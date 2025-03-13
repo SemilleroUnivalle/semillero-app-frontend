@@ -3,19 +3,25 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
+  --h1-color: #C20E1A;
+  --background: #E8E8E8;
   --foreground: #970000;
 }
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   :root {
     --background: #e03f3f;
     --foreground: #ededed;
   }
+} */
+h1 {
+  color: var(--h1-color);
+  font-weight: bold;
+  font-size: 1.5rem ; /* Cambia el color a rojo */
 }
 
 body {
-  color: var(--foreground);
+  /* color: var(--foreground); */
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Helvetica, sans-serif;
 }
