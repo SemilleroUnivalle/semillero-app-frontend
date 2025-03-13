@@ -6,6 +6,7 @@ export default function Login() {
    
       <div className="mx-auto max-w-md overflow-hidden rounded-3xl bg-white p-11 px-0 text-center shadow-md md:max-w-xl">
         <h1>Iniciar sesión</h1>
+
         <form className="space-y-6" action="#" method="POST">
           {/* Campo Documento */}
 
@@ -52,10 +53,10 @@ export default function Login() {
         {/* Botón de registro */}
         <Link href="/auth/registro">
           <button className="mt-4 w-3/4 rounded-2xl border-2 border-[#C20E1A] py-2 text-lg font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white">
+
             Crear cuenta
           </button>
         </Link>
       </div>
-
   );
 }

@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 :root {
+
   --h1-color: #C20E1A;
   --background: #E8E8E8;
   --foreground: #970000;
