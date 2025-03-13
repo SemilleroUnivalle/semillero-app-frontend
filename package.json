@@ -13,6 +13,12 @@
   "dependencies": {
     "next": "15.1.7",
     "react": "^19.0.0",
+<<<<<<< HEAD
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+=======
     "react-dom": "^19.0.0",
     "ts-jest": "^29.2.6"
   },
@@ -23,18 +29,25 @@
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^14.6.1",
     "@types/jest": "^29.5.14",
+>>>>>>> e81d02fa03943ebade2d7e9c65e66fe0f1932c5c
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
+<<<<<<< HEAD
+=======
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+>>>>>>> e81d02fa03943ebade2d7e9c65e66fe0f1932c5c
     "postcss": "^8",
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tailwindcss": "^3.4.1",
+<<<<<<< HEAD
+=======
     "ts-node": "^10.9.2",
+>>>>>>> e81d02fa03943ebade2d7e9c65e66fe0f1932c5c
     "typescript": "^5"
   }
 }
