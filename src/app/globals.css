@@ -3,13 +3,9 @@
 @tailwind utilities;
 
 :root {
-<<<<<<< HEAD
-  --background: #ffffff;
-=======
 
   --h1-color: #C20E1A;
   --background: #E8E8E8;
->>>>>>> e81d02fa03943ebade2d7e9c65e66fe0f1932c5c
   --foreground: #970000;
 }
 
