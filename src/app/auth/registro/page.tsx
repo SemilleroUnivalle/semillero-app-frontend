@@ -4,7 +4,9 @@ import Link from "next/link";
 export default function Login() {
   return (
     <div className="">
-      <div className="mx-auto max-w-md overflow-hidden rounded-xl bg-white p-11 text-center shadow-md md:max-w-2xl">
+
+      <div className="mx-auto max-w-md overflow-hidden rounded-2xl bg-white p-11 px-0 text-center shadow-md md:max-w-xl">
+
         <h1>Crear cuenta</h1>
         <form className="space-y-6" action="#" method="POST">
           {/* Campos Nombres y Apellidos */}
@@ -14,7 +16,8 @@ export default function Login() {
             name="nombre"
             id="nombre"
             required
-            className="mt-6 w-3/4 rounded-2xl border border-gray-300 px-4 py-2 text-center focus:outline-none focus:ring-2 focus:ring-[#C20E1A]"
+            className="mt-6 w-3/4 rounded-2xl border border-gray-300 px-4 py-2 text-center text-md focus:outline-none focus:ring-2 focus:ring-[#C20E1A]"
+
           />
 
           <input
