@@ -1,3 +1,6 @@
+import Button from '@mui/material/Button';
+
+
 export default function Inicio() {
   return (
 
@@ -28,6 +31,8 @@ export default function Inicio() {
           </label>
         </div> 
       </div>
+
+      <Button variant="contained" className='bg-black'>Hello world</Button>
 
 
     </div>

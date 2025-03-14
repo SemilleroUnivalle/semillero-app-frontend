@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+
+
 export default function Login() {
   return (
    
@@ -16,7 +18,7 @@ export default function Login() {
             name="documento"
             id="documento"
             required
-            className="mt-6 w-3/4 rounded-2xl border border-gray-300 px-4 py-2 text-center text-lg focus:outline-none focus:ring-2 focus:ring-[#C20E1A]"
+            className="mt-6 w-3/4 rounded-2xl border border-gray-300 px-4 py-2 text-center text-md focus:outline-none focus:ring-2 focus:ring-[#C20E1A]"
           />
 
           {/* Campo Contraseña */}
@@ -27,14 +29,14 @@ export default function Login() {
             id="contraseña"
             placeholder="Contraseña"
             required
-            className="mt-6 w-3/4 rounded-2xl border border-gray-300 px-4 py-2 text-center text-lg focus:outline-none focus:ring-2 focus:ring-[#C20E1A]"
+            className="mt-6 w-3/4 rounded-2xl border border-gray-300 px-4 py-2 text-center text-md focus:outline-none focus:ring-2 focus:ring-[#C20E1A]"
           />
 
           {/* Botón de inicio */}
 
           <button
             type="submit"
-            className="mt-6 w-3/4 rounded-2xl bg-[#C20E1A] py-2 text-lg font-semibold text-white transition hover:bg-red-800"
+            className="mt-6 w-3/4 rounded-2xl bg-[#C20E1A] py-2 text-md font-semibold text-white transition hover:bg-red-800"
           >
             Ingresar
           </button>
@@ -57,6 +59,7 @@ export default function Login() {
             Crear cuenta
           </button>
         </Link>
+        
       </div>
   );
 }

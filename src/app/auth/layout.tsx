@@ -14,26 +14,30 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           priority
         />
       </div>
-      <div className="flex items-center justify-center">
-        <Image
-          className="mx-20 hidden w-1 flex-grow md:block"
-          src="/estudiante.png"
-          alt="Logo Semillero"
-          width={516}
-          height={516}
-          priority
-        />
+      <div className="mt-20 flex items-center justify-center">
+        <div className="w-min hidden flex-grow p-20 md:block">
+          <Image
+            className="w-3/4 mx-auto hidden md:block"
+            src="/estudiante.png"
+            alt="Logo Semillero"
+            width={516}
+            height={516}
+            priority
+          />
+        </div>
 
         <div className="w-min flex-grow">{children}</div>
 
-        <Image
-          className="mx-20 hidden w-1 flex-grow md:block"
-          src="/estudiando.png"
-          alt="Logo Semillero"
-          width={516}
-          height={516}
-          priority
-        ></Image>
+        <div className="w-min hidden flex-grow p-20 md:block">
+          <Image
+            className="w-3/4 mx-auto hidden md:block"
+            src="/estudiando.png"
+            alt="Logo Semillero"
+            width={516}
+            height={516}
+            priority
+          ></Image>
+        </div>
       </div>
     </div>
   );
