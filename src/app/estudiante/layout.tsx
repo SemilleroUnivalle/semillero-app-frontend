@@ -1,6 +1,8 @@
 import "../globals.css";
 import Image from "next/image";
+
 import Navbar from "../../components/Navbar";
+
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,7 +11,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className=" flex justify-around items-center mx-auto w-3/4 rounded-2xl bg-[#e8e8e8] p-2">
           <Navbar></Navbar>
         </div></div>
- 
       <div className="">{children}</div>
     </div>
   );

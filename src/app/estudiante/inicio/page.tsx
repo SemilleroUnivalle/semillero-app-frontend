@@ -1,5 +1,6 @@
 export default function Inicio() {
   return (
+
     <div className="pt-4">
 
 
