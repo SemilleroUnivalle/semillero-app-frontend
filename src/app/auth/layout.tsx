@@ -14,7 +14,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           priority
         />
       </div>
-      <div className="mt-20 flex items-center justify-center">
+      <div className=" flex items-center justify-center">
         <div className="w-min hidden flex-grow p-20 md:block">
           <Image
             className="w-3/4 mx-auto hidden md:block"
@@ -38,6 +38,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             priority
           ></Image>
         </div>
+      </div>
+      <div className="">
+        <Image
+          className="w-full h-40 "
+          src="/fondoLogin.svg"
+          alt="Logo Semillero"
+          width={200}
+          height={68}
+          priority
+        />
       </div>
     </div>
   );

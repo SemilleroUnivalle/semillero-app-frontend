@@ -3,9 +3,7 @@ import Link from "next/link";
 
 export default function Login() {
   return (
-    <div className="">
-
-      <div className="mx-auto max-w-md overflow-hidden rounded-2xl bg-white p-11 px-0 text-center shadow-md md:max-w-xl">
+      <div className="mx-auto max-w-md overflow-hidden rounded-3xl bg-white p-11 px-0 text-center shadow-md md:max-w-xl">
 
         <h1>Crear cuenta</h1>
         <form className="space-y-6" action="#" method="POST">
@@ -68,8 +66,5 @@ export default function Login() {
           </button>
         </Link>
       </div>
-
-      <footer className=""></footer>
-    </div>
   );
 }

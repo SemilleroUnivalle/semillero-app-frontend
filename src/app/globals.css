@@ -3,9 +3,8 @@
 @tailwind utilities;
 
 :root {
-
-  --h1-color: #C20E1A;
-  --background: #E8E8E8;
+  --h1-color: #c20e1a;
+  --background: #e8e8e8;
   --foreground: #970000;
 }
 
@@ -18,7 +17,14 @@
 h1 {
   color: var(--h1-color);
   font-weight: bold;
-  font-size: 1.5rem ; /* Cambia el color a rojo */
+  font-size: 1.5rem; /* Cambia el color a rojo */
+}
+
+input {
+  border-radius: 1rem;
+  --tw-border-opacity: 1;
+  border-color: rgb(209 213 219 / var(--tw-border-opacity, 1));
+  border-width: 1px;
 }
 
 body {
