@@ -32,3 +32,42 @@ body {
   background: var(--background);
   font-family: Helvetica, sans-serif;
 }
+
+
+/* Estilos para inputs */
+
+.inputs-textfield .MuiOutlinedInput-root {
+  border-radius: 1rem; /* Borde redondeado */
+}
+
+.inputs-textfield .MuiOutlinedInput-root fieldset {
+  border-color: #757575; /* Borde normal (gris oscuro) */
+}
+
+.inputs-textfield .MuiOutlinedInput-root:hover fieldset {
+  border-color: #c20e1a; /* Borde al pasar el mouse */
+}
+
+.inputs-textfield .MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: #c20e1a; /* Borde al enfocar */
+}
+
+.inputs-textfield .MuiInputLabel-root {
+  color: #757575; /* Color inicial del label (gris) */
+}
+
+.inputs-textfield .MuiInputLabel-root.Mui-focused {
+  color: #757575; /* Color del label al enfocar (gris oscuro) */
+}
+
+.inputs-textfield .MuiOutlinedInput-root.Mui-error fieldset {
+  border-color: red !important; /* Borde rojo cuando hay error */
+}
+
+.inputs-textfield .MuiInputLabel-root.Mui-error {
+  color: red !important; /* Color del label cuando hay error */
+}
+
+.inputs-textfield .MuiOutlinedInput-root.Mui-error:hover fieldset {
+  border-color: darkred !important; /* Borde más oscuro al pasar el mouse */
+}
