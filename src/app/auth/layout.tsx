@@ -38,6 +38,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             priority
           ></Image>
         </div>
+
       </div>
       <div className="">
         <Image
@@ -48,6 +49,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           height={68}
           priority
         />
+
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import Button from '@mui/material/Button';
+
 import Slider from '@mui/material/Slider';
 import { StyledEngineProvider } from '@mui/material/styles';
-
 
 
 export default function Inicio() {
