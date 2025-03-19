@@ -8,6 +8,7 @@ import {
   FormControl,
   CircularProgress,
   SelectChangeEvent,
+
 } from "@mui/material";
 import { useState, useEffect } from "react";
 
@@ -19,20 +20,24 @@ interface Departamento {
   id: number;
   nombre: string;
 }
+
 // Interfaces para Departamentos y Municipios
 
 interface DepartamentoApi {
   id: number;
   name: string;
 }
+
 interface Ciudad {
   id: number;
   nombre: string;
 }
+
 interface CiudadApi {
   id: number;
   name: string;
 }
+
 
 const grados: string[] = [
   "1",
@@ -69,6 +74,7 @@ export default function Perfil() {
   useEffect(() => {
     const fetchDepartamentos = async () => {
       try {
+
         const response = await axios.get<DepartamentoApi[]>(
           "https://api-colombia.com/api/v1/Department",
         );
@@ -78,16 +84,19 @@ export default function Perfil() {
             nombre: dep.name,
           }),
         );
+
         setDepartamentos(departamentosFormateados);
       } catch (error) {
         console.error("Error al obtener departamentos:", error);
       } finally {
+
       }
     };
     fetchDepartamentos();
   }, []);
 
   // Obtener ciudades cuando cambia el departamento seleccionado
+
   const handleChangeDepartamento = async (
     event: SelectChangeEvent<number | "">,
   ) => {
@@ -118,6 +127,7 @@ export default function Perfil() {
 
   const handleChangeGenero = (event: SelectChangeEvent<string>) => {
     setMostrarOtroGenero(event.target.value === "Otro");
+
   };
 
   return (
@@ -350,7 +360,9 @@ export default function Perfil() {
           <InputLabel id="grado">Grado</InputLabel>
           <Select labelId="grado" id="grado" label="grado" required>
             {grados.map((grado) => (
+
               <MenuItem key={grado} value={grado}>{grado}</MenuItem>
+
             ))}
           </Select>
         </FormControl>
