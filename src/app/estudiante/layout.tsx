@@ -1,5 +1,5 @@
 import "../globals.css";
-import Image from "next/image";
+
 import { StyledEngineProvider } from "@mui/material/styles";
 
 import Navbar from "../../components/Navbar";
