@@ -54,6 +54,7 @@ export default function Perfil() {
   // Manejo de campo para otro género
 
   const [mostrarOtroGenero, setMostrarOtroGenero] = useState(false);
+  const [mostrarTipoDiscapacidad, setTipoDiscapacidad] = useState(false);
 
   // Manejo de estados para seleccion de departamento y municipio
 
@@ -118,6 +119,10 @@ export default function Perfil() {
 
   const handleChangeGenero = (event: SelectChangeEvent<string>) => {
     setMostrarOtroGenero(event.target.value === "Otro");
+  };
+
+  const handleChangeDiscapacidad = (event: SelectChangeEvent<string>) => {
+    setTipoDiscapacidad(event.target.value === "sí");
   };
 
   return (
@@ -345,15 +350,68 @@ export default function Perfil() {
             <MenuItem value={"Cobertura"}>Cobertura</MenuItem>
           </Select>
         </FormControl>
-        {/* Campo Grado Estudiantil */}
+        {/* Campo Select Grado Estudiantil */}
         <FormControl className="inputs-textfield w-full sm:w-1/4">
           <InputLabel id="grado">Grado</InputLabel>
           <Select labelId="grado" id="grado" label="grado" required>
             {grados.map((grado) => (
-              <MenuItem key={grado} value={grado}>{grado}</MenuItem>
+              <MenuItem key={grado} value={grado}>
+                {grado}
+              </MenuItem>
             ))}
           </Select>
         </FormControl>
+        {/* Campo Select Discapacidad */}
+        <FormControl className="inputs-textfield w-full sm:w-1/4">
+          <InputLabel id="discapacidad">Discapacidad</InputLabel>
+          <Select
+            onChange={handleChangeDiscapacidad}
+            labelId="discapacidad"
+            id="discapacidad"
+            label="discapacidad"
+            required
+          >
+            <MenuItem key={"No"} value={"no"}>
+              No
+            </MenuItem>
+            <MenuItem key={"Sí"} value={"sí"}>
+              Sí
+            </MenuItem>
+          </Select>
+        </FormControl>
+        {mostrarTipoDiscapacidad && (
+          <FormControl className="inputs-textfield w-full sm:w-1/4">
+            <InputLabel id="tipo_discapacidad">Tipo de discapacidad</InputLabel>
+            <Select
+              labelId="tipo_discapacidad"
+              id="tipo_discapacidad"
+              label="tipo_discapacidad"
+              required
+            >
+              <MenuItem key={"No"} value={"no"}>
+                Auditiva
+              </MenuItem>
+              <MenuItem key={"Sí"} value={"sí"}>
+                Fisica
+              </MenuItem>
+              <MenuItem key={"Sí"} value={"sí"}>
+                Intelectual
+              </MenuItem>
+              <MenuItem key={"Sí"} value={"sí"}>
+                Visual
+              </MenuItem>
+              <MenuItem key={"Sí"} value={"sí"}>
+                Sordoceguera
+              </MenuItem>
+              <MenuItem key={"Sí"} value={"sí"}>
+                Psicosocial
+              </MenuItem>
+              <MenuItem key={"Sí"} value={"sí"}>
+                Multiple
+              </MenuItem>
+            </Select>
+          </FormControl>
+        )}
       </form>
     </div>
   );
