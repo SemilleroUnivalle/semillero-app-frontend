@@ -1,7 +1,5 @@
 
 import Link from "next/link";
-import { TextField } from "@mui/material";
-
 
 
 export default function Login() {
@@ -52,6 +50,7 @@ export default function Login() {
       <p className="text-md mt-4 text-center text-gray-600">
         Si es tu primera vez con nosotros deberás registrarte primero
       </p>
+
 
       {/* Botón de registro */}
       <Link href="/auth/registro">

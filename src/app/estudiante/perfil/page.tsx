@@ -7,6 +7,8 @@ import {
   MenuItem,
   FormControl,
   CircularProgress,
+  SelectChangeEvent,
+
 } from "@mui/material";
 import { useState, useEffect } from "react";
 
@@ -19,10 +21,23 @@ interface Departamento {
   nombre: string;
 }
 
+// Interfaces para Departamentos y Municipios
+
+interface DepartamentoApi {
+  id: number;
+  name: string;
+}
+
 interface Ciudad {
   id: number;
   nombre: string;
 }
+
+interface CiudadApi {
+  id: number;
+  name: string;
+}
+
 
 const grados: string[] = [
   "1",
@@ -43,7 +58,6 @@ const grados: string[] = [
 export default function Perfil() {
   // Manejo de campo para otro género
 
-  const [seleccion, setSeleccion] = useState("");
   const [mostrarOtroGenero, setMostrarOtroGenero] = useState(false);
 
   // Manejo de estados para seleccion de departamento y municipio
@@ -53,45 +67,49 @@ export default function Perfil() {
   const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState<
     number | ""
   >("");
-  const [ciudadSeleccionada, setCiudadSeleccionada] = useState<number | "">("");
-  const [cargandoDepartamentos, setCargandoDepartamentos] =
-    useState<boolean>(true);
+
   const [cargandoCiudades, setCargandoCiudades] = useState<boolean>(false);
 
   // Obtener departamentos
   useEffect(() => {
     const fetchDepartamentos = async () => {
       try {
-        const response = await axios.get(
+
+        const response = await axios.get<DepartamentoApi[]>(
           "https://api-colombia.com/api/v1/Department",
         );
-        const departamentosFormateados = response.data.map((dep: any) => ({
-          id: dep.id,
-          nombre: dep.name,
-        }));
+        const departamentosFormateados: Departamento[] = response.data.map(
+          (dep) => ({
+            id: dep.id,
+            nombre: dep.name,
+          }),
+        );
+
         setDepartamentos(departamentosFormateados);
       } catch (error) {
         console.error("Error al obtener departamentos:", error);
       } finally {
-        setCargandoDepartamentos(false);
+
       }
     };
     fetchDepartamentos();
   }, []);
 
   // Obtener ciudades cuando cambia el departamento seleccionado
-  const handleChangeDepartamento = async (event: any) => {
-    const departamentoId = event.target.value;
+
+  const handleChangeDepartamento = async (
+    event: SelectChangeEvent<number | "">,
+  ) => {
+    const departamentoId = event.target.value as number;
     setDepartamentoSeleccionado(departamentoId);
     setCargandoCiudades(true);
-    setCiudadSeleccionada("");
 
     try {
-      const response = await axios.get(
+      const response = await axios.get<CiudadApi[]>(
         `https://api-colombia.com/api/v1/Department/${departamentoId}/cities`,
       );
-      const ciudadesFormateadas = response.data
-        .map((ciudad: any) => ({
+      const ciudadesFormateadas: Ciudad[] = response.data
+        .map((ciudad) => ({
           id: ciudad.id,
           nombre: ciudad.name,
         }))
@@ -107,10 +125,9 @@ export default function Perfil() {
     }
   };
 
-  const handleChangeGenero = (event: any) => {
-    const value = event.target.value;
-    setSeleccion(value);
-    setMostrarOtroGenero(value === "Otro");
+  const handleChangeGenero = (event: SelectChangeEvent<string>) => {
+    setMostrarOtroGenero(event.target.value === "Otro");
+
   };
 
   return (
@@ -343,7 +360,9 @@ export default function Perfil() {
           <InputLabel id="grado">Grado</InputLabel>
           <Select labelId="grado" id="grado" label="grado" required>
             {grados.map((grado) => (
-              <MenuItem value={grado}>{grado}</MenuItem>
+
+              <MenuItem key={grado} value={grado}>{grado}</MenuItem>
+
             ))}
           </Select>
         </FormControl>
