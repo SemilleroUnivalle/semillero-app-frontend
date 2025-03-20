@@ -1,25 +1,22 @@
-import Button from '@mui/material/Button';
-
-import Slider from '@mui/material/Slider';
-
+import Image from "next/image";
 
 export default function Inicio() {
   return (
-
     <div className="pt-4">
+      <div className="mx-auto w-3/4 rounded-lg bg-white p-5 text-center content-center">
+        <h2 className="font-semibold text-primary text-lg"> Bienvenido/a estudiante</h2>
 
-
-      <div className="bg-white w-3/4 mx-auto rounded-lg text-center p-5">
-
-      <h2 className="text-primary font-semibold"> Bienvenido/a estudiante</h2>
-
-        Pagina de inicio del estudiante
-     
+        <div className="w-full">
+          <Image
+          className="mt-3 mx-auto"
+            src="/oferta_2025A.jpg"
+            alt="Logo Semillero"
+            width={516}
+            height={516}
+            priority
+          ></Image>
+        </div>
       </div>
-
-      <Button variant="contained" className='bg-black'>Hello world</Button>
-
-      <Slider defaultValue={30} className="text-red-600" />
-      </div>
+    </div>
   );
 }

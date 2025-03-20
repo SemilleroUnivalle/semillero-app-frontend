@@ -40,17 +40,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
       </div>
-      <div className="">
-        <Image
-          className="w-full h-40 "
-          src="/fondoLogin.svg"
-          alt="Logo Semillero"
-          width={200}
-          height={68}
-          priority
-        />
-
-      </div>
+      
     </div>
   );
 }
