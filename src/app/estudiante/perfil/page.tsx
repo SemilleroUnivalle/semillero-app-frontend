@@ -57,6 +57,7 @@ const grados: string[] = [
 
 export default function Perfil() {
   // Manejo de campo para otro género
+
   const [mostrarOtroGenero, setMostrarOtroGenero] = useState(false);
   const [mostrarTipoDiscapacidad, setTipoDiscapacidad] = useState(false);
 
@@ -66,6 +67,7 @@ export default function Perfil() {
   const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState<
     number | ""
   >("");
+
   const [cargandoCiudades, setCargandoCiudades] = useState<boolean>(false);
 
   // Manejo de subida de fotografia
@@ -87,6 +89,7 @@ export default function Perfil() {
   useEffect(() => {
     const fetchDepartamentos = async () => {
       try {
+
         const response = await axios.get<DepartamentoApi[]>(
           "https://api-colombia.com/api/v1/Department",
         );
@@ -101,12 +104,14 @@ export default function Perfil() {
       } catch (error) {
         console.error("Error al obtener departamentos:", error);
       } finally {
+
       }
     };
     fetchDepartamentos();
   }, []);
 
   // Obtener ciudades cuando cambia el departamento seleccionado
+
   const handleChangeDepartamento = async (
     event: SelectChangeEvent<number | "">,
   ) => {
@@ -135,6 +140,7 @@ export default function Perfil() {
     }
   };
 
+
   // Habilitar campo para otro genero
   const handleChangeGenero = (event: SelectChangeEvent<string>) => {
     setMostrarOtroGenero(event.target.value === "Otro");
@@ -143,6 +149,7 @@ export default function Perfil() {
   // Habilitar campo para tipo de discapacidad
   const handleChangeDiscapacidad = (event: SelectChangeEvent<string>) => {
     setTipoDiscapacidad(event.target.value === "sí");
+
   };
 
   return (
@@ -466,6 +473,7 @@ export default function Perfil() {
                 <MenuItem key={"No"} value={"no"}>
                   Auditiva
                 </MenuItem>
+
                 <MenuItem key={"Sí"} value={"sí"}>
                   Fisica
                 </MenuItem>
