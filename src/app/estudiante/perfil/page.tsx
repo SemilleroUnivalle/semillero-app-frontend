@@ -517,6 +517,8 @@ export default function Perfil() {
           )}
         </div>
 
+
+
         {/* Campo Seleccionar Documento de Identidad */}
         <h2 className="text-md my-4 text-center font-semibold text-primary">
           Documentación
