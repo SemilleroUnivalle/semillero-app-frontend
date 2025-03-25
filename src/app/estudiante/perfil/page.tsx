@@ -154,13 +154,13 @@ export default function Perfil() {
   };
 
   return (
-
-    
+   
 
     <div className="mx-auto my-4 w-3/4 rounded-2xl bg-white p-5 shadow-md text-center content-center">
       <Head>
         <title>Inicio | Mi Proyecto</title>
       </Head>
+
       <h2 className="text-center text-lg font-semibold text-primary">
         Tu información
       </h2>
@@ -245,10 +245,12 @@ export default function Perfil() {
             type="number"
             fullWidth
 
+
             required
             // value={formData.nombre}
             // onChange={handleChange}
           />
+
 
           {/* Campo Fecha de Nacimiento */}
           <TextField
@@ -516,7 +518,6 @@ export default function Perfil() {
             />
           )}
         </div>
-
 
 
         {/* Campo Seleccionar Documento de Identidad */}
