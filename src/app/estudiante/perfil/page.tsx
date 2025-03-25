@@ -237,6 +237,7 @@ export default function Perfil() {
             variant="outlined"
             type="number"
             fullWidth
+
             required
             // value={formData.nombre}
             // onChange={handleChange}
@@ -313,10 +314,89 @@ export default function Perfil() {
             variant="outlined"
             type="number"
             fullWidth
+
             required
             // value={formData.nombre}
             // onChange={handleChange}
           />
+
+
+          {/* Campo Fecha de Nacimiento */}
+          <TextField
+            className="inputs-textfield flex w-full flex-col sm:w-1/4"
+            label="Fecha de nacimiento"
+            name="fecha_nacimiento"
+            variant="outlined"
+            type="date"
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+            required
+
+            // value={formData.nombre}
+            // onChange={handleChange}
+          />
+          {/* Campo Género */}
+          <FormControl className="inputs-textfield w-full sm:w-1/4">
+            <InputLabel id="genero">Género</InputLabel>
+            <Select
+              labelId="genero"
+              id="genero"
+              label="genero"
+              required
+              // value={tipoDocumento}
+              onChange={handleChangeGenero}
+            >
+              <MenuItem value={10}>Masculino</MenuItem>
+              <MenuItem value={20}>Femenino</MenuItem>
+              <MenuItem value={"Otro"}>Otro</MenuItem>
+            </Select>
+          </FormControl>
+          {/* Campo Otro Genero */}
+          {mostrarOtroGenero && (
+            <TextField
+              className="inputs-textfield flex w-full flex-col sm:w-1/4"
+              label="Otro género"
+              name="otro_genero"
+              variant="outlined"
+              type="text"
+              fullWidth
+              required
+              // value={formData.nombre}
+              // onChange={handleChange}
+            />
+          )}
+        </div>
+
+        {/* Contenedor Informacion de Contacto y Ubicación */}
+        <h2 className="text-md my-4 text-center font-semibold text-primary">
+          Información de Contacto y Ubicación
+        </h2>
+        <div className="flex flex-wrap justify-around gap-4 text-gray-600">
+          {/* Campo Correo Electronico */}
+          <TextField
+            className="inputs-textfield flex w-full flex-col sm:w-1/4"
+            label="Correo Electrónico"
+            name="email"
+            variant="outlined"
+            type="email"
+            fullWidth
+            required
+            // value={formData.nombre}
+            // onChange={handleChange}
+          />
+          {/* Campo Celular */}
+          <TextField
+            className="inputs-textfield flex w-full flex-col sm:w-1/4"
+            label="Celular"
+            name="celular"
+            variant="outlined"
+            type="number"
+            fullWidth
+            required
+            // value={formData.nombre}
+            // onChange={handleChange}
+          />
+
           {/* Campo Celular Alternativo */}
           <TextField
             className="inputs-textfield flex w-full flex-col sm:w-1/4"
@@ -527,10 +607,20 @@ export default function Perfil() {
           type="submit"
           variant="contained"
           className="mx-auto my-5 flex rounded-2xl bg-primary"
+
         >
           Editar
         </Button>
       </form>
+
+      {/* Campo Seleccionar Documento de Identidad */}
+      <div className="my-4 flex justify-center">
+        <input
+          name="documento_identidad"
+          type="file"
+          className="block w-full text-sm text-gray-500"
+        />
+      </div>
     </div>
   );
 }

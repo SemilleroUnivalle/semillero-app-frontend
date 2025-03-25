@@ -72,6 +72,7 @@ export default function Matricula() {
   };
 
   return (
+
     <div className="mx-auto my-4 w-3/4 rounded-2xl bg-white p-5 text-center shadow-md">
       <h2 className="text-center text-lg font-semibold text-primary">
         Oferta Académica
@@ -223,6 +224,7 @@ export default function Matricula() {
           Enviar
         </Button>
       </form>
+
     </div>
   );
 }
