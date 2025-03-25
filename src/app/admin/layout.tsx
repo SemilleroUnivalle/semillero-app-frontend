@@ -1,10 +1,9 @@
+import SideNav from "../../../components/sidenav";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function LayoutAdmin() {
   return (
     <div className="">
-      <h1>Vista de administrador
-      </h1>
-        <div className="">{children}</div>
+      <SideNav></SideNav>
     </div>
   );
 }
