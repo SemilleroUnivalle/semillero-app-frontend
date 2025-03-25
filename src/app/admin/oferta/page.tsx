@@ -1,5 +1,5 @@
 export default function Page (){
     return(
-        <h1>Vista Inicio</h1>
+        <h1>Vista Oferta Académica</h1>
     );
 }
