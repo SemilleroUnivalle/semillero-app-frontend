@@ -71,3 +71,8 @@ body {
 .inputs-textfield .MuiOutlinedInput-root.Mui-error:hover fieldset {
   border-color: darkred !important; /* Borde más oscuro al pasar el mouse */
 }
+
+
+.selects .Mui-checked {
+  color: #c20e1a; /* Color del check */ 
+}

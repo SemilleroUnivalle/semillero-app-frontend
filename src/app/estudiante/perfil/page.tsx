@@ -146,7 +146,7 @@ export default function Perfil() {
   };
 
   return (
-    <div className="mx-auto my-4 w-3/4 rounded-2xl bg-white p-5 shadow-md">
+    <div className="mx-auto my-4 w-3/4 rounded-2xl bg-white p-5 shadow-md text-center content-center">
       <h2 className="text-center text-lg font-semibold text-primary">
         Tu información
       </h2>
@@ -500,23 +500,29 @@ export default function Perfil() {
           )}
         </div>
 
+        {/* Campo Seleccionar Documento de Identidad */}
+        <h2 className="text-md my-4 text-center font-semibold text-primary">
+          Documentación
+        </h2>
+        <div className="my-4 flex flex-col items-center gap-3">
+          <InputLabel id="documento_identidad">
+            Documento de identidad</InputLabel>
+          <input
+            name="documento_identidad"
+            type="file"
+            accept=".pdf"
+            className="block w-1/2 text-sm text-gray-500"
+          />
+        </div>
+
         <Button
           type="submit"
           variant="contained"
-          className="flex mx-auto rounded-2xl bg-primary my-5"
+          className="mx-auto my-5 flex rounded-2xl bg-primary"
         >
           Editar
         </Button>
       </form>
-
-      {/* Campo Seleccionar Documento de Identidad */}
-      <div className="my-4 flex justify-center">
-        <input
-          name="documento_identidad"
-          type="file"
-          className="block w-full text-sm text-gray-500"
-        />
-      </div>
     </div>
   );
 }
