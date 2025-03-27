@@ -3,7 +3,6 @@
 import * as React from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
-import { all } from "axios";
 
 const columns: GridColDef[] = [
   { field: "id", headerName: "ID", width: 70 },
