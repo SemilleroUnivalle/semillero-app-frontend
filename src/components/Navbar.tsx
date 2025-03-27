@@ -46,20 +46,4 @@ export default function NavLinks() {
   );
 }
 
-{
-  /* <nav className="flex justify-center space-x-4">
-        {menuItems.map((item) => (
-          <Link
-            key={item.name}
-            href={item.path}
-            className={`px-4 py-2 text-sm font-medium rounded-lg ${
-              pathname === item.path
-                ? "bg-gray-200 text-zinc-50"
-                : "text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            {item.name}
-          </Link>
-        ))}
-      </nav> */
-}
+
