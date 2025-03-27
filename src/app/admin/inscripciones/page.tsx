@@ -65,7 +65,9 @@ export default function Page() {
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 shadow-md">
         <Paper
           className="border-none shadow-none"
+
           sx={{ height: 800, width: "100%" }}
+
         >
           <DataGrid
             rows={rows}

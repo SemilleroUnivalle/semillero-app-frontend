@@ -11,7 +11,9 @@ export default function LayoutAdmin({
   return (
     <StyledEngineProvider injectFirst>
       <div className="flex flex-row">
-        <div className="h-screen w-1/5 bg-white p-4">
+
+        <div className="h-screen w-1/5 bg-white p-4 sticky top-0">
+
           <h1 className="block md:hidden text-center">SUV</h1>
           <h1 className="hidden md:block">Semillero Univalle</h1>
           <div className="mx-auto flex w-full flex-col justify-around mt-2">

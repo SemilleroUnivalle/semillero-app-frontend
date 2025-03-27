@@ -20,6 +20,12 @@ h1 {
   font-size: 1.5rem; /* Cambia el color a rojo */
 }
 
+h2 {
+  color: var(--h1-color);
+  font-weight: 600;
+  font-size: 1.25rem; /* Cambia el color a rojo */
+}
+
 input {
   border-radius: 1rem;
   --tw-border-opacity: 1;
