@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -14,6 +13,9 @@ import {
   MenuItem,
 } from "@mui/material";
 import { GridColDef, DataGrid } from "@mui/x-data-grid";
+import CrearCursoModal from "@/components/CrearCursoModal";
+import CrearOfertaModal from "@/components/CrearOfertaModal";
+
 
 const columns: GridColDef[] = [
   { field: "id", headerName: "ID", width: 70 },
@@ -280,13 +282,42 @@ const paginationModel = { page: 0, pageSize: 20 };
 
 export default function Page() {
   // Modal para crear curso
-  const [openCrearCurso, setOpenCrearCurso] = React.useState(false);
-  const handleOpenCrearCurso = () => setOpenCrearCurso(true);
-  const handleCloseCrearCurso = () => setOpenCrearCurso(false);
+  const [openModals, setOpenModals] = React.useState(false);
+  const handleOpenModals = () => setOpenModals(true);
+  const handleCloseModals = () => setOpenModals(false);
 
   return (
     <div>
       <h1>Oferta Académica</h1>
+
+      {/* Contenedor de botones para crear ofertas y cursos */}
+      <div className="mx-auto my-4 flex w-11/12 flex-wrap justify-between gap-2">
+        <Button
+          className="w-full rounded-xl bg-white capitalize text-secondary hover:bg-primary hover:text-white sm:w-1/4"
+          variant="contained"
+          onClick={handleOpenModals}
+        >
+          Crear Oferta
+        </Button>
+        <Button
+          className="w-full rounded-xl bg-white capitalize text-secondary hover:bg-primary hover:text-white sm:w-1/4"
+          variant="contained"
+        >
+          Modificar Oferta
+        </Button>
+        <Button
+          className="w-full rounded-xl bg-white capitalize text-secondary hover:bg-primary hover:text-white sm:w-1/4"
+          variant="contained"
+          onClick={handleOpenModals}
+        >
+          Crear Curso
+        </Button>
+
+        {/* Modals */}
+
+        <CrearCursoModal open={openModals} onClose={handleCloseModals} />
+        <CrearOfertaModal open={openModals} onClose={handleCloseModals} />
+      </div>
 
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 shadow-md">
         <Paper
@@ -321,121 +352,6 @@ export default function Page() {
           />
         </Paper>
       </div>
-      <div className="mx-auto my-4 flex w-11/12 flex-wrap justify-between gap-2">
-        <Button
-          className="text-secondary w-full rounded-xl bg-white capitalize hover:bg-primary hover:text-white sm:w-1/4"
-          variant="contained"
-        >
-          Crear Oferta
-        </Button>
-        <Button
-          className="text-secondary w-full rounded-xl bg-white capitalize hover:bg-primary hover:text-white sm:w-1/4"
-          variant="contained"
-        >
-          Modificar Oferta
-        </Button>
-        <Button
-          className="text-secondary w-full rounded-xl bg-white capitalize hover:bg-primary hover:text-white sm:w-1/4"
-          variant="contained"
-          onClick={handleOpenCrearCurso}
-        >
-          Crear Curso
-        </Button>
-
-        {/* Modal Crear Curso*/}
-        <Modal
-          open={openCrearCurso}
-          onClose={handleCloseCrearCurso}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-        >
-          <Box className="mx-auto mt-10 w-1/2 rounded-2xl bg-white p-4 sm:w-1/4">
-            <h2 className="text-center mb-2">Crear curso</h2>
-            <div>
-              <form action="" method="post" className="space-y-4">
-                {/* Campo nombre del curso */}
-                <TextField
-                  className="inputs-textfield flex w-full flex-col"
-                  label="Nombre"
-                  name="nombre_curso"
-                  variant="outlined"
-                  type="text"
-                  fullWidth
-                  required
-
-                  // value={formData.nombre}
-                  // onChange={handleChange}
-                />
-
-                {/* Campo selector de area */}
-                <FormControl className="inputs-textfield w-full">
-                  <InputLabel id="area_curso">Área</InputLabel>
-                  <Select
-                    labelId="area_curso"
-                    id="area_curso"
-                    label="area_curso"
-                    required
-                  >
-                    <MenuItem value={"Matemáticas"}>Matemáticas</MenuItem>
-                    <MenuItem value={"Física"}>Física</MenuItem>
-                    <MenuItem value={"Química"}>Química</MenuItem>
-                    <MenuItem value={"Lenguaje"}>Lenguaje</MenuItem>
-                    <MenuItem value={"Inglés"}>Inglés</MenuItem>
-                    <MenuItem value={"Música"}>Música</MenuItem>
-                    <MenuItem value={"Inglés"}>Inglés</MenuItem>
-                    <MenuItem value={"Artes Escénicas"}>
-                      Artes Escénicas
-                    </MenuItem>
-                    <MenuItem value={"NAS"}>
-                      NAS - Nivelación Académica Semillero
-                    </MenuItem>
-                    <MenuItem value={"Otra"}>Otra</MenuItem>
-                  </Select>
-                </FormControl>
-
-                {/* Campo intensidad horaria */}
-                <TextField
-                  className="inputs-textfield flex w-full flex-col"
-                  label="Intensidad horaria"
-                  name="intensidad_horaria"
-                  variant="outlined"
-                  type="text"
-                  fullWidth
-                  required
-
-                  // value={formData.nombre}
-                  // onChange={handleChange}
-                />
-
-                {/* Campo descripción */}
-                <TextField
-                  className="inputs-textfield flex w-full flex-col"
-                  label="Descripción"
-                  name="descripción_curso"
-                  variant="outlined"
-                  type="text"
-                  multiline
-                  rows={4}
-                  fullWidth
-                  required
-
-                  // value={formData.nombre}
-                  // onChange={handleChange}
-                />
-
-                <Button
-                  type="submit"
-                  variant="contained"
-                  className="text-md mt-4 w-full font-semibold rounded-2xl bg-primary capitalize text-white hover:bg-red-800"
-                >
-                  Crear Curso
-                </Button>
-              </form>
-            </div>
-          </Box>
-        </Modal>
-      </div>
     </div>
   );
 }
-
