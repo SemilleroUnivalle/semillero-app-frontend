@@ -1,13 +1,13 @@
 "use client";
-
+import { API_BASE_URL } from "../../../../config";
 import { useState } from "react";
 import Link from "next/link";
 
-export default function Login() {
+export default function Registro() {
   const [formData, setFormData] = useState({
     nombre: "",
-    apellidos: "",
-    documento: "",
+    apellido: "",
+    numero_identificacion: "",
     email: "",
   });
 
@@ -21,7 +21,7 @@ export default function Login() {
     e.preventDefault(); // Evitar recarga de la página
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/register/initial/", {
+      const response = await fetch(`${API_BASE_URL}/student/student/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -33,7 +33,8 @@ export default function Login() {
         console.log("Registro exitoso");
         alert("Usuario registrado con éxito");
       } else {
-        console.error("Error en el registro");
+        console.error("Error en el registro", formData);
+      
         alert("Hubo un problema en el registro");
       }
     } catch (error) {
@@ -60,9 +61,10 @@ export default function Login() {
         <input
           placeholder="Apellidos"
           type="text"
-          name="apellidos"
-          id="apellidos"
-          value={formData.apellidos}
+          name="apellido"
+          id="apellido"
+          value={formData.apellido}
+          onChange={handleChange}
           required
           className="mt-6 w-3/4 rounded-2xl border border-gray-300 px-4 py-2 text-center focus:outline-none focus:ring-2 focus:ring-[#C20E1A]"
         />
@@ -72,9 +74,9 @@ export default function Login() {
         <input
           placeholder="Documento de identidad"
           type="text"
-          name="documento"
-          id="documento"
-          value={formData.documento}
+          name="numero_identificacion"
+          id="numero_identificacion"
+          value={formData.numero_identificacion}
           onChange={handleChange}
           required
           className="mt-6 w-3/4 rounded-2xl border border-gray-300 px-4 py-2 text-center focus:outline-none focus:ring-2 focus:ring-[#C20E1A]"

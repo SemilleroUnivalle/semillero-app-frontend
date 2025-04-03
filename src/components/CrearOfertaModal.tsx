@@ -48,6 +48,7 @@ export default function CrearOfertaModal({
               // onChange={handleChange}
             />
             <FormGroup>
+            <FormControlLabel control={<Checkbox />} label="Required" />
 
             </FormGroup>
             {/* Campo selector de area */}
