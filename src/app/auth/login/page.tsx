@@ -2,14 +2,38 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "../../../../config";
 
+// Definición del tipo para los datos del formulario
+interface LoginFormData {
+  numero_identificacion: string;
+  password: string;
+}
+
+// Definición del tipo para la respuesta del backend
+interface LoginResponse {
+  refresh: string;
+  access: string;
+  id: number;
+  nombre: string;
+  apellido: string;
+  numero_identificacion: string;
+  email: string;
+  registration_phase: number;
+}
 
 export default function Login() {
-  const [formData, setFormData] = useState({
+  const router = useRouter();
+
+  // Estado para manejar los datos del formulario
+  const [formData, setFormData] = useState<LoginFormData>({
     numero_identificacion: "",
     password: "",
   });
+
+  // Estado para manejar el indicador de carga
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Manejar cambios en los inputs
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -19,6 +43,7 @@ export default function Login() {
   // Manejar envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); // Evitar recarga de la página
+    setIsLoading(true); // Activar indicador de carga
 
     try {
       const response = await fetch(`${API_BASE_URL}/student/login/`, {
@@ -30,15 +55,42 @@ export default function Login() {
       });
 
       if (response.ok) {
-        console.log("Inicio de sesion exitoso");
-        alert("Usuario ingresado con éxito");
-      } else {
-        console.error("Error en el inicio de sesion", formData);
+        const data: LoginResponse = await response.json();
 
-        alert("Hubo un problema en el inicio de sesion");
+        // Almacenar tokens en cookies o localStorage (según tu preferencia)
+        document.cookie = `access=${data.access}; path=/; secure; samesite=strict`;
+        document.cookie = `refresh=${data.refresh}; path=/; secure; samesite=strict`;
+
+        // Almacenar información adicional del usuario en localStorage (opcional)
+        localStorage.setItem("user", JSON.stringify({
+          id: data.id,
+          nombre: data.nombre,
+          apellido: data.apellido,
+          email: data.email,
+          numero_identificacion: data.numero_identificacion,
+          registration_phase: data.registration_phase,
+        }));
+
+        // Redirigir según el tipo de usuario o fase de registro
+        if (data.numero_identificacion === "12345") {
+          router.push("/admin/inicio"); // Página de admin
+        } else if (data.registration_phase === 1) {
+          router.push("/estudiante/perfil"); // Página para completar registro
+        } else {
+          router.push("/estudiante/inicio"); // Página principal del estudiante
+        }
+
+        console.log("Inicio de sesión exitoso");
+      } else if (response.status === 401) {
+        alert("Credenciales incorrectas. Por favor verifica tus datos.");
+      } else {
+        alert("Hubo un problema en el servidor. Intenta nuevamente más tarde.");
       }
     } catch (error) {
       console.error("Error de conexión:", error);
+      alert("No se pudo conectar al servidor.");
+    } finally {
+      setIsLoading(false); // Desactivar indicador de carga
     }
   };
 
@@ -48,7 +100,6 @@ export default function Login() {
 
       <form className="space-y-6" onSubmit={handleSubmit}>
         {/* Campo Documento */}
-
         <input
           placeholder="Documento de identidad"
           type="text"
@@ -61,7 +112,6 @@ export default function Login() {
         />
 
         {/* Campo Contraseña */}
-
         <input
           type="password"
           name="password"
@@ -74,12 +124,14 @@ export default function Login() {
         />
 
         {/* Botón de inicio */}
-
         <button
           type="submit"
-          className="text-md mt-6 w-3/4 rounded-2xl bg-[#C20E1A] py-2 font-semibold text-white transition hover:bg-red-800"
+          disabled={isLoading} // Deshabilitar mientras se procesa
+          className={`text-md mt-6 w-3/4 rounded-2xl bg-[#C20E1A] py-2 font-semibold text-white transition ${
+            isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-red-800"
+          }`}
         >
-          Ingresar
+          {isLoading ? "Cargando..." : "Ingresar"}
         </button>
       </form>
 

@@ -4,13 +4,6 @@ import * as React from "react";
 import {
   Button,
   Paper,
-  Modal,
-  Box,
-  TextField,
-  FormControl,
-  Select,
-  InputLabel,
-  MenuItem,
 } from "@mui/material";
 import { GridColDef, DataGrid } from "@mui/x-data-grid";
 import CrearCursoModal from "@/components/CrearCursoModal";
