@@ -67,20 +67,23 @@ export default function Perfil() {
     tipo_identificacion: "",
     fecha_nacimiento: "",
     genero: "",
-    otro_genero: "",
     email: "",
     celular: "",
     telefono: "",
     departamento_residencia: "",
-    ciudad_residencia: "",
     direccion: "",
-    colegio: "",
     estamento: "",
-    grado: "",
-    eps: "",
     discapacidad: "",
     descripcion_discapacidad: "",
     tipo_discapacidad: "",
+  });
+
+  const [data, setData] = useState({
+    otro_genero: "",
+    ciudad_residencia: "",
+    colegio: "",
+    grado: "",
+    eps: "",
   });
 
   // Cargar datos del localStorage al montar el componente
@@ -107,7 +110,9 @@ export default function Perfil() {
         descripcion_discapacidad: user.descripcion_discapacidad || "",
       
       }));
+      console.log(user);
       id_estudiante = user.id;
+      console.log(id_estudiante);
     }
   }, []);
 
@@ -124,9 +129,11 @@ export default function Perfil() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log("Datos enviados:", formData);
+
     try {
       const response = await fetch(
-        `${API_BASE_URL}/student/student/${id_estudiante}/`,
+        `${API_BASE_URL}/student/student/3/`,
         {
           method: "PUT",
           headers: {
@@ -271,7 +278,7 @@ export default function Perfil() {
 
       
 
-      <form className="items-center">
+      <form className="items-center" onSubmit={handleSubmit}>
 
         
       <div className="w-full flex flex-row">
@@ -279,7 +286,7 @@ export default function Perfil() {
         <div className="my-4 flex flex-col items-center justify-around w-1/3">
         {/* Avatar que muestra la imagen */}
         <Avatar
-          src={image || "/default-avatar.png"}
+          src={image || ""}
           sx={{ width: 150, height: 150 }}
         />
 
@@ -516,10 +523,14 @@ export default function Perfil() {
               id="ciudad"
               label="Ciudad"
               required
-              value={formData.ciudad_residencia}
+              value={data.ciudad_residencia ||""}
               onChange={(e) =>
-                setFormData({ ...formData, ciudad_residencia: e.target.value })
-              }
+                  setData({ ...data, ciudad_residencia: e.target.value })
+                }
+              // value={formData.ciudad_residencia}
+              // onChange={(e) =>
+              //   setFormData({ ...formData, ciudad_residencia: e.target.value })
+              // }
             >
               {cargandoCiudades ? (
                 <MenuItem disabled>
@@ -565,10 +576,10 @@ export default function Perfil() {
             type="text"
             fullWidth
             required
-            value={formData.colegio}
-            onChange={(e) =>
-              setFormData({ ...formData, colegio: e.target.value })
-            }
+            // value={formData.colegio}
+            // onChange={(e) =>
+            //   setFormData({ ...formData, colegio: e.target.value })
+            // }
           />
           {/* Campo Estamento Colegio */}
           <FormControl className="inputs-textfield w-full sm:w-1/4">
@@ -598,10 +609,14 @@ export default function Perfil() {
               id="grado"
               label="Grado"
               required
-              value={formData.grado}
+              value={data.grado ||""}
               onChange={(e) =>
-                setFormData({ ...formData, grado: e.target.value })
-              }
+                  setData({ ...data, grado: e.target.value })
+                }
+              // value={data.grado}
+              // onChange={(e) =>
+              //   setData({ ...data, grado: e.target.value })
+              // }
             >
               {grados.map((grado) => (
                 <MenuItem key={grado} value={grado}>
@@ -625,10 +640,14 @@ export default function Perfil() {
               id="eps"
               label="EPS"
               required
-              value={formData.eps}
+              value={data.eps ||""}
               onChange={(e) =>
-                setFormData({ ...formData, eps: e.target.value })
-              }
+                  setData({ ...data, eps: e.target.value })
+                }
+              // value={data.eps}
+              // onChange={(e) =>
+              //   setData({ ...data, eps: e.target.value })
+              // }
             >
               <MenuItem value={"Emssanar"}>Emssanar</MenuItem>
               {/* Puedes agregar más opciones si es necesario */}
@@ -724,7 +743,6 @@ export default function Perfil() {
           type="submit"
           variant="contained"
           className="mx-auto my-5 flex rounded-2xl bg-primary"
-          onSubmit={handleSubmit}
         >
           Editar
         </Button>

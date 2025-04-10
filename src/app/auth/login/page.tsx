@@ -62,14 +62,7 @@ export default function Login() {
         document.cookie = `refresh=${data.refresh}; path=/; secure; samesite=strict`;
 
         // Almacenar información adicional del usuario en localStorage (opcional)
-        localStorage.setItem("user", JSON.stringify({
-          id: data.id,
-          nombre: data.nombre,
-          apellido: data.apellido,
-          email: data.email,
-          numero_identificacion: data.numero_identificacion,
-          registration_phase: data.registration_phase,
-        }));
+        localStorage.setItem("user", JSON.stringify(data));
 
         // Redirigir según el tipo de usuario o fase de registro
         if (data.numero_identificacion === "12345") {

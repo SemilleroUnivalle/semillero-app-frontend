@@ -1,26 +1,22 @@
-// import { render, screen } from "@testing-library/react";
-// import LoginPage from "@/app/auth/login/page";
-
-// describe("Login page", () => {
-
-//     beforeEach(() => {
-//         render(<LoginPage />);
-//     });
-
-//   it("renders home page", () => {
-//     expect(screen.getByText("Iniciar sesión")).toBeInTheDocument();
-//   });
-// });
-
-
-
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import LoginPage from "@/app/auth/login/page";
+import Login from "@/app/auth/login/page";
+
+// 👇 Mock del router de Next.js (App Router)
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    refresh: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+    prefetch: jest.fn(),
+  }),
+}));
 
 describe("Login page", () => {
   beforeEach(() => {
-    render(<LoginPage />);
+    render(<Login />);
   });
 
   it("renders login title", () => {
