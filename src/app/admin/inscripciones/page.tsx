@@ -2,9 +2,18 @@
 
 import * as React from "react";
 import { useEffect, useState } from "react";
+import {
+  Paper,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  SelectChangeEvent,
+  Checkbox,
+  ListItemText,
+} from "@mui/material";
 import axios from "axios";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import Paper from "@mui/material/Paper";
 
 const columns: GridColDef[] = [
   { field: "id", headerName: "ID", width: 70 },
@@ -51,7 +60,9 @@ export default function Page() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://54.234.86.157:8080/student/student/");
+        const response = await axios.get(
+          "http://54.234.86.157:8080/student/student/",
+        );
         const estudiantes = response.data;
 
         const formateado = estudiantes.map((student: any) => ({
@@ -72,9 +83,194 @@ export default function Page() {
     fetchData();
   }, []);
 
+  // Filtros
+
+  const [selectedPeriodos, setSelectedPeriodos] = React.useState<string[]>([]);
+  const [selectedModulos, setSelectedModulos] = React.useState<string[]>([]);
+  const [selectedEstamento, setSelectedEstamento] = React.useState<string[]>(
+    [],
+  );
+  const [selectedTipo, setSelectedTipo] = React.useState<string[]>([]);
+  const [selectedEstado, setSelectedEstado] = React.useState<string[]>([]);
+
+  const handleChangePeriodos = (event: SelectChangeEvent<string[]>) => {
+    const {
+      target: { value },
+    } = event;
+    setSelectedPeriodos(typeof value === "string" ? value.split(",") : value);
+  };
+
+  const handleChangeModulos = (event: SelectChangeEvent<string[]>) => {
+    const {
+      target: { value },
+    } = event;
+    setSelectedModulos(typeof value === "string" ? value.split(",") : value);
+  };
+  const handleChangeEstamento = (event: SelectChangeEvent<string[]>) => {
+    const {
+      target: { value },
+    } = event;
+    setSelectedEstamento(typeof value === "string" ? value.split(",") : value);
+  };
+
+  const handleChangeTipo = (event: SelectChangeEvent<string[]>) => {
+    const {
+      target: { value },
+    } = event;
+    setSelectedTipo(typeof value === "string" ? value.split(",") : value);
+  };
+
+  const handleChangeEstado = (event: SelectChangeEvent<string[]>) => {
+    const {
+      target: { value },
+    } = event;
+    setSelectedEstado(typeof value === "string" ? value.split(",") : value);
+  };
+
+  const filteredRows = React.useMemo(() => {
+    return rows.filter((row) => {
+      const periodoMatch =
+        selectedPeriodos.length === 0 || selectedPeriodos.includes(row.periodo);
+
+      const moduloMatch =
+        selectedModulos.length === 0 || selectedModulos.includes(row.modulo);
+
+      const estamentoMatch =
+        selectedEstamento.length === 0 ||
+        selectedEstamento.includes(row.estamento);
+
+      const tipoMatch =
+        selectedTipo.length === 0 || selectedTipo.includes(row.tipo);
+
+      const estadoAsString = row.estado ? "Activo" : "Inactivo";
+      const estadoMatch =
+        selectedEstado.length === 0 || selectedEstado.includes(estadoAsString);
+
+      return (
+        periodoMatch &&
+        moduloMatch &&
+        estamentoMatch &&
+        tipoMatch &&
+        estadoMatch
+      );
+    });
+  }, [
+    selectedPeriodos,
+    selectedModulos,
+    selectedEstamento,
+    selectedTipo,
+    selectedEstado,
+  ]);
+
   return (
     <div>
       <h1>Inscripciones</h1>
+
+      <div className="mx-auto mt-4 flex w-11/12 justify-between rounded-2xl bg-white p-2 shadow-md">
+        {/* Filtro por Periodos */}
+        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+          <InputLabel id="filtro-periodos">Periodos</InputLabel>
+          <Select
+            labelId="filtro-periodos"
+            id="filtro-periodos"
+            label="filtro-periodos"
+            multiple
+            value={selectedPeriodos}
+            onChange={handleChangePeriodos}
+            renderValue={(selected) => selected.join(", ")}
+          >
+            {[...new Set(rows.map((row) => row.periodo))].map((periodo) => (
+              <MenuItem key={periodo} value={periodo}>
+                <Checkbox checked={selectedPeriodos.indexOf(periodo) > -1} />
+                <ListItemText primary={periodo} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Filtro por Módulos */}
+        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+          <InputLabel id="filtro-modulos">Módulos</InputLabel>
+          <Select
+            labelId="filtro-modulos"
+            multiple
+            value={selectedModulos}
+            onChange={handleChangeModulos}
+            renderValue={(selected) => selected.join(", ")}
+          >
+            {[...new Set(rows.map((row) => row.modulo))].map((modulo) => (
+              <MenuItem key={modulo} value={modulo}>
+                <Checkbox checked={selectedModulos.indexOf(modulo) > -1} />
+                <ListItemText primary={modulo} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Filtro por Estamento */}
+        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+          <InputLabel id="filtro-estamento">Estamento</InputLabel>
+          <Select
+            labelId="filtro-estamento"
+            id="filtro-estamento"
+            label="filtro-estamento"
+            multiple
+            value={selectedEstamento}
+            onChange={handleChangeEstamento}
+            renderValue={(selected) => selected.join(", ")}
+          >
+            {[...new Set(rows.map((row) => row.estamento))].map((estamento) => (
+              <MenuItem key={estamento} value={estamento}>
+                <Checkbox checked={selectedEstamento.indexOf(estamento) > -1} />
+                <ListItemText primary={estamento} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Filtro por Tipo de Inscrito */}
+        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+          <InputLabel id="filtro-tipo">Tipo de Inscrito</InputLabel>
+          <Select
+            labelId="filtro-tipo"
+            id="filtro-tipo"
+            label="filtro-tipo"
+            multiple
+            value={selectedTipo}
+            onChange={handleChangeTipo}
+            renderValue={(selected) => selected.join(", ")}
+          >
+            {[...new Set(rows.map((row) => row.tipo))].map((tipo) => (
+              <MenuItem key={tipo} value={tipo}>
+                <Checkbox checked={selectedTipo.indexOf(tipo) > -1} />
+                <ListItemText primary={tipo} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Filtro por Estado */}
+        <FormControl className="inputs-textfield w-full sm:w-1/6">
+          <InputLabel id="filtro-estado">Estado</InputLabel>
+          <Select
+            labelId="filtro-estado"
+            id="filtro-estado"
+            label="filtro-estado"
+            multiple
+            value={selectedEstado}
+            onChange={handleChangeEstado}
+            renderValue={(selected) => selected.join(", ")}
+          >
+            {["Activo", "Inactivo"].map((estado) => (
+              <MenuItem key={estado} value={estado}>
+                <Checkbox checked={selectedEstado.indexOf(estado) > -1} />
+                <ListItemText primary={estado} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </div>
+
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 shadow-md">
         <Paper
           className="border-none shadow-none"

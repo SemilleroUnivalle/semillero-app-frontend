@@ -66,6 +66,22 @@ export default function CrearCursoModal({ open, onClose }: CrearCursoModalProps)
               </Select>
             </FormControl>
 
+            {/* Campo selector de categoria */}
+            <FormControl className="inputs-textfield w-full">
+              <InputLabel id="categoria_curso">Categoría</InputLabel>
+              <Select
+                labelId="categoria_curso"
+                id="categoria_curso"
+                label="categoria_curso"
+                required
+              >
+                <MenuItem value={"Modulos por área"}>Módulos por área</MenuItem>
+                <MenuItem value={"NAS Presencial"}> NAS Presencial</MenuItem>
+                <MenuItem value={"NAS Virtual"}> NAS Virtual</MenuItem>
+                <MenuItem value={"Otra"}>Otra</MenuItem>
+              </Select>
+            </FormControl>
+
             {/* Campo intensidad horaria */}
             <TextField
               className="inputs-textfield flex w-full flex-col"

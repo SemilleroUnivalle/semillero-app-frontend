@@ -74,7 +74,7 @@ export default function Matricula() {
   return (
 
     <div className="mx-auto my-4 w-3/4 rounded-2xl bg-white p-5 text-center shadow-md">
-      <h2 className="text-center text-lg font-semibold text-primary">
+      <h2 className="text-center font-semibold text-primary">
         Oferta Académica
       </h2>
 
@@ -97,7 +97,7 @@ export default function Matricula() {
           </Select>
         </FormControl>
 
-        <h2 className="text-md my-4 text-center font-semibold text-primary">
+        <h2 className="my-4 text-center font-semibold text-primary">
           Módulo a matricular
         </h2>
         <div className="flex flex-wrap justify-around gap-4 text-gray-600">
@@ -146,10 +146,10 @@ export default function Matricula() {
         {/*Selector de Tipo de Vinculacion  */}
         <FormControl className="mx-auto">
           <FormLabel
-            className="text-md my-4 text-center font-semibold text-primary"
+            className="my-4 text-center font-semibold text-primary"
             id="tipo-vinculacion"
           >
-            Tipo de vinculación
+            <h2>Tipo de vinculación</h2>
           </FormLabel>
           <RadioGroup
             row
@@ -174,7 +174,7 @@ export default function Matricula() {
           </RadioGroup>
         </FormControl>
 
-        <h2 className="text-md my-4 text-center font-semibold text-primary">
+        <h2 className="my-4 text-center font-semibold text-primary">
           Documentación
         </h2>
         <div className="flex flex-wrap justify-around gap-4 text-gray-600">
