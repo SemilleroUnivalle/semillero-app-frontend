@@ -133,9 +133,9 @@ export default function Perfil() {
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/student/student/3/`,
+        `${API_BASE_URL}estudiante/est/${id_estudiante}/`,
         {
-          method: "PUT",
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },

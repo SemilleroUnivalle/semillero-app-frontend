@@ -156,237 +156,6 @@ const rows = [
     tipo: "Relación Univalle",
     estado: true,
   },
-  {
-    id: 10,
-    firstName: "Sofía",
-    lastName: "Ramírez",
-    email: "sofia.ramirez@email.com",
-    periodo: "2024B",
-    modulo: "Informática",
-    estamento: "Público",
-    tipo: "Particular",
-    estado: false,
-  },
-  {
-    id: 11,
-    firstName: "Diego",
-    lastName: "Flores",
-    email: "diego.flores@email.com",
-    periodo: "2020B",
-    modulo: "Matemáticas",
-    estamento: "Privado",
-    tipo: "Becado",
-    estado: true,
-  },
-  {
-    id: 12,
-    firstName: "Andrea",
-    lastName: "Gutiérrez",
-    email: "andrea.gutierrez@email.com",
-    periodo: "2021C",
-    modulo: "Ciencias",
-    estamento: "Cobertura",
-    tipo: "Relación Univalle",
-    estado: true,
-  },
-  {
-    id: 13,
-    firstName: "Jorge",
-    lastName: "Castro",
-    email: "jorge.castro@email.com",
-    periodo: "2025B",
-    modulo: "Historia",
-    estamento: "Público",
-    tipo: "Particular",
-    estado: false,
-  },
-  {
-    id: 14,
-    firstName: "Valeria",
-    lastName: "Mendoza",
-    email: "valeria.mendoza@email.com",
-    periodo: "2023C",
-    modulo: "Física",
-    estamento: "Privado",
-    tipo: "Becado",
-    estado: true,
-  },
-  {
-    id: 15,
-    firstName: "Fernando",
-    lastName: "Reyes",
-    email: "fernando.reyes@email.com",
-    periodo: "2022C",
-    modulo: "Química",
-    estamento: "Cobertura",
-    tipo: "Relación Univalle",
-    estado: true,
-  },
-  {
-    id: 16,
-    firstName: "Camila",
-    lastName: "Ortiz",
-    email: "camila.ortiz@email.com",
-    periodo: "2020C",
-    modulo: "Biología",
-    estamento: "Público",
-    tipo: "Particular",
-    estado: false,
-  },
-  {
-    id: 17,
-    firstName: "Ricardo",
-    lastName: "Navarro",
-    email: "ricardo.navarro@email.com",
-    periodo: "2024C",
-    modulo: "Arte",
-    estamento: "Privado",
-    tipo: "Becado",
-    estado: true,
-  },
-  {
-    id: 18,
-    firstName: "Isabel",
-    lastName: "Vargas",
-    email: "isabel.vargas@email.com",
-    periodo: "2021D",
-    modulo: "Literatura",
-    estamento: "Cobertura",
-    tipo: "Relación Univalle",
-    estado: true,
-  },
-  {
-    id: 19,
-    firstName: "Esteban",
-    lastName: "Silva",
-    email: "esteban.silva@email.com",
-    periodo: "2025C",
-    modulo: "Música",
-    estamento: "Público",
-    tipo: "Particular",
-    estado: false,
-  },
-  {
-    id: 20,
-    firstName: "Gabriela",
-    lastName: "Rojas",
-    email: "gabriela.rojas@email.com",
-    periodo: "2023D",
-    modulo: "Informática",
-    estamento: "Privado",
-    tipo: "Becado",
-    estado: true,
-  },
-  {
-    id: 21,
-    firstName: "Sergio",
-    lastName: "Herrera",
-    email: "sergio.herrera@email.com",
-    periodo: "2022D",
-    modulo: "Matemáticas",
-    estamento: "Cobertura",
-    tipo: "Relación Univalle",
-    estado: true,
-  },
-  {
-    id: 22,
-    firstName: "Natalia",
-    lastName: "Morales",
-    email: "natalia.morales@email.com",
-    periodo: "2024D",
-    modulo: "Ciencias",
-    estamento: "Público",
-    tipo: "Particular",
-    estado: false,
-  },
-  {
-    id: 23,
-    firstName: "Alberto",
-    lastName: "Ibarra",
-    email: "alberto.ibarra@email.com",
-    periodo: "2020D",
-    modulo: "Historia",
-    estamento: "Privado",
-    tipo: "Becado",
-    estado: true,
-  },
-  {
-    id: 24,
-    firstName: "Beatriz",
-    lastName: "Campos",
-    email: "beatriz.campos@email.com",
-    periodo: "2021E",
-    modulo: "Física",
-    estamento: "Cobertura",
-    tipo: "Relación Univalle",
-    estado: true,
-  },
-  {
-    id: 25,
-    firstName: "Mario",
-    lastName: "Peña",
-    email: "mario.pena@email.com",
-    periodo: "2025D",
-    modulo: "Química",
-    estamento: "Público",
-    tipo: "Particular",
-    estado: false,
-  },
-  {
-    id: 26,
-    firstName: "Daniela",
-    lastName: "Soto",
-    email: "daniela.soto@email.com",
-    periodo: "2023E",
-    modulo: "Biología",
-    estamento: "Privado",
-    tipo: "Becado",
-    estado: true,
-  },
-  {
-    id: 27,
-    firstName: "Hugo",
-    lastName: "Maldonado",
-    email: "hugo.maldonado@email.com",
-    periodo: "2022E",
-    modulo: "Arte",
-    estamento: "Cobertura",
-    tipo: "Relación Univalle",
-    estado: true,
-  },
-  {
-    id: 28,
-    firstName: "Mariana",
-    lastName: "Suárez",
-    email: "mariana.suarez@email.com",
-    periodo: "2020E",
-    modulo: "Literatura",
-    estamento: "Público",
-    tipo: "Particular",
-    estado: true,
-  },
-  {
-    id: 29,
-    firstName: "Cristian",
-    lastName: "Delgado",
-    email: "cristian.delgado@email.com",
-    periodo: "2024E",
-    modulo: "Música",
-    estamento: "Privado",
-    tipo: "Becado",
-    estado: false,
-  },
-  {
-    id: 30,
-    firstName: "Lorena",
-    lastName: "Cortés",
-    email: "lorena.cortes@email.com",
-    periodo: "2021F",
-    modulo: "Informática",
-    estamento: "Cobertura",
-    tipo: "Relación Univalle",
-    estado: true,
-  },
 ];
 
 const columnsOfertas: GridColDef[] = [
@@ -405,7 +174,7 @@ const columnsOfertas: GridColDef[] = [
   },
 ];
 
-const rowsOfertas = [
+const rowsOfertasII = [
   {
     id: 1,
     nombre: "2025A",
@@ -443,6 +212,142 @@ const rowsOfertas = [
     estado: true,
   },
 ];
+
+
+const rowsOfertas = [
+  {
+    id: 1,
+    id_oferta_academica: 1,
+    nombre: "Oferta Semestre 2025-I",
+    fecha_inicio: "2025-02-15",
+    estado: "Activa",
+    categorias: [
+      {
+        id_oferta_categoria: 101,
+        id_categoria: 1,
+        nombre_categoria: "Módulos por área",
+        precio_publico: 150000,
+        precio_privado: 180000,
+        precio_relacion_univalle: 120000,
+        fecha_finalizacion: "2025-06-30",
+        modulos: [
+          {
+            id_modulo_oferta: 1001,
+            id_modulo: 1,
+            nombre_modulo: "Enteros",
+            id_area: 2,
+            nombre_area: "Matemáticas"
+          },
+          {
+            id_modulo_oferta: 1002,
+            id_modulo: 3,
+            nombre_modulo: "Geometria Analitica",
+            id_area: 2,
+            nombre_area: "Matemáticas"
+          }
+        ]
+      },
+      {
+        id_oferta_categoria: 102,
+        id_categoria: 2,
+        nombre_categoria: "NAS Presencial",
+        precio_publico: 200000,
+        precio_privado: 250000,
+        precio_relacion_univalle: 170000,
+        fecha_finalizacion: "2025-06-30",
+        modulos: [
+          {
+            id_modulo_oferta: 1003,
+            id_modulo: 6,
+            nombre_modulo: "Ingles",
+            id_area: 3,
+            nombre_area: "Lenguaje"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 2,
+    id_oferta_academica: 2,
+    nombre: "Cursos de verano 2025",
+    fecha_inicio: "2025-07-10",
+    estado: "Próxima",
+    categorias: [
+      {
+        id_oferta_categoria: 201,
+        id_categoria: 4,
+        nombre_categoria: "Otros",
+        precio_publico: 100000,
+        precio_privado: 130000,
+        precio_relacion_univalle: 80000,
+        fecha_finalizacion: "2025-08-25",
+        modulos: [
+          {
+            id_modulo_oferta: 2001,
+            id_modulo: 7,
+            nombre_modulo: "Taller Infantil",
+            id_area: 5,
+            nombre_area: "Arte"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 3,
+    id_oferta_academica: 3,
+    nombre: "Preparación ICFES 2025",
+    fecha_inicio: "2025-03-01",
+    estado: "Activa",
+    categorias: [
+      {
+        id_oferta_categoria: 301,
+        id_categoria: 2,
+        nombre_categoria: "NAS Presencial",
+        precio_publico: 220000,
+        precio_privado: 270000,
+        precio_relacion_univalle: 180000,
+        fecha_finalizacion: "2025-05-30",
+        modulos: [
+          {
+            id_modulo_oferta: 3001,
+            id_modulo: 2,
+            nombre_modulo: "Trigonometria",
+            id_area: 2,
+            nombre_area: "Matemáticas"
+          },
+          {
+            id_modulo_oferta: 3002,
+            id_modulo: 4,
+            nombre_modulo: "Logica",
+            id_area: 2,
+            nombre_area: "Matemáticas"
+          }
+        ]
+      },
+      {
+        id_oferta_categoria: 302,
+        id_categoria: 3,
+        nombre_categoria: "NAS Virtual",
+        precio_publico: 190000,
+        precio_privado: 230000,
+        precio_relacion_univalle: 150000,
+        fecha_finalizacion: "2025-05-30",
+        modulos: [
+          {
+            id_modulo_oferta: 3003,
+            id_modulo: 5,
+            nombre_modulo: "Funciones",
+            id_area: 2,
+            nombre_area: "Matemáticas"
+          }
+        ]
+      }
+    ]
+  }
+];
+
 
 const paginationModel = { page: 0, pageSize: 20 };
 

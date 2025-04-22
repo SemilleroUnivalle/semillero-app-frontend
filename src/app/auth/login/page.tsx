@@ -46,7 +46,7 @@ export default function Login() {
     setIsLoading(true); // Activar indicador de carga
 
     try {
-      const response = await fetch(`${API_BASE_URL}/student/login/`, {
+      const response = await fetch(`${API_BASE_URL}/login/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

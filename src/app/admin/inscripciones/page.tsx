@@ -13,6 +13,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import axios from "axios";
+import { API_BASE_URL } from "../../../../config";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 
 const columns: GridColDef[] = [
@@ -61,7 +62,7 @@ export default function Page() {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "http://54.234.86.157:8080/student/student/",
+          `${API_BASE_URL}/estudiante/est/`,
         );
         const estudiantes = response.data;
 
