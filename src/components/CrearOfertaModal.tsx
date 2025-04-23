@@ -16,13 +16,17 @@ import {
 } from "@mui/material";
 
 import React from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { API_BASE_URL } from "../../config";
+
 
 interface CrearOfertaModalProps {
   open: boolean;
   onClose: () => void;
 }
 
-const categorias = [
+const categorias2 = [
   "Módulos por área",
   "NAS Presencial",
   "NAS Virtual",
@@ -45,6 +49,37 @@ export default function CrearOfertaModal({
 }: CrearOfertaModalProps) {
   // Estado mínimo necesario para que el Select múltiple funcione
   const [selectedCursos, setSelectedCursos] = React.useState<number[]>([]);
+
+  const [categorias, setCategorias] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(
+          `${API_BASE_URL}/categoria/cat/`,
+          {
+            headers: {
+              Authorization: `Token ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        const categoria = response.data;
+
+        const formateado = categoria.map((cat: any) => ({
+          id: cat.id_categoria,
+          nombre: cat.nombre,
+          descripcion: cat.descripcion,
+        }));
+
+        setCategorias(formateado);
+        console.log("Categorias", formateado);
+      } catch (error) {
+        console.error("Error al obtener las categorias", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <Modal
@@ -86,8 +121,8 @@ export default function CrearOfertaModal({
             <h2>Cursos</h2>
 
             {categorias.map((categoria) => (
-              <Box key={categoria} borderRadius={2}>
-                <FormLabel className="font-semibold">{categoria}</FormLabel>
+              <Box key={categoria.id} borderRadius={2}>
+                <FormLabel className="font-semibold">{categoria.nombre}</FormLabel>
 
                 <FormControl className="inputs-textfield" fullWidth sx={{ mt: 2 }}>
                   <InputLabel>Cursos</InputLabel>

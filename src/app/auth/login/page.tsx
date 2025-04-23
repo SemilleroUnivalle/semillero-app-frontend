@@ -7,20 +7,16 @@ import { API_BASE_URL } from "../../../../config";
 
 // Definición del tipo para los datos del formulario
 interface LoginFormData {
-  numero_identificacion: string;
-  password: string;
+  numero_documento: string;
+  contrasena: string;
 }
 
 // Definición del tipo para la respuesta del backend
 interface LoginResponse {
   refresh: string;
   access: string;
-  id: number;
-  nombre: string;
-  apellido: string;
-  numero_identificacion: string;
-  email: string;
-  registration_phase: number;
+  token: string;
+  tipo_usuario: string;
 }
 
 export default function Login() {
@@ -28,8 +24,8 @@ export default function Login() {
 
   // Estado para manejar los datos del formulario
   const [formData, setFormData] = useState<LoginFormData>({
-    numero_identificacion: "",
-    password: "",
+    numero_documento: "",
+    contrasena: "",
   });
 
   // Estado para manejar el indicador de carga
@@ -58,16 +54,18 @@ export default function Login() {
         const data: LoginResponse = await response.json();
 
         // Almacenar tokens en cookies o localStorage (según tu preferencia)
-        document.cookie = `access=${data.access}; path=/; secure; samesite=strict`;
-        document.cookie = `refresh=${data.refresh}; path=/; secure; samesite=strict`;
+        localStorage.setItem("access", data.access);
+        localStorage.setItem("refresh", data.refresh);
+        localStorage.setItem("token", data.token);
+        console.log("Token almacenado:", data.token);
 
         // Almacenar información adicional del usuario en localStorage (opcional)
         localStorage.setItem("user", JSON.stringify(data));
 
         // Redirigir según el tipo de usuario o fase de registro
-        if (data.numero_identificacion === "12345") {
+        if (data.tipo_usuario === "administrador") {
           router.push("/admin/inicio"); // Página de admin
-        } else if (data.registration_phase === 1) {
+        } else if (1 === 1) {
           router.push("/estudiante/perfil"); // Página para completar registro
         } else {
           router.push("/estudiante/inicio"); // Página principal del estudiante
@@ -96,9 +94,9 @@ export default function Login() {
         <input
           placeholder="Documento de identidad"
           type="text"
-          name="numero_identificacion"
-          id="numero_identificacion"
-          value={formData.numero_identificacion}
+          name="numero_documento"
+          id="numero_documento"
+          value={formData.numero_documento}
           onChange={handleChange}
           required
           className="text-md peer mt-6 w-3/4 rounded-2xl border border-gray-300 px-4 py-2 text-center focus:outline-none focus:ring-2 focus:ring-[#C20E1A]"
@@ -106,10 +104,10 @@ export default function Login() {
 
         {/* Campo Contraseña */}
         <input
-          type="password"
-          name="password"
-          id="password"
-          value={formData.password}
+          type="contrasena"
+          name="contrasena"
+          id="contrasena"
+          value={formData.contrasena}
           onChange={handleChange}
           placeholder="Contraseña"
           required

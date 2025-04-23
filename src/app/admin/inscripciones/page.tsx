@@ -22,36 +22,33 @@ const columns: GridColDef[] = [
   { field: "nombre", headerName: "Nombres", width: 130 },
   { field: "email", headerName: "Correo Electrónico", width: 130 },
   {
-    field: "numero_identificacion",
-    headerName: "Numero de Identificación",
+    field: "periodo",
+    headerName: "Periodo",
     width: 130,
   },
   {
-    field: "direccion",
-    headerName: "Direccion",
+    field: "modulo",
+    headerName: "Módulo",
     width: 130,
-    // type: "boolean",
+  },
+  {
+    field: "estamento",
+    headerName: "Estamento",
+    width: 130,
+  },
+  {
+    field: "tipo",
+    headerName: "Tipo de Inscrito",
+    width: 130,
+  },
+  {
+    field: "estado",
+    headerName: "Estado",
+    width: 130,
+    type: "boolean",
   },
 ];
 
-const rows = [
-  {
-    id: 1,
-    lastName: "Pérez",
-    firstName: "Carlos",
-    email: "carlos.perez@email.com",
-    age: "Matemáticas",
-    estado: true,
-  },
-  {
-    id: 2,
-    lastName: "Gómez",
-    firstName: "Ana",
-    email: "ana.gomez@email.com",
-    age: "Ciencias",
-    estado: false,
-  },
-];
 
 const paginationModel = { page: 0, pageSize: 20 };
 
@@ -62,17 +59,21 @@ export default function Page() {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          `${API_BASE_URL}/estudiante/est/`,
+          `https://jsonplaceholder.typicode.com/users`,
         );
         const estudiantes = response.data;
 
         const formateado = estudiantes.map((student: any) => ({
           id: student.id,
-          apellido: student.apellido,
-          nombre: student.nombre,
+          apellido: student.username,
+          nombre: student.name,
           email: student.email,
-          numero_identificacion: student.numero_identificacion || "Sin asignar",
-          direccion: student.direccion,
+          direccion: student.address,
+          periodo: student.address.city,
+          modulo: student.address.street,
+          estamento: student.address.suite,
+          tipo: student.address.zipcode,
+          estado: true,
         }));
 
         setRows(formateado);
@@ -83,6 +84,33 @@ export default function Page() {
 
     fetchData();
   }, []);
+
+
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         `${API_BASE_URL}/estudiante/est/`,
+  //       );
+  //       const estudiantes = response.data;
+
+  //       const formateado = estudiantes.map((student: any) => ({
+  //         id: student.id,
+  //         apellido: student.apellido,
+  //         nombre: student.nombre,
+  //         email: student.email,
+  //         numero_identificacion: student.numero_identificacion || "Sin asignar",
+  //         direccion: student.direccion,
+  //       }));
+
+  //       setRows(formateado);
+  //     } catch (error) {
+  //       console.error("Error al obtener los datos de los estudiantes:", error);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, []);
 
   // Filtros
 
@@ -129,6 +157,7 @@ export default function Page() {
   };
 
   const filteredRows = React.useMemo(() => {
+    if (rows.length === 0) return rows;
     return rows.filter((row) => {
       const periodoMatch =
         selectedPeriodos.length === 0 || selectedPeriodos.includes(row.periodo);
@@ -156,6 +185,7 @@ export default function Page() {
       );
     });
   }, [
+    rows,
     selectedPeriodos,
     selectedModulos,
     selectedEstamento,
@@ -278,7 +308,7 @@ export default function Page() {
           sx={{ height: 800, width: "100%" }}
         >
           <DataGrid
-            rows={rows}
+            rows={filteredRows}
             columns={columns}
             initialState={{ pagination: { paginationModel } }}
             pageSizeOptions={[20, 40]}
