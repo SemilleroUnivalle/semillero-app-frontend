@@ -49,6 +49,8 @@ export default function CrearOfertaModal({
 }: CrearOfertaModalProps) {
   // Estado mínimo necesario para que el Select múltiple funcione
   const [selectedCursos, setSelectedCursos] = React.useState<number[]>([]);
+  const [selectedCursosPorCategoria, setSelectedCursosPorCategoria] = React.useState<Record<number, number[]>>({});
+
 
   const [categorias, setCategorias] = useState<any[]>([]);
 
@@ -80,6 +82,12 @@ export default function CrearOfertaModal({
 
     fetchData();
   }, []);
+
+  const handleCursoChange = (categoriaId: number, selected: number[]) => {
+    setSelectedCursosPorCategoria((prev) => ({
+      ...prev,
+      [categoriaId]: selected,
+    }));}
 
   return (
     <Modal
@@ -130,7 +138,7 @@ export default function CrearOfertaModal({
                     multiple
                     value={selectedCursos}
                     onChange={(e) =>
-                      setSelectedCursos(e.target.value as number[])
+                      handleCursoChange(categoria.id, e.target.value as number[])
                     }
                     input={<OutlinedInput label="Cursos" />}
                     renderValue={(selected) =>
