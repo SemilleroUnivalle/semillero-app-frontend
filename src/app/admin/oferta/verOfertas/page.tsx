@@ -1,26 +1,10 @@
-
 "use client";
 
 import * as React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import Link from "next/link";
-import {
-  Button,
-  Paper,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  SelectChangeEvent,
-  Checkbox,
-  ListItemText,
-} from "@mui/material";
-import {
-  GridColDef,
-  DataGrid,
-  GridRowParams,
-} from "@mui/x-data-grid";
+import { Paper } from "@mui/material";
+import { GridColDef, DataGrid, GridRowParams } from "@mui/x-data-grid";
 import ModificarOfertaModal from "@/components/ModificarOfertaModal";
 
 const columns: GridColDef[] = [
@@ -67,7 +51,7 @@ const rowsII = [
     estamento: "Público",
     tipo: "Particular",
     estado: true,
-  }
+  },
 ];
 
 const columnsOfertas: GridColDef[] = [
@@ -85,13 +69,10 @@ const columnsOfertas: GridColDef[] = [
   // },
 ];
 
-
 const paginationModel = { page: 0, pageSize: 20 };
 
 export default function Page() {
-
-    const [rows, setRows] = useState<any[]>([]);
-  
+  const [rows, setRows] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -150,14 +131,12 @@ export default function Page() {
     setOpenModificarOfertaModal(true);
   };
 
-
-
   return (
     <div>
-    {/* Contenedor de ofertas */}
+      {/* Contenedor de ofertas */}
 
-     <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 shadow-md">
-       {/* <input
+      <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 shadow-md">
+        {/* <input
          type="text"
          placeholder="Buscar..."
          value={searchText}
@@ -165,50 +144,50 @@ export default function Page() {
          className="mb-4 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm focus:border-primary focus:outline-none sm:w-1/3"
        /> */}
 
-       <Paper
-         className="border-none shadow-none"
-         sx={{ height: 500, width: "100%" }}
-       >
-         <DataGrid
-           rows={rows}
-           columns={columnsOfertas}
-           initialState={{ pagination: { paginationModel } }}
-           onRowClick={handleOpenModificarOfertaModal}
-           pageSizeOptions={[20, 40]}
-           sx={{ border: 0 }}
-           localeText={{
-             // 📌 Traducciones básicas en español
-             noRowsLabel: "No hay filas",
-             columnMenuSortAsc: "Ordenar ascendente",
-             columnMenuSortDesc: "Ordenar descendente",
-             columnMenuFilter: "Filtrar",
-             columnMenuHideColumn: "Ocultar columna",
-             columnMenuShowColumns: "Mostrar columnas",
-             toolbarDensity: "Densidad",
-             toolbarDensityLabel: "Densidad",
-             toolbarDensityCompact: "Compacta",
-             toolbarDensityStandard: "Estándar",
-             toolbarDensityComfortable: "Cómoda",
-             MuiTablePagination: {
-               labelDisplayedRows: ({ from, to, count }) =>
-                 `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`,
-               labelRowsPerPage: "Filas por página:",
-             },
-           }}
-         />
-       </Paper>
+        <Paper
+          className="border-none shadow-none"
+          sx={{ height: 500, width: "100%" }}
+        >
+          <DataGrid
+            rows={rows}
+            columns={columnsOfertas}
+            initialState={{ pagination: { paginationModel } }}
+            onRowClick={handleOpenModificarOfertaModal}
+            pageSizeOptions={[20, 40]}
+            sx={{ border: 0 }}
+            localeText={{
+              // 📌 Traducciones básicas en español
+              noRowsLabel: "No hay filas",
+              columnMenuSortAsc: "Ordenar ascendente",
+              columnMenuSortDesc: "Ordenar descendente",
+              columnMenuFilter: "Filtrar",
+              columnMenuHideColumn: "Ocultar columna",
+              columnMenuShowColumns: "Mostrar columnas",
+              toolbarDensity: "Densidad",
+              toolbarDensityLabel: "Densidad",
+              toolbarDensityCompact: "Compacta",
+              toolbarDensityStandard: "Estándar",
+              toolbarDensityComfortable: "Cómoda",
+              MuiTablePagination: {
+                labelDisplayedRows: ({ from, to, count }) =>
+                  `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`,
+                labelRowsPerPage: "Filas por página:",
+              },
+            }}
+          />
+        </Paper>
 
-       <ModificarOfertaModal
-         open={openModificarOfertaModal}
-         onClose={() => setOpenModificarOfertaModal(false)}
-         data={ofertaSeleccionada}
-       />
-     </div>
+        <ModificarOfertaModal
+          open={openModificarOfertaModal}
+          onClose={() => setOpenModificarOfertaModal(false)}
+          data={ofertaSeleccionada}
+        />
+      </div>
 
-     {/* Contenedor de Inscripciones */}
+      {/* Contenedor de Inscripciones */}
 
-     <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 shadow-md">
-       {/* <input
+      <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 shadow-md">
+        {/* <input
          type="text"
          placeholder="Buscar..."
          value={searchText}
@@ -216,38 +195,38 @@ export default function Page() {
          className="mb-4 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm focus:border-primary focus:outline-none sm:w-1/3"
        /> */}
 
-       <Paper
-         className="border-none shadow-none"
-         sx={{ height: 500, width: "100%" }}
-       >
-         <DataGrid
-           rows={rowsII}
-           columns={columns}
-           initialState={{ pagination: { paginationModel } }}
-           pageSizeOptions={[20, 40]}
-           sx={{ border: 0 }}
-           localeText={{
-             // 📌 Traducciones básicas en español
-             noRowsLabel: "No hay filas",
-             columnMenuSortAsc: "Ordenar ascendente",
-             columnMenuSortDesc: "Ordenar descendente",
-             columnMenuFilter: "Filtrar",
-             columnMenuHideColumn: "Ocultar columna",
-             columnMenuShowColumns: "Mostrar columnas",
-             toolbarDensity: "Densidad",
-             toolbarDensityLabel: "Densidad",
-             toolbarDensityCompact: "Compacta",
-             toolbarDensityStandard: "Estándar",
-             toolbarDensityComfortable: "Cómoda",
-             MuiTablePagination: {
-               labelDisplayedRows: ({ from, to, count }) =>
-                 `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`,
-               labelRowsPerPage: "Filas por página:",
-             },
-           }}
-         />
-       </Paper>
-     </div>
-   </div>
+        <Paper
+          className="border-none shadow-none"
+          sx={{ height: 500, width: "100%" }}
+        >
+          <DataGrid
+            rows={rowsII}
+            columns={columns}
+            initialState={{ pagination: { paginationModel } }}
+            pageSizeOptions={[20, 40]}
+            sx={{ border: 0 }}
+            localeText={{
+              // 📌 Traducciones básicas en español
+              noRowsLabel: "No hay filas",
+              columnMenuSortAsc: "Ordenar ascendente",
+              columnMenuSortDesc: "Ordenar descendente",
+              columnMenuFilter: "Filtrar",
+              columnMenuHideColumn: "Ocultar columna",
+              columnMenuShowColumns: "Mostrar columnas",
+              toolbarDensity: "Densidad",
+              toolbarDensityLabel: "Densidad",
+              toolbarDensityCompact: "Compacta",
+              toolbarDensityStandard: "Estándar",
+              toolbarDensityComfortable: "Cómoda",
+              MuiTablePagination: {
+                labelDisplayedRows: ({ from, to, count }) =>
+                  `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`,
+                labelRowsPerPage: "Filas por página:",
+              },
+            }}
+          />
+        </Paper>
+      </div>
+    </div>
   );
 }

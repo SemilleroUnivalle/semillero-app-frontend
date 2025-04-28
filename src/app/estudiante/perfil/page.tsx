@@ -272,7 +272,7 @@ export default function Perfil() {
         <title>Inicio | Mi Proyecto</title>
       </Head>
 
-      <h2 className="text-center text-lg font-semibold text-primary">
+      <h2 className="text-center font-semibold text-primary">
         Tu información
       </h2>
 
