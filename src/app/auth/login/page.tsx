@@ -104,7 +104,7 @@ export default function Login() {
 
         {/* Campo Contraseña */}
         <input
-          type="contrasena"
+          type="password"
           name="contrasena"
           id="contrasena"
           value={formData.contrasena}

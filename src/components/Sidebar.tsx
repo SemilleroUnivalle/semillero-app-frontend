@@ -4,6 +4,7 @@ import {
   UsersIcon,
   TagIcon,
   HomeIcon,
+  BookOpenIcon,
 } from "@heroicons/react/24/outline";
 
 import Link from "next/link";
@@ -17,8 +18,13 @@ const links = [
     icon: UsersIcon,
   },
   {
+    name: "Cursos",
+    href: "/admin/cursos/verCursos",
+    icon: BookOpenIcon,
+  },
+  {
     name: "Oferta Académica",
-    href: "/admin/oferta",
+    href: "/admin/oferta/verOfertas",
     icon: TagIcon,
   },
 ];
@@ -33,7 +39,7 @@ export default function NavLinks() {
           <Link
             key={link.name}
             href={link.href}
-            className={`flex grow my-1 items-center justify-center gap-4 rounded-lg p-3 text-md font-medium text-[#575757] hover:bg-[#C20E1A] hover:text-white md:flex-none md:justify-start md:p-2 md:px-3 ${pathname === link.href ? "bg-[#C20E1A] text-gray-50" : ""} `}
+            className={`text-md my-1 flex grow items-center justify-center gap-4 rounded-lg p-3 font-medium text-[#575757] hover:bg-[#C20E1A] hover:text-white md:flex-none md:justify-start md:p-2 md:px-3 ${pathname === link.href ? "bg-[#C20E1A] text-gray-50" : ""} `}
           >
             <LinkIcon className="w-5" />
             <p className="hidden font-bold md:block">{link.name}</p>
