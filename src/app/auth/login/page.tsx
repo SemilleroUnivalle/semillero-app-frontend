@@ -65,15 +65,13 @@ export default function Login() {
         // Redirigir según el tipo de usuario o fase de registro
         if (data.tipo_usuario === "administrador") {
           router.push("/admin/inicio"); // Página de admin
-        } else if (1 === 1) {
-          router.push("/estudiante/perfil"); // Página para completar registro
         } else {
           router.push("/estudiante/inicio"); // Página principal del estudiante
         }
 
         console.log("Inicio de sesión exitoso");
       } else if (response.status === 401) {
-        alert("Credenciales incorrectas. Por favor verifica tus datos.");
+        alert("Credenciales incorrectas. Por favor, verifica tus datos.");
       } else {
         alert("Hubo un problema en el servidor. Intenta nuevamente más tarde.");
       }

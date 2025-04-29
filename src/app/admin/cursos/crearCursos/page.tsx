@@ -177,6 +177,43 @@ export default function CrearCursos() {
             onChange={handleChange}
           />
 
+{/* Campo selector de categoria */}
+<FormControl className="inputs-textfield w-full">
+            <InputLabel id="categoria_curso">Categoría</InputLabel>
+            <Select
+              labelId="categoria_curso"
+              id="categoria_curso"
+              name="id_categoria"
+              label="categoria_curso"
+              value={formData.id_categoria}
+              onChange={handleChange}
+              required
+            >
+              {/* Opciones de categoria */}
+              {categorias.map((cat) => (
+                <MenuItem key={cat.id_categoria} value={cat.id_categoria}>
+                  {cat.nombre}
+                </MenuItem>
+              ))}
+              <MenuItem value={"Otra"}>Otra</MenuItem>
+            </Select>
+          </FormControl>
+
+          {/* Campo para especificar otra área */}
+          {formData.id_categoria === "Otra" && (
+            <TextField
+              className="inputs-textfield w-full"
+              label="Especificar Categoría"
+              name="otra_categoria"
+              variant="outlined"
+              type="text"
+              value={otraCategoria}
+              onChange={(e) => setOtraCategoria(e.target.value)} // Actualiza el estado con el valor del campo de texto
+              fullWidth
+              required
+            />
+          )}
+
           {/* Campo selector de area */}
           <FormControl className="inputs-textfield w-full">
             <InputLabel id="area_curso">Área</InputLabel>
@@ -214,42 +251,6 @@ export default function CrearCursos() {
             />
           )}
 
-          {/* Campo selector de categoria */}
-          <FormControl className="inputs-textfield w-full">
-            <InputLabel id="categoria_curso">Categoría</InputLabel>
-            <Select
-              labelId="categoria_curso"
-              id="categoria_curso"
-              name="id_categoria"
-              label="categoria_curso"
-              value={formData.id_categoria}
-              onChange={handleChange}
-              required
-            >
-              {/* Opciones de categoria */}
-              {categorias.map((cat) => (
-                <MenuItem key={cat.id_categoria} value={cat.id_categoria}>
-                  {cat.nombre}
-                </MenuItem>
-              ))}
-              <MenuItem value={"Otra"}>Otra</MenuItem>
-            </Select>
-          </FormControl>
-
-          {/* Campo para especificar otra área */}
-          {formData.id_categoria === "Otra" && (
-            <TextField
-              className="inputs-textfield w-full"
-              label="Especificar Categoría"
-              name="otra_categoria"
-              variant="outlined"
-              type="text"
-              value={otraCategoria}
-              onChange={(e) => setOtraCategoria(e.target.value)} // Actualiza el estado con el valor del campo de texto
-              fullWidth
-              required
-            />
-          )}
 
           {/* Campo descripción */}
           <TextField
