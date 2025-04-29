@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Paper } from "@mui/material";
 import { GridColDef, DataGrid, GridRowParams } from "@mui/x-data-grid";
-import ModificarOfertaModal from "@/components/ModificarOfertaModal";
+import { useRouter } from "next/navigation";
 
 const columns: GridColDef[] = [
   { field: "id", headerName: "ID", width: 70 },
@@ -72,6 +72,8 @@ const columnsOfertas: GridColDef[] = [
 const paginationModel = { page: 0, pageSize: 20 };
 
 export default function Page() {
+  const router = useRouter();
+
   const [rows, setRows] = useState<any[]>([]);
 
   useEffect(() => {
@@ -91,6 +93,7 @@ export default function Page() {
           pagina_web: data.website,
           lat: data.address.geo.lat,
           lng: data.address.geo.lng,
+          _original: data,
         }));
 
         setRows(formateado);
@@ -122,14 +125,6 @@ export default function Page() {
   //   setFilteredRows(filtered);
   // };
 
-  // Modal para modificar oferta
-  const [openModificarOfertaModal, setOpenModificarOfertaModal] =
-    React.useState(false);
-  const [ofertaSeleccionada, setOfertaSeleccionada] = React.useState(null);
-  const handleOpenModificarOfertaModal = (params: GridRowParams) => {
-    setOfertaSeleccionada(params.row); // Esto guarda la fila completa
-    setOpenModificarOfertaModal(true);
-  };
 
   return (
     <div>
@@ -152,7 +147,11 @@ export default function Page() {
             rows={rows}
             columns={columnsOfertas}
             initialState={{ pagination: { paginationModel } }}
-            onRowClick={handleOpenModificarOfertaModal}
+            onRowClick={(params) => {
+              const fullData = params.row._original;
+              localStorage.setItem('ofertaSeleccionada', JSON.stringify(fullData)); 
+              router.push('/admin/oferta/modificarOfertas/'); 
+            }}
             pageSizeOptions={[20, 40]}
             sx={{ border: 0 }}
             localeText={{
@@ -177,11 +176,6 @@ export default function Page() {
           />
         </Paper>
 
-        <ModificarOfertaModal
-          open={openModificarOfertaModal}
-          onClose={() => setOpenModificarOfertaModal(false)}
-          data={ofertaSeleccionada}
-        />
       </div>
 
       {/* Contenedor de Inscripciones */}

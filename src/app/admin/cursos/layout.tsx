@@ -2,7 +2,7 @@ import { StyledEngineProvider } from "@mui/material/styles";
 import Link from "next/link";
 import { Button } from "@mui/material";
 
-export default function LayoutAdmin({
+export default function LayoutCursos({
   children,
 }: {
   children: React.ReactNode;
@@ -10,7 +10,7 @@ export default function LayoutAdmin({
   return (
     <StyledEngineProvider injectFirst>
       <div className="flex flex-col">
-        <h1>Oferta Académica</h1>
+        <h1>Catálogo de cursos</h1>
 
         {/* Contenedor de botones para crear ofertas y cursos */}
         <div className="mx-auto my-4 flex w-11/12 flex-wrap justify-around gap-2">
@@ -18,7 +18,6 @@ export default function LayoutAdmin({
             <Button
               className="w-full rounded-2xl bg-white p-4 capitalize text-secondary hover:bg-primary hover:text-white"
               variant="contained"
-              // onClick={handleOpenOfertaModal}
             >
               Ver Cursos
             </Button>
@@ -27,7 +26,6 @@ export default function LayoutAdmin({
             <Button
               className="w-full rounded-2xl bg-white p-4 capitalize text-secondary hover:bg-primary hover:text-white"
               variant="contained"
-              // onClick={handleOpenOfertaModal}
             >
               Crear Cursos
             </Button>

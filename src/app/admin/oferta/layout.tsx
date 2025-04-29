@@ -2,7 +2,7 @@ import { StyledEngineProvider } from "@mui/material/styles";
 import Link from "next/link";
 import { Button } from "@mui/material";
 
-export default function LayoutAdmin({
+export default function LayoutOferta({
   children,
 }: {
   children: React.ReactNode;

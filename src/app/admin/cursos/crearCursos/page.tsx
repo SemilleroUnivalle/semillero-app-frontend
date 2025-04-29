@@ -15,7 +15,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 
-export default function CrearCursoModal() {
+export default function CrearCursos() {
   const [areas, setAreas] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
 

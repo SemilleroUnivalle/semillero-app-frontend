@@ -13,17 +13,42 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 
-export default function CrearCursoModal() {
+export default function _ModificarCursos() {
+
+  // Obtener el curso seleccionado del localStorage
+  // y guardarlo en el estado del componente
+  const [curso, setCurso] = useState<any>(null);
+
+  useEffect(() => {
+    const storedCurso = localStorage.getItem("cursoSeleccionado");
+    if (storedCurso) {
+      setCurso(JSON.parse(storedCurso));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (curso) {
+      setFormData({
+        nombre_modulo: curso.nombre || "",
+        descripcion_curso: curso.descripcion || "",
+        id_area: curso.area || "",
+        id_categoria: curso.categoria || "",
+      });
+    }
+  }, [curso]);
+
   const [areas, setAreas] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
 
   const [otraArea, setOtraArea] = useState<string>(""); // Para especificar otra área
-  const [otraCategoria, setOtraCategoria] = useState<string>(""); // Para especificar otra
+  const [otraCategoria, setOtraCategoria] = useState<string>(""); // Para especificar otra categoría
+
+  // Estado para manejar los datos del formulario
   const [formData, setFormData] = useState({
-    nombre_modulo: "",
-    descripcion_curso: "",
-    id_area: "",
-    id_categoria: "",
+    nombre_modulo:"", // Usar el nombre del curso seleccionado
+    descripcion_curso:"", // Usar la descripción del curso seleccionado
+    id_area: "", // Usar el área del curso seleccionado
+    id_categoria: "", // Usar la categoría del curso seleccionado
   });
 
   // Manejar cambios en los campos del formulario
@@ -153,8 +178,8 @@ export default function CrearCursoModal() {
   }, []);
 
   return (
-    <div className="mx-auto mt-4 py-2 flex w-11/12 flex-col items-center justify-center rounded-2xl bg-white p-1 shadow-md">
-      <h2 className="mb-2 text-center">Crear curso</h2>
+    <div className="mx-auto mt-4 py-2 flex w-11/12 flex-col items-center justify-center rounded-2xl bg-white p-4 shadow-md">
+      <h2 className="mb-2 text-center">Modificar curso</h2>
       <div className="w-full sm:w-1/3">
         <form
           action=""
@@ -269,7 +294,7 @@ export default function CrearCursoModal() {
             variant="contained"
             className="text-md mt-4 w-full rounded-2xl bg-primary font-semibold capitalize text-white hover:bg-red-800"
           >
-            Crear Curso
+            Editar curso
           </Button>
         </form>
       </div>

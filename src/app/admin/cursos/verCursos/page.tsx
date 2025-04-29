@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Paper } from "@mui/material";
 import { GridColDef, DataGrid, GridRowParams } from "@mui/x-data-grid";
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 
 const columnsOfertas: GridColDef[] = [
@@ -25,7 +25,7 @@ const columnsOfertas: GridColDef[] = [
 
 const paginationModel = { page: 0, pageSize: 20 };
 
-export default function verCursos() {
+export default function VerCursos() {
   const router = useRouter();
   const [rows, setRows] = useState<any[]>([]);
 
@@ -98,7 +98,7 @@ export default function verCursos() {
             onRowClick={(params) => {
               const rowData = params.row;
               localStorage.setItem('cursoSeleccionado', JSON.stringify(rowData)); // 👉 Guarda la fila completa como JSON
-              router.push('/modificarCursos'); // 👉 Navega a la pantalla de modificar
+              router.push('/admin/cursos/modificarCursos/'); // 👉 Navega a la pantalla de modificar
             }}
             pageSizeOptions={[20, 40]}
             sx={{
