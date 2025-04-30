@@ -6,6 +6,7 @@ import axios from "axios";
 import { Paper } from "@mui/material";
 import { GridColDef, DataGrid, GridRowParams } from "@mui/x-data-grid";
 import { useRouter } from 'next/navigation';
+import { API_BASE_URL } from "../../../../../config";
 
 
 const columnsOfertas: GridColDef[] = [
@@ -33,21 +34,25 @@ export default function VerCursos() {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          `https://jsonplaceholder.typicode.com/users`,
+          `${API_BASE_URL}/modulo/mod/`, {
+            headers: {
+              Authorization: `Token ${localStorage.getItem("token")}`,
+            },
+          }
         );
         const res = response.data;
 
         const formateado = res.map((data: any) => ({
-          id: data.id,
-          nombre: data.name,
-          area: data.username,
-          categoria: data.email,
-          descripcion: data.website,
+          id: data.id_modulo,
+          nombre: data.nombre_modulo,
+          area: data.id_area,
+          categoria: data.activo,
+          descripcion: "descripcion",
         }));
 
         setRows(formateado);
       } catch (error) {
-        console.error("Error al obtener los datos de los estudiantes:", error);
+        console.error("Error al obtener las areas:", error);
       }
     };
 
