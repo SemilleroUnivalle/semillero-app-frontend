@@ -10,6 +10,8 @@ import {
   FormLabel,
   Select,
   InputLabel,
+  FormGroup,
+  FormControlLabel,
   MenuItem,
   Checkbox,
 } from "@mui/material";
@@ -18,7 +20,6 @@ import React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
-
 
 export default function CrearOferta() {
   // Estado mínimo necesario para que el Select múltiple funcione
@@ -89,127 +90,151 @@ export default function CrearOferta() {
   };
 
   return (
-    <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 shadow-md">
-        <h2 className="mb-2 text-center">Crear oferta</h2>
-        <div className="flex w-full flex-row items-center justify-center">
-          <form action="" method="post" className="space-y-4">
-            <div className="flex w-full flex-wrap justify-between gap-4 text-gray-600">
-              {/* Campo nombre de la oferta */}
-              <TextField
-                className="inputs-textfield flex w-full sm:w-1/3"
-                label="Nombre de la oferta"
-                name="nombre_oferta"
-                variant="outlined"
-                type="text"
+    <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-2 shadow-md">
+      <h2 className="mb-2 text-center">Crear oferta</h2>
+      <div className="flex w-full flex-row items-center justify-center sm:w-4/5 mx-auto">
+        <form action="" method="post" className="space-y-4">
+          <div className="flex w-full flex-wrap justify-between gap-4 text-gray-600">
+            {/* Campo nombre de la oferta */}
+            <TextField
+              className="inputs-textfield flex w-full sm:w-1/3"
+              label="Nombre de la oferta"
+              name="nombre_oferta"
+              variant="outlined"
+              type="text"
+              fullWidth
+              required
+            />
+            {/* Campo fecha de inicio de la oferta */}
+
+            <TextField
+              className="inputs-textfield flex w-full sm:w-1/3"
+              label="Fecha de inicio"
+              name="fecha_inicio"
+              variant="outlined"
+              type="date"
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+              required
+            />
+          </div>
+
+          <h2>Cursos</h2>
+
+          {categorias.map((categoria) => (
+            <Box className="border-b-2" key={categoria.id_categoria} borderRadius={2}>
+              <FormLabel className="font-semibold">
+                {categoria.nombre}
+              </FormLabel>
+
+
+              <FormGroup className="flex flex-row flex-wrap gap-2 justify-between">
+
+                {modulos
+                    // Filtra los módulos por categoría
+                    .map((curso) => (
+
+                      <FormControlLabel className="" control={<Checkbox />}
+                      label={curso.nombre_modulo} />
+
+
+                      // <MenuItem key={curso.id_modulo} value={curso.id_modulo}>
+                      //   <Checkbox
+                      //     checked={
+                      //       selectedCursosPorCategoria[
+                      //         categoria.id_categoria
+                      //       ]?.includes(curso.id_modulo) || false
+                      //     }
+                      //   />
+                      //   <ListItemText primary={curso.nombre_modulo} />
+                      // </MenuItem>
+                    ))}
+              </FormGroup>
+
+              <FormControl
+                className="inputs-textfield"
                 fullWidth
-                required
-              />
-              {/* Campo fecha de inicio de la oferta */}
-
-              <TextField
-                className="inputs-textfield flex w-full sm:w-1/3"
-                label="Fecha de inicio"
-                name="fecha_inicio"
-                variant="outlined"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-                required
-              />
-            </div>
-
-            <h2>Cursos</h2>
-
-            {categorias.map((categoria) => (
-              <Box key={categoria.id_categoria} borderRadius={2}>
-                <FormLabel className="font-semibold">
-                  {categoria.nombre}
-                </FormLabel>
-                <FormControl
-                  className="inputs-textfield"
-                  fullWidth
-                  sx={{ mt: 2 }}
-                >
-                  <InputLabel>Cursos</InputLabel>
-                  <Select
-                    multiple
-                    value={
-                      selectedCursosPorCategoria[categoria.id_categoria] || []
-                    }
-                    onChange={(e) =>
-                      handleCursoChange(
-                        categoria.id_categoria,
-                        e.target.value as number[],
+                sx={{ mt: 2 }}
+              >
+                <InputLabel>Cursos</InputLabel>
+                <Select
+                  multiple
+                  value={
+                    selectedCursosPorCategoria[categoria.id_categoria] || []
+                  }
+                  onChange={(e) =>
+                    handleCursoChange(
+                      categoria.id_categoria,
+                      e.target.value as number[],
+                    )
+                  }
+                  input={<OutlinedInput label="Cursos" />}
+                  renderValue={(selected) =>
+                    selected
+                      .map(
+                        (id) =>
+                          modulos.find((c) => c.id_modulo === id)
+                            ?.nombre_modulo,
                       )
-                    }
-                    input={<OutlinedInput label="Cursos" />}
-                    renderValue={(selected) =>
-                      selected
-                        .map(
-                          (id) =>
-                            modulos.find((c) => c.id_modulo === id)
-                              ?.nombre_modulo,
-                        )
-                        .filter(Boolean)
-                        .join(", ")
-                    }
-                  >
-                    {modulos
-                   // Filtra los módulos por categoría
-                      .map((curso) => (
-                        <MenuItem key={curso.id_modulo} value={curso.id_modulo}>
-                          <Checkbox
-                            checked={
-                              selectedCursosPorCategoria[
-                                categoria.id_categoria
-                              ]?.includes(curso.id_modulo) || false
-                            }
-                          />
-                          <ListItemText primary={curso.nombre_modulo} />
-                        </MenuItem>
-                      ))}
-                  </Select>
-                </FormControl>
+                      .filter(Boolean)
+                      .join(", ")
+                  }
+                >
+                  {modulos
+                    // Filtra los módulos por categoría
+                    .map((curso) => (
+                      <MenuItem key={curso.id_modulo} value={curso.id_modulo}>
+                        <Checkbox
+                          checked={
+                            selectedCursosPorCategoria[
+                              categoria.id_categoria
+                            ]?.includes(curso.id_modulo) || false
+                          }
+                        />
+                        <ListItemText primary={curso.nombre_modulo} />
+                      </MenuItem>
+                    ))}
+                </Select>
+              </FormControl>
 
-                <Box display="flex" gap={2} mt={2}>
-                  <TextField
-                    className="inputs-textfield"
-                    label="Precio Público"
-                    type="number"
-                  />
-                  <TextField
-                    className="inputs-textfield"
-                    label="Precio Privado"
-                    type="number"
-                  />
-                  <TextField
-                    className="inputs-textfield"
-                    label="Precio Relación Univalle"
-                    type="number"
-                  />
-                </Box>
-
+              <Box display="flex" gap={2} mt={2}>
                 <TextField
                   className="inputs-textfield"
-                  sx={{ mt: 2 }}
-                  type="date"
-                  label="Fecha de finalización"
-                  InputLabelProps={{ shrink: true }}
-                  fullWidth
+                  label="Precio Colegio Público"
+                  type="number"
+                />
+                <TextField
+                  className="inputs-textfield"
+                  label="Precio Colegio Privado"
+                  type="number"
+                />
+                <TextField
+                  className="inputs-textfield"
+                  label="Precio Relación Univalle"
+                  type="number"
                 />
               </Box>
-            ))}
 
-            <Button
-              type="submit"
-              variant="contained"
-              className="text-md mt-4 w-full rounded-2xl bg-primary font-semibold capitalize text-white hover:bg-red-800"
-            >
-              Crear oferta
-            </Button>
-          </form>
-        </div>
-    
- </div>
+              <TextField
+                className="inputs-textfield"
+                sx={{ mt: 2 }}
+                type="date"
+                label="Fecha de finalización"
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+              />
+            </Box>
+          ))}
+
+          <Button
+            type="submit"
+            variant="contained"
+            className="text-md mt-4 w-full rounded-2xl bg-primary font-semibold capitalize text-white hover:bg-red-800"
+          >
+            Crear oferta
+          </Button>
+        </form>
+      </div>
+    </div>
   );
 }
