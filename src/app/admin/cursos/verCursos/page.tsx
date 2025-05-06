@@ -12,8 +12,8 @@ import { API_BASE_URL } from "../../../../../config";
 const columnsOfertas: GridColDef[] = [
   { field: "id", headerName: "ID", width: 70 },
   { field: "nombre", headerName: "Nombre", width: 170 },
-  { field: "area", headerName: "Área", width: 170 },
   { field: "categoria", headerName: "Categoría", width: 170 },
+  { field: "area", headerName: "Área", width: 170 },
   { field: "descripcion", headerName: "Descripción", width: 170 },
   // { field: "username", headerName: "NAS Virtual", width: 130 },
   // {
@@ -45,8 +45,8 @@ export default function VerCursos() {
         const formateado = res.map((data: any) => ({
           id: data.id_modulo,
           nombre: data.nombre_modulo,
-          area: data.id_area,
-          categoria: data.activo,
+          area: data.id_area.nombre_area,
+          categoria: data.id_categoria.nombre,
           descripcion: "descripcion",
         }));
 

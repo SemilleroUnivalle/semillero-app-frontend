@@ -92,7 +92,7 @@ export default function CrearOferta() {
   return (
     <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-2 shadow-md">
       <h2 className="mb-2 text-center">Crear oferta</h2>
-      <div className="flex w-full flex-row items-center justify-center sm:w-4/5 mx-auto">
+      <div className="mx-auto flex w-full flex-row items-center justify-center sm:w-4/5">
         <form action="" method="post" className="space-y-4">
           <div className="flex w-full flex-wrap justify-between gap-4 text-gray-600">
             {/* Campo nombre de la oferta */}
@@ -122,82 +122,61 @@ export default function CrearOferta() {
           <h2>Cursos</h2>
 
           {categorias.map((categoria) => (
-            <Box className="border-b-2" key={categoria.id_categoria} borderRadius={2}>
+            <Box
+              className="border-b-2 border-primary p-3"
+              key={categoria.id_categoria}
+              borderRadius={2}
+            >
               <FormLabel className="font-semibold">
                 {categoria.nombre}
               </FormLabel>
 
-
-              <FormGroup className="flex flex-row flex-wrap gap-2 justify-between">
-
-                {modulos
-                    // Filtra los módulos por categoría
-                    .map((curso) => (
-
-                      <FormControlLabel className="" control={<Checkbox />}
-                      label={curso.nombre_modulo} />
-
-
-                      // <MenuItem key={curso.id_modulo} value={curso.id_modulo}>
-                      //   <Checkbox
-                      //     checked={
-                      //       selectedCursosPorCategoria[
-                      //         categoria.id_categoria
-                      //       ]?.includes(curso.id_modulo) || false
-                      //     }
-                      //   />
-                      //   <ListItemText primary={curso.nombre_modulo} />
-                      // </MenuItem>
-                    ))}
-              </FormGroup>
-
-              <FormControl
-                className="inputs-textfield"
-                fullWidth
-                sx={{ mt: 2 }}
-              >
-                <InputLabel>Cursos</InputLabel>
-                <Select
-                  multiple
-                  value={
-                    selectedCursosPorCategoria[categoria.id_categoria] || []
-                  }
-                  onChange={(e) =>
-                    handleCursoChange(
-                      categoria.id_categoria,
-                      e.target.value as number[],
-                    )
-                  }
-                  input={<OutlinedInput label="Cursos" />}
-                  renderValue={(selected) =>
-                    selected
-                      .map(
-                        (id) =>
-                          modulos.find((c) => c.id_modulo === id)
-                            ?.nombre_modulo,
-                      )
-                      .filter(Boolean)
-                      .join(", ")
-                  }
-                >
-                  {modulos
-                    // Filtra los módulos por categoría
-                    .map((curso) => (
-                      <MenuItem key={curso.id_modulo} value={curso.id_modulo}>
-                        <Checkbox
-                          checked={
+              <FormGroup className="flex flex-row flex-wrap justify-around gap-2">
+                {modulos.map((curso) => (
+                  <FormControlLabel
+                    key={curso.id_modulo}
+                    control={
+                      <Checkbox
+                        checked={
+                          selectedCursosPorCategoria[
+                            categoria.id_categoria
+                          ]?.includes(curso.id_modulo) || false
+                        }
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          const currentSeleccionados =
                             selectedCursosPorCategoria[
                               categoria.id_categoria
-                            ]?.includes(curso.id_modulo) || false
-                          }
-                        />
-                        <ListItemText primary={curso.nombre_modulo} />
-                      </MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
+                            ] || [];
 
-              <Box display="flex" gap={2} mt={2}>
+                          let nuevosSeleccionados;
+
+                          if (checked) {
+                            // Agrega el curso si fue seleccionado
+                            nuevosSeleccionados = [
+                              ...currentSeleccionados,
+                              curso.id_modulo,
+                            ];
+                          } else {
+                            // Elimina el curso si fue deseleccionado
+                            nuevosSeleccionados = currentSeleccionados.filter(
+                              (id) => id !== curso.id_modulo,
+                            );
+                          }
+
+                          handleCursoChange(
+                            categoria.id_categoria,
+                            nuevosSeleccionados,
+                          );
+                        }}
+                      />
+                    }
+                    label={curso.nombre_modulo}
+                  />
+                ))}
+              </FormGroup>
+
+              <Box className="wrap flex w-full flex-col gap-2  justify-between sm:flex-row" >
                 <TextField
                   className="inputs-textfield"
                   label="Precio Colegio Público"
