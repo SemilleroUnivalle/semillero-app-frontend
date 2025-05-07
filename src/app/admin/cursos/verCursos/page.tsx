@@ -15,43 +15,43 @@ const columnsOfertas: GridColDef[] = [
   { field: "categoria", headerName: "Categoría", width: 170 },
   { field: "area", headerName: "Área", width: 170 },
   { field: "descripcion", headerName: "Descripción", width: 170 },
-  {
-    field: "eliminar",
-    headerName: "Eliminar",
-    width: 130,
-    renderCell: (params) => (
-      <button
-        onClick={() => handleDelete(params.row.id)} // Llama a la función de eliminación
-        className="text-red-500 hover:text-red-700"
-      >
-        <DeleteIcon />
-      </button>
-    ),
-  },
+  // {
+  //   field: "eliminar",
+  //   headerName: "Eliminar",
+  //   width: 130,
+  //   renderCell: (params) => (
+  //     <button
+  //       onClick={() => handleDelete(params.row.id)} // Llama a la función de eliminación
+  //       className="text-red-500 hover:text-red-700"
+  //     >
+  //       <DeleteIcon />
+  //     </button>
+  //   ),
+  // },
 ];
 
-const handleDelete = async (id: number) => {
-  const confirmDelete = window.confirm(
-    "¿Estás seguro de que deseas eliminar este curso?"
-  );
-  if (!confirmDelete) return;
+// const handleDelete = async (id: number) => {
+//   const confirmDelete = window.confirm(
+//     "¿Estás seguro de que deseas eliminar este curso?"
+//   );
+//   if (!confirmDelete) return;
 
-  try {
-    await axios.delete(`${API_BASE_URL}/modulo/mod/${id}/`, {
-      headers: {
-        Authorization: `Token ${localStorage.getItem("token")}`,
-      },
-    });
+//   try {
+//     await axios.delete(`${API_BASE_URL}/modulo/mod/${id}/`, {
+//       headers: {
+//         Authorization: `Token ${localStorage.getItem("token")}`,
+//       },
+//     });
 
-    // Actualiza las filas eliminando el curso correspondiente
-    setRows((prevRows) => prevRows.filter((row) => row.id !== id));
+//     // Actualiza las filas eliminando el curso correspondiente
+//     setRows((prevRows) => prevRows.filter((row) => row.id !== id));
 
-    alert("Curso eliminado con éxito");
-  } catch (error) {
-    console.error("Error al eliminar el curso:", error);
-    alert("Hubo un error al eliminar el curso. Por favor, inténtalo de nuevo.");
-  }
-};
+//     alert("Curso eliminado con éxito");
+//   } catch (error) {
+//     console.error("Error al eliminar el curso:", error);
+//     alert("Hubo un error al eliminar el curso. Por favor, inténtalo de nuevo.");
+//   }
+// };
 
 const paginationModel = { page: 0, pageSize: 20 };
 
