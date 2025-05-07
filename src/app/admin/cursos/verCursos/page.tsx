@@ -15,14 +15,43 @@ const columnsOfertas: GridColDef[] = [
   { field: "categoria", headerName: "Categoría", width: 170 },
   { field: "area", headerName: "Área", width: 170 },
   { field: "descripcion", headerName: "Descripción", width: 170 },
-  // { field: "username", headerName: "NAS Virtual", width: 130 },
-  // {
-  //   field: "estado",
-  //   headerName: "Estado",
-  //   width: 130,
-  //   type: "boolean",
-  // },
+  {
+    field: "eliminar",
+    headerName: "Eliminar",
+    width: 130,
+    renderCell: (params) => (
+      <button
+        onClick={() => handleDelete(params.row.id)} // Llama a la función de eliminación
+        className="text-red-500 hover:text-red-700"
+      >
+        <DeleteIcon />
+      </button>
+    ),
+  },
 ];
+
+const handleDelete = async (id: number) => {
+  const confirmDelete = window.confirm(
+    "¿Estás seguro de que deseas eliminar este curso?"
+  );
+  if (!confirmDelete) return;
+
+  try {
+    await axios.delete(`${API_BASE_URL}/modulo/mod/${id}/`, {
+      headers: {
+        Authorization: `Token ${localStorage.getItem("token")}`,
+      },
+    });
+
+    // Actualiza las filas eliminando el curso correspondiente
+    setRows((prevRows) => prevRows.filter((row) => row.id !== id));
+
+    alert("Curso eliminado con éxito");
+  } catch (error) {
+    console.error("Error al eliminar el curso:", error);
+    alert("Hubo un error al eliminar el curso. Por favor, inténtalo de nuevo.");
+  }
+};
 
 const paginationModel = { page: 0, pageSize: 20 };
 
@@ -45,9 +74,11 @@ export default function VerCursos() {
         const formateado = res.map((data: any) => ({
           id: data.id_modulo,
           nombre: data.nombre_modulo,
+          id_area: data.id_area.id_area,
           area: data.id_area.nombre_area,
+          id_categoria: data.id_categoria.id_categoria,
           categoria: data.id_categoria.nombre,
-          descripcion: "descripcion",
+          descripcion: data.descripcion_modulo,
         }));
 
         setRows(formateado);

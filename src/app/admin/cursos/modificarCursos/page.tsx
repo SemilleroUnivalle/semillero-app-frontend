@@ -38,8 +38,8 @@ export default function _ModificarCursos() {
       setFormData({
         nombre_modulo: curso.nombre || "",
         descripcion_curso: curso.descripcion || "",
-        id_area: curso.area || "",
-        id_categoria: curso.categoria || "",
+        id_area: curso.id_area || "",
+        id_categoria: curso.id_categoria || "",
       });
     }
   }, [curso]);
@@ -100,12 +100,14 @@ export default function _ModificarCursos() {
         categoriaId = nuevaCategoriaResponse.data.id_categoria; // Actualiza la categoría con el ID de la nueva categoría creada
       }
 
-      // Crear el curso
-      const cursoResponse = await axios.post(
-        `${API_BASE_URL}/modulo/mod/`,
+      // Modifica el curso
+      const cursoResponse = await axios.patch(
+        `${API_BASE_URL}/modulo/mod/${curso.id}/`,
         {
-          nombre_modulo: formData.nombre_modulo, // `nombreCurso` es el valor del campo de texto para el nombre del curso
+          nombre_modulo: formData.nombre_modulo,
           id_area: areaId,
+          id_categoria: categoriaId,
+          descripcion_modulo: formData.descripcion_curso,
         },
         {
           headers: {
@@ -114,18 +116,18 @@ export default function _ModificarCursos() {
         },
       );
 
-      console.log("Curso creado exitosamente:", cursoResponse.data);
-      alert("Curso creado exitosamente");
+      console.log("Curso modificado exitosamente:", cursoResponse.data);
+      alert("Curso modificado exitosamente");
       // Vaciar los datos
-      setFormData({
-        nombre_modulo: "",
-        descripcion_curso: "",
-        id_area: "",
-        id_categoria: "",
-      }); // Cierra el modal
+      // setFormData({
+      //   nombre_modulo: "",
+      //   descripcion_curso: "",
+      //   id_area: "",
+      //   id_categoria: "",
+      // }); // Cierra el modal
     } catch (error) {
-      console.error("Error al crear el curso:", error);
-      alert("Hubo un error al crear el curso. Por favor, inténtalo de nuevo.");
+      console.error("Error al modificar el curso:", error);
+      alert("Hubo un error al modificar el curso. Por favor, inténtalo de nuevo.");
     }
   };
 
@@ -199,6 +201,43 @@ export default function _ModificarCursos() {
             onChange={handleChange}
           />
 
+          {/* Campo selector de categoria */}
+          <FormControl className="inputs-textfield w-full">
+            <InputLabel id="categoria_curso">Categoría</InputLabel>
+            <Select
+              labelId="categoria_curso"
+              id="categoria_curso"
+              name="id_categoria"
+              label="categoria_curso"
+              value={formData.id_categoria}
+              onChange={handleChange}
+              required
+            >
+              {/* Opciones de categoria */}
+              {categorias.map((cat) => (
+                <MenuItem key={cat.id_categoria} value={cat.id_categoria}>
+                  {cat.nombre}
+                </MenuItem>
+              ))}
+              <MenuItem value={"Otra"}>Otra</MenuItem>
+            </Select>
+          </FormControl>
+
+          {/* Campo para especificar otra categoria */}
+          {formData.id_categoria === "Otra" && (
+            <TextField
+              className="inputs-textfield w-full"
+              label="Especificar Categoría"
+              name="otra_categoria"
+              variant="outlined"
+              type="text"
+              value={otraCategoria}
+              onChange={(e) => setOtraCategoria(e.target.value)} // Actualiza el estado con el valor del campo de texto
+              fullWidth
+              required
+            />
+          )}
+
           {/* Campo selector de area */}
           <FormControl className="inputs-textfield w-full">
             <InputLabel id="area_curso">Área</InputLabel>
@@ -236,42 +275,6 @@ export default function _ModificarCursos() {
             />
           )}
 
-          {/* Campo selector de categoria */}
-          <FormControl className="inputs-textfield w-full">
-            <InputLabel id="categoria_curso">Categoría</InputLabel>
-            <Select
-              labelId="categoria_curso"
-              id="categoria_curso"
-              name="id_categoria"
-              label="categoria_curso"
-              value={formData.id_categoria}
-              onChange={handleChange}
-              required
-            >
-              {/* Opciones de categoria */}
-              {categorias.map((cat) => (
-                <MenuItem key={cat.id_categoria} value={cat.id_categoria}>
-                  {cat.nombre}
-                </MenuItem>
-              ))}
-              <MenuItem value={"Otra"}>Otra</MenuItem>
-            </Select>
-          </FormControl>
-
-          {/* Campo para especificar otra área */}
-          {formData.id_categoria === "Otra" && (
-            <TextField
-              className="inputs-textfield w-full"
-              label="Especificar Categoría"
-              name="otra_categoria"
-              variant="outlined"
-              type="text"
-              value={otraCategoria}
-              onChange={(e) => setOtraCategoria(e.target.value)} // Actualiza el estado con el valor del campo de texto
-              fullWidth
-              required
-            />
-          )}
 
           {/* Campo descripción */}
           <TextField

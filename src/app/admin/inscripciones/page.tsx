@@ -195,7 +195,7 @@ export default function Page() {
 
   return (
     <div>
-      <h1>Inscripciones</h1>
+      <h1>Estudiantes inscritos</h1>
 
       <div className="mx-auto mt-4 flex w-11/12 justify-between rounded-2xl bg-white p-2 shadow-md">
         {/* Filtro por Periodos */}

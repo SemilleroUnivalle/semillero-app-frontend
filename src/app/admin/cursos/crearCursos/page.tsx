@@ -10,9 +10,9 @@ import {
   SelectChangeEvent,
 } from "@mui/material";
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
+import { idID } from "@mui/material/locale";
 
 export default function CrearCursos() {
   const [areas, setAreas] = useState<any[]>([]);
@@ -22,7 +22,7 @@ export default function CrearCursos() {
   const [otraCategoria, setOtraCategoria] = useState<string>(""); // Para especificar otra
   const [formData, setFormData] = useState({
     nombre_modulo: "",
-    descripcion_curso: "",
+    descripcion_modulo: "",
     id_area: "",
     id_categoria: "",
   });
@@ -81,8 +81,10 @@ export default function CrearCursos() {
       const cursoResponse = await axios.post(
         `${API_BASE_URL}/modulo/mod/`,
         {
-          nombre_modulo: formData.nombre_modulo, // `nombreCurso` es el valor del campo de texto para el nombre del curso
+          nombre_modulo: formData.nombre_modulo,
           id_area: areaId,
+          id_categoria: categoriaId,
+          descripcion_modulo: formData.descripcion_modulo,
         },
         {
           headers: {
@@ -96,7 +98,7 @@ export default function CrearCursos() {
       // Vaciar los datos
       setFormData({
         nombre_modulo: "",
-        descripcion_curso: "",
+        descripcion_modulo: "",
         id_area: "",
         id_categoria: "",
       }); // Cierra el modal
@@ -154,7 +156,7 @@ export default function CrearCursos() {
   }, []);
 
   return (
-    <div className="mx-auto mt-4 py-2 flex w-11/12 flex-col items-center justify-center rounded-2xl bg-white p-1 shadow-md">
+    <div className="mx-auto mt-4 flex w-11/12 flex-col items-center justify-center rounded-2xl bg-white p-1 py-2 shadow-md">
       <h2 className="mb-2 text-center">Crear curso</h2>
       <div className="w-full sm:w-1/3">
         <form
@@ -176,8 +178,8 @@ export default function CrearCursos() {
             onChange={handleChange}
           />
 
-{/* Campo selector de categoria */}
-<FormControl className="inputs-textfield w-full">
+          {/* Campo selector de categoria */}
+          <FormControl className="inputs-textfield w-full">
             <InputLabel id="categoria_curso">Categoría</InputLabel>
             <Select
               labelId="categoria_curso"
@@ -250,19 +252,18 @@ export default function CrearCursos() {
             />
           )}
 
-
           {/* Campo descripción */}
           <TextField
             className="inputs-textfield w-full"
             label="Descripción"
-            name="descripcion_curso"
+            name="descripcion_modulo"
             variant="outlined"
             type="text"
             multiline
             rows={4}
             fullWidth
             required
-            value={formData.descripcion_curso}
+            value={formData.descripcion_modulo}
             onChange={handleChange}
           />
 
