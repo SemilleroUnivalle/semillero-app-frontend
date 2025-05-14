@@ -312,7 +312,17 @@ export default function Page() {
             columns={columns}
             initialState={{ pagination: { paginationModel } }}
             pageSizeOptions={[20, 40]}
-            sx={{ border: 0 }}
+            sx={{
+              border: 0,
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "#e8e8e8", // Fondo de todo el header
+              },
+              "& .MuiDataGrid-columnHeaderTitle": {
+                fontWeight: "bold", // Negrita en el título
+                color: "#575757", // Color del texto
+                fontSize: "1rem", // (opcional) Tamaño de letra
+              },
+            }}
             localeText={{
               // 📌 Traducciones básicas en español
               noRowsLabel: "No hay filas",

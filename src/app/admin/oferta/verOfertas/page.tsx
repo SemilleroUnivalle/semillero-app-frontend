@@ -4,62 +4,21 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Paper } from "@mui/material";
-import { GridColDef, DataGrid, GridRowParams } from "@mui/x-data-grid";
+import { GridColDef, DataGrid} from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
-
-const columns: GridColDef[] = [
-  { field: "id", headerName: "ID", width: 70 },
-  { field: "lastName", headerName: "Apellidos", width: 130 },
-  { field: "firstName", headerName: "Nombres", width: 130 },
-  { field: "email", headerName: "Correo Electrónico", width: 130 },
-  {
-    field: "periodo",
-    headerName: "Periodo",
-    width: 130,
-  },
-  {
-    field: "modulo",
-    headerName: "Módulo",
-    width: 130,
-  },
-  {
-    field: "estamento",
-    headerName: "Estamento",
-    width: 130,
-  },
-  {
-    field: "tipo",
-    headerName: "Tipo de Inscrito",
-    width: 130,
-  },
-  {
-    field: "estado",
-    headerName: "Estado",
-    width: 130,
-    type: "boolean",
-  },
-];
-
-const rowsII = [
-  {
-    id: 1,
-    firstName: "Carlos",
-    lastName: "Pérez",
-    email: "carlos.perez@email.com",
-    periodo: "2021A",
-    modulo: "Matemáticas",
-    estamento: "Público",
-    tipo: "Particular",
-    estado: true,
-  },
-];
+import { API_BASE_URL } from "../../../../../config";
 
 const columnsOfertas: GridColDef[] = [
   { field: "id", headerName: "ID", width: 70 },
   { field: "nombre", headerName: "Nombre", width: 130 },
-  { field: "username", headerName: "Fecha de inicio", width: 130 },
-  { field: "correo", headerName: "Módulos por área", width: 130 },
-  { field: "lng", headerName: "NAS Presencial", width: 130 },
+  { field: "categoria", headerName: "Categoria", width: 130 },
+  { field: "precio_publico", headerName: "Precio publico", width: 130 },
+  { field: "precio_privado", headerName: "Precio privado", width: 130 },
+  { field: "precio_univalle", headerName: "Precio Univalle", width: 130 },
+  { field: "fecha_inicio", headerName: "Fecha inicio", width: 130 },
+  { field: "fecha_finalizacion", headerName: "Fecha finalización", width: 130 },
+
+
   // { field: "username", headerName: "NAS Virtual", width: 130 },
   // {
   //   field: "estado",
@@ -80,20 +39,27 @@ export default function Page() {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          `https://jsonplaceholder.typicode.com/users`,
+          `${API_BASE_URL}/oferta_categoria/ofer/`, {
+            headers: {
+              Authorization: `Token ${localStorage.getItem("token")}`,
+            },
+          }
         );
         const res = response.data;
 
         const formateado = res.map((data: any) => ({
-          id: data.id,
-          nombre: data.name,
-          username: data.username,
-          correo: data.email,
-          telefono: data.phone,
-          pagina_web: data.website,
-          lat: data.address.geo.lat,
-          lng: data.address.geo.lng,
-          _original: data,
+          id: data.id_oferta_categoria,
+          nombre: data.id_oferta_academica.nombre,
+          categoria: data.id_categoria.nombre,
+          precio_publico: data.precio_publico,
+          precio_privado: data.precio_privado,
+          precio_univalle: data.precio_univalle,
+          fecha_inicio: data.id_oferta_academica.fecha_inicio,
+          fecha_finalizacion: data.fecha_finalizacion,
+          pagina_web: "prueba",
+          lat: "prueba",
+          lng: "prueba",
+          _original: "prueba",
         }));
 
         setRows(formateado);
@@ -153,7 +119,17 @@ export default function Page() {
               router.push('/admin/oferta/modificarOfertas/'); 
             }}
             pageSizeOptions={[20, 40]}
-            sx={{ border: 0 }}
+            sx={{
+              border: 0,
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "#e8e8e8", // Fondo de todo el header
+              },
+              "& .MuiDataGrid-columnHeaderTitle": {
+                fontWeight: "bold", // Negrita en el título
+                color: "#575757", // Color del texto
+                fontSize: "1rem", // (opcional) Tamaño de letra
+              },
+            }}
             localeText={{
               // 📌 Traducciones básicas en español
               noRowsLabel: "No hay filas",
@@ -178,49 +154,7 @@ export default function Page() {
 
       </div>
 
-      {/* Contenedor de Inscripciones */}
-
-      <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 shadow-md">
-        {/* <input
-         type="text"
-         placeholder="Buscar..."
-         value={searchText}
-         onChange={(e) => requestSearch(e.target.value)}
-         className="mb-4 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm focus:border-primary focus:outline-none sm:w-1/3"
-       /> */}
-
-        <Paper
-          className="border-none shadow-none"
-          sx={{ height: 500, width: "100%" }}
-        >
-          <DataGrid
-            rows={rowsII}
-            columns={columns}
-            initialState={{ pagination: { paginationModel } }}
-            pageSizeOptions={[20, 40]}
-            sx={{ border: 0 }}
-            localeText={{
-              // 📌 Traducciones básicas en español
-              noRowsLabel: "No hay filas",
-              columnMenuSortAsc: "Ordenar ascendente",
-              columnMenuSortDesc: "Ordenar descendente",
-              columnMenuFilter: "Filtrar",
-              columnMenuHideColumn: "Ocultar columna",
-              columnMenuShowColumns: "Mostrar columnas",
-              toolbarDensity: "Densidad",
-              toolbarDensityLabel: "Densidad",
-              toolbarDensityCompact: "Compacta",
-              toolbarDensityStandard: "Estándar",
-              toolbarDensityComfortable: "Cómoda",
-              MuiTablePagination: {
-                labelDisplayedRows: ({ from, to, count }) =>
-                  `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`,
-                labelRowsPerPage: "Filas por página:",
-              },
-            }}
-          />
-        </Paper>
-      </div>
+      
     </div>
   );
 }
