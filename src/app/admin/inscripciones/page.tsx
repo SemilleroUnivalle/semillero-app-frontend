@@ -50,7 +50,7 @@ const columns: GridColDef[] = [
 ];
 
 
-const paginationModel = { page: 0, pageSize: 20 };
+const paginationModel = { page: 0, pageSize: 50 };
 
 export default function Page() {
   const [rows, setRows] = useState<any[]>([]);
@@ -240,7 +240,7 @@ export default function Page() {
 
         {/* Filtro por Estamento */}
         <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
-          <InputLabel id="filtro-estamento">Estamento</InputLabel>
+          <InputLabel id="filtro-estamento">Estamentos</InputLabel>
           <Select
             labelId="filtro-estamento"
             id="filtro-estamento"
@@ -261,7 +261,7 @@ export default function Page() {
 
         {/* Filtro por Tipo de Inscrito */}
         <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
-          <InputLabel id="filtro-tipo">Tipo de Inscrito</InputLabel>
+          <InputLabel id="filtro-tipo">Tipos de Inscritos</InputLabel>
           <Select
             labelId="filtro-tipo"
             id="filtro-tipo"
@@ -282,7 +282,7 @@ export default function Page() {
 
         {/* Filtro por Estado */}
         <FormControl className="inputs-textfield w-full sm:w-1/6">
-          <InputLabel id="filtro-estado">Estado</InputLabel>
+          <InputLabel id="filtro-estado">Estados</InputLabel>
           <Select
             labelId="filtro-estado"
             id="filtro-estado"
@@ -310,8 +310,10 @@ export default function Page() {
           <DataGrid
             rows={filteredRows}
             columns={columns}
-            initialState={{ pagination: { paginationModel } }}
-            pageSizeOptions={[20, 40]}
+            initialState={{ pagination: { paginationModel }, sorting: {
+      sortModel: [{ field: "id", sort: "desc" }],
+    },}}
+            pageSizeOptions={[25, 50, 75, 100]}
             sx={{
               border: 0,
               "& .MuiDataGrid-columnHeaders": {

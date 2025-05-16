@@ -4,7 +4,10 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Paper } from "@mui/material";
-import { GridColDef, DataGrid} from "@mui/x-data-grid";
+import {
+  PencilSquareIcon, TrashIcon
+} from "@heroicons/react/24/outline";
+import { GridColDef, DataGrid } from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "../../../../../config";
 
@@ -17,6 +20,28 @@ const columnsOfertas: GridColDef[] = [
   { field: "precio_univalle", headerName: "Precio Univalle", width: 130 },
   { field: "fecha_inicio", headerName: "Fecha inicio", width: 130 },
   { field: "fecha_finalizacion", headerName: "Fecha finalización", width: 130 },
+  {
+    field: "editar",
+    headerName: "Acciones",
+    sortable: false,
+    filterable: false,
+    width: 130,
+    renderCell: (params) => (
+      <div className="flex flex-row justify-around"><PencilSquareIcon
+        className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+        onClick={() => {
+          const fullData = params.row;
+          localStorage.setItem("ofertaSeleccionada", JSON.stringify(fullData));
+          const router = useRouter();
+          router.push("/admin/oferta/modificarOfertas/");
+        }}
+      />
+      <TrashIcon
+        className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+        /></div>
+      
+    ),
+  },
 
 
   // { field: "username", headerName: "NAS Virtual", width: 130 },
@@ -39,11 +64,12 @@ export default function Page() {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          `${API_BASE_URL}/oferta_categoria/ofer/`, {
+          `${API_BASE_URL}/oferta_categoria/ofer/`,
+          {
             headers: {
               Authorization: `Token ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
         const res = response.data;
 
@@ -56,10 +82,6 @@ export default function Page() {
           precio_univalle: data.precio_univalle,
           fecha_inicio: data.id_oferta_academica.fecha_inicio,
           fecha_finalizacion: data.fecha_finalizacion,
-          pagina_web: "prueba",
-          lat: "prueba",
-          lng: "prueba",
-          _original: "prueba",
         }));
 
         setRows(formateado);
@@ -91,7 +113,6 @@ export default function Page() {
   //   setFilteredRows(filtered);
   // };
 
-
   return (
     <div>
       {/* Contenedor de ofertas */}
@@ -112,11 +133,19 @@ export default function Page() {
           <DataGrid
             rows={rows}
             columns={columnsOfertas}
-            initialState={{ pagination: { paginationModel } }}
+            initialState={{
+              pagination: { paginationModel },
+              sorting: {
+                sortModel: [{ field: "id", sort: "desc" }],
+              },
+            }}
             onRowClick={(params) => {
               const fullData = params.row._original;
-              localStorage.setItem('ofertaSeleccionada', JSON.stringify(fullData)); 
-              router.push('/admin/oferta/modificarOfertas/'); 
+              localStorage.setItem(
+                "ofertaSeleccionada",
+                JSON.stringify(fullData),
+              );
+              router.push("/admin/oferta/modificarOfertas/");
             }}
             pageSizeOptions={[20, 40]}
             sx={{
@@ -151,10 +180,7 @@ export default function Page() {
             }}
           />
         </Paper>
-
       </div>
-
-      
     </div>
   );
 }
