@@ -9,10 +9,11 @@ import {
   MenuItem,
   SelectChangeEvent,
 } from "@mui/material";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
-import { idID } from "@mui/material/locale";
 
 export default function CrearCursos() {
   const [areas, setAreas] = useState<any[]>([]);
@@ -26,6 +27,8 @@ export default function CrearCursos() {
     id_area: "",
     id_categoria: "",
   });
+
+  const [success, setSuccess] = useState(false);
 
   // Manejar cambios en los campos del formulario
   const handleChange = (
@@ -118,13 +121,17 @@ export default function CrearCursos() {
         });
         const area = response.data;
 
-        const formateado = area.map((are: any) => ({
-          id_area: are.id_area,
-          nombre_area: are.nombre_area,
-        }));
+        if (!area || (Array.isArray(area) && area.length === 0)) {
+          console.log("Error: No se encontraron áreas");
+        } else {
+          const formateado = area.map((are: any) => ({
+            id_area: are.id_area,
+            nombre_area: are.nombre_area,
+          }));
 
-        setAreas(formateado);
-        console.log("Areas", formateado);
+          setAreas(formateado);
+          console.log("Areas", formateado);
+        }
       } catch (error) {
         console.error("Error al obtener las areas", error);
       }
@@ -139,13 +146,20 @@ export default function CrearCursos() {
         });
         const categoria = response.data;
 
-        const formateado = categoria.map((cat: any) => ({
-          id_categoria: cat.id_categoria,
-          nombre: cat.nombre,
-        }));
+        if (
+          !categoria ||
+          (Array.isArray(categoria) && categoria.length === 0)
+        ) {
+          console.log("Error: No se encontraron categorias");
+        } else {
+          const formateado = categoria.map((cat: any) => ({
+            id_categoria: cat.id_categoria,
+            nombre: cat.nombre,
+          }));
 
-        setCategorias(formateado);
-        console.log("Categorias", formateado);
+          setCategorias(formateado);
+          console.log("Categorias", formateado);
+        }
       } catch (error) {
         console.error("Error al obtener las catgeorias", error);
       }
@@ -157,6 +171,20 @@ export default function CrearCursos() {
 
   return (
     <div className="mx-auto mt-4 flex w-11/12 flex-col items-center justify-center rounded-2xl bg-white p-1 py-2 shadow-md">
+      <Snackbar
+        open={success}
+        autoHideDuration={4000}
+        onClose={() => setSuccess(false)}
+      >
+        <Alert
+          onClose={() => setSuccess(false)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          Curso creado exitosamente.
+        </Alert>
+      </Snackbar>
+
       <h2 className="mb-2 text-center">Crear curso</h2>
       <div className="w-full sm:w-1/3">
         <form

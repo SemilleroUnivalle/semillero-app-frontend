@@ -4,14 +4,21 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Paper } from "@mui/material";
-import {
-  PencilSquareIcon, TrashIcon
-} from "@heroicons/react/24/outline";
+import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { GridColDef, DataGrid } from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "../../../../../config";
 
-const columnsOfertas: GridColDef[] = [
+
+
+const paginationModel = { page: 0, pageSize: 20 };
+
+export default function Page() {
+  const router = useRouter();
+
+  const [rows, setRows] = useState<any[]>([]);
+
+  const columnsOfertas: GridColDef[] = [
   { field: "id", headerName: "ID", width: 70 },
   { field: "nombre", headerName: "Nombre", width: 130 },
   { field: "categoria", headerName: "Categoria", width: 130 },
@@ -21,28 +28,32 @@ const columnsOfertas: GridColDef[] = [
   { field: "fecha_inicio", headerName: "Fecha inicio", width: 130 },
   { field: "fecha_finalizacion", headerName: "Fecha finalización", width: 130 },
   {
-    field: "editar",
-    headerName: "Acciones",
-    sortable: false,
-    filterable: false,
-    width: 130,
-    renderCell: (params) => (
-      <div className="flex flex-row justify-around"><PencilSquareIcon
-        className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
-        onClick={() => {
-          const fullData = params.row;
-          localStorage.setItem("ofertaSeleccionada", JSON.stringify(fullData));
-          const router = useRouter();
-          router.push("/admin/oferta/modificarOfertas/");
-        }}
-      />
-      <TrashIcon
-        className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
-        /></div>
-      
-    ),
-  },
-
+        field: "editar",
+        headerName: "Acciones",
+        sortable: false,
+        filterable: false,
+        width: 130,
+        renderCell: (params) => (
+          <div className="flex h-full w-full flex-row items-center justify-around">
+            <PencilSquareIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+              onClick={() => {
+                const rowData = params.row;
+  
+                localStorage.setItem(
+                  "cursoSeleccionado",
+                  JSON.stringify(rowData),
+                ); // 👉 Guarda la fila completa como JSON
+                router.push("/admin/cursos/modificarCursos/"); // 👉 Navega a la pantalla de modificar
+              }}
+            />
+            <TrashIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+              onClick={() => handleDelete(params.row.id)}
+            />
+          </div>
+        ),
+      },
 
   // { field: "username", headerName: "NAS Virtual", width: 130 },
   // {
@@ -53,12 +64,30 @@ const columnsOfertas: GridColDef[] = [
   // },
 ];
 
-const paginationModel = { page: 0, pageSize: 20 };
 
-export default function Page() {
-  const router = useRouter();
+  // Función para eliminar un curso
+  const handleDelete = async (id: number) => {
+    const confirmDelete = window.confirm(
+      "¿Estás seguro de que deseas eliminar este curso?",
+    );
+    if (!confirmDelete) return;
 
-  const [rows, setRows] = useState<any[]>([]);
+    try {
+      await axios.delete(`${API_BASE_URL}/modulo/mod/${id}/`, {
+        headers: {
+          Authorization: `Token ${localStorage.getItem("token")}`,
+        },
+      });
+
+      setRows((prevRows) => prevRows.filter((row) => row.id !== id));
+      alert("Curso eliminado con éxito");
+    } catch (error) {
+      console.error("Error al eliminar el curso:", error);
+      alert(
+        "Hubo un error al eliminar el curso. Por favor, inténtalo de nuevo.",
+      );
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {

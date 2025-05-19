@@ -9,6 +9,8 @@ import {
   MenuItem,
   SelectChangeEvent,
 } from "@mui/material";
+import Alert from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar';
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
@@ -24,6 +26,8 @@ export default function _ModificarCursos() {
     id_area: "", // Usar el área del curso seleccionado
     id_categoria: "", // Usar la categoría del curso seleccionado
   });
+// Estado para manejar el mensaje de éxito
+   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     const storedCurso = localStorage.getItem("cursoSeleccionado");
@@ -117,14 +121,9 @@ export default function _ModificarCursos() {
       );
 
       console.log("Curso modificado exitosamente:", cursoResponse.data);
-      alert("Curso modificado exitosamente");
-      // Vaciar los datos
-      // setFormData({
-      //   nombre_modulo: "",
-      //   descripcion_curso: "",
-      //   id_area: "",
-      //   id_categoria: "",
-      // }); // Cierra el modal
+      setSuccess(true);
+
+
     } catch (error) {
       console.error("Error al modificar el curso:", error);
       alert("Hubo un error al modificar el curso. Por favor, inténtalo de nuevo.");
@@ -180,6 +179,13 @@ export default function _ModificarCursos() {
 
   return (
     <div className="mx-auto mt-4 flex w-11/12 flex-col items-center justify-center rounded-2xl bg-white p-4 py-2 shadow-md">
+      
+      <Snackbar open={success} autoHideDuration={4000} onClose={() => setSuccess(false)}>
+        <Alert onClose={() => setSuccess(false)} severity="success" sx={{ width: '100%' }}>
+          Curso modificado exitosamente.
+        </Alert>
+      </Snackbar>
+      
       <h2 className="mb-2 text-center">Modificar curso</h2>
       <div className="w-full sm:w-1/3">
         <form
