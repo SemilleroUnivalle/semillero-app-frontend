@@ -266,7 +266,7 @@ export default function CrearOferta() {
   };
 
   return (
-    <div className="mx-auto mt-4 w-11/12 rounded-2xl p-2">
+    <div>
       <Snackbar
         open={!!error}
         autoHideDuration={6000}
@@ -296,7 +296,7 @@ export default function CrearOferta() {
       </Snackbar>
 
       {/* Contenedor de cursos */}
-      <div className="mx-auto mt-5 flex w-full flex-col items-center justify-center rounded-2xl bg-white p-3 sm:w-4/5">
+      <div className="mx-auto mt-5 flex w-full flex-col items-center justify-center rounded-2xl bg-white p-3 sm:w-11/12">
         <h2 className="mb-2 text-center text-xl font-bold">Crear oferta</h2>
 
         <form onSubmit={handleSubmit} className="w-full space-y-4 px-4">

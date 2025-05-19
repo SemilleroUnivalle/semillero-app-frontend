@@ -150,6 +150,7 @@ export default function VerCursos() {
               );
             });
             setModulosPorCategoria(formateado);
+            // setRows(formateado);
             console.log("Modulos por categoría:", formateado);
           }
         }
@@ -207,6 +208,24 @@ export default function VerCursos() {
       });
 
       setRows((prevRows) => prevRows.filter((row) => row.id !== id));
+
+      // Actualiza modulosPorCategoria eliminando el módulo de la categoría correspondiente
+      setModulosPorCategoria((prev) => {
+        const nuevo = { ...prev };
+        Object.keys(nuevo).forEach((categoria) => {
+          nuevo[categoria] = nuevo[categoria].filter(
+            (mod) => mod.id_modulo !== id,
+          );
+        });
+        // Opcional: elimina la categoría si queda vacía
+        Object.keys(nuevo).forEach((categoria) => {
+          if (nuevo[categoria].length === 0) {
+            delete nuevo[categoria];
+          }
+        });
+        return nuevo;
+      });
+
       setSuccess(true);
     } catch (error) {
       console.error("Error al eliminar el curso:", error);
@@ -215,15 +234,6 @@ export default function VerCursos() {
       );
     }
   };
-
-  // Agrupa un array de objetos por el campo 'categoria'
-  function groupByCategoria(rows) {
-    return rows.reduce((acc, row) => {
-      acc[row.categoria] = acc[row.categoria] || [];
-      acc[row.categoria].push(row);
-      return acc;
-    }, {});
-  }
 
   const [openCategorias, setOpenCategorias] = useState<{
     [key: string]: boolean;
@@ -270,59 +280,6 @@ export default function VerCursos() {
       {/* Contenedor de cursos */}
 
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 shadow-md">
-        <Accordion>
-          <AccordionSummary
-            expandIcon={<ArrowDownwardIcon />}
-            aria-controls="panel1-content"
-            id="panel1-header"
-          >
-            <Typography component="span">Accordion 1</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Paper
-              className="border-none shadow-none"
-              sx={{ height: 500, width: "100%" }}
-            >
-              <DataGrid
-                rows={rows}
-                columns={columnsOfertas}
-                initialState={{ pagination: { paginationModel } }}
-                pageSizeOptions={[20, 40]}
-                sx={{
-                  border: 0,
-                  "& .MuiDataGrid-columnHeaders": {
-                    backgroundColor: "#e8e8e8", // Fondo de todo el header
-                  },
-                  "& .MuiDataGrid-columnHeaderTitle": {
-                    fontWeight: "bold", // Negrita en el título
-                    color: "#575757", // Color del texto
-                    fontSize: "1rem", // (opcional) Tamaño de letra
-                  },
-                }}
-                localeText={{
-                  // 📌 Traducciones básicas en español
-                  noRowsLabel: "No hay filas",
-                  columnMenuSortAsc: "Ordenar ascendente",
-                  columnMenuSortDesc: "Ordenar descendente",
-                  columnMenuFilter: "Filtrar",
-                  columnMenuHideColumn: "Ocultar columna",
-                  columnMenuShowColumns: "Mostrar columnas",
-                  toolbarDensity: "Densidad",
-                  toolbarDensityLabel: "Densidad",
-                  toolbarDensityCompact: "Compacta",
-                  toolbarDensityStandard: "Estándar",
-                  toolbarDensityComfortable: "Cómoda",
-                  MuiTablePagination: {
-                    labelDisplayedRows: ({ from, to, count }) =>
-                      `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`,
-                    labelRowsPerPage: "Filas por página:",
-                  },
-                }}
-              />
-            </Paper>
-          </AccordionDetails>
-        </Accordion>
-
         {/* <input
          type="text"
          placeholder="Buscar..."
@@ -331,68 +288,73 @@ export default function VerCursos() {
          className="mb-4 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm focus:border-primary focus:outline-none sm:w-1/3"
        /> */}
 
-        {Object.entries(groupByCategoria(rows)).map(([categoria, cursos]) => (
-          <div key={categoria} className="mb-6">
-            <button
-              onClick={() => toggleCategoria(categoria)}
-              className="w-full rounded bg-gray-100 px-4 py-2 text-left text-lg font-bold hover:bg-gray-200"
-            >
-              {openCategorias[categoria] ? "▼" : "►"} {categoria}
-            </button>
-            {openCategorias[categoria] && (
-              <Paper
-                className="border-none shadow-none"
-                sx={{ height: 60 + cursos.length * 52, width: "100%" }}
-              >
-                <DataGrid
-                  rows={cursos}
-                  columns={columnsOfertas.filter(
-                    (col) => col.field !== "categoria",
-                  )}
-                  initialState={{ pagination: { paginationModel } }}
-                  pageSizeOptions={[20, 40]}
-                  hideFooter
-                  sx={{
-                    border: 0,
-                    "& .MuiDataGrid-columnHeaders": {
-                      backgroundColor: "#e8e8e8",
-                    },
-                    "& .MuiDataGrid-columnHeaderTitle": {
-                      fontWeight: "bold",
-                      color: "#575757",
-                      fontSize: "1rem",
-                    },
-                  }}
-                  localeText={{
-                    noRowsLabel: "No hay filas",
-                    // ...otras traducciones...
-                  }}
-                />
-              </Paper>
-            )}
-          </div>
-        ))}
-
         {loading ? (
-          <div className="py-8 text-center">Cargando módulos...</div>
+          <div className="py-8 text-center">Cargando cursos...</div>
         ) : Object.keys(modulosPorCategoria).length === 0 ? (
-          <div className="py-8 text-center">No hay categorías disponibles</div>
+          <div className="py-8 text-center">No hay cursos disponibles</div>
         ) : (
           Object.keys(modulosPorCategoria).map((nombreCategoria) => (
-            <Box
-              className="border-b border-solid border-primary py-8"
-              key={nombreCategoria}
-              borderRadius={2}
-            >
-              <FormLabel className="text-lg font-semibold">
-                {nombreCategoria}
-              </FormLabel>
-
-              <FormGroup className="mt-4 flex flex-row flex-wrap justify-start gap-4">
-                {modulosPorCategoria[nombreCategoria].map((modulo) => (
-                  <div>Hola </div>
-                ))}
-              </FormGroup>
+            <Box className="py-1" key={nombreCategoria} borderRadius={0}>
+              <Accordion className="border-b shadow-none">
+                <AccordionSummary
+                  expandIcon={<ArrowDownwardIcon />}
+                  aria-controls="panel1-content"
+                  id="panel1-header"
+                >
+                  <Typography component="span">{nombreCategoria}</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Paper
+                    className="border-none shadow-none"
+                    sx={{ height: "auto", width: "100%" }}
+                  >
+                    <DataGrid
+                      rows={modulosPorCategoria[nombreCategoria].map((mod) => ({
+                        id: mod.id_modulo,
+                        nombre: mod.nombre_modulo,
+                        descripcion: mod.descripcion_modulo,
+                        id_area: mod.id_area,
+                        area: mod.nombre_area,
+                        id_categoria: mod.id_categoria,
+                        categoria: nombreCategoria,
+                      }))}
+                      columns={columnsOfertas}
+                      initialState={{ pagination: { paginationModel } }}
+                      pageSizeOptions={[20, 40]}
+                      sx={{
+                        border: 0,
+                        "& .MuiDataGrid-columnHeaders": {
+                          backgroundColor: "#e8e8e8", // Fondo de todo el header
+                        },
+                        "& .MuiDataGrid-columnHeaderTitle": {
+                          fontWeight: "bold", // Negrita en el título
+                          color: "#575757", // Color del texto
+                          fontSize: "1rem", // (opcional) Tamaño de letra
+                        },
+                      }}
+                      localeText={{
+                        // 📌 Traducciones básicas en español
+                        noRowsLabel: "No hay filas",
+                        columnMenuSortAsc: "Ordenar ascendente",
+                        columnMenuSortDesc: "Ordenar descendente",
+                        columnMenuFilter: "Filtrar",
+                        columnMenuHideColumn: "Ocultar columna",
+                        columnMenuShowColumns: "Mostrar columnas",
+                        toolbarDensity: "Densidad",
+                        toolbarDensityLabel: "Densidad",
+                        toolbarDensityCompact: "Compacta",
+                        toolbarDensityStandard: "Estándar",
+                        toolbarDensityComfortable: "Cómoda",
+                        MuiTablePagination: {
+                          labelDisplayedRows: ({ from, to, count }) =>
+                            `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`,
+                          labelRowsPerPage: "Filas por página:",
+                        },
+                      }}
+                    />
+                  </Paper>
+                </AccordionDetails>
+              </Accordion>
             </Box>
           ))
         )}

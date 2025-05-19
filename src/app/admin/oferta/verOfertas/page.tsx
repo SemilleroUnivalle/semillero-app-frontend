@@ -9,8 +9,6 @@ import { GridColDef, DataGrid } from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "../../../../../config";
 
-
-
 const paginationModel = { page: 0, pageSize: 20 };
 
 export default function Page() {
@@ -19,51 +17,54 @@ export default function Page() {
   const [rows, setRows] = useState<any[]>([]);
 
   const columnsOfertas: GridColDef[] = [
-  { field: "id", headerName: "ID", width: 70 },
-  { field: "nombre", headerName: "Nombre", width: 130 },
-  { field: "categoria", headerName: "Categoria", width: 130 },
-  { field: "precio_publico", headerName: "Precio publico", width: 130 },
-  { field: "precio_privado", headerName: "Precio privado", width: 130 },
-  { field: "precio_univalle", headerName: "Precio Univalle", width: 130 },
-  { field: "fecha_inicio", headerName: "Fecha inicio", width: 130 },
-  { field: "fecha_finalizacion", headerName: "Fecha finalización", width: 130 },
-  {
-        field: "editar",
-        headerName: "Acciones",
-        sortable: false,
-        filterable: false,
-        width: 130,
-        renderCell: (params) => (
-          <div className="flex h-full w-full flex-row items-center justify-around">
-            <PencilSquareIcon
-              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
-              onClick={() => {
-                const rowData = params.row;
-  
-                localStorage.setItem(
-                  "cursoSeleccionado",
-                  JSON.stringify(rowData),
-                ); // 👉 Guarda la fila completa como JSON
-                router.push("/admin/cursos/modificarCursos/"); // 👉 Navega a la pantalla de modificar
-              }}
-            />
-            <TrashIcon
-              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
-              onClick={() => handleDelete(params.row.id)}
-            />
-          </div>
-        ),
-      },
+    { field: "id", headerName: "ID", width: 70 },
+    { field: "nombre", headerName: "Nombre", width: 130 },
+    { field: "categoria", headerName: "Categoria", width: 130 },
+    { field: "precio_publico", headerName: "Precio publico", width: 130 },
+    { field: "precio_privado", headerName: "Precio privado", width: 130 },
+    { field: "precio_univalle", headerName: "Precio Univalle", width: 130 },
+    { field: "fecha_inicio", headerName: "Fecha inicio", width: 130 },
+    {
+      field: "fecha_finalizacion",
+      headerName: "Fecha finalización",
+      width: 130,
+    },
+    {
+      field: "editar",
+      headerName: "Acciones",
+      sortable: false,
+      filterable: false,
+      width: 130,
+      renderCell: (params) => (
+        <div className="flex h-full w-full flex-row items-center justify-around">
+          <PencilSquareIcon
+            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+            onClick={() => {
+              const rowData = params.row;
 
-  // { field: "username", headerName: "NAS Virtual", width: 130 },
-  // {
-  //   field: "estado",
-  //   headerName: "Estado",
-  //   width: 130,
-  //   type: "boolean",
-  // },
-];
+              localStorage.setItem(
+                "cursoSeleccionado",
+                JSON.stringify(rowData),
+              ); // 👉 Guarda la fila completa como JSON
+              router.push("/admin/cursos/modificarCursos/"); // 👉 Navega a la pantalla de modificar
+            }}
+          />
+          <TrashIcon
+            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+            onClick={() => handleDelete(params.row.id)}
+          />
+        </div>
+      ),
+    },
 
+    // { field: "username", headerName: "NAS Virtual", width: 130 },
+    // {
+    //   field: "estado",
+    //   headerName: "Estado",
+    //   width: 130,
+    //   type: "boolean",
+    // },
+  ];
 
   // Función para eliminar un curso
   const handleDelete = async (id: number) => {
@@ -102,20 +103,24 @@ export default function Page() {
         );
         const res = response.data;
 
-        const formateado = res.map((data: any) => ({
-          id: data.id_oferta_categoria,
-          nombre: data.id_oferta_academica.nombre,
-          categoria: data.id_categoria.nombre,
-          precio_publico: data.precio_publico,
-          precio_privado: data.precio_privado,
-          precio_univalle: data.precio_univalle,
-          fecha_inicio: data.id_oferta_academica.fecha_inicio,
-          fecha_finalizacion: data.fecha_finalizacion,
-        }));
+        if (!res || (Array.isArray(res) && res.length === 0)) {
+          console.log("Error: No se encontraron ofertas");
+        } else {
+          const formateado = res.map((data: any) => ({
+            id: data.id_oferta_categoria,
+            nombre: data.id_oferta_academica.nombre,
+            categoria: data.id_categoria.nombre,
+            precio_publico: data.precio_publico,
+            precio_privado: data.precio_privado,
+            precio_univalle: data.precio_univalle,
+            fecha_inicio: data.id_oferta_academica.fecha_inicio,
+            fecha_finalizacion: data.fecha_finalizacion,
+          }));
 
-        setRows(formateado);
+          setRows(formateado);
+        }
       } catch (error) {
-        console.error("Error al obtener los datos de los estudiantes:", error);
+        console.error("Error al obtener los datos de las categorías:", error);
       }
     };
 
