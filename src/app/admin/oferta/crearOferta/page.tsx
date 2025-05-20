@@ -106,18 +106,6 @@ export default function CrearOferta() {
       const nombreOferta = formData.get("nombre_oferta") as string;
       const fechaInicio = formData.get("fecha_inicio") as string;
 
-      if (!nombreOferta) {
-        setError("Por favor, ingresa el nombre de la oferta.");
-        setLoading(false);
-        return;
-      }
-
-      if (!fechaInicio) {
-        setError("Por favor, selecciona la fecha de inicio.");
-        setLoading(false);
-        return;
-      }
-
       // Verificar si hay al menos una categoría con módulos seleccionados
       const haySeleccionados = Object.values(selectedCursosPorCategoria).some(
         (seleccionados) => seleccionados && seleccionados.length > 0,
@@ -156,10 +144,9 @@ export default function CrearOferta() {
 
       // Iterar sobre las categorías para enviar los datos de cada una
       for (const nombreCategoria of Object.keys(modulosPorCategoria)) {
-        console.log("iterando categoria", nombreCategoria);
         const modulosSeleccionados =
           selectedCursosPorCategoria[nombreCategoria] || [];
-        console.log("modulos seleccionados", modulosSeleccionados);
+
         if (modulosSeleccionados.length === 0) {
           continue; // Si no hay módulos seleccionados, pasa a la siguiente categoría
         }
@@ -177,11 +164,6 @@ export default function CrearOferta() {
         const fechaFinalizacion = formData.get(
           `fecha-finalizacion-${nombreCategoria}`,
         ) as string;
-
-        console.log("precio publico", precioPublico);
-        console.log("precio privado", precioPrivado);
-        console.log("precio univalle", precioUnivalle);
-        console.log("fecha finalizacion", fechaFinalizacion);
 
         // Validar campos obligatorios para cada categoría
         if (!precioPublico) {
@@ -255,7 +237,9 @@ export default function CrearOferta() {
       setSuccess(true);
 
       // Resetear el formulario
-      e.currentTarget.reset();
+      if (e.currentTarget && typeof e.currentTarget.reset === "function") {
+        e.currentTarget.reset();
+      }
       setSelectedCursosPorCategoria({});
     } catch (error) {
       console.error("Error al enviar los datos:", error);
@@ -324,7 +308,7 @@ export default function CrearOferta() {
             />
           </div>
 
-          <h2 className="text-lg font-semibold">Cursos</h2>
+          <h2 className="text-xl font-semibold">Categorías</h2>
 
           {loading ? (
             <div className="py-8 text-center">Cargando módulos...</div>
@@ -335,7 +319,7 @@ export default function CrearOferta() {
           ) : (
             Object.keys(modulosPorCategoria).map((nombreCategoria) => (
               <Box
-                className="border-b border-solid border-primary py-8"
+                className="border-b-2 border-solid border-primary py-8"
                 key={nombreCategoria}
                 borderRadius={2}
               >
@@ -406,26 +390,6 @@ export default function CrearOferta() {
                     required={
                       selectedCursosPorCategoria[nombreCategoria]?.length > 0
                     }
-                    error={
-                      formTouched &&
-                      selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
-                      !(
-                        document.getElementById(
-                          `precio-publico-${nombreCategoria}`,
-                        ) as HTMLInputElement
-                      )?.value
-                    }
-                    helperText={
-                      formTouched &&
-                      selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
-                      !(
-                        document.getElementById(
-                          `precio-publico-${nombreCategoria}`,
-                        ) as HTMLInputElement
-                      )?.value
-                        ? "Campo requerido"
-                        : ""
-                    }
                   />
                   <TextField
                     id={`precio-privado-${nombreCategoria}`}
@@ -435,26 +399,6 @@ export default function CrearOferta() {
                     type="number"
                     required={
                       selectedCursosPorCategoria[nombreCategoria]?.length > 0
-                    }
-                    error={
-                      formTouched &&
-                      selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
-                      !(
-                        document.getElementById(
-                          `precio-privado-${nombreCategoria}`,
-                        ) as HTMLInputElement
-                      )?.value
-                    }
-                    helperText={
-                      formTouched &&
-                      selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
-                      !(
-                        document.getElementById(
-                          `precio-privado-${nombreCategoria}`,
-                        ) as HTMLInputElement
-                      )?.value
-                        ? "Campo requerido"
-                        : ""
                     }
                   />
                   <TextField
@@ -466,26 +410,26 @@ export default function CrearOferta() {
                     required={
                       selectedCursosPorCategoria[nombreCategoria]?.length > 0
                     }
-                    error={
-                      formTouched &&
-                      selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
-                      !(
-                        document.getElementById(
-                          `precio-univalle-${nombreCategoria}`,
-                        ) as HTMLInputElement
-                      )?.value
-                    }
-                    helperText={
-                      formTouched &&
-                      selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
-                      !(
-                        document.getElementById(
-                          `precio-univalle-${nombreCategoria}`,
-                        ) as HTMLInputElement
-                      )?.value
-                        ? "Campo requerido"
-                        : ""
-                    }
+                    // error={
+                    //   formTouched &&
+                    //   selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
+                    //   !(
+                    //     document.getElementById(
+                    //       `precio-univalle-${nombreCategoria}`,
+                    //     ) as HTMLInputElement
+                    //   )?.value
+                    // }
+                    // helperText={
+                    //   formTouched &&
+                    //   selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
+                    //   !(
+                    //     document.getElementById(
+                    //       `precio-univalle-${nombreCategoria}`,
+                    //     ) as HTMLInputElement
+                    //   )?.value
+                    //     ? "Campo requerido"
+                    //     : ""
+                    // }
                   />
                 </Box>
 
@@ -500,26 +444,6 @@ export default function CrearOferta() {
                   fullWidth
                   required={
                     selectedCursosPorCategoria[nombreCategoria]?.length > 0
-                  }
-                  error={
-                    formTouched &&
-                    selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
-                    !(
-                      document.getElementById(
-                        `fecha-finalizacion-${nombreCategoria}`,
-                      ) as HTMLInputElement
-                    )?.value
-                  }
-                  helperText={
-                    formTouched &&
-                    selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
-                    !(
-                      document.getElementById(
-                        `fecha-finalizacion-${nombreCategoria}`,
-                      ) as HTMLInputElement
-                    )?.value
-                      ? "Campo requerido"
-                      : ""
                   }
                 />
               </Box>

@@ -7,18 +7,12 @@ import { Paper } from "@mui/material";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 import {
-  Button,
   Box,
-  TextField,
-  FormLabel,
-  FormGroup,
-  FormControlLabel,
-  Checkbox,
   Alert,
   Snackbar,
 } from "@mui/material";
 
-import { GridColDef, DataGrid, GridRowParams } from "@mui/x-data-grid";
+import { GridColDef, DataGrid} from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "../../../../../config";
 
@@ -28,6 +22,7 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import Typography from "@mui/material/Typography";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 
 // const handleDelete = async (id: number) => {
 //   const confirmDelete = window.confirm(
@@ -73,6 +68,18 @@ export default function VerCursos() {
       width: 130,
       renderCell: (params) => (
         <div className="flex h-full w-full flex-row items-center justify-around">
+          <VisibilityOutlinedIcon
+            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+            onClick={() => {
+              const rowData = params.row;
+
+              localStorage.setItem(
+                "cursoSeleccionado",
+                JSON.stringify(rowData),
+              ); // 👉 Guarda la fila completa como JSON
+              router.push("/admin/cursos/detallarCurso/");
+            }}
+            />
           <PencilSquareIcon
             className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
             onClick={() => {
@@ -89,6 +96,7 @@ export default function VerCursos() {
             className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
             onClick={() => handleDelete(params.row.id)}
           />
+          
         </div>
       ),
     },
@@ -235,12 +243,6 @@ export default function VerCursos() {
     }
   };
 
-  const [openCategorias, setOpenCategorias] = useState<{
-    [key: string]: boolean;
-  }>({});
-  const toggleCategoria = (categoria: string) => {
-    setOpenCategorias((prev) => ({ ...prev, [categoria]: !prev[categoria] }));
-  };
 
   //Barra de busqueda
 
