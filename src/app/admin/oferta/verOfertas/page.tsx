@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Paper } from "@mui/material";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { GridColDef, DataGrid } from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "../../../../../config";
@@ -37,14 +38,26 @@ export default function Page() {
       width: 130,
       renderCell: (params) => (
         <div className="flex h-full w-full flex-row items-center justify-around">
+          <VisibilityOutlinedIcon
+            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+            onClick={() => {
+              const fullData = params.row._original;
+              localStorage.setItem(
+                "ofertaSeleccionada",
+                JSON.stringify(fullData),
+              );
+              console.log(fullData); // 👉 Guarda la fila completa como JSON
+              router.push("/admin/oferta/modificarOfertas/"); // 👉 Navega a la pantalla de modificar
+            }}
+          />
           <PencilSquareIcon
             className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
             onClick={() => {
-              const rowData = params.row;
+              const fullData = params.row._original;
 
               localStorage.setItem(
-                "cursoSeleccionado",
-                JSON.stringify(rowData),
+                "ofertaSeleccionada",
+                JSON.stringify(fullData),
               ); // 👉 Guarda la fila completa como JSON
               router.push("/admin/cursos/modificarCursos/"); // 👉 Navega a la pantalla de modificar
             }}
@@ -115,6 +128,7 @@ export default function Page() {
             precio_univalle: data.precio_univalle,
             fecha_inicio: data.id_oferta_academica.fecha_inicio,
             fecha_finalizacion: data.fecha_finalizacion,
+            _original: data, // Guarda el objeto original
           }));
 
           setRows(formateado);
@@ -173,14 +187,14 @@ export default function Page() {
                 sortModel: [{ field: "id", sort: "desc" }],
               },
             }}
-            onRowClick={(params) => {
-              const fullData = params.row._original;
-              localStorage.setItem(
-                "ofertaSeleccionada",
-                JSON.stringify(fullData),
-              );
-              router.push("/admin/oferta/modificarOfertas/");
-            }}
+            // onRowClick={(params) => {
+            //   const fullData = params.row._original;
+            //   localStorage.setItem(
+            //     "ofertaSeleccionada",
+            //     JSON.stringify(fullData),
+            //   );
+            //   router.push("/admin/oferta/modificarOfertas/");
+            // }}
             pageSizeOptions={[20, 40]}
             sx={{
               border: 0,

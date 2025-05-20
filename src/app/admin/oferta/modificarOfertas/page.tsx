@@ -4,14 +4,12 @@ import {
   Button,
   Box,
   TextField,
-  OutlinedInput,
-  ListItemText,
-  FormControl,
   FormLabel,
-  Select,
-  InputLabel,
-  MenuItem,
+  FormGroup,
+  FormControlLabel,
   Checkbox,
+  Alert,
+  Snackbar,
 } from "@mui/material";
 
 import React from "react";
@@ -20,8 +18,25 @@ import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 
 export default function ModificarOferta() {
-  // Obtener la oferta seleccionada del localStorage
-  // y guardarla en el estado del componente
+  // Estado para los módulos seleccionados por categoría
+  const [selectedCursosPorCategoria, setSelectedCursosPorCategoria] = useState<
+    Record<string, number[]>
+  >({});
+
+  // Estado para indicar si un usuario ha interactuado con el formulario
+  const [formTouched, setFormTouched] = useState(false);
+
+  // Estado para los módulos agrupados por categoría
+  const [modulosPorCategoria, setModulosPorCategoria] = useState<
+    Record<string, any[]>
+  >({});
+
+  // Estado para manejo de errores y éxito
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  // Estado para la oferta seleccionada
   const [oferta, setOferta] = useState<any>(null);
 
   useEffect(() => {
@@ -29,95 +44,258 @@ export default function ModificarOferta() {
     if (storedOferta) {
       setOferta(JSON.parse(storedOferta));
     }
+    console.log("Oferta seleccionada:", storedOferta);
   }, []);
 
   useEffect(() => {
-    if (oferta) {
-      setFormData({
-        nombre_oferta: oferta.name || "",
-        fecha_inicio: oferta.username || "",
-      });
-    }
-  }, [oferta]);
-
-  const [formData, setFormData] = useState({
-    nombre_oferta: "", // Usar el nombre de la oferta seleccionada
-    fecha_inicio: "", // Usar la fecha de inicio de la oferta seleccionada
-  });
-
-  // Estado mínimo necesario para que el Select múltiple funcione
-  const [selectedCursos, setSelectedCursos] = React.useState<number[]>([]);
-  const [selectedCursosPorCategoria, setSelectedCursosPorCategoria] =
-    React.useState<Record<number, number[]>>({});
-
-  // Estado para almacenar las categorias y los modulo desde la API
-  const [categorias, setCategorias] = useState<any[]>([]);
-  const [modulos, setModulos] = useState<any[]>([]);
-
-  useEffect(() => {
-    // Obtener categorias de la API
-    const fetchCategorias = async () => {
+    // Obtener modulos por categoria de la API
+    const fetchModulosCategoria = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/categoria/cat/`, {
-          headers: {
-            Authorization: `Token ${localStorage.getItem("token")}`,
+        setLoading(true);
+        const response = await axios.get(
+          `${API_BASE_URL}/modulo/mod/por-categoria/`,
+          {
+            headers: {
+              Authorization: `Token ${localStorage.getItem("token")}`,
+            },
           },
+        );
+
+        const categoriasData = response.data;
+
+        // Formatear los datos para que sean más fáciles de usar
+        const formateado: Record<string, any[]> = {};
+
+        categoriasData.forEach((categoria: any) => {
+          formateado[categoria.nombre] = categoria.modulos.map((mod: any) => ({
+            id_modulo: mod.id_modulo,
+            nombre_modulo: mod.nombre_modulo,
+            descripcion_modulo: mod.descripcion_modulo,
+            id_area: mod.id_area.id_area,
+            nombre_area: mod.id_area.nombre_area,
+            id_categoria: mod.id_categoria.id_categoria, // Ajustar para reflejar el nuevo formato
+          }));
         });
-        const categoria = response.data;
 
-        const formateado = categoria.map((cat: any) => ({
-          id_categoria: cat.id_categoria,
-          nombre: cat.nombre,
-          descripcion: cat.descripcion,
-        }));
-
-        setCategorias(formateado);
-        console.log("Categorias", formateado);
+        setModulosPorCategoria(formateado);
+        console.log("Modulos por categoría:", formateado);
       } catch (error) {
-        console.error("Error al obtener las categorias", error);
+        console.error("Error al obtener los módulos por categoría", error);
+        setError("Error al cargar los módulos. Por favor, intenta de nuevo.");
+      } finally {
+        setLoading(false);
       }
     };
 
-    // Obtener modulos de la API
-
-    const fetchModulos = async () => {
-      try {
-        const response = await axios.get(`${API_BASE_URL}/modulo/mod/`, {
-          headers: {
-            Authorization: `Token ${localStorage.getItem("token")}`,
-          },
-        });
-        const modulo = response.data;
-
-        const formateado = modulo.map((mod: any) => ({
-          id_modulo: mod.id_modulo,
-          nombre_modulo: mod.nombre_modulo,
-          id_area: mod.descripcion,
-        }));
-
-        setModulos(formateado);
-        console.log("Modulos", formateado);
-      } catch (error) {
-        console.error("Error al obtener los modulos", error);
-      }
-    };
-    fetchModulos();
-    fetchCategorias();
+    fetchModulosCategoria();
   }, []);
 
-  const handleCursoChange = (categoriaId: number, selected: number[]) => {
+  const handleCursoChange = (categoriaId: string, selected: number[]) => {
     setSelectedCursosPorCategoria((prev) => ({
       ...prev,
       [categoriaId]: selected, // Actualiza los cursos seleccionados para la categoría específica
     }));
   };
 
+  const handleCloseSnackbar = () => {
+    setError(null);
+    setSuccess(false);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault(); // Evita el comportamiento por defecto del formulario
+
+    // Marcar el formulario como tocado para que muestre validaciones
+    setFormTouched(true);
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Validar campos obligatorios
+      const formData = new FormData(e.currentTarget);
+      const nombreOferta = formData.get("nombre_oferta") as string;
+      const fechaInicio = formData.get("fecha_inicio") as string;
+
+      // Verificar si hay al menos una categoría con módulos seleccionados
+      const haySeleccionados = Object.values(selectedCursosPorCategoria).some(
+        (seleccionados) => seleccionados && seleccionados.length > 0,
+      );
+
+      if (!haySeleccionados) {
+        setError(
+          "Por favor, selecciona al menos un módulo en alguna categoría.",
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Realizar la solicitud POST al endpoint /oferta_academica/ofer/
+      const ofertaAcademicaResponse = await axios.post(
+        `${API_BASE_URL}/oferta_academica/ofer/`,
+        {
+          nombre: nombreOferta,
+          fecha_inicio: fechaInicio,
+        },
+        {
+          headers: {
+            Authorization: `Token ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+
+      // Obtener el ID de la oferta académica creada
+      const idOfertaAcademica =
+        ofertaAcademicaResponse.data.id_oferta_academica;
+      console.log("ID de la oferta académica creada:", idOfertaAcademica);
+      console.log(
+        "selectedCursosPorCategoria antes de enviar datos a la API",
+        selectedCursosPorCategoria,
+      );
+
+      // Iterar sobre las categorías para enviar los datos de cada una
+      for (const nombreCategoria of Object.keys(modulosPorCategoria)) {
+        const modulosSeleccionados =
+          selectedCursosPorCategoria[nombreCategoria] || [];
+
+        if (modulosSeleccionados.length === 0) {
+          continue; // Si no hay módulos seleccionados, pasa a la siguiente categoría
+        }
+
+        // Obtener los valores de los campos de precios y fecha
+        const precioPublico = formData.get(
+          `precio-publico-${nombreCategoria}`,
+        ) as string;
+        const precioPrivado = formData.get(
+          `precio-privado-${nombreCategoria}`,
+        ) as string;
+        const precioUnivalle = formData.get(
+          `precio-univalle-${nombreCategoria}`,
+        ) as string;
+        const fechaFinalizacion = formData.get(
+          `fecha-finalizacion-${nombreCategoria}`,
+        ) as string;
+
+        // Validar campos obligatorios para cada categoría
+        if (!precioPublico) {
+          setError(
+            `Por favor, ingresa el precio público para la categoría: ${nombreCategoria}`,
+          );
+          setLoading(false);
+          return;
+        }
+
+        if (!precioPrivado) {
+          setError(
+            `Por favor, ingresa el precio privado para la categoría: ${nombreCategoria}`,
+          );
+          setLoading(false);
+          return;
+        }
+
+        if (!precioUnivalle) {
+          setError(
+            `Por favor, ingresa el precio Univalle para la categoría: ${nombreCategoria}`,
+          );
+          setLoading(false);
+          return;
+        }
+
+        if (!fechaFinalizacion) {
+          setError(
+            `Por favor, selecciona la fecha de finalización para la categoría: ${nombreCategoria}`,
+          );
+          setLoading(false);
+          return;
+        }
+
+        // Obtener el ID de la categoría del primer módulo de la categoría
+        const idCategoria =
+          modulosPorCategoria[nombreCategoria][0]?.id_categoria;
+
+        if (!idCategoria) {
+          setError(
+            `No se pudo determinar el ID de la categoría: ${nombreCategoria}`,
+          );
+          return;
+        }
+
+        // Formatear los datos para la API
+        const data = {
+          modulo: modulosSeleccionados,
+          precio_publico: precioPublico,
+          precio_privado: precioPrivado,
+          precio_univalle: precioUnivalle,
+          fecha_finalizacion: fechaFinalizacion,
+          id_oferta_academica: idOfertaAcademica,
+          id_categoria: idCategoria,
+        };
+
+        console.log("Enviando datos:", data);
+
+        // Realizar la solicitud POST al endpoint /oferta_categoria/ofer/
+        await axios.post(`${API_BASE_URL}/oferta_categoria/ofer/`, data, {
+          headers: {
+            Authorization: `Token ${localStorage.getItem("token")}`,
+          },
+        });
+
+        console.log(
+          `Datos enviados correctamente para la categoría: ${nombreCategoria}`,
+        );
+      }
+
+      setSuccess(true);
+
+      // Resetear el formulario
+      if (e.currentTarget && typeof e.currentTarget.reset === "function") {
+        e.currentTarget.reset();
+      }
+      setSelectedCursosPorCategoria({});
+    } catch (error) {
+      console.error("Error al enviar los datos:", error);
+      setError("Hubo un problema al enviar los datos. Inténtalo de nuevo.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 shadow-md">
-      <h2 className="mb-2 text-center">Crear oferta</h2>
-      <div className="flex w-full flex-row items-center justify-center">
-        <form action="" method="post" className="space-y-4">
-          <div className="flex w-full flex-wrap justify-between gap-4 text-gray-600">
+    <div>
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={success}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          Oferta modificada exitosamente.
+        </Alert>
+      </Snackbar>
+
+      {/* Contenedor de cursos */}
+      <div className="mx-auto mt-5 flex w-full flex-col items-center justify-center rounded-2xl bg-white p-3 sm:w-11/12">
+        <h2 className="mb-2 text-center text-xl font-bold">Modificar oferta</h2>
+
+        <form onSubmit={handleSubmit} className="w-full space-y-4 px-4">
+          <div className="mx-auto flex w-full flex-col items-center justify-between gap-4 sm:w-4/5 sm:flex-row">
             {/* Campo nombre de la oferta */}
             <TextField
               className="inputs-textfield flex w-full sm:w-1/3"
@@ -126,11 +304,9 @@ export default function ModificarOferta() {
               variant="outlined"
               type="text"
               fullWidth
-              value={formData.nombre_oferta}
               required
             />
             {/* Campo fecha de inicio de la oferta */}
-
             <TextField
               className="inputs-textfield flex w-full sm:w-1/3"
               label="Fecha de inicio"
@@ -143,95 +319,167 @@ export default function ModificarOferta() {
             />
           </div>
 
-          <h2>Cursos</h2>
+          <h2 className="text-xl font-semibold">Categorías</h2>
 
-          {categorias.map((categoria) => (
-            <Box key={categoria.id_categoria} borderRadius={2}>
-              <FormLabel className="font-semibold">
-                {categoria.nombre}
-              </FormLabel>
-              <FormControl
-                className="inputs-textfield"
-                fullWidth
-                sx={{ mt: 2 }}
+          {loading ? (
+            <div className="py-8 text-center">Cargando módulos...</div>
+          ) : Object.keys(modulosPorCategoria).length === 0 ? (
+            <div className="py-8 text-center">
+              No hay categorías disponibles
+            </div>
+          ) : (
+            Object.keys(modulosPorCategoria).map((nombreCategoria) => (
+              <Box
+                className="border-b-2 border-solid border-primary py-8"
+                key={nombreCategoria}
+                borderRadius={2}
               >
-                <InputLabel>Cursos</InputLabel>
-                <Select
-                  multiple
-                  value={
-                    selectedCursosPorCategoria[categoria.id_categoria] || []
-                  }
-                  onChange={(e) =>
-                    handleCursoChange(
-                      categoria.id_categoria,
-                      e.target.value as number[],
-                    )
-                  }
-                  input={<OutlinedInput label="Cursos" />}
-                  renderValue={(selected) =>
-                    selected
-                      .map(
-                        (id) =>
-                          modulos.find((c) => c.id_modulo === id)
-                            ?.nombre_modulo,
-                      )
-                      .filter(Boolean)
-                      .join(", ")
-                  }
-                >
-                  {modulos
-                    // Filtra los módulos por categoría
-                    .map((curso) => (
-                      <MenuItem key={curso.id_modulo} value={curso.id_modulo}>
+                <FormLabel className="text-lg font-semibold">
+                  {nombreCategoria}
+                </FormLabel>
+
+                {formTouched &&
+                  selectedCursosPorCategoria[nombreCategoria]?.length === 0 && (
+                    <p className="mt-2 text-sm text-red-600">
+                      Selecciona al menos un módulo o deja todos los campos en
+                      blanco para no incluir esta categoría
+                    </p>
+                  )}
+
+                <FormGroup className="mt-4 flex flex-row flex-wrap justify-start gap-4">
+                  {modulosPorCategoria[nombreCategoria].map((modulo) => (
+                    <FormControlLabel
+                      key={modulo.id_modulo}
+                      control={
                         <Checkbox
                           checked={
                             selectedCursosPorCategoria[
-                              categoria.id_categoria
-                            ]?.includes(curso.id_modulo) || false
+                              nombreCategoria
+                            ]?.includes(modulo.id_modulo) || false
                           }
-                        />
-                        <ListItemText primary={curso.nombre_modulo} />
-                      </MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            const currentSeleccionados =
+                              selectedCursosPorCategoria[nombreCategoria] || [];
 
-              <Box display="flex" gap={2} mt={2}>
+                            let nuevosSeleccionados;
+
+                            if (checked) {
+                              nuevosSeleccionados = [
+                                ...currentSeleccionados,
+                                modulo.id_modulo,
+                              ];
+                            } else {
+                              nuevosSeleccionados = currentSeleccionados.filter(
+                                (id) => id !== modulo.id_modulo,
+                              );
+                            }
+
+                            handleCursoChange(
+                              nombreCategoria,
+                              nuevosSeleccionados,
+                            );
+
+                            if (!formTouched) {
+                              setFormTouched(true);
+                            }
+                          }}
+                        />
+                      }
+                      label={modulo.nombre_modulo}
+                    />
+                  ))}
+                </FormGroup>
+
+                <Box className="mt-6 flex w-full flex-col justify-between gap-4 sm:flex-row">
+                  <TextField
+                    id={`precio-publico-${nombreCategoria}`}
+                    name={`precio-publico-${nombreCategoria}`}
+                    className="inputs-textfield w-full sm:w-1/3"
+                    label="Precio Colegio Público"
+                    type="number"
+                    required={
+                      selectedCursosPorCategoria[nombreCategoria]?.length > 0
+                    }
+                  />
+                  <TextField
+                    id={`precio-privado-${nombreCategoria}`}
+                    name={`precio-privado-${nombreCategoria}`}
+                    className="inputs-textfield w-full sm:w-1/3"
+                    label="Precio Colegio Privado"
+                    type="number"
+                    required={
+                      selectedCursosPorCategoria[nombreCategoria]?.length > 0
+                    }
+                  />
+                  <TextField
+                    id={`precio-univalle-${nombreCategoria}`}
+                    name={`precio-univalle-${nombreCategoria}`}
+                    className="inputs-textfield w-full sm:w-1/3"
+                    label="Precio Relación Univalle"
+                    type="number"
+                    required={
+                      selectedCursosPorCategoria[nombreCategoria]?.length > 0
+                    }
+                    // error={
+                    //   formTouched &&
+                    //   selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
+                    //   !(
+                    //     document.getElementById(
+                    //       `precio-univalle-${nombreCategoria}`,
+                    //     ) as HTMLInputElement
+                    //   )?.value
+                    // }
+                    // helperText={
+                    //   formTouched &&
+                    //   selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
+                    //   !(
+                    //     document.getElementById(
+                    //       `precio-univalle-${nombreCategoria}`,
+                    //     ) as HTMLInputElement
+                    //   )?.value
+                    //     ? "Campo requerido"
+                    //     : ""
+                    // }
+                  />
+                </Box>
+
                 <TextField
+                  id={`fecha-finalizacion-${nombreCategoria}`}
+                  name={`fecha-finalizacion-${nombreCategoria}`}
                   className="inputs-textfield"
-                  label="Precio Público"
-                  type="number"
-                />
-                <TextField
-                  className="inputs-textfield"
-                  label="Precio Privado"
-                  type="number"
-                />
-                <TextField
-                  className="inputs-textfield"
-                  label="Precio Relación Univalle"
-                  type="number"
+                  sx={{ mt: 4 }}
+                  type="date"
+                  label="Fecha de finalización"
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                  required={
+                    selectedCursosPorCategoria[nombreCategoria]?.length > 0
+                  }
                 />
               </Box>
+            ))
+          )}
 
-              <TextField
-                className="inputs-textfield"
-                sx={{ mt: 2 }}
-                type="date"
-                label="Fecha de finalización"
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-              />
-            </Box>
-          ))}
+          <div>
+            {formTouched &&
+              !Object.values(selectedCursosPorCategoria).some(
+                (arr) => arr?.length > 0,
+              ) && (
+                <p className="mb-4 text-center text-red-600">
+                  Por favor, selecciona al menos un módulo en alguna categoría
+                </p>
+              )}
 
-          <Button
-            type="submit"
-            variant="contained"
-            className="text-md mt-4 w-full rounded-2xl bg-primary font-semibold capitalize text-white hover:bg-red-800"
-          >
-            Crear oferta
-          </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={loading}
+              className="text-md mt-4 w-full rounded-2xl bg-primary py-3 font-semibold capitalize text-white hover:bg-red-800 disabled:bg-gray-400"
+            >
+              {loading ? "Procesando..." : "Crear oferta"}
+            </Button>
+          </div>
         </form>
       </div>
     </div>
