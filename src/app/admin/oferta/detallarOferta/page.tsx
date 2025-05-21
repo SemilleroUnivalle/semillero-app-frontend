@@ -338,7 +338,7 @@ export default function ModificarOferta() {
 
       {/* Contenedor de cursos */}
       <div className="mx-auto mt-5 flex w-full flex-col items-center justify-center rounded-2xl bg-white p-3 sm:w-11/12">
-        <h2 className="mb-2 text-center text-xl font-bold">Modificar oferta</h2>
+        <h2 className="mb-2 text-center text-xl font-bold">Oferta: {nombreOferta}</h2>
 
         <form onSubmit={handleSubmit} className="w-full space-y-4 px-4">
           <div className="mx-auto flex w-full flex-col items-center justify-between gap-4 sm:w-4/5 sm:flex-row">

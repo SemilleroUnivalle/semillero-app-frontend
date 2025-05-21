@@ -21,23 +21,14 @@ export default function Page() {
 
   const columnsOfertas: GridColDef[] = [
     { field: "id", headerName: "ID", width: 70 },
-    { field: "nombre", headerName: "Nombre", width: 130 },
-    { field: "categoria", headerName: "Categoria", width: 130 },
-    { field: "precio_publico", headerName: "Precio publico", width: 130 },
-    { field: "precio_privado", headerName: "Precio privado", width: 130 },
-    { field: "precio_univalle", headerName: "Precio Univalle", width: 130 },
-    { field: "fecha_inicio", headerName: "Fecha inicio", width: 130 },
-    {
-      field: "fecha_finalizacion",
-      headerName: "Fecha finalización",
-      width: 130,
-    },
+    { field: "nombre", headerName: "Nombre", width: 300 },
+    { field: "fecha_inicio", headerName: "Fecha inicio", width: 300 },
     {
       field: "editar",
       headerName: "Acciones",
       sortable: false,
       filterable: false,
-      width: 130,
+      width: 300,
       renderCell: (params) => (
         <div className="flex h-full w-full flex-row items-center justify-around">
           <VisibilityOutlinedIcon
@@ -49,7 +40,7 @@ export default function Page() {
                 JSON.stringify(fullData),
               );
               console.log(fullData); // 👉 Guarda la fila completa como JSON
-              router.push("/admin/oferta/modificarOfertas/"); // 👉 Navega a la pantalla de modificar
+              router.push("/admin/oferta/detallarOferta/"); // 👉 Navega a la pantalla de modificar
             }}
           />
           <PencilSquareIcon

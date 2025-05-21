@@ -23,29 +23,6 @@ import Typography from "@mui/material/Typography";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 
-// const handleDelete = async (id: number) => {
-//   const confirmDelete = window.confirm(
-//     "¿Estás seguro de que deseas eliminar este curso?"
-//   );
-//   if (!confirmDelete) return;
-
-//   try {
-//     await axios.delete(`${API_BASE_URL}/modulo/mod/${id}/`, {
-//       headers: {
-//         Authorization: `Token ${localStorage.getItem("token")}`,
-//       },
-//     });
-
-//     // Actualiza las filas eliminando el curso correspondiente
-//     setRows((prevRows) => prevRows.filter((row) => row.id !== id));
-
-//     alert("Curso eliminado con éxito");
-//   } catch (error) {
-//     console.error("Error al eliminar el curso:", error);
-//     alert("Hubo un error al eliminar el curso. Por favor, inténtalo de nuevo.");
-//   }
-// };
-
 const paginationModel = { page: 0, pageSize: 20 };
 
 export default function VerCursos() {
@@ -92,26 +69,13 @@ export default function VerCursos() {
             }}
           />
           <TrashIcon
-            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
             onClick={() => handleDelete(params.row.id)}
           />
           
         </div>
       ),
     },
-    // {
-    //   field: "eliminar",
-    //   headerName: "Eliminar",
-    //   width: 130,
-    //   renderCell: (params) => (
-    //     <button
-    //       onClick={() => handleDelete(params.row.id)} // Llama a la función de eliminación
-    //       className="text-red-500 hover:text-red-700"
-    //     >
-    //       <DeleteIcon />
-    //     </button>
-    //   ),
-    // },
   ];
 
   const [modulosPorCategoria, setModulosPorCategoria] = useState<
@@ -157,7 +121,6 @@ export default function VerCursos() {
               );
             });
             setModulosPorCategoria(formateado);
-            // setRows(formateado);
             console.log("Modulos por categoría:", formateado);
           }
         }
@@ -325,7 +288,8 @@ export default function VerCursos() {
                       sx={{
                         border: 0,
                         "& .MuiDataGrid-columnHeaders": {
-                          backgroundColor: "#e8e8e8", // Fondo de todo el header
+                        
+                          
                         },
                         "& .MuiDataGrid-columnHeaderTitle": {
                           fontWeight: "bold", // Negrita en el título
