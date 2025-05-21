@@ -44,7 +44,6 @@ export default function ModificarOferta() {
     if (storedOferta) {
       setOferta(JSON.parse(storedOferta));
     }
-    console.log("Oferta seleccionada:", storedOferta);
   }, []);
 
   useEffect(() => {

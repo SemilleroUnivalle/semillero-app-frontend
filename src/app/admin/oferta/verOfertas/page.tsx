@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Paper } from "@mui/material";
+import { Paper, Alert, Snackbar } from "@mui/material";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { GridColDef, DataGrid } from "@mui/x-data-grid";
@@ -14,6 +14,8 @@ const paginationModel = { page: 0, pageSize: 20 };
 
 export default function Page() {
   const router = useRouter();
+
+  const [success, setSuccess] = useState(false);
 
   const [rows, setRows] = useState<any[]>([]);
 
@@ -59,11 +61,11 @@ export default function Page() {
                 "ofertaSeleccionada",
                 JSON.stringify(fullData),
               ); // 👉 Guarda la fila completa como JSON
-              router.push("/admin/cursos/modificarCursos/"); // 👉 Navega a la pantalla de modificar
+              router.push("/admin/oferta/modificarOfertas/"); // 👉 Navega a la pantalla de modificar
             }}
           />
           <TrashIcon
-            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
             onClick={() => handleDelete(params.row.id)}
           />
         </div>
@@ -82,23 +84,24 @@ export default function Page() {
   // Función para eliminar un curso
   const handleDelete = async (id: number) => {
     const confirmDelete = window.confirm(
-      "¿Estás seguro de que deseas eliminar este curso?",
+      "¿Estás seguro de que deseas eliminar esta oferta?",
     );
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/modulo/mod/${id}/`, {
+      await axios.delete(`${API_BASE_URL}/oferta_academica/ofer/${id}/`, {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
         },
       });
 
       setRows((prevRows) => prevRows.filter((row) => row.id !== id));
-      alert("Curso eliminado con éxito");
+      setSuccess(true);
+
     } catch (error) {
-      console.error("Error al eliminar el curso:", error);
+      console.error("Error al eliminar la oferta:", error);
       alert(
-        "Hubo un error al eliminar el curso. Por favor, inténtalo de nuevo.",
+        "Hubo un error al eliminar la oferta. Por favor, inténtalo de nuevo.",
       );
     }
   };
@@ -163,6 +166,19 @@ export default function Page() {
 
   return (
     <div>
+      <Snackbar
+        open={success}
+        autoHideDuration={4000}
+        onClose={() => setSuccess(false)}
+      >
+        <Alert
+          onClose={() => setSuccess(false)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          Oferta eliminada exitosamente.
+        </Alert>
+      </Snackbar>
       {/* Contenedor de ofertas */}
 
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 shadow-md">
