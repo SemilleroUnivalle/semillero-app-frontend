@@ -17,7 +17,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 
-export default function ModificarOferta() {
+export default function DetallarOferta() {
   // Estado para los módulos seleccionados por categoría
   const [selectedCursosPorCategoria, setSelectedCursosPorCategoria] = useState<
     Record<string, number[]>
