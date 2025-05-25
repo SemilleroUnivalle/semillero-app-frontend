@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import Perfil from "../page"; // Ajusta la ruta según tu estructura
-import axios from "axios";
+
 
 jest.mock("axios");
 

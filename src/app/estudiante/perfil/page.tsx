@@ -11,7 +11,7 @@ import {
   Avatar,
   Button,
 } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import axios from "axios";
 import Head from "next/head";
@@ -58,7 +58,7 @@ const grados: string[] = [
 ];
 
 export default function Perfil() {
-  let id_estudiante = "";
+    const idEstudianteRef = useRef<string>("");
 
   const [formData, setFormData] = useState({
     nombre: "",
@@ -111,8 +111,8 @@ export default function Perfil() {
       
       }));
       console.log(user);
-      id_estudiante = user.id;
-      console.log(id_estudiante);
+      idEstudianteRef.current = user.id;
+      console.log("ID estudiante:", idEstudianteRef.current);
     }
   }, []);
 
@@ -133,7 +133,7 @@ export default function Perfil() {
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}estudiante/est/${id_estudiante}/`,
+        `${API_BASE_URL}estudiante/est/${idEstudianteRef}/`,
         {
           method: "PATCH",
           headers: {
