@@ -16,8 +16,17 @@ import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 
 export default function CrearCursos() {
-  const [areas, setAreas] = useState<any[]>([]);
-  const [categorias, setCategorias] = useState<any[]>([]);
+  interface Area {
+    id_area: string;
+    nombre_area: string;
+  }
+  interface Categoria {
+    id_categoria: string;
+    nombre: string;
+  }
+
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
 
   const [otraArea, setOtraArea] = useState<string>(""); // Para especificar otra área
   const [otraCategoria, setOtraCategoria] = useState<string>(""); // Para especificar otra
@@ -124,7 +133,7 @@ export default function CrearCursos() {
         if (!area || (Array.isArray(area) && area.length === 0)) {
           console.log("Error: No se encontraron áreas");
         } else {
-          const formateado = area.map((are: any) => ({
+          const formateado = area.map((are: Area) => ({
             id_area: are.id_area,
             nombre_area: are.nombre_area,
           }));
@@ -152,7 +161,7 @@ export default function CrearCursos() {
         ) {
           console.log("Error: No se encontraron categorias");
         } else {
-          const formateado = categoria.map((cat: any) => ({
+          const formateado = categoria.map((cat: Categoria) => ({
             id_categoria: cat.id_categoria,
             nombre: cat.nombre,
           }));

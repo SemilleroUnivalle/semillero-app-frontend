@@ -16,10 +16,28 @@ import { API_BASE_URL } from "../../../../../config";
 
 import { useRouter } from "next/navigation";
 
-export default function detallarCurso() {
+export default function DetallarCurso() {
+  interface Curso {
+    id: number;
+    nombre: string;
+    descripcion: string;
+    id_area: string;
+    id_categoria: string;
+  }
+
+  interface Area {
+    id_area: string;
+    nombre_area: string;
+  }
+
+  interface Categoria {
+    id_categoria: string;
+    nombre: string;
+  }
+
   // Obtener el curso seleccionado del localStorage
   // y guardarlo en el estado del componente
-  const [curso, setCurso] = useState<any>(null);
+  const [curso, setCurso] = useState<Curso>();
   // Estado para manejar los datos del formulario
   const [formData, setFormData] = useState({
     nombre_modulo: "", // Usar el nombre del curso seleccionado
@@ -50,8 +68,8 @@ export default function detallarCurso() {
     }
   }, [curso]);
 
-  const [areas, setAreas] = useState<any[]>([]);
-  const [categorias, setCategorias] = useState<any[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
 
   useEffect(() => {
     const fetchAreas = async () => {
@@ -63,7 +81,7 @@ export default function detallarCurso() {
         });
         const area = response.data;
 
-        const formateado = area.map((are: any) => ({
+        const formateado = area.map((are: Area) => ({
           id_area: are.id_area,
           nombre_area: are.nombre_area,
         }));
@@ -84,7 +102,7 @@ export default function detallarCurso() {
         });
         const categoria = response.data;
 
-        const formateado = categoria.map((cat: any) => ({
+        const formateado = categoria.map((cat: Categoria) => ({
           id_categoria: cat.id_categoria,
           nombre: cat.nombre,
         }));
@@ -235,7 +253,7 @@ export default function detallarCurso() {
           </Button>
           <Button
             variant="contained"
-            onClick={() => handleDelete(curso.id)}
+            onClick={() => curso && handleDelete(curso.id)}
             className="text-md mt-4 w-1/2 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
           >
             Eliminar

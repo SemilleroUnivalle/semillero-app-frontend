@@ -18,6 +18,14 @@ import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 
 export default function CrearOferta() {
+  interface Modulo {
+    id_modulo: number;
+    nombre_modulo: string;
+    descripcion_modulo: string;
+    id_area: string;
+    nombre_area: string;
+    id_categoria: string;
+  }
   // Estado para los módulos seleccionados por categoría
   const [selectedCursosPorCategoria, setSelectedCursosPorCategoria] = useState<
     Record<string, number[]>
@@ -28,7 +36,7 @@ export default function CrearOferta() {
 
   // Estado para los módulos agrupados por categoría
   const [modulosPorCategoria, setModulosPorCategoria] = useState<
-    Record<string, any[]>
+    Record<string, Modulo[]>
   >({});
 
   // Estado para manejo de errores y éxito
@@ -53,18 +61,20 @@ export default function CrearOferta() {
         const categoriasData = response.data;
 
         // Formatear los datos para que sean más fáciles de usar
-        const formateado: Record<string, any[]> = {};
+        const formateado: Record<string, Modulo[]> = {};
 
-        categoriasData.forEach((categoria: any) => {
-          formateado[categoria.nombre] = categoria.modulos.map((mod: any) => ({
-            id_modulo: mod.id_modulo,
-            nombre_modulo: mod.nombre_modulo,
-            descripcion_modulo: mod.descripcion_modulo,
-            id_area: mod.id_area.id_area,
-            nombre_area: mod.id_area.nombre_area,
-            id_categoria: mod.id_categoria.id_categoria, // Ajustar para reflejar el nuevo formato
-          }));
-        });
+        categoriasData.forEach(
+          (categoria: { nombre: string; modulos: Modulo[] }) => {
+            formateado[categoria.nombre] = categoria.modulos.map((mod) => ({
+              id_modulo: mod.id_modulo,
+              nombre_modulo: mod.nombre_modulo,
+              descripcion_modulo: mod.descripcion_modulo,
+              id_area: mod.id_area,
+              nombre_area: mod.nombre_area,
+              id_categoria: mod.id_categoria,
+            }));
+          },
+        );
 
         setModulosPorCategoria(formateado);
         console.log("Modulos por categoría:", formateado);

@@ -6,13 +6,9 @@ import axios from "axios";
 import { Paper } from "@mui/material";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
-import {
-  Box,
-  Alert,
-  Snackbar,
-} from "@mui/material";
+import { Box, Alert, Snackbar } from "@mui/material";
 
-import { GridColDef, DataGrid} from "@mui/x-data-grid";
+import { GridColDef, DataGrid } from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "../../../../../config";
 
@@ -21,13 +17,26 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import Typography from "@mui/material/Typography";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 
 const paginationModel = { page: 0, pageSize: 20 };
 
 export default function VerCursos() {
+  interface Modulo {
+    id_modulo: number;
+    nombre_modulo: string;
+    descripcion_modulo: string;
+    id_area: {
+      id_area: string;
+      nombre_area: string;
+    };
+    id_categoria: {
+      id_categoria: string;
+      nombre: string;
+    };
+  }
+
   const router = useRouter();
-  const [rows, setRows] = useState<any[]>([]);
   const [success, setSuccess] = useState(false);
 
   const columnsOfertas: GridColDef[] = [
@@ -55,7 +64,7 @@ export default function VerCursos() {
               ); // 👉 Guarda la fila completa como JSON
               router.push("/admin/cursos/detallarCurso/");
             }}
-            />
+          />
           <PencilSquareIcon
             className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
             onClick={() => {
@@ -72,14 +81,13 @@ export default function VerCursos() {
             className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
             onClick={() => handleDelete(params.row.id)}
           />
-          
         </div>
       ),
     },
   ];
 
   const [modulosPorCategoria, setModulosPorCategoria] = useState<
-    Record<string, any[]>
+    Record<string, Modulo[]>
   >({});
   const [loading, setLoading] = useState(false);
 
@@ -105,21 +113,26 @@ export default function VerCursos() {
           const categoriasData = response.data;
 
           // Formatear los datos para que sean más fáciles de usar
-          const formateado: Record<string, any[]> = {};
+          const formateado: Record<string, Modulo[]> = {};
 
           if (Array.isArray(categoriasData)) {
-            categoriasData.forEach((categoria: any) => {
-              formateado[categoria.nombre] = categoria.modulos.map(
-                (mod: any) => ({
+            categoriasData.forEach(
+              (categoria: { nombre: string; modulos: Modulo[] }) => {
+                formateado[categoria.nombre] = categoria.modulos.map((mod) => ({
                   id_modulo: mod.id_modulo,
                   nombre_modulo: mod.nombre_modulo,
                   descripcion_modulo: mod.descripcion_modulo,
-                  id_area: mod.id_area.id_area,
-                  nombre_area: mod.id_area.nombre_area,
-                  id_categoria: mod.id_categoria.id_categoria,
-                }),
-              );
-            });
+                  id_area: {
+                    id_area: mod.id_area.id_area,
+                    nombre_area: mod.id_area.nombre_area,
+                  },
+                  id_categoria: {
+                    id_categoria: mod.id_categoria.id_categoria,
+                    nombre: mod.id_categoria.nombre,
+                  },
+                }));
+              },
+            );
             setModulosPorCategoria(formateado);
             console.log("Modulos por categoría:", formateado);
           }
@@ -144,7 +157,7 @@ export default function VerCursos() {
         });
         const res = response.data;
 
-        const formateado = res.map((data: any) => ({
+        const formateado = res.map((data: Modulo) => ({
           id: data.id_modulo,
           nombre: data.nombre_modulo,
           id_area: data.id_area.id_area,
@@ -153,8 +166,8 @@ export default function VerCursos() {
           categoria: data.id_categoria.nombre,
           descripcion: data.descripcion_modulo,
         }));
-
-        setRows(formateado);
+        console.log("Modulos:", formateado);
+        // setRows(formateado);
       } catch (error) {
         console.error("Error al obtener los modulos:", error);
       }
@@ -177,7 +190,7 @@ export default function VerCursos() {
         },
       });
 
-      setRows((prevRows) => prevRows.filter((row) => row.id !== id));
+      // setRows((prevRows) => prevRows.filter((row) => row.id !== id));
 
       // Actualiza modulosPorCategoria eliminando el módulo de la categoría correspondiente
       setModulosPorCategoria((prev) => {
@@ -204,7 +217,6 @@ export default function VerCursos() {
       );
     }
   };
-
 
   //Barra de busqueda
 
@@ -278,7 +290,7 @@ export default function VerCursos() {
                         nombre: mod.nombre_modulo,
                         descripcion: mod.descripcion_modulo,
                         id_area: mod.id_area,
-                        area: mod.nombre_area,
+                        area: mod.id_area.nombre_area,
                         id_categoria: mod.id_categoria,
                         categoria: nombreCategoria,
                       }))}
@@ -287,10 +299,7 @@ export default function VerCursos() {
                       pageSizeOptions={[20, 40]}
                       sx={{
                         border: 0,
-                        "& .MuiDataGrid-columnHeaders": {
-                        
-                          
-                        },
+                        "& .MuiDataGrid-columnHeaders": {},
                         "& .MuiDataGrid-columnHeaderTitle": {
                           fontWeight: "bold", // Negrita en el título
                           color: "#575757", // Color del texto

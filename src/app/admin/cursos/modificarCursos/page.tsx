@@ -9,16 +9,33 @@ import {
   MenuItem,
   SelectChangeEvent,
 } from "@mui/material";
-import Alert from '@mui/material/Alert';
-import Snackbar from '@mui/material/Snackbar';
+import Alert from "@mui/material/Alert";
+import Snackbar from "@mui/material/Snackbar";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 
-export default function _ModificarCursos() {
+export default function ModificarCursos() {
+  interface Curso {
+    id: number;
+    nombre: string;
+    descripcion: string;
+    id_area: string;
+    id_categoria: string;
+  }
+
+  interface Area {
+    id_area: string;
+    nombre_area: string;
+  }
+
+  interface Categoria {
+    id_categoria: string;
+    nombre: string;
+  }
   // Obtener el curso seleccionado del localStorage
   // y guardarlo en el estado del componente
-  const [curso, setCurso] = useState<any>(null);
+  const [curso, setCurso] = useState<Curso | null>(null);
   // Estado para manejar los datos del formulario
   const [formData, setFormData] = useState({
     nombre_modulo: "", // Usar el nombre del curso seleccionado
@@ -26,8 +43,8 @@ export default function _ModificarCursos() {
     id_area: "", // Usar el área del curso seleccionado
     id_categoria: "", // Usar la categoría del curso seleccionado
   });
-// Estado para manejar el mensaje de éxito
-   const [success, setSuccess] = useState(false);
+  // Estado para manejar el mensaje de éxito
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     const storedCurso = localStorage.getItem("cursoSeleccionado");
@@ -48,8 +65,8 @@ export default function _ModificarCursos() {
     }
   }, [curso]);
 
-  const [areas, setAreas] = useState<any[]>([]);
-  const [categorias, setCategorias] = useState<any[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
 
   const [otraArea, setOtraArea] = useState<string>(""); // Para especificar otra área
   const [otraCategoria, setOtraCategoria] = useState<string>(""); // Para especificar otra categoría
@@ -105,28 +122,31 @@ export default function _ModificarCursos() {
       }
 
       // Modifica el curso
-      const cursoResponse = await axios.patch(
-        `${API_BASE_URL}/modulo/mod/${curso.id}/`,
-        {
-          nombre_modulo: formData.nombre_modulo,
-          id_area: areaId,
-          id_categoria: categoriaId,
-          descripcion_modulo: formData.descripcion_curso,
-        },
-        {
-          headers: {
-            Authorization: `Token ${localStorage.getItem("token")}`,
+      if (!curso) {
+        console.error("No se encontró el curso seleccionado.");
+      } else {
+        const cursoResponse = await axios.patch(
+          `${API_BASE_URL}/modulo/mod/${curso.id}/`,
+          {
+            nombre_modulo: formData.nombre_modulo,
+            id_area: areaId,
+            id_categoria: categoriaId,
+            descripcion_modulo: formData.descripcion_curso,
           },
-        },
-      );
-
-      console.log("Curso modificado exitosamente:", cursoResponse.data);
-      setSuccess(true);
-
-
+          {
+            headers: {
+              Authorization: `Token ${localStorage.getItem("token")}`,
+            },
+          },
+        );
+        console.log("Curso modificado exitosamente:", cursoResponse.data);
+        setSuccess(true);
+      }
     } catch (error) {
       console.error("Error al modificar el curso:", error);
-      alert("Hubo un error al modificar el curso. Por favor, inténtalo de nuevo.");
+      alert(
+        "Hubo un error al modificar el curso. Por favor, inténtalo de nuevo.",
+      );
     }
   };
 
@@ -140,7 +160,7 @@ export default function _ModificarCursos() {
         });
         const area = response.data;
 
-        const formateado = area.map((are: any) => ({
+        const formateado = area.map((are: Area) => ({
           id_area: are.id_area,
           nombre_area: are.nombre_area,
         }));
@@ -161,7 +181,7 @@ export default function _ModificarCursos() {
         });
         const categoria = response.data;
 
-        const formateado = categoria.map((cat: any) => ({
+        const formateado = categoria.map((cat: Categoria) => ({
           id_categoria: cat.id_categoria,
           nombre: cat.nombre,
         }));
@@ -179,13 +199,20 @@ export default function _ModificarCursos() {
 
   return (
     <div className="mx-auto mt-4 flex w-11/12 flex-col items-center justify-center rounded-2xl bg-white p-4 py-2 shadow-md">
-      
-      <Snackbar open={success} autoHideDuration={4000} onClose={() => setSuccess(false)}>
-        <Alert onClose={() => setSuccess(false)} severity="success" sx={{ width: '100%' }}>
+      <Snackbar
+        open={success}
+        autoHideDuration={4000}
+        onClose={() => setSuccess(false)}
+      >
+        <Alert
+          onClose={() => setSuccess(false)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
           Curso modificado exitosamente.
         </Alert>
       </Snackbar>
-      
+
       <h2 className="mb-2 text-center">Modificar curso</h2>
       <div className="w-full sm:w-1/3">
         <form
@@ -280,7 +307,6 @@ export default function _ModificarCursos() {
               required
             />
           )}
-
 
           {/* Campo descripción */}
           <TextField

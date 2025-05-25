@@ -13,11 +13,17 @@ import { API_BASE_URL } from "../../../../../config";
 const paginationModel = { page: 0, pageSize: 20 };
 
 export default function Page() {
+  interface OfertaRow {
+    id: number;
+    nombre: string;
+    fecha_inicio: string;
+  }
+
   const router = useRouter();
 
   const [success, setSuccess] = useState(false);
 
-  const [rows, setRows] = useState<any[]>([]);
+  const [rows, setRows] = useState<OfertaRow[]>([]);
 
   const columnsOfertas: GridColDef[] = [
     { field: "id", headerName: "ID", width: 70 },
@@ -88,7 +94,6 @@ export default function Page() {
 
       setRows((prevRows) => prevRows.filter((row) => row.id !== id));
       setSuccess(true);
-
     } catch (error) {
       console.error("Error al eliminar la oferta:", error);
       alert(
@@ -113,17 +118,17 @@ export default function Page() {
         if (!res || (Array.isArray(res) && res.length === 0)) {
           console.log("Error: No se encontraron ofertas");
         } else {
-          const formateado = res.map((data: any) => ({
-            id: data.id_oferta_categoria,
-            nombre: data.id_oferta_academica.nombre,
-            categoria: data.id_categoria.nombre,
-            precio_publico: data.precio_publico,
-            precio_privado: data.precio_privado,
-            precio_univalle: data.precio_univalle,
-            fecha_inicio: data.id_oferta_academica.fecha_inicio,
-            fecha_finalizacion: data.fecha_finalizacion,
-            _original: data, // Guarda el objeto original
-          }));
+          const formateado = res.map(
+            (data: {
+              id_oferta_categoria: number;
+              id_oferta_academica: { nombre: string; fecha_inicio: string };
+            }) => ({
+              id: data.id_oferta_categoria,
+              nombre: data.id_oferta_academica.nombre,
+              fecha_inicio: data.id_oferta_academica.fecha_inicio,
+              _original: data, // Guarda el objeto original
+            }),
+          );
 
           setRows(formateado);
         }

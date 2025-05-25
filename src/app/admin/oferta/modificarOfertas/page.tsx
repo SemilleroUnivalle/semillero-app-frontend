@@ -18,6 +18,33 @@ import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 
 export default function ModificarOferta() {
+
+  interface Modulo {
+    id_modulo: number;
+    nombre_modulo: string;
+    descripcion_modulo: string;
+    id_area: string;
+    nombre_area: string;
+    id_categoria: string;
+  }
+
+  interface Oferta {
+    id_oferta_academica: {
+      id_oferta_academica: number;
+      nombre: string;
+      fecha_inicio: string;
+    };
+    id_categoria: {
+      nombre: string;
+    };
+    modulo: { id_modulo: number }[];
+    precio_publico: string;
+    precio_privado: string;
+    precio_univalle: string;
+    fecha_finalizacion: string;
+    id_oferta_categoria: number;
+  }
+
   // Estado para los módulos seleccionados por categoría
   const [selectedCursosPorCategoria, setSelectedCursosPorCategoria] = useState<
     Record<string, number[]>
@@ -28,7 +55,7 @@ export default function ModificarOferta() {
 
   // Estado para los módulos agrupados por categoría
   const [modulosPorCategoria, setModulosPorCategoria] = useState<
-    Record<string, any[]>
+    Record<string, Modulo[]>
   >({});
 
   // Estado para manejo de errores y éxito
@@ -37,7 +64,7 @@ export default function ModificarOferta() {
   const [success, setSuccess] = useState(false);
 
   // Estado para la oferta seleccionada
-  const [oferta, setOferta] = useState<any>(null);
+const [oferta, setOferta] = useState<Oferta | null>(null);
 
   // Estado para el nombre y fecha de inicio de la oferta
   const [nombreOferta, setNombreOferta] = useState("");
@@ -62,11 +89,9 @@ export default function ModificarOferta() {
       setFechaInicio(oferta.id_oferta_academica?.fecha_inicio || "");
 
       // Precargar módulos seleccionados por categoría
-      setSelectedCursosPorCategoria({
-        [oferta.id_categoria.nombre]: oferta.modulo.map(
-          (m: any) => m.id_modulo,
-        ),
-      });
+     setSelectedCursosPorCategoria({
+  [oferta.id_categoria.nombre]: oferta.modulo.map((m: { id_modulo: number }) => m.id_modulo),
+});
 
       // Precargar precios por categoría
       setPreciosPorCategoria({
@@ -102,18 +127,20 @@ export default function ModificarOferta() {
         const categoriasData = response.data;
 
         // Formatear los datos para que sean más fáciles de usar
-        const formateado: Record<string, any[]> = {};
+       const formateado: Record<string, Modulo[]> = {};
 
-        categoriasData.forEach((categoria: any) => {
-          formateado[categoria.nombre] = categoria.modulos.map((mod: any) => ({
-            id_modulo: mod.id_modulo,
-            nombre_modulo: mod.nombre_modulo,
-            descripcion_modulo: mod.descripcion_modulo,
-            id_area: mod.id_area.id_area,
-            nombre_area: mod.id_area.nombre_area,
-            id_categoria: mod.id_categoria.id_categoria, // Ajustar para reflejar el nuevo formato
-          }));
-        });
+        categoriasData.forEach(
+          (categoria: { nombre: string; modulos: Modulo[] }) => {
+            formateado[categoria.nombre] = categoria.modulos.map((mod) => ({
+              id_modulo: mod.id_modulo,
+              nombre_modulo: mod.nombre_modulo,
+              descripcion_modulo: mod.descripcion_modulo,
+              id_area: mod.id_area,
+              nombre_area: mod.nombre_area,
+              id_categoria: mod.id_categoria,
+            }));
+          },
+        );
 
         setModulosPorCategoria(formateado);
         console.log("Modulos por categoría:", formateado);
@@ -144,9 +171,15 @@ export default function ModificarOferta() {
 
   // Manejo del envío del formulario
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    console.log(oferta.id_oferta_academica.id_oferta_academica);
+    
+    if (!oferta) {
+      setError("No se ha seleccionado ninguna oferta para modificar.");
+      return;
+    }
+
     e.preventDefault(); // Evita el comportamiento por defecto del formulario
 
+    console.log(oferta.id_oferta_academica.id_oferta_academica);
     // Marcar el formulario como tocado para que muestre validaciones
     setFormTouched(true);
     console.log(oferta.id_oferta_academica.id_oferta_academica);
@@ -172,7 +205,7 @@ export default function ModificarOferta() {
         return;
       }
 
-      // Realizar la solicitud POST al endpoint /oferta_academica/ofer/
+      //Realizar la solicitud POST al endpoint /oferta_academica/ofer/
       const ofertaAcademicaResponse = await axios.patch(
         `${API_BASE_URL}/oferta_academica/ofer/${oferta.id_oferta_academica.id_oferta_academica}/`,
         {
@@ -185,6 +218,7 @@ export default function ModificarOferta() {
           },
         },
       );
+      console.log("Respuesta de la oferta académica:", ofertaAcademicaResponse.data);
 
       // Obtener el ID de la oferta académica creada
       // const idOfertaAcademica =

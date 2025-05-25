@@ -18,6 +18,31 @@ import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 
 export default function DetallarOferta() {
+  interface Oferta {
+    id_oferta_academica: {
+      id_oferta_academica: number;
+      nombre: string;
+      fecha_inicio: string;
+    };
+    id_categoria: {
+      nombre: string;
+    };
+    modulo: { id_modulo: number }[];
+    precio_publico: string;
+    precio_privado: string;
+    precio_univalle: string;
+    fecha_finalizacion: string;
+    id_oferta_categoria: number;
+  }
+
+  interface Modulo {
+    id_modulo: number;
+    nombre_modulo: string;
+    descripcion_modulo: string;
+    id_area: string;
+    nombre_area: string;
+    id_categoria: string;
+  }
   // Estado para los módulos seleccionados por categoría
   const [selectedCursosPorCategoria, setSelectedCursosPorCategoria] = useState<
     Record<string, number[]>
@@ -28,7 +53,7 @@ export default function DetallarOferta() {
 
   // Estado para los módulos agrupados por categoría
   const [modulosPorCategoria, setModulosPorCategoria] = useState<
-    Record<string, any[]>
+    Record<string, Modulo[]>
   >({});
 
   // Estado para manejo de errores y éxito
@@ -37,7 +62,7 @@ export default function DetallarOferta() {
   const [success, setSuccess] = useState(false);
 
   // Estado para la oferta seleccionada
-  const [oferta, setOferta] = useState<any>(null);
+  const [oferta, setOferta] = useState<Oferta | null>(null);
 
   // Estado para el nombre y fecha de inicio de la oferta
   const [nombreOferta, setNombreOferta] = useState("");
@@ -64,7 +89,7 @@ export default function DetallarOferta() {
       // Precargar módulos seleccionados por categoría
       setSelectedCursosPorCategoria({
         [oferta.id_categoria.nombre]: oferta.modulo.map(
-          (m: any) => m.id_modulo,
+          (m: { id_modulo: number }) => m.id_modulo,
         ),
       });
 
@@ -102,18 +127,20 @@ export default function DetallarOferta() {
         const categoriasData = response.data;
 
         // Formatear los datos para que sean más fáciles de usar
-        const formateado: Record<string, any[]> = {};
+        const formateado: Record<string, Modulo[]> = {};
 
-        categoriasData.forEach((categoria: any) => {
-          formateado[categoria.nombre] = categoria.modulos.map((mod: any) => ({
-            id_modulo: mod.id_modulo,
-            nombre_modulo: mod.nombre_modulo,
-            descripcion_modulo: mod.descripcion_modulo,
-            id_area: mod.id_area.id_area,
-            nombre_area: mod.id_area.nombre_area,
-            id_categoria: mod.id_categoria.id_categoria, // Ajustar para reflejar el nuevo formato
-          }));
-        });
+        categoriasData.forEach(
+          (categoria: { nombre: string; modulos: Modulo[] }) => {
+            formateado[categoria.nombre] = categoria.modulos.map((mod) => ({
+              id_modulo: mod.id_modulo,
+              nombre_modulo: mod.nombre_modulo,
+              descripcion_modulo: mod.descripcion_modulo,
+              id_area: mod.id_area,
+              nombre_area: mod.nombre_area,
+              id_categoria: mod.id_categoria,
+            }));
+          },
+        );
 
         setModulosPorCategoria(formateado);
         console.log("Modulos por categoría:", formateado);
@@ -144,8 +171,12 @@ export default function DetallarOferta() {
 
   // Manejo del envío del formulario
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    console.log(oferta.id_oferta_academica.id_oferta_academica);
     e.preventDefault(); // Evita el comportamiento por defecto del formulario
+    if (!oferta) {
+      setError("No se ha seleccionado una oferta válida.");
+      return;
+    }
+    console.log(oferta.id_oferta_academica.id_oferta_academica);
 
     // Marcar el formulario como tocado para que muestre validaciones
     setFormTouched(true);
@@ -184,6 +215,11 @@ export default function DetallarOferta() {
             Authorization: `Token ${localStorage.getItem("token")}`,
           },
         },
+      );
+
+      console.log(
+        "Oferta académica actualizada:",
+        ofertaAcademicaResponse.data,
       );
 
       // Obtener el ID de la oferta académica creada
@@ -273,7 +309,12 @@ export default function DetallarOferta() {
           id_categoria: idCategoria,
         };
 
-        console.log("Enviando datos:", data, "para la categoría:", oferta.id_oferta_categoria);
+        console.log(
+          "Enviando datos:",
+          data,
+          "para la categoría:",
+          oferta.id_oferta_categoria,
+        );
 
         // Realizar la solicitud POST al endpoint /oferta_categoria/ofer/
         await axios.patch(
@@ -338,7 +379,9 @@ export default function DetallarOferta() {
 
       {/* Contenedor de cursos */}
       <div className="mx-auto mt-5 flex w-full flex-col items-center justify-center rounded-2xl bg-white p-3 sm:w-11/12">
-        <h2 className="mb-2 text-center text-xl font-bold">Oferta: {nombreOferta}</h2>
+        <h2 className="mb-2 text-center text-xl font-bold">
+          Oferta: {nombreOferta}
+        </h2>
 
         <form onSubmit={handleSubmit} className="w-full space-y-4 px-4">
           <div className="mx-auto flex w-full flex-col items-center justify-between gap-4 sm:w-4/5 sm:flex-row">

@@ -13,7 +13,6 @@ import {
   ListItemText,
 } from "@mui/material";
 import axios from "axios";
-import { API_BASE_URL } from "../../../../config";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 
 const columns: GridColDef[] = [
@@ -49,11 +48,23 @@ const columns: GridColDef[] = [
   },
 ];
 
-
 const paginationModel = { page: 0, pageSize: 50 };
 
 export default function Page() {
-  const [rows, setRows] = useState<any[]>([]);
+  interface EstudianteRow {
+    id: number;
+    apellido: string;
+    nombre: string;
+    email: string;
+    direccion: string;
+    periodo: string;
+    modulo: string;
+    estamento: string;
+    tipo: string;
+    estado: boolean;
+  }
+
+  const [rows, setRows] = useState<EstudianteRow[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -63,18 +74,31 @@ export default function Page() {
         );
         const estudiantes = response.data;
 
-        const formateado = estudiantes.map((student: any) => ({
-          id: student.id,
-          apellido: student.username,
-          nombre: student.name,
-          email: student.email,
-          direccion: student.address,
-          periodo: student.address.city,
-          modulo: student.address.street,
-          estamento: student.address.suite,
-          tipo: student.address.zipcode,
-          estado: true,
-        }));
+        const formateado = estudiantes.map(
+          (student: {
+            id: number;
+            username: string;
+            name: string;
+            email: string;
+            address: {
+              city: string;
+              street: string;
+              suite: string;
+              zipcode: string;
+            };
+          }) => ({
+            id: student.id,
+            apellido: student.username,
+            nombre: student.name,
+            email: student.email,
+            direccion: student.address,
+            periodo: student.address.city,
+            modulo: student.address.street,
+            estamento: student.address.suite,
+            tipo: student.address.zipcode,
+            estado: true,
+          }),
+        );
 
         setRows(formateado);
       } catch (error) {
@@ -84,7 +108,6 @@ export default function Page() {
 
     fetchData();
   }, []);
-
 
   // useEffect(() => {
   //   const fetchData = async () => {
@@ -310,9 +333,12 @@ export default function Page() {
           <DataGrid
             rows={filteredRows}
             columns={columns}
-            initialState={{ pagination: { paginationModel }, sorting: {
-      sortModel: [{ field: "id", sort: "desc" }],
-    },}}
+            initialState={{
+              pagination: { paginationModel },
+              sorting: {
+                sortModel: [{ field: "id", sort: "desc" }],
+              },
+            }}
             pageSizeOptions={[25, 50, 75, 100]}
             sx={{
               border: 0,
