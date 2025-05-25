@@ -1,17 +1,43 @@
 "use client";
 
 import * as React from "react";
+import { useEffect, useState } from "react";
+import {
+  Paper,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  SelectChangeEvent,
+  Checkbox,
+  ListItemText,
+} from "@mui/material";
+import axios from "axios";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import Paper from "@mui/material/Paper";
 
 const columns: GridColDef[] = [
   { field: "id", headerName: "ID", width: 70 },
-  { field: "lastName", headerName: "Apellidos", width: 130 },
-  { field: "firstName", headerName: "Nombres", width: 130 },
+  { field: "apellido", headerName: "Apellidos", width: 130 },
+  { field: "nombre", headerName: "Nombres", width: 130 },
   { field: "email", headerName: "Correo Electrónico", width: 130 },
   {
-    field: "age",
+    field: "periodo",
+    headerName: "Periodo",
+    width: 130,
+  },
+  {
+    field: "modulo",
     headerName: "Módulo",
+    width: 130,
+  },
+  {
+    field: "estamento",
+    headerName: "Estamento",
+    width: 130,
+  },
+  {
+    field: "tipo",
+    headerName: "Tipo de Inscrito",
     width: 130,
   },
   {
@@ -22,59 +48,309 @@ const columns: GridColDef[] = [
   },
 ];
 
-const rows = [
-    { id: 1, lastName: "Pérez", firstName: "Carlos", email: "carlos.perez@email.com", age: "Matemáticas", estado: true },
-    { id: 2, lastName: "Gómez", firstName: "Ana", email: "ana.gomez@email.com", age: "Ciencias", estado: false },
-    { id: 3, lastName: "Rodríguez", firstName: "Luis", email: "luis.rodriguez@email.com", age: "Historia", estado: true },
-    { id: 4, lastName: "Martínez", firstName: "Elena", email: "elena.martinez@email.com", age: "Física", estado: true },
-    { id: 5, lastName: "Sánchez", firstName: "Javier", email: "javier.sanchez@email.com", age: "Química", estado: true },
-    { id: 6, lastName: "Fernández", firstName: "Lucía", email: "lucia.fernandez@email.com", age: "Biología", estado: false },
-    { id: 7, lastName: "López", firstName: "Miguel", email: "miguel.lopez@email.com", age: "Arte", estado: true },
-    { id: 8, lastName: "Díaz", firstName: "Patricia", email: "patricia.diaz@email.com", age: "Literatura", estado: true },
-    { id: 9, lastName: "Torres", firstName: "Raúl", email: "raul.torres@email.com", age: "Música", estado: true },
-    { id: 10, lastName: "Ramírez", firstName: "Sofía", email: "sofia.ramirez@email.com", age: "Informática", estado: false },
-    { id: 11, lastName: "Flores", firstName: "Diego", email: "diego.flores@email.com", age: "Matemáticas", estado: true },
-    { id: 12, lastName: "Gutiérrez", firstName: "Andrea", email: "andrea.gutierrez@email.com", age: "Ciencias", estado: true },
-    { id: 13, lastName: "Castro", firstName: "Jorge", email: "jorge.castro@email.com", age: "Historia", estado: false },
-    { id: 14, lastName: "Mendoza", firstName: "Valeria", email: "valeria.mendoza@email.com", age: "Física", estado: true },
-    { id: 15, lastName: "Reyes", firstName: "Fernando", email: "fernando.reyes@email.com", age: "Química", estado: true },
-    { id: 16, lastName: "Ortiz", firstName: "Camila", email: "camila.ortiz@email.com", age: "Biología", estado: true },
-    { id: 17, lastName: "Navarro", firstName: "Ricardo", email: "ricardo.navarro@email.com", age: "Arte", estado: false },
-    { id: 18, lastName: "Vargas", firstName: "Isabel", email: "isabel.vargas@email.com", age: "Literatura", estado: true },
-    { id: 19, lastName: "Silva", firstName: "Esteban", email: "esteban.silva@email.com", age: "Música", estado: true },
-    { id: 20, lastName: "Rojas", firstName: "Gabriela", email: "gabriela.rojas@email.com", age: "Informática", estado: false },
-    { id: 21, lastName: "Herrera", firstName: "Sergio", email: "sergio.herrera@email.com", age: "Matemáticas", estado: true },
-    { id: 22, lastName: "Morales", firstName: "Natalia", email: "natalia.morales@email.com", age: "Ciencias", estado: true },
-    { id: 23, lastName: "Ibarra", firstName: "Alberto", email: "alberto.ibarra@email.com", age: "Historia", estado: false },
-    { id: 24, lastName: "Campos", firstName: "Beatriz", email: "beatriz.campos@email.com", age: "Física", estado: true },
-    { id: 25, lastName: "Peña", firstName: "Mario", email: "mario.pena@email.com", age: "Química", estado: true },
-    { id: 26, lastName: "Soto", firstName: "Daniela", email: "daniela.soto@email.com", age: "Biología", estado: true },
-    { id: 27, lastName: "Maldonado", firstName: "Hugo", email: "hugo.maldonado@email.com", age: "Arte", estado: false },
-    { id: 28, lastName: "Suárez", firstName: "Mariana", email: "mariana.suarez@email.com", age: "Literatura", estado: true },
-    { id: 29, lastName: "Delgado", firstName: "Cristian", email: "cristian.delgado@email.com", age: "Música", estado: true },
-    { id: 30, lastName: "Cortés", firstName: "Lorena", email: "lorena.cortes@email.com", age: "Informática", estado: false },
-  ];
-  
-
-const paginationModel = { page: 0, pageSize: 20 };
+const paginationModel = { page: 0, pageSize: 50 };
 
 export default function Page() {
+  interface EstudianteRow {
+    id: number;
+    apellido: string;
+    nombre: string;
+    email: string;
+    direccion: string;
+    periodo: string;
+    modulo: string;
+    estamento: string;
+    tipo: string;
+    estado: boolean;
+  }
+
+  const [rows, setRows] = useState<EstudianteRow[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(
+          `https://jsonplaceholder.typicode.com/users`,
+        );
+        const estudiantes = response.data;
+
+        const formateado = estudiantes.map(
+          (student: {
+            id: number;
+            username: string;
+            name: string;
+            email: string;
+            address: {
+              city: string;
+              street: string;
+              suite: string;
+              zipcode: string;
+            };
+          }) => ({
+            id: student.id,
+            apellido: student.username,
+            nombre: student.name,
+            email: student.email,
+            direccion: student.address,
+            periodo: student.address.city,
+            modulo: student.address.street,
+            estamento: student.address.suite,
+            tipo: student.address.zipcode,
+            estado: true,
+          }),
+        );
+
+        setRows(formateado);
+      } catch (error) {
+        console.error("Error al obtener los datos de los estudiantes:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         `${API_BASE_URL}/estudiante/est/`,
+  //       );
+  //       const estudiantes = response.data;
+
+  //       const formateado = estudiantes.map((student: any) => ({
+  //         id: student.id,
+  //         apellido: student.apellido,
+  //         nombre: student.nombre,
+  //         email: student.email,
+  //         numero_identificacion: student.numero_identificacion || "Sin asignar",
+  //         direccion: student.direccion,
+  //       }));
+
+  //       setRows(formateado);
+  //     } catch (error) {
+  //       console.error("Error al obtener los datos de los estudiantes:", error);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, []);
+
+  // Filtros
+
+  const [selectedPeriodos, setSelectedPeriodos] = React.useState<string[]>([]);
+  const [selectedModulos, setSelectedModulos] = React.useState<string[]>([]);
+  const [selectedEstamento, setSelectedEstamento] = React.useState<string[]>(
+    [],
+  );
+  const [selectedTipo, setSelectedTipo] = React.useState<string[]>([]);
+  const [selectedEstado, setSelectedEstado] = React.useState<string[]>([]);
+
+  const handleChangePeriodos = (event: SelectChangeEvent<string[]>) => {
+    const {
+      target: { value },
+    } = event;
+    setSelectedPeriodos(typeof value === "string" ? value.split(",") : value);
+  };
+
+  const handleChangeModulos = (event: SelectChangeEvent<string[]>) => {
+    const {
+      target: { value },
+    } = event;
+    setSelectedModulos(typeof value === "string" ? value.split(",") : value);
+  };
+  const handleChangeEstamento = (event: SelectChangeEvent<string[]>) => {
+    const {
+      target: { value },
+    } = event;
+    setSelectedEstamento(typeof value === "string" ? value.split(",") : value);
+  };
+
+  const handleChangeTipo = (event: SelectChangeEvent<string[]>) => {
+    const {
+      target: { value },
+    } = event;
+    setSelectedTipo(typeof value === "string" ? value.split(",") : value);
+  };
+
+  const handleChangeEstado = (event: SelectChangeEvent<string[]>) => {
+    const {
+      target: { value },
+    } = event;
+    setSelectedEstado(typeof value === "string" ? value.split(",") : value);
+  };
+
+  const filteredRows = React.useMemo(() => {
+    if (rows.length === 0) return rows;
+    return rows.filter((row) => {
+      const periodoMatch =
+        selectedPeriodos.length === 0 || selectedPeriodos.includes(row.periodo);
+
+      const moduloMatch =
+        selectedModulos.length === 0 || selectedModulos.includes(row.modulo);
+
+      const estamentoMatch =
+        selectedEstamento.length === 0 ||
+        selectedEstamento.includes(row.estamento);
+
+      const tipoMatch =
+        selectedTipo.length === 0 || selectedTipo.includes(row.tipo);
+
+      const estadoAsString = row.estado ? "Activo" : "Inactivo";
+      const estadoMatch =
+        selectedEstado.length === 0 || selectedEstado.includes(estadoAsString);
+
+      return (
+        periodoMatch &&
+        moduloMatch &&
+        estamentoMatch &&
+        tipoMatch &&
+        estadoMatch
+      );
+    });
+  }, [
+    rows,
+    selectedPeriodos,
+    selectedModulos,
+    selectedEstamento,
+    selectedTipo,
+    selectedEstado,
+  ]);
+
   return (
     <div>
-      <h1>Inscripciones</h1>
+      <h1>Estudiantes inscritos</h1>
+
+      <div className="mx-auto mt-4 flex w-11/12 justify-between rounded-2xl bg-white p-2 shadow-md">
+        {/* Filtro por Periodos */}
+        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+          <InputLabel id="filtro-periodos">Periodos</InputLabel>
+          <Select
+            labelId="filtro-periodos"
+            id="filtro-periodos"
+            label="filtro-periodos"
+            multiple
+            value={selectedPeriodos}
+            onChange={handleChangePeriodos}
+            renderValue={(selected) => selected.join(", ")}
+          >
+            {[...new Set(rows.map((row) => row.periodo))].map((periodo) => (
+              <MenuItem key={periodo} value={periodo}>
+                <Checkbox checked={selectedPeriodos.indexOf(periodo) > -1} />
+                <ListItemText primary={periodo} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Filtro por Módulos */}
+        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+          <InputLabel id="filtro-modulos">Módulos</InputLabel>
+          <Select
+            labelId="filtro-modulos"
+            multiple
+            value={selectedModulos}
+            onChange={handleChangeModulos}
+            renderValue={(selected) => selected.join(", ")}
+          >
+            {[...new Set(rows.map((row) => row.modulo))].map((modulo) => (
+              <MenuItem key={modulo} value={modulo}>
+                <Checkbox checked={selectedModulos.indexOf(modulo) > -1} />
+                <ListItemText primary={modulo} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Filtro por Estamento */}
+        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+          <InputLabel id="filtro-estamento">Estamentos</InputLabel>
+          <Select
+            labelId="filtro-estamento"
+            id="filtro-estamento"
+            label="filtro-estamento"
+            multiple
+            value={selectedEstamento}
+            onChange={handleChangeEstamento}
+            renderValue={(selected) => selected.join(", ")}
+          >
+            {[...new Set(rows.map((row) => row.estamento))].map((estamento) => (
+              <MenuItem key={estamento} value={estamento}>
+                <Checkbox checked={selectedEstamento.indexOf(estamento) > -1} />
+                <ListItemText primary={estamento} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Filtro por Tipo de Inscrito */}
+        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+          <InputLabel id="filtro-tipo">Tipos de Inscritos</InputLabel>
+          <Select
+            labelId="filtro-tipo"
+            id="filtro-tipo"
+            label="filtro-tipo"
+            multiple
+            value={selectedTipo}
+            onChange={handleChangeTipo}
+            renderValue={(selected) => selected.join(", ")}
+          >
+            {[...new Set(rows.map((row) => row.tipo))].map((tipo) => (
+              <MenuItem key={tipo} value={tipo}>
+                <Checkbox checked={selectedTipo.indexOf(tipo) > -1} />
+                <ListItemText primary={tipo} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Filtro por Estado */}
+        <FormControl className="inputs-textfield w-full sm:w-1/6">
+          <InputLabel id="filtro-estado">Estados</InputLabel>
+          <Select
+            labelId="filtro-estado"
+            id="filtro-estado"
+            label="filtro-estado"
+            multiple
+            value={selectedEstado}
+            onChange={handleChangeEstado}
+            renderValue={(selected) => selected.join(", ")}
+          >
+            {["Activo", "Inactivo"].map((estado) => (
+              <MenuItem key={estado} value={estado}>
+                <Checkbox checked={selectedEstado.indexOf(estado) > -1} />
+                <ListItemText primary={estado} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </div>
+
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 shadow-md">
         <Paper
           className="border-none shadow-none"
-
           sx={{ height: 800, width: "100%" }}
-
         >
           <DataGrid
-            rows={rows}
+            rows={filteredRows}
             columns={columns}
-            initialState={{ pagination: { paginationModel } }}
-            pageSizeOptions={[20, 40]}
-            sx={{ border: 0 }}
+            initialState={{
+              pagination: { paginationModel },
+              sorting: {
+                sortModel: [{ field: "id", sort: "desc" }],
+              },
+            }}
+            pageSizeOptions={[25, 50, 75, 100]}
+            sx={{
+              border: 0,
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "#e8e8e8", // Fondo de todo el header
+              },
+              "& .MuiDataGrid-columnHeaderTitle": {
+                fontWeight: "bold", // Negrita en el título
+                color: "#575757", // Color del texto
+                fontSize: "1rem", // (opcional) Tamaño de letra
+              },
+            }}
             localeText={{
               // 📌 Traducciones básicas en español
               noRowsLabel: "No hay filas",
