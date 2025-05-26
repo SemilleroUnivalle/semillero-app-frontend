@@ -26,15 +26,16 @@ export default function Page() {
   const [rows, setRows] = useState<OfertaRow[]>([]);
 
   const columnsOfertas: GridColDef[] = [
-    { field: "id", headerName: "ID", width: 70 },
-    { field: "nombre", headerName: "Nombre", width: 300 },
-    { field: "fecha_inicio", headerName: "Fecha inicio", width: 300 },
+    { field: "id", headerName: "ID", flex: 1,},
+    { field: "nombre", headerName: "Nombre", flex: 1,},
+    { field: "fecha_inicio", headerName: "Fecha inicio", flex: 1, },
     {
       field: "editar",
       headerName: "Acciones",
       sortable: false,
       filterable: false,
-      width: 300,
+      flex: 1,
+      align: "center", headerAlign: "center",
       renderCell: (params) => (
         <div className="flex h-full w-full flex-row items-center justify-around">
           <VisibilityOutlinedIcon
@@ -210,13 +211,14 @@ export default function Page() {
             pageSizeOptions={[20, 40]}
             sx={{
               border: 0,
-              "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: "#e8e8e8", // Fondo de todo el header
-              },
               "& .MuiDataGrid-columnHeaderTitle": {
-                fontWeight: "bold", // Negrita en el título
-                color: "#575757", // Color del texto
-                fontSize: "1rem", // (opcional) Tamaño de letra
+                fontWeight: "bold",
+                color: "#575757",
+                fontSize: "1rem",
+              },
+
+              "& .MuiDataGrid-columnHeader": {
+                backgroundColor: "#e8e8e8",
               },
             }}
             localeText={{
