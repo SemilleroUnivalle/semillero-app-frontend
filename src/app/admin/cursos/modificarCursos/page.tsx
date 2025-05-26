@@ -20,8 +20,8 @@ export default function ModificarCursos() {
     id: number;
     nombre: string;
     descripcion: string;
-    id_area: string;
-    id_categoria: string;
+    id_area: {id_area: string; nombre_area: string};
+    id_categoria: {id_categoria: string; nombre: string};
   }
 
   interface Area {
@@ -59,8 +59,8 @@ export default function ModificarCursos() {
       setFormData({
         nombre_modulo: curso.nombre || "",
         descripcion_curso: curso.descripcion || "",
-        id_area: curso.id_area || "",
-        id_categoria: curso.id_categoria || "",
+        id_area: curso.id_area.id_area || "",
+        id_categoria: curso.id_categoria.id_categoria || "",
       });
     }
   }, [curso]);
