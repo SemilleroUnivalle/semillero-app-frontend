@@ -40,18 +40,19 @@ export default function VerCursos() {
   const [success, setSuccess] = useState(false);
 
   const columnsOfertas: GridColDef[] = [
-    { field: "id", headerName: "ID", flex: 0.5, },
-    { field: "nombre", headerName: "Nombre", flex: 1,  },
-    { field: "categoria", headerName: "Categoría", flex: 1,  },
-    { field: "area", headerName: "Área", flex: 1, width: 90  },
-    { field: "descripcion", headerName: "Descripción", flex: 1, },
+    { field: "id", headerName: "ID", flex: 0.5 },
+    { field: "nombre", headerName: "Nombre", flex: 1 },
+    { field: "categoria", headerName: "Categoría", flex: 1 },
+    { field: "area", headerName: "Área", flex: 1, width: 90 },
+    { field: "descripcion", headerName: "Descripción", flex: 1 },
     {
       field: "editar",
       headerName: "Acciones",
       sortable: false,
       filterable: false,
       flex: 1,
-      align: "center", headerAlign: "center",
+      align: "center",
+      headerAlign: "center",
       renderCell: (params) => (
         <div className="flex h-full w-full flex-row items-center justify-around">
           <VisibilityOutlinedIcon
@@ -310,8 +311,7 @@ export default function VerCursos() {
 
                     "& .MuiDataGrid-columnHeader": {
                       backgroundColor: "#e8e8e8",
-                  
-                    }
+                    },
                   }}
                   localeText={{
                     noRowsLabel: "No hay filas",
@@ -358,11 +358,14 @@ export default function VerCursos() {
                       pageSizeOptions={[20, 40]}
                       sx={{
                         border: 0,
-                        "& .MuiDataGrid-columnHeaders": {},
                         "& .MuiDataGrid-columnHeaderTitle": {
-                          fontWeight: "bold", // Negrita en el título
-                          color: "#575757", // Color del texto
-                          fontSize: "1rem", // (opcional) Tamaño de letra
+                          fontWeight: "bold",
+                          color: "#575757",
+                          fontSize: "1rem",
+                        },
+
+                        "& .MuiDataGrid-columnHeader": {
+                          backgroundColor: "#e8e8e8",
                         },
                       }}
                       localeText={{
