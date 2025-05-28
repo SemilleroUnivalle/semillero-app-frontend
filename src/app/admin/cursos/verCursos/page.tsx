@@ -40,17 +40,19 @@ export default function VerCursos() {
   const [success, setSuccess] = useState(false);
 
   const columnsOfertas: GridColDef[] = [
-    { field: "id", headerName: "ID", width: 70 },
-    { field: "nombre", headerName: "Nombre", width: 170 },
-    { field: "categoria", headerName: "Categoría", width: 170 },
-    { field: "area", headerName: "Área", width: 170 },
-    { field: "descripcion", headerName: "Descripción", width: 170 },
+    { field: "id", headerName: "ID", flex: 0.5 },
+    { field: "nombre", headerName: "Nombre", flex: 1 },
+    { field: "categoria", headerName: "Categoría", flex: 1 },
+    { field: "area", headerName: "Área", flex: 1, width: 90 },
+    { field: "descripcion", headerName: "Descripción", flex: 1 },
     {
       field: "editar",
       headerName: "Acciones",
       sortable: false,
       filterable: false,
-      width: 130,
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
       renderCell: (params) => (
         <div className="flex h-full w-full flex-row items-center justify-around">
           <VisibilityOutlinedIcon
@@ -218,6 +220,19 @@ export default function VerCursos() {
     }
   };
 
+  const todosLosCursos = Object.keys(modulosPorCategoria).flatMap(
+    (nombreCategoria) =>
+      modulosPorCategoria[nombreCategoria].map((mod) => ({
+        id: mod.id_modulo,
+        nombre: mod.nombre_modulo,
+        descripcion: mod.descripcion_modulo,
+        id_area: mod.id_area,
+        area: mod.id_area.nombre_area,
+        id_categoria: mod.id_categoria,
+        categoria: nombreCategoria,
+      })),
+  );
+
   //Barra de busqueda
 
   // const [searchText, setSearchText] = React.useState("");
@@ -264,6 +279,50 @@ export default function VerCursos() {
          className="mb-4 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm focus:border-primary focus:outline-none sm:w-1/3"
        /> */}
 
+        {/* Acordeón para todos los cursos */}
+        <Box className="py-1" borderRadius={0}>
+          <Accordion className="border-b shadow-none" defaultExpanded>
+            <AccordionSummary
+              expandIcon={<ArrowDownwardIcon />}
+              aria-controls="panel-todos-content"
+              id="panel-todos-header"
+            >
+              <Typography component="span" fontWeight="bold">
+                Todos los cursos
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Paper
+                className="border-none shadow-none"
+                sx={{ height: "auto", width: "100%" }}
+              >
+                <DataGrid
+                  rows={todosLosCursos}
+                  columns={columnsOfertas}
+                  initialState={{ pagination: { paginationModel } }}
+                  pageSizeOptions={[20, 40]}
+                  sx={{
+                    border: 0,
+                    "& .MuiDataGrid-columnHeaderTitle": {
+                      fontWeight: "bold",
+                      color: "#575757",
+                      fontSize: "1rem",
+                    },
+
+                    "& .MuiDataGrid-columnHeader": {
+                      backgroundColor: "#e8e8e8",
+                    },
+                  }}
+                  localeText={{
+                    noRowsLabel: "No hay filas",
+                    // ...otras traducciones...
+                  }}
+                />
+              </Paper>
+            </AccordionDetails>
+          </Accordion>
+        </Box>
+
         {loading ? (
           <div className="py-8 text-center">Cargando cursos...</div>
         ) : Object.keys(modulosPorCategoria).length === 0 ? (
@@ -299,11 +358,14 @@ export default function VerCursos() {
                       pageSizeOptions={[20, 40]}
                       sx={{
                         border: 0,
-                        "& .MuiDataGrid-columnHeaders": {},
                         "& .MuiDataGrid-columnHeaderTitle": {
-                          fontWeight: "bold", // Negrita en el título
-                          color: "#575757", // Color del texto
-                          fontSize: "1rem", // (opcional) Tamaño de letra
+                          fontWeight: "bold",
+                          color: "#575757",
+                          fontSize: "1rem",
+                        },
+
+                        "& .MuiDataGrid-columnHeader": {
+                          backgroundColor: "#e8e8e8",
                         },
                       }}
                       localeText={{

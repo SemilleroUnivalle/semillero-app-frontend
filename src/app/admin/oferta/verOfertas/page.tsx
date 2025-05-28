@@ -19,6 +19,27 @@ export default function Page() {
     fecha_inicio: string;
   }
 
+  interface OfertaCategoria {
+  id_oferta_categoria: number;
+  modulo: any[]; // Si tienes la estructura de "modulo", reemplaza "any" por la interfaz correspondiente
+  precio_publico: string;
+  precio_privado: string;
+  precio_univalle: string;
+  fecha_finalizacion: string; // Formato: "YYYY-MM-DD"
+  estado: boolean;
+  id_oferta_academica: {
+    id_oferta_academica: number;
+    nombre: string;
+    fecha_inicio: string; // Formato: "YYYY-MM-DD"
+    estado: string;
+  };
+  id_categoria: {
+    id_categoria: number;
+    nombre: string;
+    estado: boolean;
+  };
+}
+
   const router = useRouter();
 
   const [success, setSuccess] = useState(false);
@@ -26,15 +47,16 @@ export default function Page() {
   const [rows, setRows] = useState<OfertaRow[]>([]);
 
   const columnsOfertas: GridColDef[] = [
-    { field: "id", headerName: "ID", width: 70 },
-    { field: "nombre", headerName: "Nombre", width: 300 },
-    { field: "fecha_inicio", headerName: "Fecha inicio", width: 300 },
+    { field: "id", headerName: "ID", flex: 1,},
+    { field: "nombre", headerName: "Nombre", flex: 1,},
+    { field: "fecha_inicio", headerName: "Fecha inicio", flex: 1, },
     {
       field: "editar",
       headerName: "Acciones",
       sortable: false,
       filterable: false,
-      width: 300,
+      flex: 1,
+      align: "center", headerAlign: "center",
       renderCell: (params) => (
         <div className="flex h-full w-full flex-row items-center justify-around">
           <VisibilityOutlinedIcon
@@ -69,13 +91,6 @@ export default function Page() {
       ),
     },
 
-    // { field: "username", headerName: "NAS Virtual", width: 130 },
-    // {
-    //   field: "estado",
-    //   headerName: "Estado",
-    //   width: 130,
-    //   type: "boolean",
-    // },
   ];
 
   // Función para eliminar un curso
@@ -106,7 +121,7 @@ export default function Page() {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          `${API_BASE_URL}/oferta_categoria/ofer/`,
+          `${API_BASE_URL}/oferta_categoria/ofer/por-oferta-academica/`,
           {
             headers: {
               Authorization: `Token ${localStorage.getItem("token")}`,
@@ -120,12 +135,9 @@ export default function Page() {
         } else {
           const formateado = res.map(
             (data: {
-              id_oferta_categoria: number;
-              id_oferta_academica: { nombre: string; fecha_inicio: string };
+              oferta: OfertaCategoria[];
             }) => ({
-              id: data.id_oferta_categoria,
-              nombre: data.id_oferta_academica.nombre,
-              fecha_inicio: data.id_oferta_academica.fecha_inicio,
+              id: data.oferta,
               _original: data, // Guarda el objeto original
             }),
           );
@@ -210,13 +222,14 @@ export default function Page() {
             pageSizeOptions={[20, 40]}
             sx={{
               border: 0,
-              "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: "#e8e8e8", // Fondo de todo el header
-              },
               "& .MuiDataGrid-columnHeaderTitle": {
-                fontWeight: "bold", // Negrita en el título
-                color: "#575757", // Color del texto
-                fontSize: "1rem", // (opcional) Tamaño de letra
+                fontWeight: "bold",
+                color: "#575757",
+                fontSize: "1rem",
+              },
+
+              "& .MuiDataGrid-columnHeader": {
+                backgroundColor: "#e8e8e8",
               },
             }}
             localeText={{

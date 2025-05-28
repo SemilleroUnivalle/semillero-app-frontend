@@ -16,34 +16,34 @@ import axios from "axios";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 
 const columns: GridColDef[] = [
-  { field: "id", headerName: "ID", width: 70 },
-  { field: "apellido", headerName: "Apellidos", width: 130 },
-  { field: "nombre", headerName: "Nombres", width: 130 },
-  { field: "email", headerName: "Correo Electrónico", width: 130 },
+  { field: "id", headerName: "ID", flex: 0.5 },
+  { field: "apellido", headerName: "Apellidos", flex: 1 },
+  { field: "nombre", headerName: "Nombres", flex: 1 },
+  { field: "email", headerName: "Correo Electrónico", flex: 1 },
   {
     field: "periodo",
     headerName: "Periodo",
-    width: 130,
+    flex: 1,
   },
   {
     field: "modulo",
     headerName: "Módulo",
-    width: 130,
+    flex: 1,
   },
   {
     field: "estamento",
     headerName: "Estamento",
-    width: 130,
+    flex: 1,
   },
   {
     field: "tipo",
     headerName: "Tipo de Inscrito",
-    width: 130,
+    flex: 1,
   },
   {
     field: "estado",
     headerName: "Estado",
-    width: 130,
+    flex: 1,
     type: "boolean",
   },
 ];
@@ -342,13 +342,14 @@ export default function Page() {
             pageSizeOptions={[25, 50, 75, 100]}
             sx={{
               border: 0,
-              "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: "#e8e8e8", // Fondo de todo el header
-              },
               "& .MuiDataGrid-columnHeaderTitle": {
-                fontWeight: "bold", // Negrita en el título
-                color: "#575757", // Color del texto
-                fontSize: "1rem", // (opcional) Tamaño de letra
+                fontWeight: "bold",
+                color: "#575757",
+                fontSize: "1rem",
+              },
+
+              "& .MuiDataGrid-columnHeader": {
+                backgroundColor: "#e8e8e8",
               },
             }}
             localeText={{
