@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Paper, Alert, Snackbar } from "@mui/material";
+import { Paper, Alert, Snackbar, Tooltip } from "@mui/material";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { GridColDef, DataGrid } from "@mui/x-data-grid";
@@ -20,25 +20,29 @@ export default function Page() {
   }
 
   interface OfertaCategoria {
-  id_oferta_categoria: number;
-  modulo: any[]; // Si tienes la estructura de "modulo", reemplaza "any" por la interfaz correspondiente
-  precio_publico: string;
-  precio_privado: string;
-  precio_univalle: string;
-  fecha_finalizacion: string; // Formato: "YYYY-MM-DD"
-  estado: boolean;
-  id_oferta_academica: {
-    id_oferta_academica: number;
-    nombre: string;
-    fecha_inicio: string; // Formato: "YYYY-MM-DD"
-    estado: string;
-  };
-  id_categoria: {
-    id_categoria: number;
-    nombre: string;
+    id_oferta_categoria: number;
+    modulo: any[]; // Si tienes la estructura de "modulo", reemplaza "any" por la interfaz correspondiente
+    precio_publico: string;
+    precio_privado: string;
+    precio_univalle: string;
+    fecha_finalizacion: string; // Formato: "YYYY-MM-DD"
     estado: boolean;
-  };
-}
+    id_oferta_academica: {
+      id_oferta_academica: number;
+      nombre: string;
+      fecha_inicio: string; // Formato: "YYYY-MM-DD"
+      estado: string;
+    };
+    id_categoria: {
+      id_categoria: number;
+      nombre: string;
+      estado: boolean;
+    };
+  }
+
+  const [ofertasAcademicas, setOfertasAcademicas] = useState<
+    Record<string, OfertaCategoria[]>
+  >({});
 
   const router = useRouter();
 
@@ -47,50 +51,58 @@ export default function Page() {
   const [rows, setRows] = useState<OfertaRow[]>([]);
 
   const columnsOfertas: GridColDef[] = [
-    { field: "id", headerName: "ID", flex: 1,},
-    { field: "nombre", headerName: "Nombre", flex: 1,},
-    { field: "fecha_inicio", headerName: "Fecha inicio", flex: 1, },
+    { field: "id", headerName: "ID", flex: 1 },
+    { field: "nombre", headerName: "Nombre", flex: 1 },
+    { field: "fecha_inicio", headerName: "Fecha inicio", flex: 1 },
     {
       field: "editar",
       headerName: "Acciones",
       sortable: false,
       filterable: false,
       flex: 1,
-      align: "center", headerAlign: "center",
+      align: "center",
+      headerAlign: "center",
       renderCell: (params) => (
         <div className="flex h-full w-full flex-row items-center justify-around">
-          <VisibilityOutlinedIcon
-            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
-            onClick={() => {
-              const fullData = params.row._original;
-              localStorage.setItem(
-                "ofertaSeleccionada",
-                JSON.stringify(fullData),
-              );
-              console.log(fullData); // 👉 Guarda la fila completa como JSON
-              router.push("/admin/oferta/detallarOferta/"); // 👉 Navega a la pantalla de modificar
-            }}
-          />
-          <PencilSquareIcon
-            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
-            onClick={() => {
-              const fullData = params.row._original;
+          <Tooltip title="Ver detalles" placement="top">
+            <VisibilityOutlinedIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+              onClick={() => {
+                const fullData = params.row._original;
+                localStorage.setItem(
+                  "ofertaSeleccionada",
+                  JSON.stringify(fullData),
+                );
+                console.log(fullData); // 👉 Guarda la fila completa como JSON
+                router.push("/admin/oferta/detallarOferta/"); // 👉 Navega a la pantalla de modificar
+              }}
+            />
+          </Tooltip>
 
-              localStorage.setItem(
-                "ofertaSeleccionada",
-                JSON.stringify(fullData),
-              ); // 👉 Guarda la fila completa como JSON
-              router.push("/admin/oferta/modificarOfertas/"); // 👉 Navega a la pantalla de modificar
-            }}
-          />
-          <TrashIcon
-            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
-            onClick={() => handleDelete(params.row.id)}
-          />
+          <Tooltip title="Editar oferta" placement="top">
+            <PencilSquareIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+              onClick={() => {
+                const fullData = params.row._original;
+
+                localStorage.setItem(
+                  "ofertaSeleccionada",
+                  JSON.stringify(fullData),
+                ); // 👉 Guarda la fila completa como JSON
+                router.push("/admin/oferta/modificarOfertas/"); // 👉 Navega a la pantalla de modificar
+              }}
+            />
+          </Tooltip>
+
+          <Tooltip title="Eliminar oferta" placement="top">
+            <TrashIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
+              onClick={() => handleDelete(params.row.id)}
+            />
+          </Tooltip>
         </div>
       ),
     },
-
   ];
 
   // Función para eliminar un curso
@@ -130,20 +142,28 @@ export default function Page() {
         );
         const res = response.data;
 
-        if (!res || (Array.isArray(res) && res.length === 0)) {
-          console.log("Error: No se encontraron ofertas");
-        } else {
-          const formateado = res.map(
-            (data: {
-              oferta: OfertaCategoria[];
-            }) => ({
-              id: data.oferta,
-              _original: data, // Guarda el objeto original
-            }),
-          );
+        // Agrupar por id_oferta_academica
+        const ofertasPorAcademica: Record<number, OfertaCategoria[]> = {};
+        Object.values(res).forEach((ofertasArray: any) => {
+          ofertasArray.forEach((oferta: any) => {
+            const id = oferta.id_oferta_academica?.id_oferta_academica;
+            if (!ofertasPorAcademica[id]) ofertasPorAcademica[id] = [];
+            ofertasPorAcademica[id].push(oferta);
+          });
+        });
 
-          setRows(formateado);
-        }
+        // Construir filas: una por cada oferta académica
+        const rows = Object.values(ofertasPorAcademica).map((ofertas) => {
+          const primera = ofertas[0];
+          return {
+            id: primera.id_oferta_academica.id_oferta_academica,
+            nombre: primera.id_oferta_academica.nombre,
+            fecha_inicio: primera.id_oferta_academica.fecha_inicio,
+            _original: ofertas, // Guarda todas las ofertas_categoria asociadas
+          };
+        });
+
+        setRows(rows);
       } catch (error) {
         console.error("Error al obtener los datos de las categorías:", error);
       }
