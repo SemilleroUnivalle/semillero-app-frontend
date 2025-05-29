@@ -6,7 +6,7 @@ import axios from "axios";
 import { Paper } from "@mui/material";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
-import { Box, Alert, Snackbar } from "@mui/material";
+import { Box, Alert, Snackbar, Tooltip } from "@mui/material";
 
 import { GridColDef, DataGrid } from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
@@ -55,34 +55,40 @@ export default function VerCursos() {
       headerAlign: "center",
       renderCell: (params) => (
         <div className="flex h-full w-full flex-row items-center justify-around">
-          <VisibilityOutlinedIcon
-            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
-            onClick={() => {
-              const rowData = params.row;
+          <Tooltip title="Ver detalles" placement="top">
+            <VisibilityOutlinedIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+              onClick={() => {
+                const rowData = params.row;
 
-              localStorage.setItem(
-                "cursoSeleccionado",
-                JSON.stringify(rowData),
-              ); // 👉 Guarda la fila completa como JSON
-              router.push("/admin/cursos/detallarCurso/");
-            }}
-          />
-          <PencilSquareIcon
-            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
-            onClick={() => {
-              const rowData = params.row;
+                localStorage.setItem(
+                  "cursoSeleccionado",
+                  JSON.stringify(rowData),
+                ); // 👉 Guarda la fila completa como JSON
+                router.push("/admin/cursos/detallarCurso/");
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="Editar curso" placement="top">
+            <PencilSquareIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+              onClick={() => {
+                const rowData = params.row;
 
-              localStorage.setItem(
-                "cursoSeleccionado",
-                JSON.stringify(rowData),
-              ); // 👉 Guarda la fila completa como JSON
-              router.push("/admin/cursos/modificarCursos/"); // 👉 Navega a la pantalla de modificar
-            }}
-          />
-          <TrashIcon
-            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
-            onClick={() => handleDelete(params.row.id)}
-          />
+                localStorage.setItem(
+                  "cursoSeleccionado",
+                  JSON.stringify(rowData),
+                ); // 👉 Guarda la fila completa como JSON
+                router.push("/admin/cursos/modificarCursos/"); // 👉 Navega a la pantalla de modificar
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="Eliminar curso" placement="top">
+            <TrashIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
+              onClick={() => handleDelete(params.row.id)}
+            />
+          </Tooltip>
         </div>
       ),
     },
@@ -283,7 +289,7 @@ export default function VerCursos() {
         <Box className="py-1" borderRadius={0}>
           <Accordion className="border-b shadow-none" defaultExpanded>
             <AccordionSummary
-              expandIcon={<ArrowDownwardIcon />}
+              expandIcon={<Tooltip title="Expandir todos" placement="top"><ArrowDownwardIcon /></Tooltip>}
               aria-controls="panel-todos-content"
               id="panel-todos-header"
             >
