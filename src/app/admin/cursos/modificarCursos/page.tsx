@@ -20,8 +20,11 @@ export default function ModificarCursos() {
     id: number;
     nombre: string;
     descripcion: string;
-    id_area: {id_area: string; nombre_area: string};
-    id_categoria: {id_categoria: string; nombre: string};
+    id_area: { id_area: string; nombre_area: string };
+    id_categoria: { id_categoria: string; nombre: string };
+    intensidad_horaria: string;
+    dirigido: string;
+    incluye: string;
   }
 
   interface Area {
@@ -42,6 +45,9 @@ export default function ModificarCursos() {
     descripcion_curso: "", // Usar la descripción del curso seleccionado
     id_area: "", // Usar el área del curso seleccionado
     id_categoria: "", // Usar la categoría del curso seleccionado
+    intensidad_horaria: "", // Usar la intensidad horaria del curso seleccionado
+    dirigido: "", // Usar el dirigido del curso seleccionado
+    incluye: "", // Usar el incluye del curso seleccionado
   });
   // Estado para manejar el mensaje de éxito
   const [success, setSuccess] = useState(false);
@@ -61,6 +67,9 @@ export default function ModificarCursos() {
         descripcion_curso: curso.descripcion || "",
         id_area: curso.id_area.id_area || "",
         id_categoria: curso.id_categoria.id_categoria || "",
+        intensidad_horaria: curso.intensidad_horaria || "",
+        dirigido: curso.dirigido || "",
+        incluye: curso.incluye || "",
       });
     }
   }, [curso]);
@@ -321,6 +330,53 @@ export default function ModificarCursos() {
             required
             value={formData.descripcion_curso}
             onChange={handleChange}
+          />
+          {/* Campo Intensidad Horaria*/}
+          <TextField
+            className="inputs-textfield w-full"
+            label="Intensidad Horaria"
+            name="intensidad_horaria"
+            variant="outlined"
+            type="text"
+            fullWidth
+            slotProps={{
+              input: {
+                readOnly: true,
+              },
+            }}
+            value={formData.intensidad_horaria}
+          />
+
+          {/* Campo Dirigido a*/}
+          <TextField
+            className="inputs-textfield w-full"
+            label="Dirigido a"
+            name="dirigido"
+            variant="outlined"
+            type="text"
+            fullWidth
+            value={formData.dirigido}
+            slotProps={{
+              input: {
+                readOnly: true,
+              },
+            }}
+          />
+
+          {/* Campo Incluye*/}
+          <TextField
+            className="inputs-textfield w-full"
+            label="Incluye"
+            name="incluye"
+            variant="outlined"
+            type="text"
+            fullWidth
+            slotProps={{
+              input: {
+                readOnly: true,
+              },
+            }}
+            value={formData.incluye}
           />
 
           <Button

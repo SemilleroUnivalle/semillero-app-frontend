@@ -1,6 +1,7 @@
 import "./auth.css";
 import Image from "next/image";
 import "../globals.css";
+import Footer from "@/components/Footer";
 
 import { StyledEngineProvider } from "@mui/material/styles";
 
@@ -44,7 +45,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
       </div>
-      
+      <Footer />
     </StyledEngineProvider>
   );
 }

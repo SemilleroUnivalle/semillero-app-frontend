@@ -72,8 +72,7 @@ export default function Matricula() {
   };
 
   return (
-
-    <div className="mx-auto my-4 w-3/4 rounded-2xl bg-white p-5 text-center shadow-md">
+    <div className="mx-auto my-4 w-full rounded-2xl bg-white p-5 text-center shadow-md">
       <h2 className="text-center font-semibold text-primary">
         Oferta Académica
       </h2>
@@ -223,13 +222,12 @@ export default function Matricula() {
 
         <Button
           type="submit"
-          variant="contained"
-          className="mx-auto my-5 flex rounded-2xl bg-primary"
+          variant="outlined"
+          className="mt-4 w-3/4 rounded-2xl border-2 border-[#C20E1A] py-2 font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white"
         >
           Enviar
         </Button>
       </form>
-
     </div>
   );
 }

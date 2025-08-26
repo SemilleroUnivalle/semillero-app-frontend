@@ -30,11 +30,17 @@ export default function CrearCursos() {
 
   const [otraArea, setOtraArea] = useState<string>(""); // Para especificar otra área
   const [otraCategoria, setOtraCategoria] = useState<string>(""); // Para especificar otra
+  const [documentoIdentidad, setDocumentoIdentidad] = useState<File | null>(
+    null,
+  );
   const [formData, setFormData] = useState({
     nombre_modulo: "",
     descripcion_modulo: "",
     id_area: "",
     id_categoria: "",
+    intensidad_horaria: "",
+    dirigido: "",
+    incluye: "",
   });
 
   const [success, setSuccess] = useState(false);
@@ -113,6 +119,9 @@ export default function CrearCursos() {
         descripcion_modulo: "",
         id_area: "",
         id_categoria: "",
+        intensidad_horaria: "",
+        dirigido: "",
+        incluye: "",
       }); // Cierra el modal
     } catch (error) {
       console.error("Error al crear el curso:", error);
@@ -239,17 +248,34 @@ export default function CrearCursos() {
 
           {/* Campo para especificar otra área */}
           {formData.id_categoria === "Otra" && (
-            <TextField
-              className="inputs-textfield w-full"
-              label="Especificar Categoría"
-              name="otra_categoria"
-              variant="outlined"
-              type="text"
-              value={otraCategoria}
-              onChange={(e) => setOtraCategoria(e.target.value)} // Actualiza el estado con el valor del campo de texto
-              fullWidth
-              required
-            />
+            <div className="flex flex-col gap-2 text-center">
+              <TextField
+                className="inputs-textfield w-full"
+                label="Especificar Categoría"
+                name="otra_categoria"
+                variant="outlined"
+                type="text"
+                value={otraCategoria}
+                onChange={(e) => setOtraCategoria(e.target.value)} // Actualiza el estado con el valor del campo de texto
+                fullWidth
+                required
+              />
+              <InputLabel id="img_categoria">
+                Imagen para categoría
+              </InputLabel>
+              <input
+                name="img_categoria"
+                type="file"
+                accept=".jpg"
+                className="block w-full text-sm text-gray-500"
+                // onChange={(e) => {
+                //   const file = e.target.files?.[0];
+                //   if (file) {
+                //     setDocumentoIdentidad(file);
+                //   }
+                // }}
+              />
+            </div>
           )}
 
           {/* Campo selector de area */}
@@ -301,6 +327,45 @@ export default function CrearCursos() {
             fullWidth
             required
             value={formData.descripcion_modulo}
+            onChange={handleChange}
+          />
+
+          {/* Campo Intensidad Horaria*/}
+          <TextField
+            className="inputs-textfield w-full"
+            label="Intensidad Horaria"
+            name="intensidad_horaria"
+            variant="outlined"
+            type="text"
+            fullWidth
+            required
+            value={formData.intensidad_horaria}
+            onChange={handleChange}
+          />
+
+          {/* Campo Dirigido a*/}
+          <TextField
+            className="inputs-textfield w-full"
+            label="Dirigido a"
+            name="dirigido"
+            variant="outlined"
+            type="text"
+            fullWidth
+            required
+            value={formData.dirigido}
+            onChange={handleChange}
+          />
+
+          {/* Campo Incluye*/}
+          <TextField
+            className="inputs-textfield w-full"
+            label="Incluye"
+            name="incluye"
+            variant="outlined"
+            type="text"
+            fullWidth
+            required
+            value={formData.incluye}
             onChange={handleChange}
           />
 

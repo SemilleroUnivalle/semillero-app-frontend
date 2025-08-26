@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import {
+  Button,
   Paper,
   Select,
   MenuItem,
@@ -11,46 +12,104 @@ import {
   SelectChangeEvent,
   Checkbox,
   ListItemText,
+  Tooltip,
 } from "@mui/material";
+
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+
 import axios from "axios";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { API_BASE_URL } from "../../../../../config";
+import { useRouter } from "next/navigation";
 
-const columns: GridColDef[] = [
-  { field: "id", headerName: "ID", flex: 0.5 },
-  { field: "apellido", headerName: "Apellidos", flex: 1 },
-  { field: "nombre", headerName: "Nombres", flex: 1 },
-  { field: "email", headerName: "Correo Electrónico", flex: 1 },
-  {
-    field: "periodo",
-    headerName: "Periodo",
-    flex: 1,
-  },
-  {
-    field: "modulo",
-    headerName: "Módulo",
-    flex: 1,
-  },
-  {
-    field: "estamento",
-    headerName: "Estamento",
-    flex: 1,
-  },
-  {
-    field: "tipo",
-    headerName: "Tipo de Inscrito",
-    flex: 1,
-  },
-  {
-    field: "estado",
-    headerName: "Estado",
-    flex: 1,
-    type: "boolean",
-  },
-];
+export default function VerInscripciones() {
+  const router = useRouter();
 
-const paginationModel = { page: 0, pageSize: 50 };
+  const columns: GridColDef[] = [
+    { field: "id", headerName: "ID", flex: 0.5 },
+    { field: "apellido", headerName: "Apellidos", flex: 1 },
+    { field: "nombre", headerName: "Nombres", flex: 1 },
+    { field: "email", headerName: "Correo Electrónico", flex: 1 },
+    {
+      field: "periodo",
+      headerName: "Periodo",
+      flex: 1,
+    },
+    {
+      field: "modulo",
+      headerName: "Módulo",
+      flex: 1,
+    },
+    {
+      field: "estamento",
+      headerName: "Estamento",
+      flex: 1,
+    },
+    {
+      field: "tipo",
+      headerName: "Tipo de Inscrito",
+      flex: 1,
+    },
+    {
+      field: "estado",
+      headerName: "Estado",
+      flex: 1,
+      type: "boolean",
+    },
+    {
+      field: "editar",
+      headerName: "Acciones",
+      sortable: false,
+      filterable: false,
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+        <div className="flex h-full w-full flex-row items-center justify-around">
+          <Tooltip title="Ver detalles" placement="top">
+            <VisibilityOutlinedIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+              onClick={() => {
+                const rowData = params.row;
 
-export default function Page() {
+                localStorage.setItem(
+                  "inscritoSeleccionado",
+                  JSON.stringify(rowData),
+                ); // 👉 Guarda la fila completa como JSON
+                router.push("/admin/inscripciones/detallarInscripcion/");
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="Editar inscripcion" placement="top">
+            <PencilSquareIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+              onClick={() => {
+                const rowData = params.row;
+
+                localStorage.setItem(
+                  "cursoSeleccionado",
+                  JSON.stringify(rowData),
+                ); // 👉 Guarda la fila completa como JSON
+                router.push("/admin/inscripciones//"); // 👉 Navega a la pantalla de modificar
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="Eliminar inscripcion" placement="top">
+            <TrashIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
+              // onClick={() => handleDelete(params.row.id)}
+            />
+          </Tooltip>
+        </div>
+      ),
+    },
+  ];
+
+  const paginationModel = { page: 0, pageSize: 50 };
+
   interface EstudianteRow {
     id: number;
     apellido: string;
@@ -64,43 +123,152 @@ export default function Page() {
     estado: boolean;
   }
 
-  const [rows, setRows] = useState<EstudianteRow[]>([]);
+  interface Estudiante {
+    id_estudiante: number;
+    nombre: string;
+    apellido: string;
+    contrasena: string;
+    numero_documento: string;
+    email: string;
+    is_active: boolean;
+    ciudad_residencia: string;
+    eps: string;
+    grado: string;
+    colegio: string;
+    tipo_documento: string;
+    genero: string;
+    fecha_nacimiento: string;
+    telefono_fijo: string;
+    celular: string;
+    departamento_residencia: string;
+    comuna_residencia: string;
+    direccion_residencia: string;
+    estamento: string;
+    discapacidad: boolean;
+    tipo_discapacidad: string;
+    descripcion_discapacidad: string;
+    area_desempeño: string | null;
+    grado_escolaridad: string | null;
+    documento_identidad: string | null;
+    recibo_pago: string | null;
+    foto: string | null;
+    constancia_estudios: string | null;
+    user: number;
+    acudiente: number;
+  }
+
+  const datosEjemplo: EstudianteRow[] = [
+    {
+      id: 1,
+      apellido: "García",
+      nombre: "María Fernanda",
+      email: "maria.garcia@email.com",
+      direccion: "Cra 10 #20-30",
+      periodo: "2024-1",
+      modulo: "Matemáticas Básicas",
+      estamento: "Estudiante",
+      tipo: "Regular",
+      estado: true,
+    },
+    {
+      id: 2,
+      apellido: "Rodríguez",
+      nombre: "Juan Pablo",
+      email: "juan.rodriguez@email.com",
+      direccion: "Cll 5 #15-22",
+      periodo: "2024-1",
+      modulo: "Ciencias Naturales",
+      estamento: "Estudiante",
+      tipo: "Becado",
+      estado: true,
+    },
+    {
+      id: 3,
+      apellido: "Martínez",
+      nombre: "Laura Sofía",
+      email: "laura.martinez@email.com",
+      direccion: "Av 3N #45-67",
+      periodo: "2024-1",
+      modulo: "Lengua Castellana",
+      estamento: "Estudiante",
+      tipo: "Regular",
+      estado: false,
+    },
+    {
+      id: 4,
+      apellido: "López",
+      nombre: "Carlos Andrés",
+      email: "carlos.lopez@email.com",
+      direccion: "Cll 8 #12-34",
+      periodo: "2024-2",
+      modulo: "Educación Física",
+      estamento: "Docente",
+      tipo: "Invitado",
+      estado: true,
+    },
+    {
+      id: 5,
+      apellido: "Ramírez",
+      nombre: "Ana Lucía",
+      email: "ana.ramirez@email.com",
+      direccion: "Cra 15 #25-40",
+      periodo: "2024-2",
+      modulo: "Artes",
+      estamento: "Estudiante",
+      tipo: "Regular",
+      estado: true,
+    },
+  ];
+
+  const [rows, setRows] = useState<EstudianteRow[]>(datosEjemplo);
+  const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(
-          `https://jsonplaceholder.typicode.com/users`,
-        );
-        const estudiantes = response.data;
+        const userString = localStorage.getItem("user");
+        let token = "";
+        if (userString) {
+          const user = JSON.parse(userString);
+          token = user.token;
+        }
 
-        const formateado = estudiantes.map(
-          (student: {
-            id: number;
-            username: string;
-            name: string;
-            email: string;
-            address: {
-              city: string;
-              street: string;
-              suite: string;
-              zipcode: string;
-            };
-          }) => ({
-            id: student.id,
-            apellido: student.username,
-            nombre: student.name,
-            email: student.email,
-            direccion: student.address,
-            periodo: student.address.city,
-            modulo: student.address.street,
-            estamento: student.address.suite,
-            tipo: student.address.zipcode,
-            estado: true,
-          }),
-        );
+        const response = await axios.get(`${API_BASE_URL}/estudiante/est/`, {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        });
+        setEstudiantes(response.data);
+        console.log("Estudiantes:", response.data);
 
-        setRows(formateado);
+        // const formateado = estudiantes.map(
+        //   (student: {
+        //     id: number;
+        //     username: string;
+        //     name: string;
+        //     email: string;
+        //     address: {
+        //       city: string;
+        //       street: string;
+        //       suite: string;
+        //       zipcode: string;
+        //     };
+        //   }) => ({
+        //     id: student.id,
+        //     apellido: student.username,
+        //     nombre: student.name,
+        //     email: student.email,
+        //     direccion: student.address,
+        //     periodo: student.address.city,
+        //     modulo: student.address.street,
+        //     estamento: student.address.suite,
+        //     tipo: student.address.zipcode,
+        //     estado: true,
+        //   }),
+        // );
+
+        // setRows(formateado);
       } catch (error) {
         console.error("Error al obtener los datos de los estudiantes:", error);
       }
@@ -179,6 +347,31 @@ export default function Page() {
     setSelectedEstado(typeof value === "string" ? value.split(",") : value);
   };
 
+  const handleExportExcel = async () => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/estudiante/est/export-excel/`,
+        {
+          responseType: "blob", // Importante para archivos
+          headers: {
+            Authorization: `Token ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+      // Crear un enlace para descargar el archivo
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "Inscripciones.xlsx"); // Nombre del archivo
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      alert("No se pudo exportar el archivo.");
+      console.error(error);
+    }
+  };
+
   const filteredRows = React.useMemo(() => {
     if (rows.length === 0) return rows;
     return rows.filter((row) => {
@@ -218,8 +411,6 @@ export default function Page() {
 
   return (
     <div>
-      <h1>Estudiantes inscritos</h1>
-
       <div className="mx-auto mt-4 flex w-11/12 justify-between rounded-2xl bg-white p-2 shadow-md">
         {/* Filtro por Periodos */}
         <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
@@ -325,7 +516,7 @@ export default function Page() {
         </FormControl>
       </div>
 
-      <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 shadow-md">
+      <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 text-center shadow-md">
         <Paper
           className="border-none shadow-none"
           sx={{ height: 800, width: "100%" }}
@@ -373,6 +564,14 @@ export default function Page() {
             }}
           />
         </Paper>
+        <Button
+          variant="outlined"
+          startIcon={<FileDownloadIcon />}
+          className="m-4 rounded-xl border-primary text-primary hover:bg-primary hover:text-white"
+          onClick={handleExportExcel}
+        >
+          Exportar a Excel
+        </Button>
       </div>
     </div>
   );

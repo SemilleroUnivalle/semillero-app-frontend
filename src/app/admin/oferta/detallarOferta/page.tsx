@@ -8,8 +8,6 @@ import {
   FormGroup,
   FormControlLabel,
   Checkbox,
-  Alert,
-  Snackbar,
 } from "@mui/material";
 
 import React from "react";
@@ -78,34 +76,43 @@ export default function DetallarOferta() {
   useEffect(() => {
     const storedOferta = localStorage.getItem("ofertaSeleccionada");
     if (storedOferta) {
-      setOferta(JSON.parse(storedOferta));
+      const ofertas: Oferta[] = JSON.parse(storedOferta);
 
-      const oferta = JSON.parse(storedOferta);
+      // Precargar nombre y fecha de inicio de la oferta académica (toma la primera)
+      setNombreOferta(ofertas[0]?.id_oferta_academica?.nombre || "");
+      setFechaInicio(ofertas[0]?.id_oferta_academica?.fecha_inicio || "");
 
-      // Precargar nombre y fecha de inicio de la oferta académica
-      setNombreOferta(oferta.id_oferta_academica?.nombre || "");
-      setFechaInicio(oferta.id_oferta_academica?.fecha_inicio || "");
+      // Precargar módulos seleccionados, precios y fechas por cada categoría
+      const cursosPorCategoria: Record<string, number[]> = {};
+      const preciosPorCategoria: Record<
+        string,
+        { publico: string; privado: string; univalle: string }
+      > = {};
+      const fechasPorCategoria: Record<string, string> = {};
 
-      // Precargar módulos seleccionados por categoría
-      setSelectedCursosPorCategoria({
-        [oferta.id_categoria.nombre]: oferta.modulo.map(
-          (m: { id_modulo: number }) => m.id_modulo,
-        ),
-      });
+      ofertas.forEach((oferta) => {
+        const nombreCategoria = oferta.id_categoria?.nombre;
+        if (!nombreCategoria) return;
 
-      // Precargar precios por categoría
-      setPreciosPorCategoria({
-        [oferta.id_categoria.nombre]: {
+        // Módulos seleccionados
+        cursosPorCategoria[nombreCategoria] = oferta.modulo.map(
+          (m) => m.id_modulo,
+        );
+
+        // Precios
+        preciosPorCategoria[nombreCategoria] = {
           publico: oferta.precio_publico || "",
           privado: oferta.precio_privado || "",
           univalle: oferta.precio_univalle || "",
-        },
+        };
+
+        // Fecha de finalización
+        fechasPorCategoria[nombreCategoria] = oferta.fecha_finalizacion || "";
       });
 
-      // Precargar fecha de finalización por categoría
-      setFechasFinalizacionPorCategoria({
-        [oferta.id_categoria.nombre]: oferta.fecha_finalizacion || "",
-      });
+      setSelectedCursosPorCategoria(cursosPorCategoria);
+      setPreciosPorCategoria(preciosPorCategoria);
+      setFechasFinalizacionPorCategoria(fechasPorCategoria);
     }
   }, []);
 
@@ -169,221 +176,15 @@ export default function DetallarOferta() {
     setSuccess(false);
   };
 
-  // Manejo del envío del formulario
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // Evita el comportamiento por defecto del formulario
-    if (!oferta) {
-      setError("No se ha seleccionado una oferta válida.");
-      return;
-    }
-    console.log(oferta.id_oferta_academica.id_oferta_academica);
-
-    // Marcar el formulario como tocado para que muestre validaciones
-    setFormTouched(true);
-    console.log(oferta.id_oferta_academica.id_oferta_academica);
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Validar campos obligatorios
-      const formData = new FormData(e.currentTarget);
-      const nombreOferta = formData.get("nombre_oferta") as string;
-      const fechaInicio = formData.get("fecha_inicio") as string;
-
-      // Verificar si hay al menos una categoría con módulos seleccionados
-      const haySeleccionados = Object.values(selectedCursosPorCategoria).some(
-        (seleccionados) => seleccionados && seleccionados.length > 0,
-      );
-
-      if (!haySeleccionados) {
-        setError(
-          "Por favor, selecciona al menos un módulo en alguna categoría.",
-        );
-        setLoading(false);
-        return;
-      }
-
-      // Realizar la solicitud POST al endpoint /oferta_academica/ofer/
-      const ofertaAcademicaResponse = await axios.patch(
-        `${API_BASE_URL}/oferta_academica/ofer/${oferta.id_oferta_academica.id_oferta_academica}/`,
-        {
-          nombre: nombreOferta,
-          fecha_inicio: fechaInicio,
-        },
-        {
-          headers: {
-            Authorization: `Token ${localStorage.getItem("token")}`,
-          },
-        },
-      );
-
-      console.log(
-        "Oferta académica actualizada:",
-        ofertaAcademicaResponse.data,
-      );
-
-      // Obtener el ID de la oferta académica creada
-      // const idOfertaAcademica =
-      //   ofertaAcademicaResponse.data.id_oferta_academica;
-      // console.log("ID de la oferta académica creada:", idOfertaAcademica);
-      // console.log(
-      //   "selectedCursosPorCategoria antes de enviar datos a la API",
-      //   selectedCursosPorCategoria,
-      // );
-
-      // Iterar sobre las categorías para enviar los datos de cada una
-      for (const nombreCategoria of Object.keys(modulosPorCategoria)) {
-        const modulosSeleccionados =
-          selectedCursosPorCategoria[nombreCategoria] || [];
-
-        if (modulosSeleccionados.length === 0) {
-          continue; // Si no hay módulos seleccionados, pasa a la siguiente categoría
-        }
-
-        // Obtener los valores de los campos de precios y fecha
-        const precioPublico = formData.get(
-          `precio-publico-${nombreCategoria}`,
-        ) as string;
-        const precioPrivado = formData.get(
-          `precio-privado-${nombreCategoria}`,
-        ) as string;
-        const precioUnivalle = formData.get(
-          `precio-univalle-${nombreCategoria}`,
-        ) as string;
-        const fechaFinalizacion = formData.get(
-          `fecha-finalizacion-${nombreCategoria}`,
-        ) as string;
-
-        // Validar campos obligatorios para cada categoría
-        if (!precioPublico) {
-          setError(
-            `Por favor, ingresa el precio público para la categoría: ${nombreCategoria}`,
-          );
-          setLoading(false);
-          return;
-        }
-
-        if (!precioPrivado) {
-          setError(
-            `Por favor, ingresa el precio privado para la categoría: ${nombreCategoria}`,
-          );
-          setLoading(false);
-          return;
-        }
-
-        if (!precioUnivalle) {
-          setError(
-            `Por favor, ingresa el precio Univalle para la categoría: ${nombreCategoria}`,
-          );
-          setLoading(false);
-          return;
-        }
-
-        if (!fechaFinalizacion) {
-          setError(
-            `Por favor, selecciona la fecha de finalización para la categoría: ${nombreCategoria}`,
-          );
-          setLoading(false);
-          return;
-        }
-
-        // Obtener el ID de la categoría del primer módulo de la categoría
-        const idCategoria =
-          modulosPorCategoria[nombreCategoria][0]?.id_categoria;
-
-        if (!idCategoria) {
-          setError(
-            `No se pudo determinar el ID de la categoría: ${nombreCategoria}`,
-          );
-          return;
-        }
-
-        // Formatear los datos para la API
-        const data = {
-          modulo: modulosSeleccionados,
-          precio_publico: precioPublico,
-          precio_privado: precioPrivado,
-          precio_univalle: precioUnivalle,
-          fecha_finalizacion: fechaFinalizacion,
-          id_oferta_academica: oferta.id_oferta_academica.id_oferta_academica,
-          id_categoria: idCategoria,
-        };
-
-        console.log(
-          "Enviando datos:",
-          data,
-          "para la categoría:",
-          oferta.id_oferta_categoria,
-        );
-
-        // Realizar la solicitud POST al endpoint /oferta_categoria/ofer/
-        await axios.patch(
-          `${API_BASE_URL}/oferta_categoria/ofer/${oferta.id_oferta_categoria}/`,
-          data,
-          {
-            headers: {
-              Authorization: `Token ${localStorage.getItem("token")}`,
-            },
-          },
-        );
-
-        console.log(
-          `Datos enviados correctamente para la categoría: ${nombreCategoria}`,
-        );
-      }
-
-      setSuccess(true);
-
-      // Resetear el formulario
-      if (e.currentTarget && typeof e.currentTarget.reset === "function") {
-        e.currentTarget.reset();
-      }
-      setSelectedCursosPorCategoria({});
-    } catch (error) {
-      console.error("Error al enviar los datos --:", error);
-      setError("Hubo un problema al enviar los datos. Inténtalo de nuevo.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div>
-      <Snackbar
-        open={!!error}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity="error"
-          sx={{ width: "100%" }}
-        >
-          {error}
-        </Alert>
-      </Snackbar>
-
-      <Snackbar
-        open={success}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity="success"
-          sx={{ width: "100%" }}
-        >
-          Oferta modificada exitosamente.
-        </Alert>
-      </Snackbar>
-
       {/* Contenedor de cursos */}
       <div className="mx-auto mt-5 flex w-full flex-col items-center justify-center rounded-2xl bg-white p-3 sm:w-11/12">
         <h2 className="mb-2 text-center text-xl font-bold">
           Oferta: {nombreOferta}
         </h2>
 
-        <form onSubmit={handleSubmit} className="w-full space-y-4 px-4">
+        <form className="w-full space-y-4 px-4">
           <div className="mx-auto flex w-full flex-col items-center justify-between gap-4 sm:w-4/5 sm:flex-row">
             {/* Campo nombre de la oferta */}
             <TextField
@@ -394,8 +195,7 @@ export default function DetallarOferta() {
               type="text"
               fullWidth
               value={nombreOferta}
-              onChange={(e) => setNombreOferta(e.target.value)}
-              required
+              InputProps={{ readOnly: true }}
             />
             {/* Campo fecha de inicio de la oferta */}
             <TextField
@@ -407,8 +207,7 @@ export default function DetallarOferta() {
               InputLabelProps={{ shrink: true }}
               fullWidth
               value={fechaInicio}
-              onChange={(e) => setFechaInicio(e.target.value)}
-              required
+              InputProps={{ readOnly: true }}
             />
           </div>
 
@@ -431,14 +230,6 @@ export default function DetallarOferta() {
                   {nombreCategoria}
                 </FormLabel>
 
-                {formTouched &&
-                  selectedCursosPorCategoria[nombreCategoria]?.length === 0 && (
-                    <p className="mt-2 text-sm text-red-600">
-                      Selecciona al menos un módulo o deja todos los campos en
-                      blanco para no incluir esta categoría
-                    </p>
-                  )}
-
                 <FormGroup className="mt-4 flex flex-row flex-wrap justify-start gap-4">
                   {modulosPorCategoria[nombreCategoria].map((modulo) => (
                     <FormControlLabel
@@ -450,6 +241,7 @@ export default function DetallarOferta() {
                               nombreCategoria
                             ]?.includes(modulo.id_modulo) || false
                           }
+                          disabled
                           onChange={(e) => {
                             const checked = e.target.checked;
                             const currentSeleccionados =
@@ -491,19 +283,8 @@ export default function DetallarOferta() {
                     className="inputs-textfield w-full sm:w-1/3"
                     label="Precio Colegio Público"
                     type="number"
-                    required={
-                      selectedCursosPorCategoria[nombreCategoria]?.length > 0
-                    }
                     value={preciosPorCategoria[nombreCategoria]?.publico || ""}
-                    onChange={(e) =>
-                      setPreciosPorCategoria((prev) => ({
-                        ...prev,
-                        [nombreCategoria]: {
-                          ...prev[nombreCategoria],
-                          publico: e.target.value,
-                        },
-                      }))
-                    }
+                    InputProps={{ readOnly: true }}
                   />
                   <TextField
                     id={`precio-privado-${nombreCategoria}`}
@@ -524,6 +305,7 @@ export default function DetallarOferta() {
                         },
                       }))
                     }
+                    InputProps={{ readOnly: true }}
                   />
                   <TextField
                     id={`precio-univalle-${nombreCategoria}`}
@@ -531,39 +313,8 @@ export default function DetallarOferta() {
                     className="inputs-textfield w-full sm:w-1/3"
                     label="Precio Relación Univalle"
                     type="number"
-                    required={
-                      selectedCursosPorCategoria[nombreCategoria]?.length > 0
-                    }
                     value={preciosPorCategoria[nombreCategoria]?.univalle || ""}
-                    onChange={(e) =>
-                      setPreciosPorCategoria((prev) => ({
-                        ...prev,
-                        [nombreCategoria]: {
-                          ...prev[nombreCategoria],
-                          univalle: e.target.value,
-                        },
-                      }))
-                    }
-                    // error={
-                    //   formTouched &&
-                    //   selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
-                    //   !(
-                    //     document.getElementById(
-                    //       `precio-univalle-${nombreCategoria}`,
-                    //     ) as HTMLInputElement
-                    //   )?.value
-                    // }
-                    // helperText={
-                    //   formTouched &&
-                    //   selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
-                    //   !(
-                    //     document.getElementById(
-                    //       `precio-univalle-${nombreCategoria}`,
-                    //     ) as HTMLInputElement
-                    //   )?.value
-                    //     ? "Campo requerido"
-                    //     : ""
-                    // }
+                    InputProps={{ readOnly: true }}
                   />
                 </Box>
 
@@ -576,38 +327,27 @@ export default function DetallarOferta() {
                   label="Fecha de finalización"
                   InputLabelProps={{ shrink: true }}
                   fullWidth
-                  required={
-                    selectedCursosPorCategoria[nombreCategoria]?.length > 0
-                  }
+                  InputProps={{ readOnly: true }}
                   value={fechasFinalizacionPorCategoria[nombreCategoria] || ""}
-                  onChange={(e) =>
-                    setFechasFinalizacionPorCategoria((prev) => ({
-                      ...prev,
-                      [nombreCategoria]: e.target.value,
-                    }))
-                  }
                 />
               </Box>
             ))
           )}
 
-          <div>
-            {formTouched &&
-              !Object.values(selectedCursosPorCategoria).some(
-                (arr) => arr?.length > 0,
-              ) && (
-                <p className="mb-4 text-center text-red-600">
-                  Por favor, selecciona al menos un módulo en alguna categoría
-                </p>
-              )}
-
+          <div className="flex flex-row gap-2">
             <Button
-              type="submit"
               variant="contained"
-              disabled={loading}
-              className="text-md mt-4 w-full rounded-2xl bg-primary py-3 font-semibold capitalize text-white hover:bg-red-800 disabled:bg-gray-400"
+              href="/admin/oferta/modificarOfertas/"
+              className="text-md mt-4 w-1/2 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
             >
-              {loading ? "Procesando..." : "Crear oferta"}
+              Editar
+            </Button>
+            <Button
+              variant="contained"
+              // onClick={() => curso && handleDelete(curso.id)}
+              className="text-md mt-4 w-1/2 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
+            >
+              Eliminar
             </Button>
           </div>
         </form>

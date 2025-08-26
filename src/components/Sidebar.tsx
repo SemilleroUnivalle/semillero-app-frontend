@@ -5,6 +5,7 @@ import {
   TagIcon,
   HomeIcon,
   BookOpenIcon,
+  CogIcon,
 } from "@heroicons/react/24/outline";
 
 import Link from "next/link";
@@ -14,7 +15,7 @@ const links = [
   { name: "Inicio", href: "/admin/inicio", icon: HomeIcon },
   {
     name: "Inscripciones",
-    href: "/admin/inscripciones",
+    href: "/admin/inscripciones/verInscripciones",
     icon: UsersIcon,
   },
   {
@@ -26,6 +27,11 @@ const links = [
     name: "Oferta Académica",
     href: "/admin/oferta/verOfertas",
     icon: TagIcon,
+  },
+  {
+    name: "Ajustes",
+    href: "/admin/ajustes/ajustes",
+    icon: CogIcon,
   },
 ];
 

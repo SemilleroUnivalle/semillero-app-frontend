@@ -125,9 +125,12 @@ export default function Login() {
       </form>
 
       {/* Enlace de recuperación de contraseña */}
+      <Link href={"/auth/recuperarContrasena"}>
       <p className="text-md mt-4 cursor-pointer text-center text-[#C20E1A] hover:underline">
         ¿Olvidaste tu contraseña?
       </p>
+      </Link>
+      
 
       {/* Mensaje de registro */}
       <p className="text-md mt-4 text-center text-gray-600">

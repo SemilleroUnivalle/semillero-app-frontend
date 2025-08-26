@@ -19,16 +19,7 @@ import { API_BASE_URL } from "../../../../../config";
 
 export default function ModificarOferta() {
 
-  interface Modulo {
-    id_modulo: number;
-    nombre_modulo: string;
-    descripcion_modulo: string;
-    id_area: string;
-    nombre_area: string;
-    id_categoria: string;
-  }
-
-  interface Oferta {
+ interface Oferta {
     id_oferta_academica: {
       id_oferta_academica: number;
       nombre: string;
@@ -45,6 +36,14 @@ export default function ModificarOferta() {
     id_oferta_categoria: number;
   }
 
+  interface Modulo {
+    id_modulo: number;
+    nombre_modulo: string;
+    descripcion_modulo: string;
+    id_area: string;
+    nombre_area: string;
+    id_categoria: string;
+  }
   // Estado para los módulos seleccionados por categoría
   const [selectedCursosPorCategoria, setSelectedCursosPorCategoria] = useState<
     Record<string, number[]>
@@ -80,32 +79,43 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
   useEffect(() => {
     const storedOferta = localStorage.getItem("ofertaSeleccionada");
     if (storedOferta) {
-      setOferta(JSON.parse(storedOferta));
+      const ofertas: Oferta[] = JSON.parse(storedOferta);
 
-      const oferta = JSON.parse(storedOferta);
+      // Precargar nombre y fecha de inicio de la oferta académica (toma la primera)
+      setNombreOferta(ofertas[0]?.id_oferta_academica?.nombre || "");
+      setFechaInicio(ofertas[0]?.id_oferta_academica?.fecha_inicio || "");
 
-      // Precargar nombre y fecha de inicio de la oferta académica
-      setNombreOferta(oferta.id_oferta_academica?.nombre || "");
-      setFechaInicio(oferta.id_oferta_academica?.fecha_inicio || "");
+      // Precargar módulos seleccionados, precios y fechas por cada categoría
+      const cursosPorCategoria: Record<string, number[]> = {};
+      const preciosPorCategoria: Record<
+        string,
+        { publico: string; privado: string; univalle: string }
+      > = {};
+      const fechasPorCategoria: Record<string, string> = {};
 
-      // Precargar módulos seleccionados por categoría
-     setSelectedCursosPorCategoria({
-  [oferta.id_categoria.nombre]: oferta.modulo.map((m: { id_modulo: number }) => m.id_modulo),
-});
+      ofertas.forEach((oferta) => {
+        const nombreCategoria = oferta.id_categoria?.nombre;
+        if (!nombreCategoria) return;
 
-      // Precargar precios por categoría
-      setPreciosPorCategoria({
-        [oferta.id_categoria.nombre]: {
+        // Módulos seleccionados
+        cursosPorCategoria[nombreCategoria] = oferta.modulo.map(
+          (m) => m.id_modulo,
+        );
+
+        // Precios
+        preciosPorCategoria[nombreCategoria] = {
           publico: oferta.precio_publico || "",
           privado: oferta.precio_privado || "",
           univalle: oferta.precio_univalle || "",
-        },
+        };
+
+        // Fecha de finalización
+        fechasPorCategoria[nombreCategoria] = oferta.fecha_finalizacion || "";
       });
 
-      // Precargar fecha de finalización por categoría
-      setFechasFinalizacionPorCategoria({
-        [oferta.id_categoria.nombre]: oferta.fecha_finalizacion || "",
-      });
+      setSelectedCursosPorCategoria(cursosPorCategoria);
+      setPreciosPorCategoria(preciosPorCategoria);
+      setFechasFinalizacionPorCategoria(fechasPorCategoria);
     }
   }, []);
 
@@ -598,7 +608,7 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
               disabled={loading}
               className="text-md mt-4 w-full rounded-2xl bg-primary py-3 font-semibold capitalize text-white hover:bg-red-800 disabled:bg-gray-400"
             >
-              {loading ? "Procesando..." : "Crear oferta"}
+              {loading ? "Procesando..." : "Edita oferta"}
             </Button>
           </div>
         </form>

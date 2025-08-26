@@ -73,7 +73,7 @@ export default function Page() {
                   "ofertaSeleccionada",
                   JSON.stringify(fullData),
                 );
-                console.log(fullData); // 👉 Guarda la fila completa como JSON
+                console.log("Estos son los datos enviados", fullData); // 👉 Guarda la fila completa como JSON
                 router.push("/admin/oferta/detallarOferta/"); // 👉 Navega a la pantalla de modificar
               }}
             />
@@ -151,7 +151,7 @@ export default function Page() {
             ofertasPorAcademica[id].push(oferta);
           });
         });
-
+6
         // Construir filas: una por cada oferta académica
         const rows = Object.values(ofertasPorAcademica).map((ofertas) => {
           const primera = ofertas[0];
