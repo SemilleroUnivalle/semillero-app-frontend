@@ -39,7 +39,7 @@ export default function CrearCursos() {
     id_area: "",
     id_categoria: "",
     intensidad_horaria: "",
-    dirigido: "",
+    dirigido_a: "",
     incluye: "",
   });
 
@@ -120,7 +120,7 @@ export default function CrearCursos() {
         id_area: "",
         id_categoria: "",
         intensidad_horaria: "",
-        dirigido: "",
+        dirigido_a: "",
         incluye: "",
       }); // Cierra el modal
     } catch (error) {
@@ -260,21 +260,6 @@ export default function CrearCursos() {
                 fullWidth
                 required
               />
-              <InputLabel id="img_categoria">
-                Imagen para categoría
-              </InputLabel>
-              <input
-                name="img_categoria"
-                type="file"
-                accept=".jpg"
-                className="block w-full text-sm text-gray-500"
-                // onChange={(e) => {
-                //   const file = e.target.files?.[0];
-                //   if (file) {
-                //     setDocumentoIdentidad(file);
-                //   }
-                // }}
-              />
             </div>
           )}
 
@@ -302,17 +287,34 @@ export default function CrearCursos() {
 
           {/* Campo para especificar otra área */}
           {formData.id_area === "Otra" && (
-            <TextField
-              className="inputs-textfield w-full"
-              label="Especificar Área"
-              name="otra_area"
-              variant="outlined"
-              type="text"
-              fullWidth
-              value={otraArea}
-              onChange={(e) => setOtraArea(e.target.value)} // Actualiza el estado con el valor del campo de texto
-              required
-            />
+            <div className="flex flex-col gap-3">
+              <TextField
+                className="inputs-textfield w-full"
+                label="Especificar Área"
+                name="otra_area"
+                variant="outlined"
+                type="text"
+                fullWidth
+                value={otraArea}
+                onChange={(e) => setOtraArea(e.target.value)} // Actualiza el estado con el valor del campo de texto
+                required
+              />
+              <div className="solid rounded-2xl border border-secondary p-2">
+                <InputLabel id="img_area">Imagen para el área</InputLabel>
+                <input
+                  name="img_area"
+                  type="file"
+                  accept=".jpg"
+                  className="w-full text-sm text-gray-500"
+                  // onChange={(e) => {
+                  //   const file = e.target.files?.[0];
+                  //   if (file) {
+                  //     setDocumentoIdentidad(file);
+                  //   }
+                  // }}
+                />
+              </div>
+            </div>
           )}
 
           {/* Campo descripción */}
@@ -352,7 +354,7 @@ export default function CrearCursos() {
             type="text"
             fullWidth
             required
-            value={formData.dirigido}
+            value={formData.dirigido_a}
             onChange={handleChange}
           />
 

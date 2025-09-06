@@ -25,7 +25,7 @@ export default function DetallarCurso() {
     id_area: { id_area: string; nombre_area: string };
     id_categoria: { id_categoria: string; nombre: string };
     intensidad_horaria: string;
-    dirigido: string;
+    dirigido_a: string;
     incluye: string;
   }
 
@@ -72,7 +72,7 @@ export default function DetallarCurso() {
         id_area: curso.id_area.id_area || "",
         id_categoria: curso.id_categoria.id_categoria || "",
         intensidad_horaria: curso.intensidad_horaria || "",
-        dirigido: curso.dirigido || "",
+        dirigido: curso.dirigido_a || "",
         incluye: curso.incluye || "",
       });
     }

@@ -44,7 +44,21 @@ export default function VerCursos() {
   >({});
 
   const columnsOfertas: GridColDef[] = [
-    { field: "id", headerName: "ID", flex: 0.5 },
+    {
+      field: "logo",
+      headerName: "Logo",
+      flex: 0.5,
+      renderCell: () => (
+        <div className="flex h-full w-full flex-row items-center justify-around">
+          {" "}
+          <Avatar
+            src="/NAS.png"
+            // alt={nombreCategoria}
+            sx={{ width: 32, height: 32 }}
+          />{" "}
+        </div>
+      ),
+    },
     { field: "id", headerName: "ID", flex: 0.5 },
     { field: "nombre", headerName: "Nombre", flex: 1 },
     { field: "categoria", headerName: "Categoría", flex: 1 },
@@ -329,11 +343,12 @@ export default function VerCursos() {
                   aria-controls="panel1-content"
                   id="panel1-header"
                 >
+                  {/* {nombreCategoria}
                   <Avatar
                     src="/NAS.png"
                     alt={nombreCategoria}
                     sx={{ width: 32, height: 32, marginRight: 2 }}
-                  />
+                  /> */}
                   <Typography component="span">{nombreCategoria}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>

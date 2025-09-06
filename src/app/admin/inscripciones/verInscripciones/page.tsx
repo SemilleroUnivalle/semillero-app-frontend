@@ -411,6 +411,7 @@ export default function VerInscripciones() {
 
   return (
     <div>
+      
       <div className="mx-auto mt-4 flex w-11/12 justify-between rounded-2xl bg-white p-2 shadow-md">
         {/* Filtro por Periodos */}
         <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
@@ -517,6 +518,14 @@ export default function VerInscripciones() {
       </div>
 
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 text-center shadow-md">
+      <Button
+          variant="outlined"
+          startIcon={<FileDownloadIcon />}
+          className="m-4 rounded-xl border-primary text-primary hover:bg-primary hover:text-white"
+          onClick={handleExportExcel}
+        >
+          Exportar a Excel
+        </Button>
         <Paper
           className="border-none shadow-none"
           sx={{ height: 800, width: "100%" }}
@@ -564,14 +573,7 @@ export default function VerInscripciones() {
             }}
           />
         </Paper>
-        <Button
-          variant="outlined"
-          startIcon={<FileDownloadIcon />}
-          className="m-4 rounded-xl border-primary text-primary hover:bg-primary hover:text-white"
-          onClick={handleExportExcel}
-        >
-          Exportar a Excel
-        </Button>
+        
       </div>
     </div>
   );
