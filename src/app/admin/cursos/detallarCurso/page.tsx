@@ -24,7 +24,7 @@ export default function DetallarCurso() {
     descripcion: string;
     id_area: { id_area: string; nombre_area: string };
     id_categoria: { id_categoria: string; nombre: string };
-    intensidad_horaria: string;
+    intensidad_horaria: number;
     dirigido_a: string;
     incluye: string;
   }
@@ -48,8 +48,8 @@ export default function DetallarCurso() {
     descripcion_curso: "", // Usar la descripción del curso seleccionado
     id_area: "", // Usar el área del curso seleccionado
     id_categoria: "", // Usar la categoría del curso seleccionado
-    intensidad_horaria: "", // Usar la intensidad horaria del curso seleccionado
-    dirigido: "", // Usar el dirigido del curso seleccionado
+    intensidad_horaria: 0, // Usar la intensidad horaria del curso seleccionado
+    dirigido_a: "", // Usar el dirigido del curso seleccionado
     incluye: "", // Usar el incluye del curso seleccionado
   });
   //Estado para manejar el mensaje de éxito
@@ -71,8 +71,8 @@ export default function DetallarCurso() {
         descripcion_curso: curso.descripcion || "",
         id_area: curso.id_area.id_area || "",
         id_categoria: curso.id_categoria.id_categoria || "",
-        intensidad_horaria: curso.intensidad_horaria || "",
-        dirigido: curso.dirigido_a || "",
+        intensidad_horaria: curso.intensidad_horaria,
+        dirigido_a: curso.dirigido_a || "",
         incluye: curso.incluye || "",
       });
     }
@@ -273,11 +273,11 @@ export default function DetallarCurso() {
         <TextField
           className="inputs-textfield w-full"
           label="Dirigido a"
-          name="dirigido"
+          name="dirigido_a"
           variant="outlined"
           type="text"
           fullWidth
-          value={formData.dirigido}
+          value={formData.dirigido_a}
           slotProps={{
             input: {
               readOnly: true,

@@ -78,7 +78,7 @@ export default function VerCursos() {
             <VisibilityOutlinedIcon
               className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
               onClick={() => {
-                const rowData = params.row;
+                const rowData = params.row.moduloCompleto;
 
                 localStorage.setItem(
                   "cursoSeleccionado",
@@ -192,6 +192,7 @@ export default function VerCursos() {
           id_categoria: data.id_categoria.id_categoria,
           categoria: data.id_categoria.nombre,
           descripcion: data.descripcion_modulo,
+          
         }));
         console.log("Modulos:", formateado);
         // setRows(formateado);
@@ -255,6 +256,7 @@ export default function VerCursos() {
         area: mod.id_area.nombre_area,
         id_categoria: mod.id_categoria,
         categoria: nombreCategoria,
+        moduloCompleto: mod,
       })),
   );
 
@@ -365,6 +367,7 @@ export default function VerCursos() {
                         area: mod.id_area.nombre_area,
                         id_categoria: mod.id_categoria,
                         categoria: nombreCategoria,
+                        moduloCompleto: mod,
                       }))}
                       columns={columnsOfertas}
                       initialState={{ pagination: { paginationModel } }}

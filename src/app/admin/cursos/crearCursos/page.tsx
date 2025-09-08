@@ -103,6 +103,9 @@ export default function CrearCursos() {
           id_area: areaId,
           id_categoria: categoriaId,
           descripcion_modulo: formData.descripcion_modulo,
+          intensidad_horaria: formData.intensidad_horaria,
+          dirigido_a: formData.dirigido_a,
+          incluye: formData.incluye,
         },
         {
           headers: {
@@ -338,7 +341,7 @@ export default function CrearCursos() {
             label="Intensidad Horaria"
             name="intensidad_horaria"
             variant="outlined"
-            type="text"
+            type="number"
             fullWidth
             required
             value={formData.intensidad_horaria}
@@ -349,7 +352,7 @@ export default function CrearCursos() {
           <TextField
             className="inputs-textfield w-full"
             label="Dirigido a"
-            name="dirigido"
+            name="dirigido_a"
             variant="outlined"
             type="text"
             fullWidth
