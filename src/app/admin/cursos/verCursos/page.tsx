@@ -34,6 +34,9 @@ export default function VerCursos() {
       id_categoria: string;
       nombre: string;
     };
+    intensidad_horaria: number;
+    dirigido_a: string;
+    incluye: string;
   }
 
   const router = useRouter();
@@ -92,7 +95,7 @@ export default function VerCursos() {
             <PencilSquareIcon
               className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
               onClick={() => {
-                const rowData = params.row;
+                const rowData = params.row.moduloCompleto;
 
                 localStorage.setItem(
                   "cursoSeleccionado",
@@ -149,6 +152,9 @@ export default function VerCursos() {
                   id_modulo: mod.id_modulo,
                   nombre_modulo: mod.nombre_modulo,
                   descripcion_modulo: mod.descripcion_modulo,
+                  intensidad_horaria: mod.intensidad_horaria,
+                  dirigido_a: mod.dirigido_a,
+                  incluye: mod.incluye,
                   id_area: {
                     id_area: mod.id_area.id_area,
                     nombre_area: mod.id_area.nombre_area,
@@ -192,7 +198,9 @@ export default function VerCursos() {
           id_categoria: data.id_categoria.id_categoria,
           categoria: data.id_categoria.nombre,
           descripcion: data.descripcion_modulo,
-          
+          intensidad_horaria: data.intensidad_horaria,
+          dirigido_a: data.dirigido_a,
+          incluye: data.incluye,
         }));
         console.log("Modulos:", formateado);
         // setRows(formateado);

@@ -18,8 +18,7 @@ import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 
 export default function ModificarOferta() {
-
- interface Oferta {
+  interface Oferta {
     id_oferta_academica: {
       id_oferta_academica: number;
       nombre: string;
@@ -42,7 +41,14 @@ export default function ModificarOferta() {
     descripcion_modulo: string;
     id_area: string;
     nombre_area: string;
-    id_categoria: string;
+    id_categoria: Categoria;
+  }
+
+  interface Categoria {
+    id_categoria: number;
+    nombre: string;
+    fecha_inicio: string;
+    estado: boolean;
   }
   // Estado para los módulos seleccionados por categoría
   const [selectedCursosPorCategoria, setSelectedCursosPorCategoria] = useState<
@@ -63,7 +69,7 @@ export default function ModificarOferta() {
   const [success, setSuccess] = useState(false);
 
   // Estado para la oferta seleccionada
-const [oferta, setOferta] = useState<Oferta | null>(null);
+  const [oferta, setOferta] = useState<Oferta | null>(null);
 
   // Estado para el nombre y fecha de inicio de la oferta
   const [nombreOferta, setNombreOferta] = useState("");
@@ -116,6 +122,9 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
       setSelectedCursosPorCategoria(cursosPorCategoria);
       setPreciosPorCategoria(preciosPorCategoria);
       setFechasFinalizacionPorCategoria(fechasPorCategoria);
+
+      // 👇 Guarda la primera oferta en el estado
+      setOferta(ofertas[0]);
     }
   }, []);
 
@@ -137,7 +146,7 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
         const categoriasData = response.data;
 
         // Formatear los datos para que sean más fáciles de usar
-       const formateado: Record<string, Modulo[]> = {};
+        const formateado: Record<string, Modulo[]> = {};
 
         categoriasData.forEach(
           (categoria: { nombre: string; modulos: Modulo[] }) => {
@@ -181,13 +190,12 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
 
   // Manejo del envío del formulario
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    
+    e.preventDefault(); // Evita el comportamiento por defecto del formulario
+
     if (!oferta) {
       setError("No se ha seleccionado ninguna oferta para modificar.");
       return;
     }
-
-    e.preventDefault(); // Evita el comportamiento por defecto del formulario
 
     console.log(oferta.id_oferta_academica.id_oferta_academica);
     // Marcar el formulario como tocado para que muestre validaciones
@@ -215,7 +223,7 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
         return;
       }
 
-      //Realizar la solicitud POST al endpoint /oferta_academica/ofer/
+      //Realizar la solicitud PATCH al endpoint /oferta_academica/ofer/
       const ofertaAcademicaResponse = await axios.patch(
         `${API_BASE_URL}/oferta_academica/ofer/${oferta.id_oferta_academica.id_oferta_academica}/`,
         {
@@ -228,7 +236,10 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
           },
         },
       );
-      console.log("Respuesta de la oferta académica:", ofertaAcademicaResponse.data);
+      console.log(
+        "Respuesta de la oferta académica:",
+        ofertaAcademicaResponse.data,
+      );
 
       // Obtener el ID de la oferta académica creada
       // const idOfertaAcademica =
@@ -297,7 +308,9 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
 
         // Obtener el ID de la categoría del primer módulo de la categoría
         const idCategoria =
-          modulosPorCategoria[nombreCategoria][0]?.id_categoria;
+          modulosPorCategoria[nombreCategoria][0]?.id_categoria.id_categoria;
+
+          console.log("Modulos por categori", idCategoria);
 
         if (!idCategoria) {
           setError(
@@ -317,7 +330,13 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
           id_categoria: idCategoria,
         };
 
-        console.log("Enviando datos:", data, "para la categoría:", oferta.id_oferta_categoria);
+        console.log(
+          "Enviando datos:",
+          data,
+          "para la categoría:",
+          oferta.id_oferta_categoria,
+        );
+        console.log(oferta);
 
         // Realizar la solicitud POST al endpoint /oferta_categoria/ofer/
         await axios.patch(

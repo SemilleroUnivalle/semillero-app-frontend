@@ -20,8 +20,8 @@ import internal from "stream";
 export default function DetallarCurso() {
   interface Curso {
     id: number;
-    nombre: string;
-    descripcion: string;
+    nombre_modulo: string;
+    descripcion_modulo: string;
     id_area: { id_area: string; nombre_area: string };
     id_categoria: { id_categoria: string; nombre: string };
     intensidad_horaria: number;
@@ -45,7 +45,7 @@ export default function DetallarCurso() {
   // Estado para manejar los datos del formulario
   const [formData, setFormData] = useState({
     nombre_modulo: "", // Usar el nombre del curso seleccionado
-    descripcion_curso: "", // Usar la descripción del curso seleccionado
+    descripcion_modulo: "", // Usar la descripción del curso seleccionado
     id_area: "", // Usar el área del curso seleccionado
     id_categoria: "", // Usar la categoría del curso seleccionado
     intensidad_horaria: 0, // Usar la intensidad horaria del curso seleccionado
@@ -67,8 +67,8 @@ export default function DetallarCurso() {
   useEffect(() => {
     if (curso) {
       setFormData({
-        nombre_modulo: curso.nombre || "",
-        descripcion_curso: curso.descripcion || "",
+        nombre_modulo: curso.nombre_modulo || "",
+        descripcion_modulo: curso.descripcion_modulo || "",
         id_area: curso.id_area.id_area || "",
         id_categoria: curso.id_categoria.id_categoria || "",
         intensidad_horaria: curso.intensidad_horaria,
@@ -251,7 +251,7 @@ export default function DetallarCurso() {
               readOnly: true,
             },
           }}
-          value={formData.descripcion_curso}
+          value={formData.descripcion_modulo}
         />
         {/* Campo Intensidad Horaria*/}
         <TextField

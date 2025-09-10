@@ -17,13 +17,13 @@ import { API_BASE_URL } from "../../../../../config";
 
 export default function ModificarCursos() {
   interface Curso {
-    id: number;
-    nombre: string;
-    descripcion: string;
+    id_modulo: number;
+    nombre_modulo: string;
+    descripcion_modulo: string;
     id_area: { id_area: string; nombre_area: string };
     id_categoria: { id_categoria: string; nombre: string };
-    intensidad_horaria: string;
-    dirigido: string;
+    intensidad_horaria: number;
+    dirigido_a: string;
     incluye: string;
   }
 
@@ -41,12 +41,13 @@ export default function ModificarCursos() {
   const [curso, setCurso] = useState<Curso | null>(null);
   // Estado para manejar los datos del formulario
   const [formData, setFormData] = useState({
+    id_modulo: 0,
     nombre_modulo: "", // Usar el nombre del curso seleccionado
     descripcion_curso: "", // Usar la descripción del curso seleccionado
     id_area: "", // Usar el área del curso seleccionado
     id_categoria: "", // Usar la categoría del curso seleccionado
-    intensidad_horaria: "", // Usar la intensidad horaria del curso seleccionado
-    dirigido: "", // Usar el dirigido del curso seleccionado
+    intensidad_horaria: 0, // Usar la intensidad horaria del curso seleccionado
+    dirigido_a: "", // Usar el dirigido del curso seleccionado
     incluye: "", // Usar el incluye del curso seleccionado
   });
   // Estado para manejar el mensaje de éxito
@@ -63,12 +64,13 @@ export default function ModificarCursos() {
   useEffect(() => {
     if (curso) {
       setFormData({
-        nombre_modulo: curso.nombre || "",
-        descripcion_curso: curso.descripcion || "",
+        id_modulo : curso.id_modulo || 0,
+        nombre_modulo: curso.nombre_modulo || "",
+        descripcion_curso: curso.descripcion_modulo || "",
         id_area: curso.id_area.id_area || "",
         id_categoria: curso.id_categoria.id_categoria || "",
-        intensidad_horaria: curso.intensidad_horaria || "",
-        dirigido: curso.dirigido || "",
+        intensidad_horaria: curso.intensidad_horaria,
+        dirigido_a: curso.dirigido_a || "",
         incluye: curso.incluye || "",
       });
     }
@@ -135,12 +137,15 @@ export default function ModificarCursos() {
         console.error("No se encontró el curso seleccionado.");
       } else {
         const cursoResponse = await axios.patch(
-          `${API_BASE_URL}/modulo/mod/${curso.id}/`,
+          `${API_BASE_URL}/modulo/mod/${curso.id_modulo}/`,
           {
             nombre_modulo: formData.nombre_modulo,
             id_area: areaId,
             id_categoria: categoriaId,
             descripcion_modulo: formData.descripcion_curso,
+            intensidad_horaria: formData.intensidad_horaria,
+            dirigido_a: formData.dirigido_a,
+            incluye: formData.incluye,
           },
           {
             headers: {
@@ -339,11 +344,8 @@ export default function ModificarCursos() {
             variant="outlined"
             type="text"
             fullWidth
-            slotProps={{
-              input: {
-                readOnly: true,
-              },
-            }}
+            required
+            onChange={handleChange}
             value={formData.intensidad_horaria}
           />
 
@@ -355,12 +357,9 @@ export default function ModificarCursos() {
             variant="outlined"
             type="text"
             fullWidth
-            value={formData.dirigido}
-            slotProps={{
-              input: {
-                readOnly: true,
-              },
-            }}
+            value={formData.dirigido_a}
+            required
+            onChange={handleChange}
           />
 
           {/* Campo Incluye*/}
@@ -371,11 +370,8 @@ export default function ModificarCursos() {
             variant="outlined"
             type="text"
             fullWidth
-            slotProps={{
-              input: {
-                readOnly: true,
-              },
-            }}
+            required
+            onChange={handleChange}
             value={formData.incluye}
           />
 
@@ -384,7 +380,7 @@ export default function ModificarCursos() {
             variant="contained"
             className="text-md mt-4 w-full rounded-2xl bg-primary font-semibold capitalize text-white hover:bg-red-800"
           >
-            Editar curso
+            Guardar cambios
           </Button>
         </form>
       </div>
