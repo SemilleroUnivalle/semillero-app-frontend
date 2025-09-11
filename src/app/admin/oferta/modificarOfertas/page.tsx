@@ -84,6 +84,8 @@ export default function ModificarOferta() {
 
   useEffect(() => {
     const storedOferta = localStorage.getItem("ofertaSeleccionada");
+    const ofertas: Oferta[] = storedOferta ? JSON.parse(storedOferta) : [];
+
     if (storedOferta) {
       const ofertas: Oferta[] = JSON.parse(storedOferta);
 
@@ -191,6 +193,9 @@ export default function ModificarOferta() {
   // Manejo del envío del formulario
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // Evita el comportamiento por defecto del formulario
+
+    const storedOferta = localStorage.getItem("ofertaSeleccionada");
+    const ofertas: Oferta[] = storedOferta ? JSON.parse(storedOferta) : [];
 
     if (!oferta) {
       setError("No se ha seleccionado ninguna oferta para modificar.");
@@ -306,11 +311,16 @@ export default function ModificarOferta() {
           return;
         }
 
+        const ofertaCategoria = ofertas.find(
+          (o) => o.id_categoria.nombre === nombreCategoria,
+        );
+        const idOfertaCategoria = ofertaCategoria?.id_oferta_categoria;
+
         // Obtener el ID de la categoría del primer módulo de la categoría
         const idCategoria =
           modulosPorCategoria[nombreCategoria][0]?.id_categoria.id_categoria;
 
-          console.log("Modulos por categori", idCategoria);
+        console.log("Modulos por categori", idCategoria);
 
         if (!idCategoria) {
           setError(
@@ -337,10 +347,11 @@ export default function ModificarOferta() {
           oferta.id_oferta_categoria,
         );
         console.log(oferta);
+        console.log("idOfertaCategoria:", idOfertaCategoria);
 
         // Realizar la solicitud POST al endpoint /oferta_categoria/ofer/
         await axios.patch(
-          `${API_BASE_URL}/oferta_categoria/ofer/${oferta.id_oferta_categoria}/`,
+          `${API_BASE_URL}/oferta_categoria/ofer/${idOfertaCategoria}/`,
           data,
           {
             headers: {

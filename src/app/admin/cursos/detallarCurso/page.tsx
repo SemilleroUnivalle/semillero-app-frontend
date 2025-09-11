@@ -19,7 +19,7 @@ import internal from "stream";
 
 export default function DetallarCurso() {
   interface Curso {
-    id: number;
+    id_modulo: number;
     nombre_modulo: string;
     descripcion_modulo: string;
     id_area: { id_area: string; nombre_area: string };
@@ -310,7 +310,7 @@ export default function DetallarCurso() {
           </Button>
           <Button
             variant="contained"
-            onClick={() => curso && handleDelete(curso.id)}
+            onClick={() => curso && handleDelete(curso.id_modulo)}
             className="text-md mt-4 w-1/2 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
           >
             Eliminar
