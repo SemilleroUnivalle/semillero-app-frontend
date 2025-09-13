@@ -224,58 +224,47 @@ export default function VerInscripciones() {
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const userString = localStorage.getItem("user");
-        let token = "";
-        if (userString) {
-          const user = JSON.parse(userString);
-          token = user.token;
-        }
-
-        const response = await axios.get(`${API_BASE_URL}/estudiante/est/`, {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        });
-        setEstudiantes(response.data);
-        console.log("Estudiantes:", response.data);
-
-        // const formateado = estudiantes.map(
-        //   (student: {
-        //     id: number;
-        //     username: string;
-        //     name: string;
-        //     email: string;
-        //     address: {
-        //       city: string;
-        //       street: string;
-        //       suite: string;
-        //       zipcode: string;
-        //     };
-        //   }) => ({
-        //     id: student.id,
-        //     apellido: student.username,
-        //     nombre: student.name,
-        //     email: student.email,
-        //     direccion: student.address,
-        //     periodo: student.address.city,
-        //     modulo: student.address.street,
-        //     estamento: student.address.suite,
-        //     tipo: student.address.zipcode,
-        //     estado: true,
-        //   }),
-        // );
-
-        // setRows(formateado);
-      } catch (error) {
-        console.error("Error al obtener los datos de los estudiantes:", error);
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const userString = localStorage.getItem("user");
+      let token = "";
+      if (userString) {
+        const user = JSON.parse(userString);
+        token = user.token;
       }
-    };
 
-    fetchData();
-  }, []);
+      const response = await axios.get(`${API_BASE_URL}/estudiante/est/`, {
+        headers: {
+          Authorization: `Token ${token}`,
+        },
+      });
+
+      // Formatea los datos para la tabla
+      const formateado = response.data.map((student: any) => ({
+        id: student.id_estudiante,
+        apellido: student.apellido || "",
+        nombre: student.nombre || "",
+        email: student.email || "",
+        direccion: student.direccion_residencia || "",
+        periodo: "", // No viene en el endpoint, lo dejas vacío
+        modulo: "",  // No viene en el endpoint, lo dejas vacío
+        estamento: student.estamento || "",
+        tipo: "",    // No viene en el endpoint, lo dejas vacío
+        estado: student.is_active ?? false,
+      }));
+
+      setRows(formateado);
+      setEstudiantes(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error al obtener los datos de los estudiantes:", error);
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, []);
 
   // useEffect(() => {
   //   const fetchData = async () => {

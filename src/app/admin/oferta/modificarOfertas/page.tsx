@@ -367,11 +367,7 @@ export default function ModificarOferta() {
 
       setSuccess(true);
 
-      // Resetear el formulario
-      if (e.currentTarget && typeof e.currentTarget.reset === "function") {
-        e.currentTarget.reset();
-      }
-      setSelectedCursosPorCategoria({});
+    
     } catch (error) {
       console.error("Error al enviar los datos --:", error);
       setError("Hubo un problema al enviar los datos. Inténtalo de nuevo.");

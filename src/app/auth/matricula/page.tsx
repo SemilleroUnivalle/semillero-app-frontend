@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { API_BASE_URL } from "../../../../config";
+
+import axios from "axios";
 import {
   InputLabel,
   Select,
@@ -54,22 +57,53 @@ export default function Matricula() {
     tipoVinculacion: "",
   });
 
-  // Encontrar las áreas disponibles según el periodo seleccionado
-  const areasDisponibles =
-    periodos.find((p) => p.id === Number(formData.oferta))?.area || [];
+  // Estado para las ofertas académicas activas
+  const [ofertas, setOfertas] = useState<any>({});
+  const [loading, setLoading] = useState(true);
 
-  // Encontrar los módulos disponibles según el área seleccionada
-  const modulosDisponibles =
-    areasDisponibles.find((a) => a.id === Number(formData.area))?.modulos || [];
+
+  useEffect(() => {
+    // Reemplaza la URL por la de tu endpoint real
+    axios.get(`${API_BASE_URL}/oferta_categoria/ofer/por-oferta-academica/`)
+      .then((res) => {
+        console.log("Ofertas académicas obtenidas:", res.data);
+        setOfertas(res.data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  // Obtén la lista de ofertas académicas
+  const ofertasAcademicas = Object.values(ofertas)
+    .flat()
+    .map((oferta: any) => oferta.id_oferta_academica)
+    .filter(
+      (value, index, self) =>
+        self.findIndex((v) => v.id_oferta_academica === value.id_oferta_academica) === index
+    );
+
+  // Categorías disponibles según la oferta seleccionada
+  const categoriasDisponibles = formData.oferta
+    ? ofertas[formData.oferta]?.map((cat: any) => cat.id_categoria) || []
+    : [];
+
+  // Módulos disponibles según la categoría seleccionada
+  const modulosDisponibles = formData.oferta && formData.area
+    ? ofertas[formData.oferta]
+        ?.find((cat: any) => cat.id_categoria.id_categoria === Number(formData.area))
+        ?.modulo || []
+    : [];
 
   const handleChange = (event: SelectChangeEvent<string>, field: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: event.target.value,
-      ...(field === "oferta" ? { area: "", modulo: "" } : {}), // Resetear área y módulo si cambia el período
-      ...(field === "area" ? { modulo: "" } : {}), // Resetear módulo si cambia el área
+      ...(field === "oferta" ? { area: "", modulo: "" } : {}),
+      ...(field === "area" ? { modulo: "" } : {}),
     }));
   };
+
+  if (loading) return <div>Cargando ofertas...</div>;
 
   return (
     <div className="mx-auto my-4 w-full rounded-2xl bg-white p-5 text-center shadow-md">
@@ -78,9 +112,9 @@ export default function Matricula() {
       </h2>
 
       <form className="items-center">
-        {/* Selector de Período */}
+                {/* Selector de Oferta Académica */}
         <FormControl className="inputs-textfield mx-auto mt-2 flex w-full sm:w-1/4">
-          <InputLabel id="oferta-label">Periodo</InputLabel>
+          <InputLabel id="oferta-label">Oferta académica</InputLabel>
           <Select
             labelId="oferta-label"
             id="oferta"
@@ -88,58 +122,57 @@ export default function Matricula() {
             value={formData.oferta}
             onChange={(e) => handleChange(e, "oferta")}
           >
-            {periodos.map((periodo) => (
-              <MenuItem key={periodo.id} value={periodo.id}>
-                {periodo.nombre}
+            {ofertasAcademicas.map((oferta: any) => (
+              <MenuItem key={oferta.id_oferta_academica} value={oferta.id_oferta_academica}>
+                {oferta.nombre}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
 
-        <h2 className="my-4 text-center font-semibold text-primary">
-          Módulo a matricular
-        </h2>
-        <div className="flex flex-wrap justify-around gap-4 text-gray-600">
-          {/* Selector de Área (dependiente del Período) */}
-          <FormControl
-            className="inputs-textfield flex w-full flex-col sm:w-1/4"
-            disabled={!formData.oferta}
+<div className="flex flex-wrap justify-around gap-3 my-4">
+        {/* Selector de Área */}
+        <FormControl
+          className="inputs-textfield flex w-full flex-col sm:w-1/3"
+          disabled={!formData.oferta}
+        >
+          <InputLabel id="area-label">Área</InputLabel>
+          <Select
+            labelId="area-label"
+            id="area"
+            label="area-label"
+            value={formData.area}
+            onChange={(e) => handleChange(e, "area")}
           >
-            <InputLabel id="area-label">Área</InputLabel>
-            <Select
-              labelId="area-label"
-              id="area"
-              label="area-label"
-              value={formData.area}
-              onChange={(e) => handleChange(e, "area")}
-            >
-              {areasDisponibles.map((area) => (
-                <MenuItem key={area.id} value={area.id}>
-                  {area.nombre}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          {/* Selector de Módulo (dependiente del Área) */}
-          <FormControl
-            className="inputs-textfield flex w-full flex-col sm:w-1/4"
-            disabled={!formData.area}
+            {categoriasDisponibles.map((cat: any) => (
+              <MenuItem key={cat.id_categoria} value={cat.id_categoria}>
+                {cat.nombre}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Selector de Módulo */}
+        <FormControl
+          className="inputs-textfield flex w-full flex-col sm:w-1/3"
+          disabled={!formData.area}
+        >
+          <InputLabel id="modulo-label">Módulo</InputLabel>
+          <Select
+            labelId="modulo-label"
+            id="modulo"
+            label="modulo-label"
+            value={formData.modulo}
+            onChange={(e) => handleChange(e, "modulo")}
           >
-            <InputLabel id="modulo-label">Módulo</InputLabel>
-            <Select
-              labelId="modulo-label"
-              id="modulo"
-              label="modulo-label"
-              value={formData.modulo}
-              onChange={(e) => handleChange(e, "modulo")}
-            >
-              {modulosDisponibles.map((modulo) => (
-                <MenuItem key={modulo.id} value={modulo.id}>
-                  {modulo.nombre}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+            {modulosDisponibles.map((modulo: any) => (
+              <MenuItem key={modulo.id_modulo} value={modulo.id_modulo}>
+                {modulo.nombre_modulo}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        
         </div>
 
         {/*Selector de Tipo de Vinculacion  */}

@@ -58,8 +58,8 @@ export default function LayoutAdmin({
             className="m-4"
             src="/logoGrisSemillero.png"
             alt="Logo Semillero"
-            width={200}
-            height={68}
+            width={250}
+            height={85}
             priority
           />
           <div className="mx-auto mt-2 flex w-full flex-col justify-around">

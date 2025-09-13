@@ -14,6 +14,8 @@ import React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
+import { useRouter } from "next/navigation";
+
 
 export default function DetallarOferta() {
   interface Oferta {
@@ -72,6 +74,9 @@ export default function DetallarOferta() {
   >({});
   const [fechasFinalizacionPorCategoria, setFechasFinalizacionPorCategoria] =
     useState<Record<string, string>>({});
+
+      const router = useRouter();
+    
 
   useEffect(() => {
     const storedOferta = localStorage.getItem("ofertaSeleccionada");
@@ -174,6 +179,31 @@ export default function DetallarOferta() {
   const handleCloseSnackbar = () => {
     setError(null);
     setSuccess(false);
+  };
+
+  // Función para eliminar un curso
+  const handleDelete = async (id: number) => {
+    console.log("ID de la oferta a eliminar:", id);
+    const confirmDelete = window.confirm(
+      "¿Estás seguro de que deseas eliminar esta oferta?",
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`${API_BASE_URL}/oferta_academica/ofer/${id}/`, {
+        headers: {
+          Authorization: `Token ${localStorage.getItem("token")}`,
+        },
+      });
+
+      setSuccess(true);
+      router.push("/admin/oferta/verOfertas");
+    } catch (error) {
+      console.error("Error al eliminar la oferta", error);
+      alert(
+        "Hubo un error al eliminar la oferta Por favor, inténtalo de nuevo.",
+      );
+    }
   };
 
   return (
@@ -344,7 +374,7 @@ export default function DetallarOferta() {
             </Button>
             <Button
               variant="contained"
-              // onClick={() => curso && handleDelete(curso.id)}
+              onClick={() => oferta && handleDelete(oferta.id_oferta_academica.id_oferta_academica)}
               className="text-md mt-4 w-1/2 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
             >
               Eliminar
