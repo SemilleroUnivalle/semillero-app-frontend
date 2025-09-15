@@ -172,7 +172,7 @@ export default function DetallarCurso() {
       <div className="flex w-full flex-col gap-3 sm:w-1/3">
         {/* Campo nombre del curso */}
         <TextField
-          className="inputs-textfield w-full"
+          className="inputs-textfield-readonly w-full"
           label="Nombre"
           name="nombre_modulo"
           variant="outlined"
@@ -180,14 +180,14 @@ export default function DetallarCurso() {
           fullWidth
           value={formData.nombre_modulo}
           slotProps={{
-            input: {
-              readOnly: true,
-            },
-          }}
+              input: {
+                readOnly: true,
+              },
+            }}
         />
 
         {/* Campo selector de categoria */}
-        <FormControl className="inputs-textfield w-full">
+        <FormControl className="inputs-textfield-readonly w-full">
           <InputLabel id="categoria_curso">Categoría</InputLabel>
           <Select
             labelId="categoria_curso"
@@ -212,7 +212,7 @@ export default function DetallarCurso() {
         </FormControl>
 
         {/* Campo selector de area */}
-        <FormControl className="inputs-textfield w-full">
+        <FormControl className="inputs-textfield-readonly w-full">
           <InputLabel id="area_curso">Área</InputLabel>
           <Select
             labelId="area_curso"
@@ -238,7 +238,7 @@ export default function DetallarCurso() {
 
         {/* Campo descripción */}
         <TextField
-          className="inputs-textfield w-full"
+          className="inputs-textfield-readonly w-full"
           label="Descripción"
           name="descripcion_curso"
           variant="outlined"
@@ -255,7 +255,7 @@ export default function DetallarCurso() {
         />
         {/* Campo Intensidad Horaria*/}
         <TextField
-          className="inputs-textfield w-full"
+          className="inputs-textfield-readonly w-full"
           label="Intensidad Horaria"
           name="intensidad_horaria"
           variant="outlined"
@@ -271,7 +271,7 @@ export default function DetallarCurso() {
 
         {/* Campo Dirigido a*/}
         <TextField
-          className="inputs-textfield w-full"
+          className="inputs-textfield-readonly w-full"
           label="Dirigido a"
           name="dirigido_a"
           variant="outlined"
@@ -287,7 +287,7 @@ export default function DetallarCurso() {
 
         {/* Campo Incluye*/}
         <TextField
-          className="inputs-textfield w-full"
+          className="inputs-textfield-readonly w-full"
           label="Incluye"
           name="incluye"
           variant="outlined"

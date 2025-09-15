@@ -82,7 +82,7 @@ export default function Registro() {
     ciudad_residencia: "",
     comuna_residencia: "",
     direccion_residencia: "",
-    // colegio: "",
+    colegio: "",
     grado: "",
     estamento: "",
     eps: "",
@@ -739,10 +739,10 @@ export default function Registro() {
                 type="text"
                 fullWidth
                 required
-                // value={formData.colegio}
-                // onChange={(e) =>
-                //   setFormData({ ...formData, colegio: e.target.value })
-                // }
+                value={formData.colegio}
+                onChange={(e) =>
+                  setFormData({ ...formData, colegio: e.target.value })
+                }
               />
               {/* Campo Estamento Colegio */}
               <FormControl className="inputs-textfield w-full sm:w-1/4">

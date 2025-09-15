@@ -157,70 +157,9 @@ export default function VerInscripciones() {
     acudiente: number;
   }
 
-  const datosEjemplo: EstudianteRow[] = [
-    {
-      id: 1,
-      apellido: "García",
-      nombre: "María Fernanda",
-      email: "maria.garcia@email.com",
-      direccion: "Cra 10 #20-30",
-      periodo: "2024-1",
-      modulo: "Matemáticas Básicas",
-      estamento: "Estudiante",
-      tipo: "Regular",
-      estado: true,
-    },
-    {
-      id: 2,
-      apellido: "Rodríguez",
-      nombre: "Juan Pablo",
-      email: "juan.rodriguez@email.com",
-      direccion: "Cll 5 #15-22",
-      periodo: "2024-1",
-      modulo: "Ciencias Naturales",
-      estamento: "Estudiante",
-      tipo: "Becado",
-      estado: true,
-    },
-    {
-      id: 3,
-      apellido: "Martínez",
-      nombre: "Laura Sofía",
-      email: "laura.martinez@email.com",
-      direccion: "Av 3N #45-67",
-      periodo: "2024-1",
-      modulo: "Lengua Castellana",
-      estamento: "Estudiante",
-      tipo: "Regular",
-      estado: false,
-    },
-    {
-      id: 4,
-      apellido: "López",
-      nombre: "Carlos Andrés",
-      email: "carlos.lopez@email.com",
-      direccion: "Cll 8 #12-34",
-      periodo: "2024-2",
-      modulo: "Educación Física",
-      estamento: "Docente",
-      tipo: "Invitado",
-      estado: true,
-    },
-    {
-      id: 5,
-      apellido: "Ramírez",
-      nombre: "Ana Lucía",
-      email: "ana.ramirez@email.com",
-      direccion: "Cra 15 #25-40",
-      periodo: "2024-2",
-      modulo: "Artes",
-      estamento: "Estudiante",
-      tipo: "Regular",
-      estado: true,
-    },
-  ];
 
-  const [rows, setRows] = useState<EstudianteRow[]>(datosEjemplo);
+
+  const [rows, setRows] = useState<EstudianteRow[]>([]);
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
   const [loading, setLoading] = useState(true);
 
