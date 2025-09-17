@@ -19,6 +19,11 @@ const links = [
     icon: UsersIcon,
   },
   {
+    name: "Matrículas",
+    href: "/admin/matriculas/verMatriculas",
+    icon: UsersIcon,
+  },
+  {
     name: "Cursos",
     href: "/admin/cursos/verCursos",
     icon: BookOpenIcon,
