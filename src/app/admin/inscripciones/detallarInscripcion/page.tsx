@@ -11,19 +11,119 @@ import {
   Button,
   Typography,
   Box,
+  SelectChangeEvent,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 
+// Interfaces para Departamentos y Municipios
+interface Departamento {
+  id: number;
+  nombre: string;
+}
+interface DepartamentoApi {
+  id: number;
+  name: string;
+}
+interface Ciudad {
+  id: number;
+  nombre: string;
+}
+interface CiudadApi {
+  id: number;
+  name: string;
+}
+interface FormDataInterface {
+  id_estudiante: number | null;
+  nombre: string;
+  apellido: string;
+  numero_documento: string;
+  tipo_documento: string;
+  fecha_nacimiento: string;
+  genero: string;
+  email: string;
+  celular: string;
+  telefono_fijo: string;
+  departamento_residencia: string;
+  ciudad_residencia: string;
+  comuna_residencia: string;
+  direccion_residencia: string;
+  colegio: string;
+  grado: string;
+  estamento: string;
+  eps: string;
+  discapacidad: boolean;
+  descripcion_discapacidad: string;
+  tipo_discapacidad: string;
+  is_active: boolean;
+  [key: string]: string | number | boolean | null; // Add index signature
+}
+
 export default function DetallarInscripcion() {
   const [estudiante, setEstudiante] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editable, setEditable] = useState(false);
-  const [editData, setEditData] = useState<any>(null);
 
+  // Estados para departamentos y ciudades
+  const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
+  const [ciudades, setCiudades] = useState<Ciudad[]>([]);
+  const [departamentoSeleccionado, setDepartamentoSeleccionado] =
+    useState<string>("");
+  const [cargandoCiudades, setCargandoCiudades] = useState<boolean>(false);
 
+  const [formData, setFormData] = useState<FormDataInterface>({
+    id_estudiante: null,
+    nombre: "",
+    apellido: "",
+    numero_documento: "",
+    tipo_documento: "",
+    fecha_nacimiento: "",
+    genero: "",
+    email: "",
+    celular: "",
+    telefono_fijo: "",
+    departamento_residencia: "",
+    ciudad_residencia: "",
+    comuna_residencia: "",
+    direccion_residencia: "",
+    colegio: "",
+    grado: "",
+    estamento: "",
+    eps: "",
+    discapacidad: false,
+    descripcion_discapacidad: "",
+    tipo_discapacidad: "",
+    is_active: true,
+  });
+
+  // Estados para manejo de archivos
+  const [fotoPerfil, setFotoPerfil] = useState<File | null>(null);
+  const [documentoIdentidad, setDocumentoIdentidad] = useState<File | null>(
+    null,
+  );
+  const [image, setImage] = useState<string | null>(null);
+
+  // Obtener datos del estudiante y departamentos
   useEffect(() => {
+    setLoading(true); // <-- inicia la carga
+    const fetchDepartamentos = async () => {
+      try {
+        const response = await axios.get<DepartamentoApi[]>(
+          "https://api-colombia.com/api/v1/Department",
+        );
+        const departamentosFormateados: Departamento[] = response.data.map(
+          (dep) => ({
+            id: dep.id,
+            nombre: dep.name,
+          }),
+        );
+        setDepartamentos(departamentosFormateados);
+      } catch (error) {
+        console.error("Error al obtener departamentos:", error);
+      }
+    };
+
     const storedData = localStorage.getItem("inscritoSeleccionado");
     if (storedData) {
       const seleccionado = JSON.parse(storedData);
@@ -43,64 +143,121 @@ export default function DetallarInscripcion() {
           })
           .then((res) => {
             setEstudiante(res.data);
-            setEditData(res.data); // Inicializa los datos editables
-            setLoading(false);
+            setDepartamentoSeleccionado(res.data.departamento_residencia || "");
+            setLoading(false); // <-- termina la carga
+            // En tu useEffect después de obtener el estudiante
+            setFormData({
+              ...formData,
+              ...res.data,
+            });
           })
-          .catch(() => setLoading(false));
+          .catch(() => setLoading(false)); // <-- termina la carga en error
+      } else {
+        setLoading(false); // <-- termina la carga si no hay id
       }
+    } else {
+      setLoading(false); // <-- termina la carga si no hay datos
     }
+    fetchDepartamentos();
   }, []);
 
-  const handleEditChange = (field: string, value: any) => {
-    setEditData((prev: any) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleSave = async () => {
-    if (!editData?.id_estudiante) return;
-    const userString = localStorage.getItem("user");
-    let token = "";
-    if (userString) {
-      const user = JSON.parse(userString);
-      token = user.token;
+  // Obtener ciudades cuando cambia el departamento seleccionado en modo edición
+  useEffect(() => {
+    const fetchCiudades = async () => {
+      if (!departamentoSeleccionado) return;
+      setCargandoCiudades(true);
+      try {
+        const departamentoObj = departamentos.find(
+          (d) => d.nombre === departamentoSeleccionado,
+        );
+        if (!departamentoObj) return;
+        const response = await axios.get<CiudadApi[]>(
+          `https://api-colombia.com/api/v1/Department/${departamentoObj.id}/cities`,
+        );
+        const ciudadesFormateadas: Ciudad[] = response.data
+          .map((ciudad) => ({
+            id: ciudad.id,
+            nombre: ciudad.name,
+          }))
+          .sort((a, b) => a.nombre.localeCompare(b.nombre));
+        setCiudades(ciudadesFormateadas);
+      } catch (error) {
+        console.error("Error al obtener ciudades:", error);
+      } finally {
+        setCargandoCiudades(false);
+      }
+    };
+    if (editable && departamentoSeleccionado) {
+      fetchCiudades();
     }
+  }, [editable, departamentoSeleccionado, departamentos]);
+  1;
+
+  // ...existing code...
+  const handleSave = async () => {
     try {
-      await axios.patch(
-        `${API_BASE_URL}/estudiante/est/${editData.id_estudiante}/`,
-        editData,
+      const formDataToSend = new FormData();
+
+      // Lista de campos que NO se deben enviar
+      const camposExcluidos = [
+        "contrasena",
+        "id_estudiante",
+        "foto",
+        "documento_identidad",
+
+        "is_active",
+      ];
+
+      for (const key in formData) {
+        if (camposExcluidos.includes(key)) continue; // Salta los campos excluidos
+
+        let value = (formData as any)[key];
+        if (typeof value === "boolean") {
+          value = value ? "True" : "False";
+        }
+        formDataToSend.append(key, value);
+      }
+
+      // if (fotoPerfil) {
+      //   formDataToSend.append("foto", fotoPerfil);
+      // }
+      // if (documentoIdentidad) {
+      //   formDataToSend.append("documento_identidad", documentoIdentidad);
+      // }
+
+      // Obtener token del localStorage
+      const userString = localStorage.getItem("user");
+      let token = "";
+      if (userString) {
+        const user = JSON.parse(userString);
+        token = user.token;
+      }
+
+      for (let pair of formDataToSend.entries()) {
+        console.log(`${pair[0]}:`, pair[1]);
+      }
+      const response = await axios.patch(
+        `${API_BASE_URL}/estudiante/est/${formData.id_estudiante}/`,
+        formDataToSend,
         {
           headers: {
+            "Content-Type": "multipart/form-data",
             Authorization: `Token ${token}`,
           },
-        }
+        },
       );
-      setEstudiante(editData);
-      setEditable(false);
+
+      if (response.status === 200) {
+        alert("Actualización exitosa");
+      } else {
+        alert("Error al actualizar");
+      }
     } catch (error) {
-      alert("Error al guardar los cambios.");
+      console.error("Error de conexión:", error);
+      alert("Hubo un error al actualizar el estudiante.");
     }
   };
-
-  if (loading) {
-    return (
-      <Box className="mx-auto flex max-w-md flex-col items-center justify-center rounded-xl bg-white p-4 shadow">
-        <CircularProgress />
-        <Typography className="mt-2">
-          Cargando datos del estudiante...
-        </Typography>
-      </Box>
-    );
-  }
-
-  if (!estudiante) {
-    return (
-      <Box className="mx-auto flex max-w-md flex-col items-center justify-center rounded-xl bg-white p-4 shadow">
-        <Typography>No se encontró información del estudiante.</Typography>
-      </Box>
-    );
-  }
+  // ...existing code...
 
   if (loading) {
     return (
@@ -127,21 +284,6 @@ export default function DetallarInscripcion() {
         Detalle de Inscripción
       </h2>
 
-      <Button
-        variant="contained"
-        color={editable ? "success" : "primary"}
-        className="mb-4"
-        onClick={() => {
-          if (editable) {
-            handleSave();
-          } else {
-            setEditable(true);
-          }
-        }}
-      >
-        {editable ? "Guardar" : "Editar"}
-      </Button>
-
       <div className="flex flex-col justify-around">
         {/* Fotografía */}
         <div className="my-4 flex flex-col items-center justify-around">
@@ -150,7 +292,41 @@ export default function DetallarInscripcion() {
             sx={{ width: 150, height: 150 }}
             alt="Foto del estudiante"
           />
+
+          {editable && (
+            <Button
+              variant="contained"
+              component="label"
+              className="my-4 w-1/3 rounded-2xl bg-primary"
+            >
+              {fotoPerfil ? "Cambiar Imagen" : "Elegir Imagen"}
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setFotoPerfil(file);
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      setImage(reader.result as string);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+              />
+            </Button>
+          )}
         </div>
+
+        {fotoPerfil && (
+          <Typography variant="caption" color="textSecondary">
+            {fotoPerfil.name}
+          </Typography>
+        )}
+
+        {/* Información personal */}
         <div className="flex flex-col items-center justify-center">
           <div className="flex flex-wrap justify-around gap-4 text-gray-600">
             <TextField
@@ -160,11 +336,13 @@ export default function DetallarInscripcion() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Nombres"
-              value={editable ? editData?.nombre || "" : estudiante.nombre || ""}
+              value={formData.nombre}
+              onChange={(e) =>
+                setFormData({ ...formData, nombre: e.target.value })
+              }
               InputProps={{ readOnly: !editable }}
-              onChange={editable ? (e) => handleEditChange("nombre", e.target.value) : undefined}
-           
             />
+
             <TextField
               className={
                 editable
@@ -172,7 +350,10 @@ export default function DetallarInscripcion() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Apellidos"
-              value={estudiante.apellido || ""}
+              value={formData.apellido}
+              onChange={(e) =>
+                setFormData({ ...formData, apellido: e.target.value })
+              }
               InputProps={{ readOnly: !editable }}
             />
             <TextField
@@ -182,9 +363,42 @@ export default function DetallarInscripcion() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Correo Electrónico"
-              value={estudiante.email || ""}
               InputProps={{ readOnly: !editable }}
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
             />
+
+            {/* Campo Tipo de Documento */}
+            <FormControl
+              className={
+                editable
+                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
+                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+              }
+            >
+              <InputLabel id="tipo_documento">Tipo de documento</InputLabel>
+              <Select
+                labelId="tipo_documento"
+                id="tipo_documento"
+                label="tipo_documento"
+                required
+                inputProps={{ readOnly: !editable }}
+                value={formData.tipo_documento}
+                onChange={(e: SelectChangeEvent<string>) =>
+                  setFormData({ ...formData, tipo_documento: e.target.value })
+                }
+              >
+                <MenuItem value={"TI"}>Tarjeta de identidad</MenuItem>
+                <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
+                <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
+                <MenuItem value={"PPT"}>
+                  Permiso de protección temporal
+                </MenuItem>
+              </Select>
+            </FormControl>
+
             <TextField
               className={
                 editable
@@ -192,19 +406,13 @@ export default function DetallarInscripcion() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Número de identificación"
-              value={estudiante.numero_documento || ""}
+              value={formData.numero_documento}
               InputProps={{ readOnly: !editable }}
-            />
-            <TextField
-              className={
-                editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+              onChange={(e) =>
+                setFormData({ ...formData, numero_documento: e.target.value })
               }
-              label="Tipo de documento"
-              value={estudiante.tipo_documento || ""}
-              InputProps={{ readOnly: !editable }}
             />
+
             <TextField
               className={
                 editable
@@ -232,8 +440,11 @@ export default function DetallarInscripcion() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Celular"
-              value={estudiante.celular || ""}
               InputProps={{ readOnly: !editable }}
+              value={formData.celular}
+              onChange={(e) =>
+                setFormData({ ...formData, celular: e.target.value })
+              }
             />
             <TextField
               className={
@@ -242,29 +453,86 @@ export default function DetallarInscripcion() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Teléfono fijo"
-              value={estudiante.telefono_fijo || ""}
-              InputProps={{ readOnly: !editable }}
-            />
-            <TextField
-              className={
-                editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+              value={formData.telefono_fijo}
+              onChange={(e) =>
+                setFormData({ ...formData, telefono_fijo: e.target.value })
               }
-              label="Departamento"
-              value={estudiante.departamento_residencia || ""}
               InputProps={{ readOnly: !editable }}
             />
-            <TextField
-              className={
-                editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-              }
-              label="Ciudad"
-              value={estudiante.ciudad_residencia || ""}
-              InputProps={{ readOnly: !editable }}
-            />
+            {editable ? (
+              <>
+                <FormControl className="inputs-textfield w-full sm:w-1/4">
+                  <InputLabel id="departamento_residencia">
+                    Departamento
+                  </InputLabel>
+                  <Select
+                    labelId="departamento_residencia"
+                    id="departamento_residencia"
+                    label="Departamento"
+                    value={formData.departamento_residencia}
+                    onChange={(e: SelectChangeEvent<string>) => {
+                      setFormData({
+                        ...formData,
+                        departamento_residencia: e.target.value,
+                        ciudad_residencia: "",
+                      });
+                      setDepartamentoSeleccionado(e.target.value);
+                    }}
+                  >
+                    {departamentos.map((dept) => (
+                      <MenuItem key={dept.id} value={dept.nombre}>
+                        {dept.nombre}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl
+                  className="inputs-textfield w-full sm:w-1/4"
+                  disabled={cargandoCiudades}
+                >
+                  <InputLabel id="ciudad">Ciudad</InputLabel>
+                  <Select
+                    labelId="ciudad"
+                    value={formData.ciudad_residencia}
+                    onChange={(e: SelectChangeEvent<string>) =>
+                      setFormData({
+                        ...formData,
+                        ciudad_residencia: e.target.value,
+                      })
+                    }
+                    disabled={!editable}
+                  >
+                    {cargandoCiudades ? (
+                      <MenuItem disabled>
+                        <CircularProgress size={24} />
+                      </MenuItem>
+                    ) : (
+                      ciudades.map((ciudad) => (
+                        <MenuItem key={ciudad.id} value={ciudad.nombre}>
+                          {ciudad.nombre}
+                        </MenuItem>
+                      ))
+                    )}
+                  </Select>
+                </FormControl>{" "}
+              </>
+            ) : (
+              <>
+                <TextField
+                  className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+                  label="Departamento"
+                  value={estudiante.departamento_residencia || ""}
+                  InputProps={{ readOnly: true }}
+                />
+
+                <TextField
+                  className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+                  label="Ciudad"
+                  value={estudiante.ciudad_residencia || ""}
+                  InputProps={{ readOnly: true }}
+                />
+              </>
+            )}
             <TextField
               className={
                 editable
@@ -272,7 +540,10 @@ export default function DetallarInscripcion() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Comuna"
-              value={estudiante.comuna_residencia || ""}
+              value={formData.comuna_residencia}
+              onChange={(e) =>
+                setFormData({ ...formData, comuna_residencia: e.target.value })
+              }
               InputProps={{ readOnly: !editable }}
             />
             <TextField
@@ -292,7 +563,10 @@ export default function DetallarInscripcion() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Colegio"
-              value={estudiante.colegio || ""}
+              value={formData.colegio}
+              onChange={(e) =>
+                setFormData({ ...formData, colegio: e.target.value })
+              }
               InputProps={{ readOnly: !editable }}
             />
             <TextField
@@ -302,7 +576,10 @@ export default function DetallarInscripcion() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Grado"
-              value={estudiante.grado || ""}
+              value={formData.grado}
+              onChange={(e) =>
+                setFormData({ ...formData, grado: e.target.value })
+              }
               InputProps={{ readOnly: !editable }}
             />
             <TextField
@@ -312,7 +589,10 @@ export default function DetallarInscripcion() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Estamento"
-              value={estudiante.estamento || ""}
+              value={formData.estamento}
+              onChange={(e) =>
+                setFormData({ ...formData, estamento: e.target.value })
+              }
               InputProps={{ readOnly: !editable }}
             />
             <TextField
@@ -322,7 +602,10 @@ export default function DetallarInscripcion() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="EPS"
-              value={estudiante.eps || ""}
+              value={formData.eps}
+              onChange={(e) =>
+                setFormData({ ...formData, eps: e.target.value })
+              }
               InputProps={{ readOnly: !editable }}
             />
             <TextField
@@ -332,7 +615,7 @@ export default function DetallarInscripcion() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Discapacidad"
-              value={estudiante.discapacidad ? "Sí" : "No"}
+              value={formData.discapacidad ? "Sí" : "No"}
               InputProps={{ readOnly: !editable }}
             />
             <TextField
@@ -372,6 +655,39 @@ export default function DetallarInscripcion() {
             Ver documento de identidad
           </Button>
         )}
+
+        {editable && (
+          <div className="my-4 flex flex-col items-center gap-3">
+            <InputLabel id="documento_identidad">
+              Documento de identidad
+            </InputLabel>
+            <Button
+              variant="contained"
+              component="label"
+              className="my-2 rounded-2xl bg-primary"
+            >
+              {documentoIdentidad ? "Cambiar Documento" : "Elegir Documento"}
+              <input
+                name="documento_identidad"
+                type="file"
+                accept=".pdf"
+                hidden
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setDocumentoIdentidad(file);
+                  }
+                }}
+              />
+            </Button>
+            {documentoIdentidad && (
+              <Typography variant="caption" color="textSecondary">
+                {documentoIdentidad.name}
+              </Typography>
+            )}
+          </div>
+        )}
+
         {estudiante.constancia_estudios && (
           <Button
             variant="outlined"
@@ -396,6 +712,20 @@ export default function DetallarInscripcion() {
             Ver recibo de pago
           </Button>
         )}
+
+        <Button
+          variant="contained"
+          className="text-md mt-4 w-1/2 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
+          onClick={() => {
+            if (editable) {
+              handleSave();
+            } else {
+              setEditable(true);
+            }
+          }}
+        >
+          {editable ? "Guardar" : "Editar"}
+        </Button>
       </div>
     </div>
   );

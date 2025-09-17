@@ -218,7 +218,7 @@ export default function DetallarOferta() {
           <div className="mx-auto flex w-full flex-col items-center justify-between gap-4 sm:w-4/5 sm:flex-row">
             {/* Campo nombre de la oferta */}
             <TextField
-              className="inputs-textfield flex w-full sm:w-1/3"
+              className="inputs-textfield-readonly flex w-full sm:w-1/3"
               label="Nombre de la oferta"
               name="nombre_oferta"
               variant="outlined"
@@ -229,7 +229,7 @@ export default function DetallarOferta() {
             />
             {/* Campo fecha de inicio de la oferta */}
             <TextField
-              className="inputs-textfield flex w-full sm:w-1/3"
+              className="inputs-textfield-readonly flex w-full sm:w-1/3"
               label="Fecha de inicio"
               name="fecha_inicio"
               variant="outlined"
@@ -310,7 +310,7 @@ export default function DetallarOferta() {
                   <TextField
                     id={`precio-publico-${nombreCategoria}`}
                     name={`precio-publico-${nombreCategoria}`}
-                    className="inputs-textfield w-full sm:w-1/3"
+                    className="inputs-textfield-readonly w-full sm:w-1/3"
                     label="Precio Colegio Público"
                     type="number"
                     value={preciosPorCategoria[nombreCategoria]?.publico || ""}
@@ -319,7 +319,7 @@ export default function DetallarOferta() {
                   <TextField
                     id={`precio-privado-${nombreCategoria}`}
                     name={`precio-privado-${nombreCategoria}`}
-                    className="inputs-textfield w-full sm:w-1/3"
+                    className="inputs-textfield-readonly w-full sm:w-1/3"
                     label="Precio Colegio Privado"
                     type="number"
                     required={
@@ -340,7 +340,7 @@ export default function DetallarOferta() {
                   <TextField
                     id={`precio-univalle-${nombreCategoria}`}
                     name={`precio-univalle-${nombreCategoria}`}
-                    className="inputs-textfield w-full sm:w-1/3"
+                    className="inputs-textfield-readonly w-full sm:w-1/3"
                     label="Precio Relación Univalle"
                     type="number"
                     value={preciosPorCategoria[nombreCategoria]?.univalle || ""}
@@ -351,7 +351,7 @@ export default function DetallarOferta() {
                 <TextField
                   id={`fecha-finalizacion-${nombreCategoria}`}
                   name={`fecha-finalizacion-${nombreCategoria}`}
-                  className="inputs-textfield"
+                  className="inputs-textfield-readonly"
                   sx={{ mt: 4 }}
                   type="date"
                   label="Fecha de finalización"
