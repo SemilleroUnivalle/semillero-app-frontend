@@ -13,6 +13,8 @@ import {
   Checkbox,
   ListItemText,
   Tooltip,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
@@ -83,24 +85,10 @@ export default function VerInscripciones() {
               }}
             />
           </Tooltip>
-          <Tooltip title="Editar inscripcion" placement="top">
-            <PencilSquareIcon
-              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
-              onClick={() => {
-                const rowData = params.row;
-
-                localStorage.setItem(
-                  "cursoSeleccionado",
-                  JSON.stringify(rowData),
-                ); // 👉 Guarda la fila completa como JSON
-                router.push("/admin/inscripciones//"); // 👉 Navega a la pantalla de modificar
-              }}
-            />
-          </Tooltip>
           <Tooltip title="Eliminar inscripcion" placement="top">
             <TrashIcon
               className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
-              // onClick={() => handleDelete(params.row.id)}
+              onClick={() => handleDelete(params.row.id)}
             />
           </Tooltip>
         </div>
@@ -157,79 +145,78 @@ export default function VerInscripciones() {
     acudiente: number;
   }
 
-
-
   const [rows, setRows] = useState<EstudianteRow[]>([]);
+  const [success, setSuccess] = useState(false);
+
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const userString = localStorage.getItem("user");
-      let token = "";
-      if (userString) {
-        const user = JSON.parse(userString);
-        token = user.token;
-      }
+  // Función para eliminar un inscrito
+  const handleDelete = async (id: number) => {
+    const confirmDelete = window.confirm(
+      "¿Estás seguro de que deseas eliminar este inscrito?",
+    );
+    if (!confirmDelete) return;
 
-      const response = await axios.get(`${API_BASE_URL}/estudiante/est/`, {
+    try {
+      await axios.delete(`${API_BASE_URL}/estudiante/est/${id}/`, {
         headers: {
-          Authorization: `Token ${token}`,
+          Authorization: `Token ${localStorage.getItem("token")}`,
         },
       });
 
-      // Formatea los datos para la tabla
-      const formateado = response.data.map((student: any) => ({
-        id: student.id_estudiante,
-        apellido: student.apellido || "",
-        nombre: student.nombre || "",
-        email: student.email || "",
-        direccion: student.direccion_residencia || "",
-        periodo: "", // No viene en el endpoint, lo dejas vacío
-        modulo: "",  // No viene en el endpoint, lo dejas vacío
-        estamento: student.estamento || "",
-        tipo: "",    // No viene en el endpoint, lo dejas vacío
-        estado: student.is_active ?? false,
-      }));
+      setRows((prevRows) => prevRows.filter((row) => row.id !== id));
 
-      setRows(formateado);
-      setEstudiantes(response.data);
-      setLoading(false);
+      setSuccess(true);
     } catch (error) {
-      console.error("Error al obtener los datos de los estudiantes:", error);
-      setLoading(false);
+      console.error("Error al eliminar el inscrito:", error);
+      alert(
+        "Hubo un error al eliminar el inscrito. Por favor, inténtalo de nuevo.",
+      );
     }
   };
 
-  fetchData();
-}, []);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userString = localStorage.getItem("user");
+        let token = "";
+        if (userString) {
+          const user = JSON.parse(userString);
+          token = user.token;
+        }
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         `${API_BASE_URL}/estudiante/est/`,
-  //       );
-  //       const estudiantes = response.data;
+        const response = await axios.get(`${API_BASE_URL}/estudiante/est/`, {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        });
 
-  //       const formateado = estudiantes.map((student: any) => ({
-  //         id: student.id,
-  //         apellido: student.apellido,
-  //         nombre: student.nombre,
-  //         email: student.email,
-  //         numero_identificacion: student.numero_identificacion || "Sin asignar",
-  //         direccion: student.direccion,
-  //       }));
+        // Formatea los datos para la tabla
+        const formateado = response.data.map((student: any) => ({
+          id: student.id_estudiante,
+          apellido: student.apellido || "",
+          nombre: student.nombre || "",
+          email: student.email || "",
+          direccion: student.direccion_residencia || "",
+          periodo: "", // No viene en el endpoint, lo dejas vacío
+          modulo: "", // No viene en el endpoint, lo dejas vacío
+          estamento: student.estamento || "",
+          tipo: "", // No viene en el endpoint, lo dejas vacío
+          estado: student.is_active ?? false,
+        }));
 
-  //       setRows(formateado);
-  //     } catch (error) {
-  //       console.error("Error al obtener los datos de los estudiantes:", error);
-  //     }
-  //   };
+        setRows(formateado);
+        setEstudiantes(response.data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error al obtener los datos de los estudiantes:", error);
+        setLoading(false);
+      }
+    };
 
-  //   fetchData();
-  // }, []);
+    fetchData();
+  }, []);
 
   // Filtros
 
@@ -339,7 +326,19 @@ useEffect(() => {
 
   return (
     <div>
-      
+      <Snackbar
+        open={success}
+        autoHideDuration={4000}
+        onClose={() => setSuccess(false)}
+      >
+        <Alert
+          onClose={() => setSuccess(false)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          Inscrito eliminado exitosamente.
+        </Alert>
+      </Snackbar>
       <div className="mx-auto mt-4 flex w-11/12 justify-between rounded-2xl bg-white p-2 shadow-md">
         {/* Filtro por Periodos */}
         <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
@@ -446,7 +445,7 @@ useEffect(() => {
       </div>
 
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 text-center shadow-md">
-      <Button
+        <Button
           variant="outlined"
           startIcon={<FileDownloadIcon />}
           className="m-4 rounded-xl border-primary text-primary hover:bg-primary hover:text-white"
@@ -501,7 +500,6 @@ useEffect(() => {
             }}
           />
         </Paper>
-        
       </div>
     </div>
   );

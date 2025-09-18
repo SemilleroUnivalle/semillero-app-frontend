@@ -12,10 +12,14 @@ import {
   Typography,
   Box,
   SelectChangeEvent,
+  Snackbar,
+  Alert,
+  Switch,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
+import { useRouter } from "next/navigation";
 
 // Interfaces para Departamentos y Municipios
 interface Departamento {
@@ -40,6 +44,7 @@ interface AcudienteInterface {
   nombre_acudiente: string;
   apellido_acudiente: string;
   tipo_documento_acudiente: string;
+  email_acudiente: string;
   numero_documento_acudiente: string;
   celular_acudiente: string;
 }
@@ -87,6 +92,8 @@ const grados: string[] = [
 ];
 
 export default function DetallarInscripcion() {
+  const router = useRouter();
+
   const [estudiante, setEstudiante] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editable, setEditable] = useState(false);
@@ -125,6 +132,7 @@ export default function DetallarInscripcion() {
       id_acudiente: 0,
       nombre_acudiente: "",
       apellido_acudiente: "",
+      email_acudiente: "",
       tipo_documento_acudiente: "",
       numero_documento_acudiente: "",
       celular_acudiente: "",
@@ -140,9 +148,12 @@ export default function DetallarInscripcion() {
         formData.acudiente.tipo_documento_acudiente || "",
       numero_documento_acudiente:
         formData.acudiente.numero_documento_acudiente || "",
-      // email_acudiente: formData.acudiente.email_acudiente || "",
+      email_acudiente: formData.acudiente.email_acudiente || "",
       celular_acudiente: formData.acudiente.celular_acudiente || "",
     });
+
+  const [success, setSuccess] = useState(false);
+  const [verificacion, setVerificacion] = useState(true);
 
   // Estados para manejo de archivos
   const [fotoPerfil, setFotoPerfil] = useState<File | null>(null);
@@ -226,6 +237,7 @@ export default function DetallarInscripcion() {
         numero_documento_acudiente:
           formData.acudiente.numero_documento_acudiente || "",
         celular_acudiente: formData.acudiente.celular_acudiente || "",
+        email_acudiente: formData.acudiente.email_acudiente || "",
       });
     }
   }, [formData.acudiente]);
@@ -287,12 +299,12 @@ export default function DetallarInscripcion() {
         formDataToSend.append(key, value);
       }
 
-      // if (fotoPerfil) {
-      //   formDataToSend.append("foto", fotoPerfil);
-      // }
-      // if (documentoIdentidad) {
-      //   formDataToSend.append("documento_identidad", documentoIdentidad);
-      // }
+      if (fotoPerfil) {
+        formDataToSend.append("foto", fotoPerfil);
+      }
+      if (documentoIdentidad) {
+        formDataToSend.append("documento_identidad", documentoIdentidad);
+      }
 
       // Obtener token del localStorage
       const userString = localStorage.getItem("user");
@@ -326,7 +338,61 @@ export default function DetallarInscripcion() {
       alert("Hubo un error al actualizar el estudiante.");
     }
   };
-  // ...existing code...
+
+  // Función para eliminar un inscrito
+  const handleDelete = async (id: number) => {
+    const confirmDelete = window.confirm(
+      "¿Estás seguro de que deseas eliminar este inscrito?",
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`${API_BASE_URL}/estudiante/est/${id}/`, {
+        headers: {
+          Authorization: `Token ${localStorage.getItem("token")}`,
+        },
+      });
+
+      setSuccess(true);
+      router.push("/admin/inscripciones/verInscripciones");
+    } catch (error) {
+      console.error("Error al eliminar el inscrito:", error);
+      alert(
+        "Hubo un error al eliminar el inscrito. Por favor, inténtalo de nuevo.",
+      );
+    }
+  };
+
+  // Funcion para cambiar el estado de verificacion del estudiante
+  const handleIsActiveChange = async (checked: boolean) => {
+    setVerificacion(checked);
+
+    // Obtener token del localStorage
+    const userString = localStorage.getItem("user");
+    let token = "";
+    if (userString) {
+      const user = JSON.parse(userString);
+      token = user.token;
+    }
+
+    try {
+      await axios.patch(
+        `${API_BASE_URL}/estudiante/est/${formData.id_estudiante}/`,
+        { is_active: checked }, // Envía como JSON booleano
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Token ${token}`,
+          },
+        },
+      );
+      // Opcional: muestra mensaje de éxito
+      console.log("is_active actualizado exitosamente");
+    } catch (error) {
+      console.error("Error al actualizar is_active:", error);
+      alert("No se pudo actualizar el estado activo.");
+    }
+  };
 
   if (loading) {
     return (
@@ -349,6 +415,19 @@ export default function DetallarInscripcion() {
 
   return (
     <div className="mx-auto my-4 w-11/12 content-center rounded-2xl bg-white p-5 text-center shadow-md">
+      <Snackbar
+        open={success}
+        autoHideDuration={4000}
+        onClose={() => setSuccess(false)}
+      >
+        <Alert
+          onClose={() => setSuccess(false)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          Inscrito eliminado exitosamente.
+        </Alert>
+      </Snackbar>
       <h2 className="mb-4 text-center font-semibold text-primary">
         Detalle de Inscripción
       </h2>
@@ -1009,13 +1088,13 @@ export default function DetallarInscripcion() {
               fullWidth
               required
               InputProps={{ readOnly: !editable }}
-              // value={formDataAcudiente.email_acudiente}
-              // onChange={(e) =>
-              //   setFormDataAcudiente({
-              //     ...formDataAcudiente,
-              //     email_acudiente: e.target.value,
-              //   })
-              // }
+              value={formDataAcudiente.email_acudiente}
+              onChange={(e) =>
+                setFormDataAcudiente({
+                  ...formDataAcudiente,
+                  email_acudiente: e.target.value,
+                })
+              }
             />
             {/* Campo Celular del Acudiente */}
             <TextField
@@ -1114,19 +1193,39 @@ export default function DetallarInscripcion() {
           </Button>
         )}
 
-        <Button
-          variant="contained"
-          className="text-md mt-4 w-1/2 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
-          onClick={() => {
-            if (editable) {
-              handleSave();
-            } else {
-              setEditable(true);
-            }
-          }}
-        >
-          {editable ? "Guardar" : "Editar"}
-        </Button>
+        <h2 className="text-md my-4 text-center font-semibold text-primary">Verificación de Documentación</h2>
+
+        <Switch
+          checked={verificacion}
+          onChange={(e) => handleIsActiveChange(e.target.checked)}
+          color="primary"
+        />
+
+        <div className="mt-4 flex w-full flex-wrap justify-around gap-4">
+          <Button
+            variant="contained"
+            className="text-md mt-4 w-1/3 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
+            onClick={() => {
+              if (editable) {
+                handleSave();
+              } else {
+                setEditable(true);
+              }
+            }}
+          >
+            {editable ? "Guardar" : "Editar"}
+          </Button>
+
+          <Button
+            variant="contained"
+            className="text-md mt-4 w-1/3 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
+            onClick={() => {
+              handleDelete(estudiante.id_estudiante);
+            }}
+          >
+            Eliminar
+          </Button>
+        </div>
       </div>
     </div>
   );

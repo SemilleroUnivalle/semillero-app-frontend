@@ -178,6 +178,8 @@ export default function Registro() {
         if (responseEstudiante.status === 201) {
           console.log("Estudiante agregado con éxito");
           alert("Registro exitoso");
+          localStorage.setItem("id_estudiante", responseEstudiante.data.id_estudiante);
+          console.log("ID del estudiante guardado en localStorage:", responseEstudiante.data.id_estudiante);
           router.push("/auth/matricula"); // Redirigir a la página de matricula
         } else {
           console.error(
