@@ -18,7 +18,7 @@ export default function LayoutAdmin({
   // Divide la ruta en segmentos y genera los enlaces
   const pathSegments = pathname.split("/").filter(Boolean).slice(1); // Quita el primer segmento "admin"
 
-  const basePath = "/admin/inscripciones/verInscripciones";
+  const basePath = "/admin/registros/verRegistros";
   const breadcrumbNames: Record<string, string> = {
     verOfertas: "Ver Ofertas Académicas",
     crearOferta: "Crear Oferta Académica",
@@ -26,7 +26,7 @@ export default function LayoutAdmin({
   };
 
   const breadcrumbLinks = [
-    { href: basePath, label: "Inscritos" },
+    { href: basePath, label: "Registros" },
     ...pathSegments.slice(1).map((segment, idx) => {
       const href = basePath + "/" + pathSegments.slice(1, idx + 2).join("/");
       const label =
@@ -39,7 +39,7 @@ export default function LayoutAdmin({
   return (
     <StyledEngineProvider injectFirst>
       <div className="flex flex-col">
-        <h1>Estudiantes inscritos</h1>
+        <h1>Estudiantes registrados</h1>
         <Breadcrumbs aria-label="breadcrumb" className="">
           {breadcrumbLinks.map((crumb, idx) =>
             idx < breadcrumbLinks.length - 1 ? (

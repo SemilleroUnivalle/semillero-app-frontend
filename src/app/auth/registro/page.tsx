@@ -177,9 +177,17 @@ export default function Registro() {
         );
         if (responseEstudiante.status === 201) {
           console.log("Estudiante agregado con éxito");
+          localStorage.setItem(
+            "id_estudiante",
+            responseEstudiante.data.id,
+          );
+          console.log(
+            "ID del estudiante guardado en localStorage:",
+            responseEstudiante.data.id,
+          );
+
           alert("Registro exitoso");
-          localStorage.setItem("id_estudiante", responseEstudiante.data.id_estudiante);
-          console.log("ID del estudiante guardado en localStorage:", responseEstudiante.data.id_estudiante);
+          localStorage.setItem("estamento", formData.estamento);
           router.push("/auth/matricula"); // Redirigir a la página de matricula
         } else {
           console.error(

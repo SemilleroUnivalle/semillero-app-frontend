@@ -27,7 +27,7 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { API_BASE_URL } from "../../../../../config";
 import { useRouter } from "next/navigation";
 
-export default function VerInscripciones() {
+export default function VerRegistros() {
   const router = useRouter();
 
   const columns: GridColDef[] = [
@@ -36,29 +36,19 @@ export default function VerInscripciones() {
     { field: "nombre", headerName: "Nombres", flex: 1 },
     { field: "email", headerName: "Correo Electrónico", flex: 1 },
     {
-      field: "periodo",
-      headerName: "Periodo",
-      flex: 1,
-    },
-    {
-      field: "modulo",
-      headerName: "Módulo",
-      flex: 1,
-    },
-    {
       field: "estamento",
       headerName: "Estamento",
       flex: 1,
     },
     {
-      field: "tipo",
-      headerName: "Tipo de Inscrito",
-      flex: 1,
+      field: "grado",
+      headerName: "Grado",
+      flex: 0.5,
     },
     {
       field: "estado",
       headerName: "Estado",
-      flex: 1,
+      flex: 0.5,
       type: "boolean",
     },
     {
@@ -81,7 +71,7 @@ export default function VerInscripciones() {
                   "inscritoSeleccionado",
                   JSON.stringify(rowData),
                 ); // 👉 Guarda la fila completa como JSON
-                router.push("/admin/inscripciones/detallarInscripcion/");
+                router.push("/admin/registros/detallarRegistro/");
               }}
             />
           </Tooltip>
@@ -107,7 +97,7 @@ export default function VerInscripciones() {
     periodo: string;
     modulo: string;
     estamento: string;
-    tipo: string;
+    grado: string;
     estado: boolean;
   }
 
@@ -123,7 +113,7 @@ export default function VerInscripciones() {
     eps: string;
     grado: string;
     colegio: string;
-    tipo_documento: string;
+    grado_documento: string;
     genero: string;
     fecha_nacimiento: string;
     telefono_fijo: string;
@@ -133,7 +123,7 @@ export default function VerInscripciones() {
     direccion_residencia: string;
     estamento: string;
     discapacidad: boolean;
-    tipo_discapacidad: string;
+    grado_discapacidad: string;
     descripcion_discapacidad: string;
     area_desempeño: string | null;
     grado_escolaridad: string | null;
@@ -199,11 +189,9 @@ export default function VerInscripciones() {
           nombre: student.nombre || "",
           email: student.email || "",
           direccion: student.direccion_residencia || "",
-          periodo: "", // No viene en el endpoint, lo dejas vacío
-          modulo: "", // No viene en el endpoint, lo dejas vacío
           estamento: student.estamento || "",
-          tipo: "", // No viene en el endpoint, lo dejas vacío
-          estado: student.is_active ?? false,
+          grado: student.grado || "", // No viene en el endpoint, lo dejas vacío
+          estado: student.is_active,
         }));
 
         setRows(formateado);
@@ -220,27 +208,12 @@ export default function VerInscripciones() {
 
   // Filtros
 
-  const [selectedPeriodos, setSelectedPeriodos] = React.useState<string[]>([]);
-  const [selectedModulos, setSelectedModulos] = React.useState<string[]>([]);
   const [selectedEstamento, setSelectedEstamento] = React.useState<string[]>(
     [],
   );
-  const [selectedTipo, setSelectedTipo] = React.useState<string[]>([]);
+  const [selectedGrado, setSelectedGrado] = React.useState<string[]>([]);
   const [selectedEstado, setSelectedEstado] = React.useState<string[]>([]);
 
-  const handleChangePeriodos = (event: SelectChangeEvent<string[]>) => {
-    const {
-      target: { value },
-    } = event;
-    setSelectedPeriodos(typeof value === "string" ? value.split(",") : value);
-  };
-
-  const handleChangeModulos = (event: SelectChangeEvent<string[]>) => {
-    const {
-      target: { value },
-    } = event;
-    setSelectedModulos(typeof value === "string" ? value.split(",") : value);
-  };
   const handleChangeEstamento = (event: SelectChangeEvent<string[]>) => {
     const {
       target: { value },
@@ -248,11 +221,11 @@ export default function VerInscripciones() {
     setSelectedEstamento(typeof value === "string" ? value.split(",") : value);
   };
 
-  const handleChangeTipo = (event: SelectChangeEvent<string[]>) => {
+  const handleChangeGrado = (event: SelectChangeEvent<string[]>) => {
     const {
       target: { value },
     } = event;
-    setSelectedTipo(typeof value === "string" ? value.split(",") : value);
+    setSelectedGrado(typeof value === "string" ? value.split(",") : value);
   };
 
   const handleChangeEstado = (event: SelectChangeEvent<string[]>) => {
@@ -290,37 +263,28 @@ export default function VerInscripciones() {
   const filteredRows = React.useMemo(() => {
     if (rows.length === 0) return rows;
     return rows.filter((row) => {
-      const periodoMatch =
-        selectedPeriodos.length === 0 || selectedPeriodos.includes(row.periodo);
-
-      const moduloMatch =
-        selectedModulos.length === 0 || selectedModulos.includes(row.modulo);
 
       const estamentoMatch =
         selectedEstamento.length === 0 ||
         selectedEstamento.includes(row.estamento);
 
-      const tipoMatch =
-        selectedTipo.length === 0 || selectedTipo.includes(row.tipo);
+      const gradoMatch =
+        selectedGrado.length === 0 || selectedGrado.includes(row.grado);
 
-      const estadoAsString = row.estado ? "Activo" : "Inactivo";
+      const estadoAsString = row.estado ? "Verificado" : "No verificado";
       const estadoMatch =
         selectedEstado.length === 0 || selectedEstado.includes(estadoAsString);
 
       return (
-        periodoMatch &&
-        moduloMatch &&
         estamentoMatch &&
-        tipoMatch &&
+        gradoMatch &&
         estadoMatch
       );
     });
   }, [
     rows,
-    selectedPeriodos,
-    selectedModulos,
     selectedEstamento,
-    selectedTipo,
+    selectedGrado,
     selectedEstado,
   ]);
 
@@ -339,46 +303,8 @@ export default function VerInscripciones() {
           Inscrito eliminado exitosamente.
         </Alert>
       </Snackbar>
-      <div className="mx-auto mt-4 flex w-11/12 justify-between rounded-2xl bg-white p-2 shadow-md">
-        {/* Filtro por Periodos */}
-        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
-          <InputLabel id="filtro-periodos">Periodos</InputLabel>
-          <Select
-            labelId="filtro-periodos"
-            id="filtro-periodos"
-            label="filtro-periodos"
-            multiple
-            value={selectedPeriodos}
-            onChange={handleChangePeriodos}
-            renderValue={(selected) => selected.join(", ")}
-          >
-            {[...new Set(rows.map((row) => row.periodo))].map((periodo) => (
-              <MenuItem key={periodo} value={periodo}>
-                <Checkbox checked={selectedPeriodos.indexOf(periodo) > -1} />
-                <ListItemText primary={periodo} />
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* Filtro por Módulos */}
-        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
-          <InputLabel id="filtro-modulos">Módulos</InputLabel>
-          <Select
-            labelId="filtro-modulos"
-            multiple
-            value={selectedModulos}
-            onChange={handleChangeModulos}
-            renderValue={(selected) => selected.join(", ")}
-          >
-            {[...new Set(rows.map((row) => row.modulo))].map((modulo) => (
-              <MenuItem key={modulo} value={modulo}>
-                <Checkbox checked={selectedModulos.indexOf(modulo) > -1} />
-                <ListItemText primary={modulo} />
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+      <div className="mx-auto mt-4 flex w-11/12 justify-around rounded-2xl bg-white p-2 shadow-md">
+        
 
         {/* Filtro por Estamento */}
         <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
@@ -401,22 +327,22 @@ export default function VerInscripciones() {
           </Select>
         </FormControl>
 
-        {/* Filtro por Tipo de Inscrito */}
+        {/* Filtro por Grado */}
         <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
-          <InputLabel id="filtro-tipo">Tipos de Inscritos</InputLabel>
+          <InputLabel id="filtro-grado">Grado</InputLabel>
           <Select
-            labelId="filtro-tipo"
-            id="filtro-tipo"
-            label="filtro-tipo"
+            labelId="filtro-grado"
+            id="filtro-grado"
+            label="filtro-grado"
             multiple
-            value={selectedTipo}
-            onChange={handleChangeTipo}
+            value={selectedGrado}
+            onChange={handleChangeGrado}
             renderValue={(selected) => selected.join(", ")}
           >
-            {[...new Set(rows.map((row) => row.tipo))].map((tipo) => (
-              <MenuItem key={tipo} value={tipo}>
-                <Checkbox checked={selectedTipo.indexOf(tipo) > -1} />
-                <ListItemText primary={tipo} />
+            {[...new Set(rows.map((row) => row.grado))].map((grado) => (
+              <MenuItem key={grado} value={grado}>
+                <Checkbox checked={selectedGrado.indexOf(grado) > -1} />
+                <ListItemText primary={grado} />
               </MenuItem>
             ))}
           </Select>
@@ -434,7 +360,7 @@ export default function VerInscripciones() {
             onChange={handleChangeEstado}
             renderValue={(selected) => selected.join(", ")}
           >
-            {["Activo", "Inactivo"].map((estado) => (
+            {["Verificado", "No verificado"].map((estado) => (
               <MenuItem key={estado} value={estado}>
                 <Checkbox checked={selectedEstado.indexOf(estado) > -1} />
                 <ListItemText primary={estado} />

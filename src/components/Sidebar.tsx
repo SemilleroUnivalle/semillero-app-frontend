@@ -14,8 +14,8 @@ import { usePathname } from "next/navigation";
 const links = [
   { name: "Inicio", href: "/admin/inicio", icon: HomeIcon },
   {
-    name: "Inscripciones",
-    href: "/admin/inscripciones/verInscripciones",
+    name: "Registros",
+    href: "/admin/registros/verRegistros",
     icon: UsersIcon,
   },
   {

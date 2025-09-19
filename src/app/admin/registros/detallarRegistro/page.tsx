@@ -91,7 +91,7 @@ const grados: string[] = [
   "Docente",
 ];
 
-export default function DetallarInscripcion() {
+export default function DetallarRegistro() {
   const router = useRouter();
 
   const [estudiante, setEstudiante] = useState<any>(null);

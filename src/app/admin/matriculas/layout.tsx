@@ -39,7 +39,7 @@ export default function LayoutAdmin({
   return (
     <StyledEngineProvider injectFirst>
       <div className="flex flex-col">
-        <h1>Estudiantes inscritos</h1>
+        <h1>Estudiantes matriculados</h1>
         <Breadcrumbs aria-label="breadcrumb" className="">
           {breadcrumbLinks.map((crumb, idx) =>
             idx < breadcrumbLinks.length - 1 ? (
