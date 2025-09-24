@@ -15,7 +15,11 @@ import {
   Snackbar,
   Alert,
   Switch,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
@@ -257,8 +261,9 @@ export default function DetallarMatricula() {
   );
 
   const [success, setSuccess] = useState(false);
-  const [verificacion, setVerificacion] = useState(true); // Estado para el switch de verificación de documentacion
-
+  const [matriculaVerificada, setMatriculaVerificada] = useState(
+    formDataMatricula.estado === "A",
+  ); // Estado para matrícula verificada
 
   // Estados para manejo de archivos
   const [fotoPerfil, setFotoPerfil] = useState<File | null>(null);
@@ -330,6 +335,7 @@ export default function DetallarMatricula() {
               ...formDataEstudiante,
               ...res.data.estudiante,
             });
+            setMatriculaVerificada(res.data.estado);
           })
           .catch(() => setLoading(false)); // <-- termina la carga en error
       } else {
@@ -340,10 +346,6 @@ export default function DetallarMatricula() {
     }
     fetchDepartamentos();
   }, []);
-
-    const [matriculaVerificada, setMatriculaVerificada] = useState(
-    formDataMatricula.estado === "A"
-  ); // Estado para matrícula verificada
 
   useEffect(() => {
     if (formDataEstudiante.acudiente) {
@@ -509,37 +511,6 @@ export default function DetallarMatricula() {
     }
   };
 
-  // Funcion para cambiar el estado de verificacion del estudiante
-  const handleIsActiveChange = async (checked: boolean) => {
-    setVerificacion(checked);
-
-    // Obtener token del localStorage
-    const userString = localStorage.getItem("user");
-    let token = "";
-    if (userString) {
-      const user = JSON.parse(userString);
-      token = user.token;
-    }
-
-    try {
-      await axios.patch(
-        `${API_BASE_URL}/estudiante/est/${formDataEstudiante.id_estudiante}/`,
-        { is_active: checked }, // Envía como JSON booleano
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Token ${token}`,
-          },
-        },
-      );
-      // Opcional: muestra mensaje de éxito
-      console.log("is_active actualizado exitosamente");
-    } catch (error) {
-      console.error("Error al actualizar is_active:", error);
-      alert("No se pudo actualizar el estado activo.");
-    }
-  };
-
   // Funcion para cambiar el estado de verificacion de la matricula
   const handleMatriculaVerificadaChange = async (checked: boolean) => {
     setMatriculaVerificada(checked);
@@ -567,6 +538,83 @@ export default function DetallarMatricula() {
     } catch (error) {
       console.error("Error al actualizar estado de matrícula:", error);
       alert("No se pudo actualizar el estado de la matrícula.");
+    }
+  };
+
+  // Estados para las verificaciones
+  const [estadoInformacion, setEstadoInformacion] = useState<
+    true | false | null
+  >(null);
+  const [estadoDocumentoIdentidad, setEstadoDocumentoIdentidad] = useState<
+    true | false | null
+  >(null);
+  const [estadoFotoPerfil, setEstadoFotoPerfil] = useState<true | false | null>(
+    null,
+  );
+
+  const [estadoReciboPago, setEstadoReciboPago] = useState<
+    true | false | null
+  >(null);
+  const [estadoCertificado, setEstadoCertificado] = useState<
+    true | false | null
+  >(null);
+  const [estadoInformacionMatricula, setEstadoInformacionMatricula] = useState<
+    true | false | null
+  >(null);
+
+  // Handler para el cambio de estado de cada verificacion
+  const handleEstadoInformacion = (
+    event: React.MouseEvent<HTMLElement>,
+    newEstado: true | false | null,
+  ) => {
+    if (newEstado !== null) {
+      setEstadoInformacion(newEstado);
+      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    }
+  };
+  const handleEstadoFotoPerfil = (
+    event: React.MouseEvent<HTMLElement>,
+    newEstado: true | false | null,
+  ) => {
+    if (newEstado !== null) {
+      setEstadoFotoPerfil(newEstado);
+      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    }
+  };
+  const handleEstadoDocumentoIdentidad = (
+    event: React.MouseEvent<HTMLElement>,
+    newEstado: true | false | null,
+  ) => {
+    if (newEstado !== null) {
+      setEstadoDocumentoIdentidad(newEstado);
+      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    }
+  };
+  const handleEstadoReciboPago = (
+    event: React.MouseEvent<HTMLElement>,
+    newEstado: true | false | null,
+  ) => {
+    if (newEstado !== null) {
+      setEstadoReciboPago(newEstado);
+      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    }
+  };
+  const handleEstadoCertificado = (
+    event: React.MouseEvent<HTMLElement>,
+    newEstado: true | false | null,
+  ) => {
+    if (newEstado !== null) {
+      setEstadoCertificado(newEstado);
+      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    }
+  };
+  const handleEstadoInformacionMatricula = (
+    event: React.MouseEvent<HTMLElement>,
+    newEstado: true | false | null,
+  ) => {
+    if (newEstado !== null) {
+      setEstadoInformacionMatricula(newEstado);
+      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
     }
   };
 
@@ -1332,77 +1380,133 @@ export default function DetallarMatricula() {
             />
           </div>
         </div>
-      </div>
-      {/* Documentos */}
-      <div className="mt-4 flex flex-col items-center">
-        {estudiante.documento_identidad && (
-          <Button
-            variant="outlined"
-            color="primary"
-            href={estudiante.documento_identidad}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2"
-          >
-            Ver documento de identidad
-          </Button>
-        )}
 
-        {editable && (
-          <div className="my-4 flex flex-col items-center gap-3">
-            <InputLabel id="documento_identidad">
-              Documento de identidad
-            </InputLabel>
+        {/* Documento de identidad */}
+        <div className="mt-4 flex flex-col items-center">
+          {estudiante.documento_identidad && (
             <Button
-              variant="contained"
-              component="label"
-              className="my-2 rounded-2xl bg-primary"
+              variant="outlined"
+              color="primary"
+              href={estudiante.documento_identidad}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2"
             >
-              {documentoIdentidad ? "Cambiar Documento" : "Elegir Documento"}
-              <input
-                name="documento_identidad"
-                type="file"
-                accept=".pdf"
-                hidden
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setDocumentoIdentidad(file);
-                  }
-                }}
-              />
+              Ver documento de identidad
             </Button>
-            {documentoIdentidad && (
-              <Typography variant="caption" color="textSecondary">
-                {documentoIdentidad.name}
-              </Typography>
-            )}
-          </div>
-        )}
-
+          )}
+          {editable && (
+            <div className="my-4 flex flex-col items-center gap-3">
+              <InputLabel id="documento_identidad">
+                Documento de identidad
+              </InputLabel>
+              <Button
+                variant="contained"
+                component="label"
+                className="my-2 rounded-2xl bg-primary"
+              >
+                {documentoIdentidad ? "Cambiar Documento" : "Elegir Documento"}
+                <input
+                  name="documento_identidad"
+                  type="file"
+                  accept=".pdf"
+                  hidden
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setDocumentoIdentidad(file);
+                    }
+                  }}
+                />
+              </Button>
+              {documentoIdentidad && (
+                <Typography variant="caption" color="textSecondary">
+                  {documentoIdentidad.name}
+                </Typography>
+              )}
+            </div>
+          )}
+        </div>
+        {/* Verificaciones de informacion personal */}
         <h2 className="text-md my-4 text-center font-semibold text-primary">
-          Verificación de Documentación
+          Verificaciones
         </h2>
-        <Switch
-          checked={verificacion}
-          onChange={(e) => handleIsActiveChange(e.target.checked)}
-          color="primary"
-        />
-
-        <h2 className="text-md my-4 text-center font-semibold text-primary">
-          Información de Matricula
-        </h2>
-
-        {/* Información de Matricula */}
         <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-          {/* <FormControl
+          <div>
+            <Typography variant="body1" color="textSecondary">
+              Información verificada
+            </Typography>
+            <ToggleButtonGroup
+              className="border-rounded rounded-xl"
+              value={estadoInformacion}
+              exclusive
+              onChange={handleEstadoInformacion}
+              aria-label="Estado de verificación"
+              sx={{ marginY: 2, borderRadius: 8 }}
+            >
+              <ToggleButton value={true} aria-label="Aprobado" color="success">
+                <CheckCircleIcon></CheckCircleIcon>
+              </ToggleButton>
+              <ToggleButton value={false} aria-label="Rechazado" color="error">
+                <CancelIcon></CancelIcon>
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </div>
+
+          <div>
+            <Typography variant="body1" color="textSecondary">
+              Documento de identidad verificado
+            </Typography>
+            <ToggleButtonGroup
+              value={estadoDocumentoIdentidad}
+              exclusive
+              onChange={handleEstadoDocumentoIdentidad}
+              aria-label="Estado de verificación"
+              sx={{ marginY: 2 }}
+            >
+              <ToggleButton value={true} aria-label="Aprobado" color="success">
+                <CheckCircleIcon></CheckCircleIcon>
+              </ToggleButton>
+              <ToggleButton value={false} aria-label="Rechazado" color="error">
+                <CancelIcon></CancelIcon>
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </div>
+          <div>
+            <Typography variant="body1" color="textSecondary">
+              Fotografía verificada
+            </Typography>
+            <ToggleButtonGroup
+              value={estadoFotoPerfil}
+              exclusive
+              onChange={handleEstadoFotoPerfil}
+              aria-label="Estado de verificación"
+              sx={{ marginY: 2 }}
+            >
+              <ToggleButton value={true} aria-label="Aprobado" color="success">
+                <CheckCircleIcon></CheckCircleIcon>
+              </ToggleButton>
+              <ToggleButton value={false} aria-label="Rechazado" color="error">
+                <CancelIcon></CancelIcon>
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </div>
+        </div>
+      </div>
+
+      <h2 className="text-md my-4 text-center font-semibold text-primary">
+        Información de Matricula
+      </h2>
+      {/* Información de Matricula */}
+      <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
+        {/* <FormControl
   className={
     editable
       ? "inputs-textfield flex w-full flex-col sm:w-1/4"
       : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
   }
 > */}
-          {/* <InputLabel id="modulo-label">Módulo inscrito</InputLabel>
+        {/* <InputLabel id="modulo-label">Módulo inscrito</InputLabel>
   <Select
     labelId="modulo-label"
     id="modulo"
@@ -1431,30 +1535,31 @@ export default function DetallarMatricula() {
   </Select>
 </FormControl> */}
 
-          <TextField
-            className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-            label="Módulo inscrito"
-            value={formDataMatricula.modulo.nombre_modulo || ""}
-            InputProps={{ readOnly: true }}
-          />
-          <TextField
-            className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-            label="Periodo"
-            value={
-              formDataMatricula.oferta_categoria.id_oferta_academica.nombre ||
-              ""
-            }
-            InputProps={{ readOnly: true }}
-          />
+        <TextField
+          className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+          label="Módulo inscrito"
+          value={formDataMatricula.modulo.nombre_modulo || ""}
+          InputProps={{ readOnly: true }}
+        />
+        <TextField
+          className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+          label="Periodo"
+          value={
+            formDataMatricula.oferta_categoria.id_oferta_academica.nombre || ""
+          }
+          InputProps={{ readOnly: true }}
+        />
 
-          <TextField
-            className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-            label="Tipo de vinculación"
-            value={formDataMatricula.tipo_vinculacion || ""}
-            InputProps={{ readOnly: true }}
-          />
-        </div>
+        <TextField
+          className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+          label="Tipo de vinculación"
+          value={formDataMatricula.tipo_vinculacion || ""}
+          InputProps={{ readOnly: true }}
+        />
+      </div>
 
+      {/* Documentos de Matricula */}
+      <div className="mt-3 flex w-full flex-wrap justify-around gap-4 text-gray-600">
         {matricula.recibo_pago && (
           <Button
             variant="outlined"
@@ -1512,63 +1617,120 @@ export default function DetallarMatricula() {
             Ver certificado
           </Button>
         )}
+      </div>
 
-        <h2 className="text-md my-4 text-center font-semibold text-primary">
-          Verificación de Matrícula
-        </h2>
-        <Switch
-          checked={matriculaVerificada}
-          onChange={(e) => handleMatriculaVerificadaChange(e.target.checked)}
-          color="primary"
-        />
+      {/* Verificaciones de matricula */}
+      <h2 className="text-md my-4 text-center font-semibold text-primary">
+        Verificaciones de Matrícula
+      </h2>
 
-        <h2 className="text-md my-4 text-center font-semibold text-primary">
-          Observaciones
-        </h2>
-        <TextField
-          className={
-            editable
-              ? "inputs-textfield w-full"
-              : "inputs-textfield-readonly w-full"
-          }
-          value={formDataMatricula.observaciones || ""}
-          onChange={(e) =>
-            setFormDataMatricula({
-              ...formDataMatricula,
-              observaciones: e.target.value,
-            })
-          }
-          placeholder="Escriba las observaciones acerca de la matricula"
-          InputProps={{ readOnly: !editable }}
-          multiline
-          rows={4}
-        />
-
-        <div className="mt-4 flex w-full flex-wrap justify-around gap-4">
-          <Button
-            variant="contained"
-            className="text-md mt-4 w-1/3 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
-            onClick={() => {
-              if (editable) {
-                handleSave();
-              } else {
-                setEditable(true);
-              }
-            }}
+      <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
+        <div>
+          <Typography variant="body1" color="textSecondary">
+            Información de matrícula verificada
+          </Typography>
+          <ToggleButtonGroup
+            className="border-rounded rounded-xl"
+            value={estadoInformacionMatricula}
+            exclusive
+            onChange={handleEstadoInformacionMatricula}
+            aria-label="Estado de verificación"
+            sx={{ marginY: 2, borderRadius: 8 }}
           >
-            {editable ? "Guardar" : "Editar"}
-          </Button>
-
-          <Button
-            variant="contained"
-            className="text-md mt-4 w-1/3 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
-            onClick={() => {
-              handleDelete(estudiante.id_estudiante);
-            }}
-          >
-            Eliminar
-          </Button>
+            <ToggleButton value={true} aria-label="Aprobado" color="success">
+              <CheckCircleIcon></CheckCircleIcon>
+            </ToggleButton>
+            <ToggleButton value={false} aria-label="Rechazado" color="error">
+              <CancelIcon></CancelIcon>
+            </ToggleButton>
+          </ToggleButtonGroup>
         </div>
+
+        <div>
+          <Typography variant="body1" color="textSecondary">
+            Recibo de pago verificado
+          </Typography>
+          <ToggleButtonGroup
+            value={estadoReciboPago}
+            exclusive
+            onChange={handleEstadoReciboPago}
+            aria-label="Estado de verificación"
+            sx={{ marginY: 2 }}
+          >
+            <ToggleButton value={true} aria-label="Aprobado" color="success">
+              <CheckCircleIcon></CheckCircleIcon>
+            </ToggleButton>
+            <ToggleButton value={false} aria-label="Rechazado" color="error">
+              <CancelIcon></CancelIcon>
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </div>
+        <div>
+          <Typography variant="body1" color="textSecondary">
+            Certificado verificado
+          </Typography>
+          <ToggleButtonGroup
+            value={estadoCertificado}
+            exclusive
+            onChange={handleEstadoCertificado}
+            aria-label="Estado de verificación"
+            sx={{ marginY: 2 }}
+          >
+            <ToggleButton value={true} aria-label="Aprobado" color="success">
+              <CheckCircleIcon></CheckCircleIcon>
+            </ToggleButton>
+            <ToggleButton value={false} aria-label="Rechazado" color="error">
+              <CancelIcon></CancelIcon>
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </div>
+      </div>
+
+      <h2 className="text-md my-4 text-center font-semibold text-primary">
+        Observaciones
+      </h2>
+      <TextField
+        className={
+          editable
+            ? "inputs-textfield w-full"
+            : "inputs-textfield-readonly w-full"
+        }
+        value={formDataMatricula.observaciones || ""}
+        onChange={(e) =>
+          setFormDataMatricula({
+            ...formDataMatricula,
+            observaciones: e.target.value,
+          })
+        }
+        placeholder="Escriba las observaciones acerca de la matricula"
+        InputProps={{ readOnly: !editable }}
+        multiline
+        rows={4}
+      />
+      <div className="mt-4 flex w-full flex-wrap justify-around gap-4">
+        <Button
+          variant="contained"
+          className="text-md mt-4 w-1/3 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
+          onClick={() => {
+            if (editable) {
+              handleSave();
+            } else {
+              setEditable(true);
+            }
+          }}
+        >
+          {editable ? "Guardar" : "Editar"}
+        </Button>
+
+        <Button
+          variant="contained"
+          className="text-md mt-4 w-1/3 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
+          onClick={() => {
+            handleDelete(estudiante.id_estudiante);
+          }}
+        >
+          Eliminar
+        </Button>
       </div>
     </div>
   );

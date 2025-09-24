@@ -42,31 +42,33 @@ interface CiudadApi {
   name: string;
 }
 
-const grados: string[] = [
-  "1",
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "10",
-  "11",
-  "Egresado colegios",
-  "Docente",
-];
-
 const generos = ["Masculino", "Femenino"];
 
 export default function Registro() {
   const router = useRouter();
 
-  const [esDocente, setEsDocente] = useState(false);
+  //Estado para controlar documentos
+  const [posicion, setPosicion] = useState("");
+
+  // Estados para documentos
   const [fotoPerfil, setFotoPerfil] = useState<File | null>(null);
-  // Estado para el documento de identidad
   const [documentoIdentidad, setDocumentoIdentidad] = useState<File | null>(
+    null,
+  );
+  const [rut, setRut] = useState<File | null>(null);
+  const [certificadoBancario, setCertificadoBancario] = useState<File | null>(
+    null,
+  );
+  const [d10, setD10] = useState<File | null>(null);
+  const [tabulado, setTabulado] = useState<File | null>(null);
+  const [matriculaFinanciera, setMatriculaFinanciera] = useState<File | null>(
+    null,
+  );
+  const [hojaVida, setHojaVida] = useState<File | null>(null);
+  const [certificadoLaboral, setCertificadoLaboral] = useState<File | null>(
+    null,
+  );
+  const [certificadoEstudios, setCertificadoEstudios] = useState<File | null>(
     null,
   );
 
@@ -84,9 +86,6 @@ export default function Registro() {
     ciudad_residencia: "",
     comuna_residencia: "",
     direccion_residencia: "",
-    colegio: "",
-    grado: "",
-    estamento: "",
     eps: "",
     discapacidad: false,
     descripcion_discapacidad: "",
@@ -94,24 +93,12 @@ export default function Registro() {
     is_active: true,
     area_desempeño: "",
     grado_escolaridad: "",
-    ciudad_documento: "cali",
-  });
-
-  const [formDataAcudiente, setFormDataAcudiente] = useState({
-    nombre_acudiente: "",
-    apellido_acudiente: "",
-    tipo_documento_acudiente: "",
-    numero_documento_acudiente: "",
-    email_acudiente: "",
-    celular_acudiente: "",
   });
 
   // Manejar envío del formulario
   // Enviar datos al backend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    console.log("Datos enviados del acudiente:", formDataAcudiente);
 
     try {
       const formDataToSend = new FormData();
@@ -127,78 +114,75 @@ export default function Registro() {
 
         formDataToSend.append(key, value);
       }
-      // Crear un acudiente primero para obtener su ID
-      const responseAcudiente = await axios.post(
-        `${API_BASE_URL}/acudiente/acu/`,
-        formDataAcudiente,
+
+      // Verificar el contenido de formDataToSend
+      for (let pair of formDataToSend.entries()) {
+        console.log(`${pair[0]}:`, pair[1]);
+      }
+
+      // Agregar archivos al FormData si existen
+      if (fotoPerfil) {
+        formDataToSend.append("foto", fotoPerfil);
+      }
+
+      if (documentoIdentidad) {
+        formDataToSend.append("documento_identidad", documentoIdentidad);
+      }
+
+      if (rut) {
+        formDataToSend.append("rut", rut);
+      }
+      if (certificadoBancario) {
+        formDataToSend.append("certificado_bancario", certificadoBancario);
+      }
+      if (d10) {
+        formDataToSend.append("d10", d10);
+      }
+      if (tabulado) {
+        formDataToSend.append("tabulado", tabulado);
+      }
+      if (matriculaFinanciera) {
+        formDataToSend.append("matricula_financiera", matriculaFinanciera);
+      }
+      if (hojaVida) {
+        formDataToSend.append("hoja_vida", hojaVida);
+      }
+      if (certificadoLaboral) {
+        formDataToSend.append("certificado_laboral", certificadoLaboral);
+      }
+      if (certificadoEstudios) {
+        formDataToSend.append("certificado_estudios", certificadoEstudios);
+      }
+
+      // Realizar la solicitud POST al backend
+
+      //Hacer las peticiones dependiendo de la posicion
+
+      if (posicion === "Docente") {} else if (posicion === "Administrativo") {} else {}
+
+      const responseEstudiante = await axios.post(
+        `${API_BASE_URL}/estudiante/est/`,
+        formDataToSend,
         {
-          headers: {},
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         },
       );
-
-      if (
-        responseAcudiente.status === 201 ||
-        responseAcudiente.status === 200
-      ) {
-        let id_acudiente = null; // Inicializar id_acudiente
-        if (responseAcudiente.status === 201) {
-          id_acudiente = responseAcudiente.data.id_acudiente; // Obtener el ID del acudiente creado
-        } else {
-          id_acudiente = responseAcudiente.data.data.id_acudiente; // Obtener el ID del acudiente creado
-        }
-        console.log("ID del acudiente:", id_acudiente);
-
-        formDataToSend.append("acudiente", id_acudiente);
-        for (let pair of formDataToSend.entries()) {
-          console.log(`${pair[0]}:`, pair[1]);
-        }
-
-        // Paso 2: añadir archivos (asegúrate de capturarlos)
-        if (fotoPerfil) {
-          formDataToSend.append("foto", fotoPerfil);
-        }
-
-        if (documentoIdentidad) {
-          formDataToSend.append("documento_identidad", documentoIdentidad);
-        }
-
-        console.log("Acudiente agregado con éxito");
-        // Actualiza formData con el id_acudiente
-        // setFormData((prevFormData) => ({
-        //   ...prevFormData,
-        //   id_acudiente,
-        // }));
-
-        const responseEstudiante = await axios.post(
-          `${API_BASE_URL}/estudiante/est/`,
-          formDataToSend,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          },
+      if (responseEstudiante.status === 201) {
+        console.log("Estudiante agregado con éxito");
+        localStorage.setItem("id_estudiante", responseEstudiante.data.id);
+        console.log(
+          "ID del estudiante guardado en localStorage:",
+          responseEstudiante.data.id,
         );
-        if (responseEstudiante.status === 201) {
-          console.log("Estudiante agregado con éxito");
-          localStorage.setItem("id_estudiante", responseEstudiante.data.id);
-          console.log(
-            "ID del estudiante guardado en localStorage:",
-            responseEstudiante.data.id,
-          );
 
-          alert("Registro exitoso");
-          localStorage.setItem("estamento", formData.estamento);
-          router.push("/auth/matricula"); // Redirigir a la página de matricula
-        } else {
-          console.error(
-            "Error al agregar el estudiante:",
-            responseEstudiante.status,
-          );
-        }
+        alert("Registro exitoso");
+        router.push("/auth/login"); // Redirigir a la página de login
       } else {
         console.error(
-          "Error al agregar el acudiente:",
-          responseAcudiente.status,
+          "Error al agregar el estudiante:",
+          responseEstudiante.status,
         );
       }
     } catch (error) {
@@ -209,9 +193,7 @@ export default function Registro() {
     }
   };
 
-  // Manejo de campo para otro género
-
-  const [mostrarOtroGenero, setMostrarOtroGenero] = useState(false);
+  // Manejo de estado para mostrar campos de discapacidad
   const [mostrarTipoDiscapacidad, setTipoDiscapacidad] = useState(false);
 
   // Manejo de estados para seleccion de departamento y municipio
@@ -227,16 +209,7 @@ export default function Registro() {
   const [image, setImage] = useState<string | null>(null);
 
   // Mastrar imagen seleccionada
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]; // Obtener el archivo seleccionado
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage(reader.result as string); // Guardar la URL de la imagen en el estado
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+
   const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
@@ -322,7 +295,7 @@ export default function Registro() {
 
   return (
     <div className="mx-auto my-4 w-full content-center rounded-2xl bg-white p-5 text-center shadow-md">
-      <h2 className="text-center font-semibold text-primary">Tu información</h2>
+      <h1>Registro de Funcionarios</h1>
 
       <form className="items-center" onSubmit={handleSubmit}>
         <div className="flex w-full flex-row">
@@ -696,251 +669,87 @@ export default function Registro() {
         <h2 className="text-md my-4 text-center font-semibold text-primary">
           Información Académica
         </h2>
-        <div className="flex flex-wrap justify-around gap-4 text-gray-600">
-          {/* Campo Select Grado Estudiantil */}
-          <FormControl className="inputs-textfield w-full sm:w-1/4">
-            <InputLabel id="grado">Grado</InputLabel>
-            <Select
-              labelId="grado"
-              id="grado"
-              label="Grado"
-              required
-              value={formData.grado || ""}
-              onChange={(e) => {
-                setFormData({ ...formData, grado: e.target.value });
-                setEsDocente(e.target.value === "Docente");
-              }}
-            >
-              {grados.map((grado) => (
-                <MenuItem key={grado} value={grado}>
-                  {grado}
+
+        <>
+          <div className="flex flex-wrap justify-around gap-4 text-gray-600">
+            <FormControl className="inputs-textfield w-full sm:w-1/4">
+              <InputLabel id="grado_escolaridad">
+                Grado de escolaridad
+              </InputLabel>
+              <Select
+                labelId="grado_escolaridad"
+                id="grado_escolaridad"
+                name="grado_escolaridad"
+                label="Grado de escolaridad"
+                required
+                value={formData.grado_escolaridad || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    grado_escolaridad: e.target.value,
+                  })
+                }
+              >
+                <MenuItem value="Técnico">Técnico</MenuItem>
+                <MenuItem value="Tecnólogo">Tecnólogo</MenuItem>
+                <MenuItem value="Licenciatura">Licenciatura</MenuItem>
+                <MenuItem value="Especialización">Especialización</MenuItem>
+                <MenuItem value="Maestría">Maestría</MenuItem>
+                <MenuItem value="Doctorado">Doctorado</MenuItem>
+                <MenuItem value="Otro">Otro</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl className="inputs-textfield w-full sm:w-1/4">
+              <InputLabel id="area_ensenanza">Área de enseñanza</InputLabel>
+              <Select
+                labelId="area_ensenanza"
+                id="area_ensenanza"
+                name="area_ensenanza"
+                label="Área de enseñanza"
+                required
+                value={formData.area_desempeño || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, area_desempeño: e.target.value })
+                }
+              >
+                <MenuItem value="Matemáticas">Matemáticas</MenuItem>
+                <MenuItem value="Ciencias Naturales">
+                  Ciencias Naturales
                 </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </div>
+                <MenuItem value="Ciencias Sociales">Ciencias Sociales</MenuItem>
+                <MenuItem value="Lengua Castellana">Lengua Castellana</MenuItem>
+                <MenuItem value="Inglés">Inglés</MenuItem>
+                <MenuItem value="Educación Física">Educación Física</MenuItem>
+                <MenuItem value="Artes">Artes</MenuItem>
+                <MenuItem value="Tecnología">Tecnología</MenuItem>
+                <MenuItem value="Otra">Otra</MenuItem>
+              </Select>
+            </FormControl>
+          </div>
+        </>
 
-        {/* Mostrar campos según si es docente o no */}
-        {!esDocente ? (
-          <>
-            <div className="flex flex-wrap justify-around gap-4 text-gray-600">
-              {/* Campo Colegio */}
-              <TextField
-                className="inputs-textfield flex w-full flex-col sm:w-1/4"
-                label="Colegio"
-                name="colegio"
-                variant="outlined"
-                type="text"
-                fullWidth
-                required
-                value={formData.colegio}
-                onChange={(e) =>
-                  setFormData({ ...formData, colegio: e.target.value })
-                }
-              />
-              {/* Campo Estamento Colegio */}
-              <FormControl className="inputs-textfield w-full sm:w-1/4">
-                <InputLabel id="estamento">Estamento</InputLabel>
-                <Select
-                  labelId="estamento"
-                  name="estamento"
-                  id="estamento"
-                  label="Estamento"
-                  required
-                  value={formData.estamento}
-                  onChange={(e) =>
-                    setFormData({ ...formData, estamento: e.target.value })
-                  }
-                >
-                  <MenuItem value={"Público"}>Público</MenuItem>
-                  <MenuItem value={"Privado"}>Privado</MenuItem>
-                  <MenuItem value={"Cobertura"}>Cobertura</MenuItem>
-                </Select>
-              </FormControl>
-            </div>
+        <h2 className="text-md my-4 text-center font-semibold text-primary">
+          Seleccione su posición en Semillero
+        </h2>
+        <FormControl className="inputs-textfield w-full sm:w-1/4">
+          <InputLabel id="posicion">Cargo o posición</InputLabel>
+          <Select
+            labelId="posicion"
+            id="posicion"
+            name="posicion"
+            label="Cargo o posición"
+            required
+            value={posicion || ""}
+            onChange={(e) => setPosicion(e.target.value)}
+          >
+            7<MenuItem value="Docente">Docente</MenuItem>
+            <MenuItem value="Académico">Monitor Académico</MenuItem>
+            <MenuItem value="Administrativo">
+              Monitor Administrativo
+            </MenuItem>
+          </Select>
+        </FormControl>
 
-            {/* Contenedor Informacion de Acudiente */}
-
-            <h2 className="text-md my-4 text-center font-semibold text-primary">
-              Información de Acudiente
-            </h2>
-            <div className="flex flex-wrap justify-around gap-4 text-gray-600">
-              {/* Campo Nombres del Acudiente */}
-              <TextField
-                className="inputs-textfield flex w-full flex-col sm:w-1/4"
-                label="Nombres del acudiente"
-                name="nombre_acudiente"
-                variant="outlined"
-                fullWidth
-                type="text"
-                required
-                value={formDataAcudiente.nombre_acudiente}
-                onChange={(e) =>
-                  setFormDataAcudiente({
-                    ...formDataAcudiente,
-                    nombre_acudiente: e.target.value,
-                  })
-                }
-              />
-              {/* Campo Apellidos del acudiente  */}
-              <TextField
-                className="inputs-textfield flex w-full flex-col sm:w-1/4"
-                label="Apellidos del acudiente"
-                name="apellido_acudiente"
-                variant="outlined"
-                fullWidth
-                type="text"
-                required
-                value={formDataAcudiente.apellido_acudiente}
-                onChange={(e) =>
-                  setFormDataAcudiente({
-                    ...formDataAcudiente,
-                    apellido_acudiente: e.target.value,
-                  })
-                }
-              />
-              {/* Campo Tipo de Documento */}
-              <FormControl className="inputs-textfield w-full sm:w-1/4">
-                <InputLabel id="tipo_documento_acudiente">
-                  Tipo de documento
-                </InputLabel>
-                <Select
-                  labelId="tipo_documento_acudiente"
-                  id="tipo_documento_acudiente"
-                  label="tipo_documento_acudiente"
-                  required
-                  value={formDataAcudiente.tipo_documento_acudiente || ""}
-                  onChange={(e) =>
-                    setFormDataAcudiente({
-                      ...formDataAcudiente,
-                      tipo_documento_acudiente: e.target.value,
-                    })
-                  }
-                >
-                  <MenuItem value={"TI"}>Tarjeta de identidad</MenuItem>
-                  <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
-                  <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
-                  <MenuItem value={"PPT"}>
-                    Permiso de protección temporal
-                  </MenuItem>
-                </Select>
-              </FormControl>
-              {/* Campo Numero de Documento */}
-              <TextField
-                className="inputs-textfield flex w-full flex-col sm:w-1/4"
-                label="Número de identificación"
-                name="numero_identificacion"
-                variant="outlined"
-                type="number"
-                fullWidth
-                required
-                value={formDataAcudiente.numero_documento_acudiente}
-                onChange={(e) =>
-                  setFormDataAcudiente({
-                    ...formDataAcudiente,
-                    numero_documento_acudiente: e.target.value,
-                  })
-                }
-              />
-              {/* Campo Correo Electronico del Acudiente */}
-              <TextField
-                className="inputs-textfield flex w-full flex-col sm:w-1/4"
-                label="Correo Electrónico"
-                name="email"
-                variant="outlined"
-                type="email"
-                fullWidth
-                required
-                value={formDataAcudiente.email_acudiente}
-                onChange={(e) =>
-                  setFormDataAcudiente({
-                    ...formDataAcudiente,
-                    email_acudiente: e.target.value,
-                  })
-                }
-              />
-              {/* Campo Celular del Acudiente */}
-              <TextField
-                className="inputs-textfield flex w-full flex-col sm:w-1/4"
-                label="Celular"
-                name="celular"
-                variant="outlined"
-                type="number"
-                fullWidth
-                required
-                value={formDataAcudiente.celular_acudiente}
-                onChange={(e) =>
-                  setFormDataAcudiente({
-                    ...formDataAcudiente,
-                    celular_acudiente: e.target.value,
-                  })
-                }
-              />
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="flex flex-wrap justify-around gap-4 text-gray-600">
-              <FormControl className="inputs-textfield w-full sm:w-1/4">
-                <InputLabel id="grado_escolaridad">
-                  Grado de escolaridad
-                </InputLabel>
-                <Select
-                  labelId="grado_escolaridad"
-                  id="grado_escolaridad"
-                  name="grado_escolaridad"
-                  label="Grado de escolaridad"
-                  required
-                  value={formData.grado_escolaridad || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      grado_escolaridad: e.target.value,
-                    })
-                  }
-                >
-                  <MenuItem value="Técnico">Técnico</MenuItem>
-                  <MenuItem value="Tecnólogo">Tecnólogo</MenuItem>
-                  <MenuItem value="Licenciatura">Licenciatura</MenuItem>
-                  <MenuItem value="Especialización">Especialización</MenuItem>
-                  <MenuItem value="Maestría">Maestría</MenuItem>
-                  <MenuItem value="Doctorado">Doctorado</MenuItem>
-                  <MenuItem value="Otro">Otro</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl className="inputs-textfield w-full sm:w-1/4">
-                <InputLabel id="area_ensenanza">Área de enseñanza</InputLabel>
-                <Select
-                  labelId="area_ensenanza"
-                  id="area_ensenanza"
-                  name="area_ensenanza"
-                  label="Área de enseñanza"
-                  required
-                  value={formData.area_desempeño || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, area_desempeño: e.target.value })
-                  }
-                >
-                  <MenuItem value="Matemáticas">Matemáticas</MenuItem>
-                  <MenuItem value="Ciencias Naturales">
-                    Ciencias Naturales
-                  </MenuItem>
-                  <MenuItem value="Ciencias Sociales">
-                    Ciencias Sociales
-                  </MenuItem>
-                  <MenuItem value="Lengua Castellana">
-                    Lengua Castellana
-                  </MenuItem>
-                  <MenuItem value="Inglés">Inglés</MenuItem>
-                  <MenuItem value="Educación Física">Educación Física</MenuItem>
-                  <MenuItem value="Artes">Artes</MenuItem>
-                  <MenuItem value="Tecnología">Tecnología</MenuItem>
-                  <MenuItem value="Otra">Otra</MenuItem>
-                </Select>
-              </FormControl>
-            </div>
-          </>
-        )}
         {/* Campo Seleccionar Documento de Identidad */}
         <h2 className="text-md my-4 text-center font-semibold text-primary">
           Documentación
@@ -961,6 +770,130 @@ export default function Registro() {
               }
             }}
           />
+          <InputLabel id="rut">
+            Rut actualizado 2025 (Código de actividad 8560){" "}
+          </InputLabel>
+          <input
+            name="rut"
+            type="file"
+            accept=".pdf"
+            className="block w-1/2 text-sm text-gray-500"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                setRut(file);
+              }
+            }}
+          />
+          <InputLabel id="certificado_bancario">
+            Certificado bancario
+          </InputLabel>
+          <input
+            name="certificado_bancario"
+            type="file"
+            accept=".pdf"
+            className="block w-1/2 text-sm text-gray-500"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                setCertificadoBancario(file);
+              }
+            }}
+          />
+
+          {posicion === "Docente" ? (
+            <>
+              <InputLabel id="hoja-vida">Hoja de vida</InputLabel>
+              <input
+                name="hoja-vida"
+                type="file"
+                accept=".pdf"
+                className="block w-1/2 text-sm text-gray-500"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setHojaVida(file);
+                  }
+                }}
+              />
+              <InputLabel id="certificado-laboral">
+                Certificado laboral
+              </InputLabel>
+              <input
+                name="certificado-laboral"
+                type="file"
+                accept=".pdf"
+                className="block w-1/2 text-sm text-gray-500"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setCertificadoLaboral(file);
+                  }
+                }}
+              />
+
+              <InputLabel id="certificado-estudios">
+                Certificado de estudios
+              </InputLabel>
+              <input
+                name="certificado-estudios"
+                type="file"
+                accept=".pdf"
+                className="block w-1/2 text-sm text-gray-500"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setCertificadoEstudios(file);
+                  }
+                }}
+              />
+            </>
+          ) : (
+            <>
+              <InputLabel id="d10">Hoja de vida D10</InputLabel>
+              <input
+                name="d10"
+                type="file"
+                accept=".pdf"
+                className="block w-1/2 text-sm text-gray-500"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setD10(file);
+                  }
+                }}
+              />
+              <InputLabel id="tabulado">Tabulado</InputLabel>
+              <input
+                name="tabulado"
+                type="file"
+                accept=".pdf"
+                className="block w-1/2 text-sm text-gray-500"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setTabulado(file);
+                  }
+                }}
+              />
+
+              <InputLabel id="matricula-financiera">
+                Estado de matricula financiera (MATFIN)
+              </InputLabel>
+              <input
+                name="matricula-financiera"
+                type="file"
+                accept=".pdf"
+                className="block w-1/2 text-sm text-gray-500"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setMatriculaFinanciera(file);
+                  }
+                }}
+              />
+            </>
+          )}
         </div>
         <Button
           type="submit"
@@ -970,13 +903,6 @@ export default function Registro() {
           Continuar
         </Button>
       </form>
-
-      {/* Botón de iniciar sesión*/}
-      {/* <Link href="/auth/login">
-        <button className="mt-4 w-3/4 rounded-2xl border-2 border-[#C20E1A] py-2 font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white">
-          Iniciar sesión
-        </button>
-      </Link> */}
     </div>
   );
 }

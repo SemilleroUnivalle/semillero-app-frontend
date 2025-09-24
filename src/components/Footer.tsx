@@ -78,7 +78,7 @@ export default function Footer() {
         <span className="font-semibold">
           EISC - Escuela de Ingeniería de Sistemas y Computación
         </span>
-        , como parte del grupo de investigación GUIA, laboratorio{" "}
+        , como parte del grupo de investigación <span>GUIA</span>, laboratorio{" "}
         <span className="font-semibold">TEL &amp; STEAM</span>.
       </p>
       <p></p>

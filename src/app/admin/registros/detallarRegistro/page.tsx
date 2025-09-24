@@ -15,7 +15,11 @@ import {
   Snackbar,
   Alert,
   Switch,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
@@ -391,6 +395,46 @@ export default function DetallarRegistro() {
     } catch (error) {
       console.error("Error al actualizar is_active:", error);
       alert("No se pudo actualizar el estado activo.");
+    }
+  };
+
+  // Estado para el toggle
+  const [estadoInformacion, setEstadoInformacion] = useState<
+    true | false | null
+  >(null);
+  const [estadoDocumentoIdentidad, setEstadoDocumentoIdentidad] = useState<
+    true | false | null
+  >(null);
+  const [estadoFotoPerfil, setEstadoFotoPerfil] = useState<true | false | null>(
+    null,
+  );
+
+  // Handler para el cambio
+  const handleEstadoInformacion = (
+    event: React.MouseEvent<HTMLElement>,
+    newEstado: true | false | null,
+  ) => {
+    if (newEstado !== null) {
+      setEstadoInformacion(newEstado);
+      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    }
+  };
+  const handleEstadoFotoPerfil = (
+    event: React.MouseEvent<HTMLElement>,
+    newEstado: true | false | null,
+  ) => {
+    if (newEstado !== null) {
+      setEstadoFotoPerfil(newEstado);
+      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    }
+  };
+  const handleEstadoDocumentoIdentidad = (
+    event: React.MouseEvent<HTMLElement>,
+    newEstado: true | false | null,
+  ) => {
+    if (newEstado !== null) {
+      setEstadoDocumentoIdentidad(newEstado);
+      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
     }
   };
 
@@ -1193,13 +1237,71 @@ export default function DetallarRegistro() {
           </Button>
         )}
 
-        <h2 className="text-md my-4 text-center font-semibold text-primary">Verificación de Documentación</h2>
+        <h2 className="text-md my-4 text-center font-semibold text-primary">
+          Verificaciones
+        </h2>
 
-        <Switch
-          checked={verificacion}
-          onChange={(e) => handleIsActiveChange(e.target.checked)}
-          color="primary"
-        />
+        <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
+          <div>
+            <Typography variant="body1" color="textSecondary">
+              Información verificada
+            </Typography>
+            <ToggleButtonGroup
+              className="border-rounded rounded-xl"
+              value={estadoInformacion}
+              exclusive
+              onChange={handleEstadoInformacion}
+              aria-label="Estado de verificación"
+              sx={{ marginY: 2, borderRadius: 8 }}
+            >
+              <ToggleButton value={true} aria-label="Aprobado" color="success">
+                <CheckCircleIcon></CheckCircleIcon>
+              </ToggleButton>
+              <ToggleButton value={false} aria-label="Rechazado" color="error">
+                <CancelIcon></CancelIcon>
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </div>
+
+          <div>
+            <Typography variant="body1" color="textSecondary">
+              Documento de identidad verificado
+            </Typography>
+            <ToggleButtonGroup
+              value={estadoDocumentoIdentidad}
+              exclusive
+              onChange={handleEstadoDocumentoIdentidad}
+              aria-label="Estado de verificación"
+              sx={{ marginY: 2 }}
+            >
+              <ToggleButton value={true} aria-label="Aprobado" color="success">
+                <CheckCircleIcon></CheckCircleIcon>
+              </ToggleButton>
+              <ToggleButton value={false} aria-label="Rechazado" color="error">
+                <CancelIcon></CancelIcon>
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </div>
+          <div>
+            <Typography variant="body1" color="textSecondary">
+              Fotografía verificada
+            </Typography>
+            <ToggleButtonGroup
+              value={estadoFotoPerfil}
+              exclusive
+              onChange={handleEstadoFotoPerfil}
+              aria-label="Estado de verificación"
+              sx={{ marginY: 2 }}
+            >
+              <ToggleButton value={true} aria-label="Aprobado" color="success">
+                <CheckCircleIcon></CheckCircleIcon>
+              </ToggleButton>
+              <ToggleButton value={false} aria-label="Rechazado" color="error">
+                <CancelIcon></CancelIcon>
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </div>
+        </div>
 
         <div className="mt-4 flex w-full flex-wrap justify-around gap-4">
           <Button

@@ -2,14 +2,15 @@ import "./auth.css";
 import Image from "next/image";
 import "../globals.css";
 import Footer from "@/components/Footer";
-
 import { StyledEngineProvider } from "@mui/material/styles";
+import Link from "next/link";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <StyledEngineProvider injectFirst>
       <div className="p-5">
         <div className="">
+          <Link href={"/auth/login"}>
           <Image
             className="m-4"
             src="/logoSemillero.png"
@@ -17,7 +18,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             width={200}
             height={68}
             priority
-          />
+          /></Link>
         </div>
         <div className="flex items-center justify-center">
           <div className="hidden w-min flex-grow p-20 md:block">
