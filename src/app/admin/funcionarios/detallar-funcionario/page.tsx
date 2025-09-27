@@ -21,7 +21,8 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { API_BASE_URL } from "../../../../config";
+import { API_BASE_URL } from "../../../../../config";
+import { useRouter } from "next/navigation";
 
 // Interfaces para Departamentos y Municipios
 interface Departamento {
@@ -41,18 +42,8 @@ interface CiudadApi {
   name: string;
 }
 
-interface AcudienteInterface {
-  id_acudiente: number;
-  nombre_acudiente: string;
-  apellido_acudiente: string;
-  tipo_documento_acudiente: string;
-  email_acudiente: string;
-  numero_documento_acudiente: string;
-  celular_acudiente: string;
-}
-
-interface EstudianteInterface {
-  id_estudiante: number | null;
+interface FuncionarioInterface {
+  id: number;
   nombre: string;
   apellido: string;
   numero_documento: string;
@@ -66,36 +57,26 @@ interface EstudianteInterface {
   ciudad_residencia: string;
   comuna_residencia: string;
   direccion_residencia: string;
-  colegio: string;
-  grado: string;
-  estamento: string;
   eps: string;
   discapacidad: boolean;
   descripcion_discapacidad: string;
   tipo_discapacidad: string;
-  is_active: boolean;
-  acudiente: AcudienteInterface;
+  area_desempeño: string;
+  grado_escolaridad: string;
+  documento_identidad_pdf: string;
+  rut_pdf: string;
+  certificado_bancario_pdf: string;
+  hoja_vida_pdf: string;
+  certificado_laboral_pdf: string;
+  certificado_academico_pdf: string;
+  d10_pdf: string;
+  tabulado_pdf: string;
+  estado_mat_financiera_pdf: string;
 }
 
-const grados: string[] = [
-  "1",
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "10",
-  "11",
-  "Egresado colegios",
-  "Docente",
-];
+export default function DetallarFuncionarios() {
+  const router = useRouter();
 
-export default function DetallarRegistro() {
-
-  const [estudiante, setEstudiante] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editable, setEditable] = useState(false);
 
@@ -106,8 +87,8 @@ export default function DetallarRegistro() {
     useState<string>("");
   const [cargandoCiudades, setCargandoCiudades] = useState<boolean>(false);
 
-  const [formData, setFormData] = useState<EstudianteInterface>({
-    id_estudiante: null,
+  const [formData, setFormData] = useState<FuncionarioInterface>({
+    id: 0,
     nombre: "",
     apellido: "",
     numero_documento: "",
@@ -121,37 +102,22 @@ export default function DetallarRegistro() {
     ciudad_residencia: "",
     comuna_residencia: "",
     direccion_residencia: "",
-    colegio: "",
-    grado: "",
-    estamento: "",
     eps: "",
     discapacidad: false,
     descripcion_discapacidad: "",
     tipo_discapacidad: "",
-    is_active: true,
-    acudiente: {
-      id_acudiente: 0,
-      nombre_acudiente: "",
-      apellido_acudiente: "",
-      email_acudiente: "",
-      tipo_documento_acudiente: "",
-      numero_documento_acudiente: "",
-      celular_acudiente: "",
-    },
+    area_desempeño: "",
+    grado_escolaridad: "",
+    documento_identidad_pdf: "",
+    rut_pdf: "",
+    certificado_bancario_pdf: "",
+    hoja_vida_pdf: "",
+    certificado_laboral_pdf: "",
+    certificado_academico_pdf: "",
+    d10_pdf: "",
+    tabulado_pdf: "",
+    estado_mat_financiera_pdf: "",
   });
-
-  const [formDataAcudiente, setFormDataAcudiente] =
-    useState<AcudienteInterface>({
-      id_acudiente: 0,
-      nombre_acudiente: formData.acudiente.nombre_acudiente || "",
-      apellido_acudiente: formData.acudiente.apellido_acudiente || "",
-      tipo_documento_acudiente:
-        formData.acudiente.tipo_documento_acudiente || "",
-      numero_documento_acudiente:
-        formData.acudiente.numero_documento_acudiente || "",
-      email_acudiente: formData.acudiente.email_acudiente || "",
-      celular_acudiente: formData.acudiente.celular_acudiente || "",
-    });
 
   const [success, setSuccess] = useState(false);
 
@@ -160,16 +126,32 @@ export default function DetallarRegistro() {
   const [documentoIdentidad, setDocumentoIdentidad] = useState<File | null>(
     null,
   );
+  const [rut, setRut] = useState<File | null>(null);
+  const [certificadoBancario, setCertificadoBancario] = useState<File | null>(
+    null,
+  );
+  const [d10, setD10] = useState<File | null>(null);
+  const [tabulado, setTabulado] = useState<File | null>(null);
+  const [matriculaFinanciera, setMatriculaFinanciera] = useState<File | null>(
+    null,
+  );
+  const [hojaVida, setHojaVida] = useState<File | null>(null);
+  const [certificadoLaboral, setCertificadoLaboral] = useState<File | null>(
+    null,
+  );
+  const [certificadoAcademico, setCertificadoAcademico] = useState<File | null>(
+    null,
+  );
+
   const [image, setImage] = useState<string | null>(null);
 
   // Manejo de campo para otro género
 
   const [mostrarOtroGenero, setMostrarOtroGenero] = useState(false);
   const [mostrarTipoDiscapacidad, setTipoDiscapacidad] = useState(false);
+  let endpoint = "";
 
-  const [esDocente, setEsDocente] = useState(false);
-
-  // Obtener datos del estudiante y departamentos
+  // Obtener datos del funcionario y departamentos
   useEffect(() => {
     setLoading(true); // <-- inicia la carga
     const fetchDepartamentos = async () => {
@@ -189,10 +171,11 @@ export default function DetallarRegistro() {
       }
     };
 
-    const storedData = localStorage.getItem("inscritoSeleccionado");
+    const storedData = localStorage.getItem("funcionarioSeleccionado");
     if (storedData) {
       const seleccionado = JSON.parse(storedData);
-      const id = seleccionado.id || seleccionado.id_estudiante;
+      const id = seleccionado.id;
+      const tipo = seleccionado.tipo;
       if (id) {
         const userString = localStorage.getItem("user");
         let token = "";
@@ -200,14 +183,23 @@ export default function DetallarRegistro() {
           const user = JSON.parse(userString);
           token = user.token;
         }
+        
+
+        if (tipo === "Monitor Académico") {
+          endpoint = `${API_BASE_URL}/monitor_academico/mon/${id}/`;
+        } else if (tipo === "Monitor Administrativo") {
+          endpoint = `${API_BASE_URL}/monitor_administrativo/mon/${id}/`;
+        } else if (tipo === "Profesor") {
+          endpoint = `${API_BASE_URL}/profesor/prof/${id}/`;
+        }
         axios
-          .get(`${API_BASE_URL}/estudiante/est/me/`, {
+          .get(endpoint, {
             headers: {
               Authorization: `Token ${token}`,
             },
           })
           .then((res) => {
-            setEstudiante(res.data);
+            // setEstudiante(res.data);
             setDepartamentoSeleccionado(res.data.departamento_residencia || "");
             setLoading(false); // <-- termina la carga
             // En tu useEffect después de obtener el estudiante
@@ -215,7 +207,6 @@ export default function DetallarRegistro() {
               ...formData,
               ...res.data,
             });
-            localStorage.setItem("estudiante", JSON.stringify(res.data));
           })
           .catch(() => setLoading(false)); // <-- termina la carga en error
       } else {
@@ -226,22 +217,6 @@ export default function DetallarRegistro() {
     }
     fetchDepartamentos();
   }, []);
-
-  useEffect(() => {
-    if (formData.acudiente) {
-      setFormDataAcudiente({
-        id_acudiente: formData.acudiente.id_acudiente || 0,
-        nombre_acudiente: formData.acudiente.nombre_acudiente || "",
-        apellido_acudiente: formData.acudiente.apellido_acudiente || "",
-        tipo_documento_acudiente:
-          formData.acudiente.tipo_documento_acudiente || "",
-        numero_documento_acudiente:
-          formData.acudiente.numero_documento_acudiente || "",
-        celular_acudiente: formData.acudiente.celular_acudiente || "",
-        email_acudiente: formData.acudiente.email_acudiente || "",
-      });
-    }
-  }, [formData.acudiente]);
 
   // Obtener ciudades cuando cambia el departamento seleccionado en modo edición
   useEffect(() => {
@@ -318,8 +293,8 @@ export default function DetallarRegistro() {
       for (let pair of formDataToSend.entries()) {
         console.log(`${pair[0]}:`, pair[1]);
       }
-      const response = await axios.patch(
-        `${API_BASE_URL}/estudiante/est/${formData.id_estudiante}/`,
+      console.log("Endpoint:", endpoint);
+      const response = await axios.patch(endpoint,
         formDataToSend,
         {
           headers: {
@@ -330,8 +305,8 @@ export default function DetallarRegistro() {
       );
 
       if (response.status === 200) {
+        alert("Actualización exitosa");
         setEditable(false);
-        setSuccess(true);
       } else {
         alert("Error al actualizar");
       }
@@ -341,19 +316,69 @@ export default function DetallarRegistro() {
     }
   };
 
+  // Función para eliminar un inscrito
+  const handleDelete = async (id: number) => {
+    const confirmDelete = window.confirm(
+      "¿Estás seguro de que deseas eliminar este funcionario?",
+    );
+    if (!confirmDelete) return;
 
+    try {
+      await axios.delete(endpoint, {
+        headers: {
+          Authorization: `Token ${localStorage.getItem("token")}`,
+        },
+      });
+
+      setSuccess(true);
+      router.push("/admin/funcionarios/visualizar-funcionarios/");
+    } catch (error) {
+      console.error("Error al eliminar el funcionario:", error);
+      alert(
+        "Hubo un error al eliminar el funcionario. Por favor, inténtalo de nuevo.",
+      );
+    }
+  };
 
   // Estado para el toggle
-  // const [estadoInformacion, setEstadoInformacion] = useState<
-  //   true | false | null
-  // >(null);
-  // const [estadoDocumentoIdentidad, setEstadoDocumentoIdentidad] = useState<
-  //   true | false | null
-  // >(null);
-  // const [estadoFotoPerfil, setEstadoFotoPerfil] = useState<true | false | null>(
-  //   null,
-  // );
+  const [estadoInformacion, setEstadoInformacion] = useState<
+    true | false | null
+  >(null);
+  const [estadoDocumentoIdentidad, setEstadoDocumentoIdentidad] = useState<
+    true | false | null
+  >(null);
+  const [estadoFotoPerfil, setEstadoFotoPerfil] = useState<true | false | null>(
+    null,
+  );
 
+  // Handler para el cambio
+  const handleEstadoInformacion = (
+    event: React.MouseEvent<HTMLElement>,
+    newEstado: true | false | null,
+  ) => {
+    if (newEstado !== null) {
+      setEstadoInformacion(newEstado);
+      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    }
+  };
+  const handleEstadoFotoPerfil = (
+    event: React.MouseEvent<HTMLElement>,
+    newEstado: true | false | null,
+  ) => {
+    if (newEstado !== null) {
+      setEstadoFotoPerfil(newEstado);
+      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    }
+  };
+  const handleEstadoDocumentoIdentidad = (
+    event: React.MouseEvent<HTMLElement>,
+    newEstado: true | false | null,
+  ) => {
+    if (newEstado !== null) {
+      setEstadoDocumentoIdentidad(newEstado);
+      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    }
+  };
 
   if (loading) {
     return (
@@ -366,16 +391,8 @@ export default function DetallarRegistro() {
     );
   }
 
-  if (!estudiante) {
-    return (
-      <Box className="mt-4 mx-auto flex max-w-md flex-col items-center justify-center rounded-xl bg-white p-4 shadow">
-        <Typography>No se encontró información del estudiante.</Typography>
-      </Box>
-    );
-  }
-
   return (
-    <div className="mx-auto my-4 w-9/12 content-center rounded-2xl bg-white p-5 text-center shadow-md">
+    <div className="mx-auto my-4 w-11/12 content-center rounded-2xl bg-white p-5 text-center shadow-md">
       <Snackbar
         open={success}
         autoHideDuration={4000}
@@ -386,18 +403,17 @@ export default function DetallarRegistro() {
           severity="success"
           sx={{ width: "100%" }}
         >
-          Informacion actualizada exitosamente.
+          Inscrito eliminado exitosamente.
         </Alert>
       </Snackbar>
       <h2 className="mb-4 text-center font-semibold text-primary">
         Detalle de Inscripción
       </h2>
-
       <div className="flex flex-col justify-around">
         {/* Fotografía */}
         <div className="my-4 flex flex-col items-center justify-around">
           <Avatar
-            src={estudiante.foto || ""}
+            // src={formData.foto || ""}
             sx={{ width: 150, height: 150 }}
             alt="Foto del estudiante"
           />
@@ -576,7 +592,7 @@ export default function DetallarRegistro() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Fecha de nacimiento"
-              value={estudiante.fecha_nacimiento || ""}
+              value={formData.fecha_nacimiento || ""}
               InputProps={{ readOnly: !editable }}
             />
           </div>
@@ -688,14 +704,14 @@ export default function DetallarRegistro() {
                 <TextField
                   className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
                   label="Departamento"
-                  value={estudiante.departamento_residencia || ""}
+                  value={formData.departamento_residencia || ""}
                   InputProps={{ readOnly: true }}
                 />
 
                 <TextField
                   className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
                   label="Ciudad"
-                  value={estudiante.ciudad_residencia || ""}
+                  value={formData.ciudad_residencia || ""}
                   InputProps={{ readOnly: true }}
                 />
               </>
@@ -723,7 +739,7 @@ export default function DetallarRegistro() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Dirección"
-              value={estudiante.direccion_residencia || ""}
+              value={formData.direccion_residencia || ""}
               InputProps={{ readOnly: !editable }}
             />
           </div>
@@ -866,248 +882,38 @@ export default function DetallarRegistro() {
                   ? "inputs-textfield flex w-full flex-col sm:w-1/4"
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
-              label="Colegio"
-              value={formData.colegio}
+              label="Grado Escolaridad"
+              value={formData.grado_escolaridad}
               onChange={(e) =>
-                setFormData({ ...formData, colegio: e.target.value })
+                setFormData({ ...formData, grado_escolaridad: e.target.value })
               }
               InputProps={{ readOnly: !editable }}
             />
-            <FormControl
-              className={
-                editable
-                  ? "inputs-textfield w-full sm:w-1/4"
-                  : "inputs-textfield-readonly w-full sm:w-1/4"
-              }
-            >
-              <InputLabel id="grado">Grado</InputLabel>
-              <Select
-                labelId="grado"
-                id="grado"
-                label="Grado"
-                required
-                value={formData.grado || ""}
-                onChange={
-                  editable
-                    ? (e) => {
-                        setFormData({ ...formData, grado: e.target.value });
-                        setEsDocente(e.target.value === "Docente");
-                      }
-                    : undefined
-                }
-                disabled={!editable}
-              >
-                {grados.map((grado) => (
-                  <MenuItem key={grado} value={grado}>
-                    {grado}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            {esDocente ? (
-              <>
-                {/* Campos de docente */}
-                {/* ...igual que en registro... */}
-              </>
-            ) : (
-              <>
-                {/* Campos de colegio y estamento */}
-                {/* ...igual que en registro... */}
-              </>
-            )}
 
-<FormControl
-              className={
-                editable
-                  ? "inputs-textfield w-full sm:w-1/4"
-                  : "inputs-textfield-readonly w-full sm:w-1/4"
-              }
-            >
-              <InputLabel id="estamento">Estamento</InputLabel>
-              <Select
-                labelId="estamento"
-                id="estamento"
-                label="Estamento"
-                required
-                value={formData.estamento || ""}
-                onChange={
-                  editable
-                    ? (e) => {
-                        setFormData({ ...formData, estamento: e.target.value });
-                      }
-                    : undefined
-                }
-                disabled={!editable}
-              >
-                <MenuItem value="Público">Público</MenuItem>
-                <MenuItem value="Privado">Privado</MenuItem>
-                <MenuItem value="Cobertura">Cobertura</MenuItem>
-              </Select>
-            </FormControl>
-
-
-  
-          </div>
-
-          {/* Contenedor Informacion de Acudiente */}
-
-          <h2 className="text-md my-4 text-center font-semibold text-primary">
-            Información de Acudiente
-          </h2>
-          <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-            {/* Campo Nombres del Acudiente */}
             <TextField
               className={
                 editable
                   ? "inputs-textfield flex w-full flex-col sm:w-1/4"
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
-              label="Nombres del acudiente"
-              name="nombre_acudiente"
-              variant="outlined"
-              fullWidth
-              type="text"
-              required
-              InputProps={{ readOnly: !editable }}
-              value={formDataAcudiente.nombre_acudiente}
+              label="Area de Desempeño"
+              value={formData.area_desempeño}
               onChange={(e) =>
-                setFormDataAcudiente({
-                  ...formDataAcudiente,
-                  nombre_acudiente: e.target.value,
-                })
+                setFormData({ ...formData, area_desempeño: e.target.value })
               }
-            />
-            {/* Campo Apellidos del acudiente  */}
-            <TextField
-              className={
-                editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-              }
-              label="Apellidos del acudiente"
-              name="apellido_acudiente"
-              variant="outlined"
-              fullWidth
-              type="text"
-              required
               InputProps={{ readOnly: !editable }}
-              value={formDataAcudiente.apellido_acudiente}
-              onChange={(e) =>
-                setFormDataAcudiente({
-                  ...formDataAcudiente,
-                  apellido_acudiente: e.target.value,
-                })
-              }
-            />
-            {/* Campo Tipo de Documento */}
-            <FormControl
-              className={
-                editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-              }
-            >
-              <InputLabel id="tipo_documento_acudiente">
-                Tipo de documento
-              </InputLabel>
-              <Select
-                labelId="tipo_documento_acudiente"
-                id="tipo_documento_acudiente"
-                label="tipo_documento_acudiente"
-                required
-                disabled={!editable}
-                value={formDataAcudiente.tipo_documento_acudiente}
-                onChange={(e) =>
-                  setFormDataAcudiente({
-                    ...formDataAcudiente,
-                    tipo_documento_acudiente: e.target.value,
-                  })
-                }
-              >
-                <MenuItem value={"TI"}>Tarjeta de identidad</MenuItem>
-                <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
-                <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
-                <MenuItem value={"PPT"}>
-                  Permiso de protección temporal
-                </MenuItem>
-              </Select>
-            </FormControl>
-            {/* Campo Numero de Documento */}
-            <TextField
-              className={
-                editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-              }
-              label="Número de identificación"
-              name="numero_identificacion"
-              variant="outlined"
-              type="number"
-              fullWidth
-              required
-              InputProps={{ readOnly: !editable }}
-              value={formDataAcudiente.numero_documento_acudiente}
-              onChange={(e) =>
-                setFormDataAcudiente({
-                  ...formDataAcudiente,
-                  numero_documento_acudiente: e.target.value,
-                })
-              }
-            />
-            {/* Campo Correo Electronico del Acudiente */}
-            <TextField
-              className={
-                editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-              }
-              label="Correo Electrónico"
-              name="email"
-              variant="outlined"
-              type="email"
-              fullWidth
-              required
-              InputProps={{ readOnly: !editable }}
-              value={formDataAcudiente.email_acudiente}
-              onChange={(e) =>
-                setFormDataAcudiente({
-                  ...formDataAcudiente,
-                  email_acudiente: e.target.value,
-                })
-              }
-            />
-            {/* Campo Celular del Acudiente */}
-            <TextField
-              className={
-                editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-              }
-              label="Celular"
-              name="celular"
-              variant="outlined"
-              type="number"
-              fullWidth
-              required
-              InputProps={{ readOnly: !editable }}
-              value={formDataAcudiente.celular_acudiente}
-              onChange={(e) =>
-                setFormDataAcudiente({
-                  ...formDataAcudiente,
-                  celular_acudiente: e.target.value,
-                })
-              }
             />
           </div>
         </div>
       </div>
+
       {/* Documentos */}
       <div className="mt-4 flex flex-col items-center">
-        {estudiante.documento_identidad && (
+        {formData.documento_identidad_pdf && (
           <Button
             variant="outlined"
             color="primary"
-            href={estudiante.documento_identidad}
+            href={formData.documento_identidad_pdf}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-2"
@@ -1148,28 +954,106 @@ export default function DetallarRegistro() {
           </div>
         )}
 
-        {estudiante.constancia_estudios && (
+        {formData.rut_pdf && (
           <Button
             variant="outlined"
             color="primary"
-            href={estudiante.constancia_estudios}
+            href={formData.rut_pdf}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-2"
           >
-            Ver constancia de estudios
+            Ver RUT
           </Button>
         )}
-        {estudiante.recibo_pago && (
+
+        {formData.certificado_bancario_pdf && (
           <Button
             variant="outlined"
             color="primary"
-            href={estudiante.recibo_pago}
+            href={formData.certificado_bancario_pdf}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-2"
           >
-            Ver recibo de pago
+            Ver Certificado Bancario
+          </Button>
+        )}
+
+        {formData.hoja_vida_pdf && (
+          <Button
+            variant="outlined"
+            color="primary"
+            href={formData.hoja_vida_pdf}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2"
+          >
+            Ver Hoja de Vida
+          </Button>
+        )}
+
+        {formData.certificado_laboral_pdf && (
+          <Button
+            variant="outlined"
+            color="primary"
+            href={formData.certificado_laboral_pdf}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2"
+          >
+            Ver Certificado Laboral
+          </Button>
+        )}
+        {formData.certificado_academico_pdf && (
+          <Button
+            variant="outlined"
+            color="primary"
+            href={formData.certificado_academico_pdf}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2"
+          >
+            Ver Certificado Académico
+          </Button>
+        )}
+
+        {formData.d10_pdf && (
+          <Button
+            variant="outlined"
+            color="primary"
+            href={formData.d10_pdf}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2"
+          >
+            Ver D10
+          </Button>
+        )}
+
+        {formData.tabulado_pdf && (
+          <Button
+            variant="outlined"
+            color="primary"
+            href={formData.tabulado_pdf}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2"
+          >
+            Ver Tabulado
+          </Button>
+        )}
+
+        {formData.estado_mat_financiera_pdf && (
+          <Button
+            variant="outlined"
+            color="primary"
+            href={formData.estado_mat_financiera_pdf}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2"
+          >
+            Ver Estado de Matrícula Financiera
           </Button>
         )}
 
@@ -1184,11 +1068,31 @@ export default function DetallarRegistro() {
             </Typography>
             <ToggleButtonGroup
               className="border-rounded rounded-xl"
-              // value={estadoInformacion}
+              value={estadoInformacion}
               exclusive
-              disabled
+              onChange={handleEstadoInformacion}
               aria-label="Estado de verificación"
               sx={{ marginY: 2, borderRadius: 8 }}
+            >
+              <ToggleButton value={true} aria-label="Aprobado" color="success">
+                <CheckCircleIcon></CheckCircleIcon>
+              </ToggleButton>
+              <ToggleButton value={false} aria-label="Rechazado" color="error">
+                <CancelIcon></CancelIcon>
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </div>
+
+          <div>
+            <Typography variant="body1" color="textSecondary">
+              Fotografía verificada
+            </Typography>
+            <ToggleButtonGroup
+              value={estadoFotoPerfil}
+              exclusive
+              onChange={handleEstadoFotoPerfil}
+              aria-label="Estado de verificación"
+              sx={{ marginY: 2 }}
             >
               <ToggleButton value={true} aria-label="Aprobado" color="success">
                 <CheckCircleIcon></CheckCircleIcon>
@@ -1204,9 +1108,69 @@ export default function DetallarRegistro() {
               Documento de identidad verificado
             </Typography>
             <ToggleButtonGroup
-              // value={estadoDocumentoIdentidad}
+              value={estadoDocumentoIdentidad}
               exclusive
-              disabled
+              onChange={handleEstadoDocumentoIdentidad}
+              aria-label="Estado de verificación"
+              sx={{ marginY: 2 }}
+            >
+              <ToggleButton value={true} aria-label="Aprobado" color="success">
+                <CheckCircleIcon></CheckCircleIcon>
+              </ToggleButton>
+              <ToggleButton value={false} aria-label="Rechazado" color="error">
+                <CancelIcon></CancelIcon>
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </div>
+
+          <div>
+            <Typography variant="body1" color="textSecondary">
+              RUT verificado
+            </Typography>
+            <ToggleButtonGroup
+              value={estadoDocumentoIdentidad}
+              exclusive
+              onChange={handleEstadoDocumentoIdentidad}
+              aria-label="Estado de verificación"
+              sx={{ marginY: 2 }}
+            >
+              <ToggleButton value={true} aria-label="Aprobado" color="success">
+                <CheckCircleIcon></CheckCircleIcon>
+              </ToggleButton>
+              <ToggleButton value={false} aria-label="Rechazado" color="error">
+                <CancelIcon></CancelIcon>
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </div>
+
+          <div>
+            <Typography variant="body1" color="textSecondary">
+              Certificado bancario verificado
+            </Typography>
+            <ToggleButtonGroup
+              value={estadoDocumentoIdentidad}
+              exclusive
+              onChange={handleEstadoDocumentoIdentidad}
+              aria-label="Estado de verificación"
+              sx={{ marginY: 2 }}
+            >
+              <ToggleButton value={true} aria-label="Aprobado" color="success">
+                <CheckCircleIcon></CheckCircleIcon>
+              </ToggleButton>
+              <ToggleButton value={false} aria-label="Rechazado" color="error">
+                <CancelIcon></CancelIcon>
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </div>
+
+          <div>
+            <Typography variant="body1" color="textSecondary">
+              Certificado bancario verificado
+            </Typography>
+            <ToggleButtonGroup
+              value={estadoDocumentoIdentidad}
+              exclusive
+              onChange={handleEstadoDocumentoIdentidad}
               aria-label="Estado de verificación"
               sx={{ marginY: 2 }}
             >
@@ -1220,12 +1184,51 @@ export default function DetallarRegistro() {
           </div>
           <div>
             <Typography variant="body1" color="textSecondary">
-              Fotografía verificada
+              Hoja de vida verificada
             </Typography>
             <ToggleButtonGroup
-              // value={}
+              value={estadoDocumentoIdentidad}
               exclusive
-              disabled
+              onChange={handleEstadoDocumentoIdentidad}
+              aria-label="Estado de verificación"
+              sx={{ marginY: 2 }}
+            >
+              <ToggleButton value={true} aria-label="Aprobado" color="success">
+                <CheckCircleIcon></CheckCircleIcon>
+              </ToggleButton>
+              <ToggleButton value={false} aria-label="Rechazado" color="error">
+                <CancelIcon></CancelIcon>
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </div>
+
+          <div>
+            <Typography variant="body1" color="textSecondary">
+              Certificado laboral verificado
+            </Typography>
+            <ToggleButtonGroup
+              value={estadoDocumentoIdentidad}
+              exclusive
+              onChange={handleEstadoDocumentoIdentidad}
+              aria-label="Estado de verificación"
+              sx={{ marginY: 2 }}
+            >
+              <ToggleButton value={true} aria-label="Aprobado" color="success">
+                <CheckCircleIcon></CheckCircleIcon>
+              </ToggleButton>
+              <ToggleButton value={false} aria-label="Rechazado" color="error">
+                <CancelIcon></CancelIcon>
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </div>
+          <div>
+            <Typography variant="body1" color="textSecondary">
+              Certificado académico verificado
+            </Typography>
+            <ToggleButtonGroup
+              value={estadoDocumentoIdentidad}
+              exclusive
+              onChange={handleEstadoDocumentoIdentidad}
               aria-label="Estado de verificación"
               sx={{ marginY: 2 }}
             >
@@ -1254,6 +1257,15 @@ export default function DetallarRegistro() {
             {editable ? "Guardar" : "Editar"}
           </Button>
 
+          <Button
+            variant="contained"
+            className="text-md mt-4 w-1/3 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
+            onClick={() => {
+              handleDelete(formData.id);
+            }}
+          >
+            Eliminar
+          </Button>
         </div>
       </div>
     </div>

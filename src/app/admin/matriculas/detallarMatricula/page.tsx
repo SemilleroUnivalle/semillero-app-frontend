@@ -14,7 +14,6 @@ import {
   SelectChangeEvent,
   Snackbar,
   Alert,
-  Switch,
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
@@ -261,23 +260,20 @@ export default function DetallarMatricula() {
   );
 
   const [success, setSuccess] = useState(false);
-  const [matriculaVerificada, setMatriculaVerificada] = useState(
-    formDataMatricula.estado === "A",
-  ); // Estado para matrícula verificada
 
   // Estados para manejo de archivos
   const [fotoPerfil, setFotoPerfil] = useState<File | null>(null);
   const [documentoIdentidad, setDocumentoIdentidad] = useState<File | null>(
     null,
   );
-  const [reciboPago, setReciboPago] = useState<File | null>(null);
-  const [reciboCertificado, setReciboCertificado] = useState<File | null>(null);
+  // const [reciboPago, setReciboPago] = useState<File | null>(null);
+  // const [reciboCertificado, setReciboCertificado] = useState<File | null>(null);
 
-  const [image, setImage] = useState<string | null>(null);
+  // const [image, setImage] = useState<string | null>(null);
 
   // Manejo de campo para otro género
 
-  const [mostrarOtroGenero, setMostrarOtroGenero] = useState(false);
+  // const [mostrarOtroGenero, setMostrarOtroGenero] = useState(false);
   const [mostrarTipoDiscapacidad, setTipoDiscapacidad] = useState(false);
 
   const [esDocente, setEsDocente] = useState(false);
@@ -335,7 +331,6 @@ export default function DetallarMatricula() {
               ...formDataEstudiante,
               ...res.data.estudiante,
             });
-            setMatriculaVerificada(res.data.estado);
           })
           .catch(() => setLoading(false)); // <-- termina la carga en error
       } else {
@@ -511,35 +506,6 @@ export default function DetallarMatricula() {
     }
   };
 
-  // Funcion para cambiar el estado de verificacion de la matricula
-  const handleMatriculaVerificadaChange = async (checked: boolean) => {
-    setMatriculaVerificada(checked);
-
-    // Obtener token del localStorage
-    const userString = localStorage.getItem("user");
-    let token = "";
-    if (userString) {
-      const user = JSON.parse(userString);
-      token = user.token;
-    }
-
-    try {
-      await axios.patch(
-        `${API_BASE_URL}/matricula/mat/${formDataMatricula.id_inscripcion}/`,
-        { estado: checked ? "A" : "I" },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Token ${token}`,
-          },
-        },
-      );
-      console.log("Estado de matrícula actualizado exitosamente");
-    } catch (error) {
-      console.error("Error al actualizar estado de matrícula:", error);
-      alert("No se pudo actualizar el estado de la matrícula.");
-    }
-  };
 
   // Estados para las verificaciones
   const [estadoInformacion, setEstadoInformacion] = useState<
@@ -682,7 +648,7 @@ export default function DetallarMatricula() {
                     setFotoPerfil(file);
                     const reader = new FileReader();
                     reader.onloadend = () => {
-                      setImage(reader.result as string);
+                      // setImage(reader.result as string);
                     };
                     reader.readAsDataURL(file);
                   }
@@ -809,7 +775,7 @@ export default function DetallarMatricula() {
                           ...formDataEstudiante,
                           genero: e.target.value,
                         });
-                        setMostrarOtroGenero(e.target.value === "Otro");
+                        // setMostrarOtroGenero(e.target.value === "Otro");
                       }
                     : undefined
                 }

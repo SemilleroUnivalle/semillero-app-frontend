@@ -211,7 +211,6 @@ export default function Registro() {
 
   // Manejo de campo para otro género
 
-  const [mostrarOtroGenero, setMostrarOtroGenero] = useState(false);
   const [mostrarTipoDiscapacidad, setTipoDiscapacidad] = useState(false);
 
   // Manejo de estados para seleccion de departamento y municipio

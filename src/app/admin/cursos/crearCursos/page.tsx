@@ -30,9 +30,7 @@ export default function CrearCursos() {
 
   const [otraArea, setOtraArea] = useState<string>(""); // Para especificar otra área
   const [otraCategoria, setOtraCategoria] = useState<string>(""); // Para especificar otra
-  const [documentoIdentidad, setDocumentoIdentidad] = useState<File | null>(
-    null,
-  );
+
   const [formData, setFormData] = useState({
     nombre_modulo: "",
     descripcion_modulo: "",

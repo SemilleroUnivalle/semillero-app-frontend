@@ -33,7 +33,6 @@ export default function NuevaMatricula() {
   });
 
   // Estados para los archivos
-  const [constanciaEstudio, setConstanciaEstudio] = useState<File | null>(null);
   const [reciboPago, setReciboPago] = useState<File | null>(null);
   const [certificado, setCertificado] = useState<File | null>(null);
 
@@ -42,7 +41,6 @@ export default function NuevaMatricula() {
 
   // Estado para las ofertas académicas activas
   const [ofertas, setOfertas] = useState<any>({});
-  const [loading, setLoading] = useState(true);
 
   const [estamento, setEstamento] = useState<string>("");
 
@@ -58,9 +56,9 @@ export default function NuevaMatricula() {
       .then((res) => {
         console.log("Ofertas académicas obtenidas:", res.data);
         setOfertas(res.data);
-        setLoading(false);
+
       })
-      .catch(() => setLoading(false));
+      .catch(() => console.log("No se pudo obtener las ofertas"));
   }, []);
 
   // Obtén la lista de ofertas académicas
@@ -118,9 +116,6 @@ export default function NuevaMatricula() {
     formDataToSend.append("tipo_vinculacion", formData.tipo_vinculacion);
     formDataToSend.append("terminos", terminos ? "True" : "False");
 
-    if (constanciaEstudio) {
-      formDataToSend.append("constancia", constanciaEstudio);
-    }
     if (reciboPago) {
       formDataToSend.append("recibo_pago", reciboPago);
     }

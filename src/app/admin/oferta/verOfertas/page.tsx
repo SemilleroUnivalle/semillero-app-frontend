@@ -40,9 +40,6 @@ export default function Page() {
     };
   }
 
-  const [ofertasAcademicas, setOfertasAcademicas] = useState<
-    Record<string, OfertaCategoria[]>
-  >({});
 
   const router = useRouter();
 

@@ -7,7 +7,7 @@ import {
   BookOpenIcon,
   CogIcon,
 } from "@heroicons/react/24/outline";
-
+import GroupWorkOutlinedIcon from '@mui/icons-material/GroupWorkOutlined';
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -22,6 +22,11 @@ const links = [
     name: "Matrículas",
     href: "/admin/matriculas/verMatriculas",
     icon: UsersIcon,
+  },
+  {
+    name: "Funcionarios",
+    href: "/admin/funcionarios/visualizar-funcionarios",
+    icon: GroupWorkOutlinedIcon,
   },
   {
     name: "Cursos",

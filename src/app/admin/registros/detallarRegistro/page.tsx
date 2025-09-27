@@ -14,7 +14,6 @@ import {
   SelectChangeEvent,
   Snackbar,
   Alert,
-  Switch,
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
@@ -157,7 +156,6 @@ export default function DetallarRegistro() {
     });
 
   const [success, setSuccess] = useState(false);
-  const [verificacion, setVerificacion] = useState(true);
 
   // Estados para manejo de archivos
   const [fotoPerfil, setFotoPerfil] = useState<File | null>(null);
@@ -367,36 +365,6 @@ export default function DetallarRegistro() {
     }
   };
 
-  // Funcion para cambiar el estado de verificacion del estudiante
-  const handleIsActiveChange = async (checked: boolean) => {
-    setVerificacion(checked);
-
-    // Obtener token del localStorage
-    const userString = localStorage.getItem("user");
-    let token = "";
-    if (userString) {
-      const user = JSON.parse(userString);
-      token = user.token;
-    }
-
-    try {
-      await axios.patch(
-        `${API_BASE_URL}/estudiante/est/${formData.id_estudiante}/`,
-        { is_active: checked }, // Envía como JSON booleano
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Token ${token}`,
-          },
-        },
-      );
-      // Opcional: muestra mensaje de éxito
-      console.log("is_active actualizado exitosamente");
-    } catch (error) {
-      console.error("Error al actualizar is_active:", error);
-      alert("No se pudo actualizar el estado activo.");
-    }
-  };
 
   // Estado para el toggle
   const [estadoInformacion, setEstadoInformacion] = useState<

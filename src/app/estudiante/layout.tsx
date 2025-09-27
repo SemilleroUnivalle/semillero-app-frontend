@@ -9,7 +9,6 @@ import axios from "axios";
 import { API_BASE_URL } from "../../../config";
 
 import Navbar from "../../components/Navbar";
-import { use } from "react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter(); // Inicializa el hook useRouter

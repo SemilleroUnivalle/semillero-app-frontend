@@ -10,7 +10,7 @@ import {
   IconButton,
   InputAdornment,
 } from "@mui/material";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 function validarContrasena(password: string): string | null {

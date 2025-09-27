@@ -58,8 +58,7 @@ export default function DetallarOferta() {
 
   // Estado para manejo de errores y éxito
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+
 
   // Estado para la oferta seleccionada
   const [oferta, setOferta] = useState<Oferta | null>(null);
@@ -158,7 +157,6 @@ export default function DetallarOferta() {
         console.log("Modulos por categoría:", formateado);
       } catch (error) {
         console.error("Error al obtener los módulos por categoría", error);
-        setError("Error al cargar los módulos. Por favor, intenta de nuevo.");
       } finally {
         setLoading(false);
       }
@@ -175,11 +173,7 @@ export default function DetallarOferta() {
     }));
   };
 
-  // Manejo del cierre del snackbar
-  const handleCloseSnackbar = () => {
-    setError(null);
-    setSuccess(false);
-  };
+
 
   // Función para eliminar un curso
   const handleDelete = async (id: number) => {
@@ -196,7 +190,6 @@ export default function DetallarOferta() {
         },
       });
 
-      setSuccess(true);
       router.push("/admin/oferta/verOfertas");
     } catch (error) {
       console.error("Error al eliminar la oferta", error);

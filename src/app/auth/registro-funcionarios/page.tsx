@@ -97,25 +97,20 @@ export default function Registro() {
 
   // Manejar envío del formulario
   // Enviar datos al backend
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
 
-    try {
-      const formDataToSend = new FormData();
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-      // Añadir todos los campos del formData al FormData
-      for (const key in formData) {
-        let value = (formData as any)[key];
-
-        // Convertir booleanos a strings esperados por el backend
-        if (typeof value === "boolean") {
-          value = value ? "True" : "False"; // O "true"/"false" según lo que espere tu backend
-        }
-
-        formDataToSend.append(key, value);
-      }
-
-      // Verificar el contenido de formDataToSend
+  try {
+    const formDataToSend = new FormData();
+    for (const key in formData) {
+      let value = (formData as any)[key];
+      if (typeof value === "boolean") value = value ? "True" : "False";
+      formDataToSend.append(key, value);
+    }
+    
+    
+    // Verificar el contenido de formDataToSend
       for (let pair of formDataToSend.entries()) {
         console.log(`${pair[0]}:`, pair[1]);
       }
@@ -126,72 +121,65 @@ export default function Registro() {
       }
 
       if (documentoIdentidad) {
-        formDataToSend.append("documento_identidad", documentoIdentidad);
+        formDataToSend.append("documento_identidad_pdf", documentoIdentidad);
       }
 
       if (rut) {
-        formDataToSend.append("rut", rut);
+        formDataToSend.append("rut_pdf", rut);
       }
       if (certificadoBancario) {
-        formDataToSend.append("certificado_bancario", certificadoBancario);
+        formDataToSend.append("certificado_bancario_pdf", certificadoBancario);
       }
       if (d10) {
-        formDataToSend.append("d10", d10);
+        formDataToSend.append("d10_pdf", d10);
       }
       if (tabulado) {
-        formDataToSend.append("tabulado", tabulado);
+        formDataToSend.append("tabulado_pdf", tabulado);
       }
       if (matriculaFinanciera) {
-        formDataToSend.append("matricula_financiera", matriculaFinanciera);
+        formDataToSend.append("estado_mat_financiera_pdf", matriculaFinanciera);
       }
       if (hojaVida) {
-        formDataToSend.append("hoja_vida", hojaVida);
+        formDataToSend.append("hoja_vida_pdf", hojaVida);
       }
       if (certificadoLaboral) {
-        formDataToSend.append("certificado_laboral", certificadoLaboral);
+        formDataToSend.append("certificado_laboral_pdf", certificadoLaboral);
       }
       if (certificadoEstudios) {
-        formDataToSend.append("certificado_estudios", certificadoEstudios);
+        formDataToSend.append("certificado_academico_pdf", certificadoEstudios);
       }
 
-      // Realizar la solicitud POST al backend
 
-      //Hacer las peticiones dependiendo de la posicion
-
-      if (posicion === "Docente") {} else if (posicion === "Administrativo") {} else {}
-
-      const responseEstudiante = await axios.post(
-        `${API_BASE_URL}/estudiante/est/`,
-        formDataToSend,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        },
-      );
-      if (responseEstudiante.status === 201) {
-        console.log("Estudiante agregado con éxito");
-        localStorage.setItem("id_estudiante", responseEstudiante.data.id);
-        console.log(
-          "ID del estudiante guardado en localStorage:",
-          responseEstudiante.data.id,
-        );
-
-        alert("Registro exitoso");
-        router.push("/auth/login"); // Redirigir a la página de login
-      } else {
-        console.error(
-          "Error al agregar el estudiante:",
-          responseEstudiante.status,
-        );
-      }
-    } catch (error) {
-      console.error("Error de conexión:", error);
-      alert(
-        "Acudiente: hubo un error de conexión al intentar crear el estudiante.",
-      );
+    // Determina el endpoint según la posición
+    let endpoint = "";
+    if (posicion === "Docente") {
+      endpoint = `${API_BASE_URL}/profesor/prof/`;
+    } else if (posicion === "Administrativo") {
+      endpoint = `${API_BASE_URL}/monitor_administrativo/mon/`;
+    } else if (posicion === "Académico") {
+      endpoint = `${API_BASE_URL}/monitor_academico/mon/`;
+    } else {
+      alert("Selecciona una posición válida.");
+      return;
     }
-  };
+
+    const response = await axios.post(endpoint, formDataToSend, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    if (response.status === 201) {
+      alert("Registro exitoso");
+      router.push("/auth/login");
+    } else {
+      alert("Error al registrar. Intenta de nuevo.");
+    }
+  } catch (error: any) {
+    alert(error.response?.data?.detail || "Error de conexión");
+  }
+};
+
 
   // Manejo de estado para mostrar campos de discapacidad
   const [mostrarTipoDiscapacidad, setTipoDiscapacidad] = useState(false);
@@ -681,7 +669,7 @@ export default function Registro() {
                 id="grado_escolaridad"
                 name="grado_escolaridad"
                 label="Grado de escolaridad"
-                required
+                // required
                 value={formData.grado_escolaridad || ""}
                 onChange={(e) =>
                   setFormData({

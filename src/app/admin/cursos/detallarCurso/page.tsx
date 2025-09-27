@@ -15,7 +15,6 @@ import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 
 import { useRouter } from "next/navigation";
-import internal from "stream";
 
 export default function DetallarCurso() {
   interface Curso {

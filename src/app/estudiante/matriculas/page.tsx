@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../config";
 import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import Typography from "@mui/material/Typography";
 import CardHeader from "@mui/material/CardHeader";
 import CardActions from "@mui/material/CardActions";
 import { CardMedia } from "@mui/material";
@@ -118,7 +116,7 @@ export default function Matriculas() {
         setLoading(false);
         console.log("Ofertas academicas", res.data);
       })
-      .catch((err) => {
+      .catch(() => {
         setError("Error al cargar las matrículas");
         setLoading(false);
       });

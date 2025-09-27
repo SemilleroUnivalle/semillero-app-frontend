@@ -84,8 +84,6 @@ export default function ModificarOferta() {
 
   useEffect(() => {
     const storedOferta = localStorage.getItem("ofertaSeleccionada");
-    const ofertas: Oferta[] = storedOferta ? JSON.parse(storedOferta) : [];
-
     if (storedOferta) {
       const ofertas: Oferta[] = JSON.parse(storedOferta);
 

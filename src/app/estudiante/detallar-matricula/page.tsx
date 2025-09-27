@@ -3,18 +3,12 @@
 import {
   TextField,
   InputLabel,
-  Select,
-  MenuItem,
-  FormControl,
   CircularProgress,
-  Avatar,
   Button,
   Typography,
   Box,
-  SelectChangeEvent,
   Snackbar,
   Alert,
-  Switch,
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
@@ -23,25 +17,8 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../config";
-import { useRouter } from "next/navigation";
 
 // Interfaces para Departamentos y Municipios
-interface Departamento {
-  id: number;
-  nombre: string;
-}
-interface DepartamentoApi {
-  id: number;
-  name: string;
-}
-interface Ciudad {
-  id: number;
-  nombre: string;
-}
-interface CiudadApi {
-  id: number;
-  name: string;
-}
 
 export interface Acudiente {
   id_acudiente: number;
@@ -134,24 +111,7 @@ export interface MatriculaResponse {
   certificado: string;
 }
 
-const grados: string[] = [
-  "1",
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "10",
-  "11",
-  "Egresado colegios",
-  "Docente",
-];
-
 export default function DetallarMatricula() {
-  const router = useRouter();
 
   const [estudiante, setEstudiante] = useState<any>(null);
   const [matricula, setMatricula] = useState<any>(null);

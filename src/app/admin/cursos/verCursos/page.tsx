@@ -254,19 +254,6 @@ export default function VerCursos() {
     }
   };
 
-  const todosLosCursos = Object.keys(modulosPorCategoria).flatMap(
-    (nombreCategoria) =>
-      modulosPorCategoria[nombreCategoria].map((mod) => ({
-        id: mod.id_modulo,
-        nombre: mod.nombre_modulo,
-        descripcion: mod.descripcion_modulo,
-        id_area: mod.id_area,
-        area: mod.id_area.nombre_area,
-        id_categoria: mod.id_categoria,
-        categoria: nombreCategoria,
-        moduloCompleto: mod,
-      })),
-  );
 
   //Barra de busqueda
 

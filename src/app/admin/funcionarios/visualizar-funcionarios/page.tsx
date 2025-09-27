@@ -15,7 +15,6 @@ import {
   Tooltip,
   Snackbar,
   Alert,
-  dividerClasses,
 } from "@mui/material";
 
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
@@ -28,7 +27,7 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { API_BASE_URL } from "../../../../../config";
 import { useRouter } from "next/navigation";
 
-export default function VerRegistros() {
+export default function VisualizarFuncionarios() {
   const router = useRouter();
 
   const columns: GridColDef[] = [
@@ -37,13 +36,13 @@ export default function VerRegistros() {
     { field: "nombre", headerName: "Nombres", flex: 1 },
     { field: "email", headerName: "Correo Electrónico", flex: 1 },
     {
-      field: "estamento",
-      headerName: "Estamento",
+      field: "tipo",
+      headerName: "Tipo",
       flex: 1,
     },
     {
-      field: "grado",
-      headerName: "Grado",
+      field: "area_desempeño",
+      headerName: "Área de Desempeño",
       flex: 0.5,
     },
     {
@@ -69,10 +68,10 @@ export default function VerRegistros() {
                 const rowData = params.row;
 
                 localStorage.setItem(
-                  "inscritoSeleccionado",
+                  "funcionarioSeleccionado",
                   JSON.stringify(rowData),
                 ); // 👉 Guarda la fila completa como JSON
-                router.push("/admin/registros/detallarRegistro/");
+                router.push("/admin/funcionarios/detallar-funcionario/");
               }}
             />
           </Tooltip>
@@ -89,54 +88,17 @@ export default function VerRegistros() {
 
   const paginationModel = { page: 0, pageSize: 50 };
 
-  interface EstudianteRow {
+  interface FuncionarioRow {
     id: number;
     apellido: string;
     nombre: string;
     email: string;
-    direccion: string;
-    periodo: string;
-    modulo: string;
-    estamento: string;
-    grado: string;
+    tipo: string;
+    area_desempeño: string;
     estado: boolean;
   }
 
-  interface Estudiante {
-    id_estudiante: number;
-    nombre: string;
-    apellido: string;
-    contrasena: string;
-    numero_documento: string;
-    email: string;
-    is_active: boolean;
-    ciudad_residencia: string;
-    eps: string;
-    grado: string;
-    colegio: string;
-    grado_documento: string;
-    genero: string;
-    fecha_nacimiento: string;
-    telefono_fijo: string;
-    celular: string;
-    departamento_residencia: string;
-    comuna_residencia: string;
-    direccion_residencia: string;
-    estamento: string;
-    discapacidad: boolean;
-    grado_discapacidad: string;
-    descripcion_discapacidad: string;
-    area_desempeño: string | null;
-    grado_escolaridad: string | null;
-    documento_identidad: string | null;
-    recibo_pago: string | null;
-    foto: string | null;
-    constancia_estudios: string | null;
-    user: number;
-    acudiente: number;
-  }
-
-  const [rows, setRows] = useState<EstudianteRow[]>([]);
+  const [rows, setRows] = useState<FuncionarioRow[]>([]);
   const [success, setSuccess] = useState(false);
 
   const [loading, setLoading] = useState(true);
@@ -144,7 +106,7 @@ export default function VerRegistros() {
   // Función para eliminar un inscrito
   const handleDelete = async (id: number) => {
     const confirmDelete = window.confirm(
-      "¿Estás seguro de que deseas eliminar este inscrito?",
+      "¿Estás seguro de que deseas eliminar este funcionario?",
     );
     if (!confirmDelete) return;
 
@@ -176,27 +138,79 @@ export default function VerRegistros() {
           token = user.token;
         }
 
-        const response = await axios.get(`${API_BASE_URL}/estudiante/est/`, {
+        const responseProfesor = await axios.get(`${API_BASE_URL}/profesor/prof/`, {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        });
+        const responseMonitorAcad = await axios.get(`${API_BASE_URL}/monitor_academico/mon/`, {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        });
+        const responseMonitorAdmin = await axios.get(`${API_BASE_URL}/monitor_administrativo/mon/`, {
           headers: {
             Authorization: `Token ${token}`,
           },
         });
 
-        if (response.status === 200) {
-          // Formatea los datos para la tabla
-        const formateado = response.data.map((student: any) => ({
-          id: student.id_estudiante,
-          apellido: student.apellido || "",
-          nombre: student.nombre || "",
-          email: student.email || "",
-          direccion: student.direccion_residencia || "",
-          estamento: student.estamento || "",
-          grado: student.grado || "", // No viene en el endpoint, lo dejas vacío
-          estado: student.is_active,
-        }));
 
-        setRows(formateado);
-        }
+        if (
+  responseProfesor.status === 200 &&
+  responseMonitorAcad.status === 200 &&
+  responseMonitorAdmin.status === 200
+) {
+  const profesores = Array.isArray(responseProfesor.data)
+    ? responseProfesor.data
+    : [];
+
+  const monitoresAcad = Array.isArray(responseMonitorAcad.data)
+    ? responseMonitorAcad.data
+    : [];
+
+  const monitoresAdmin = Array.isArray(responseMonitorAdmin.data)
+    ? responseMonitorAdmin.data
+    : [];
+
+  const formateadoProfesores = profesores.map((profesor: any) => ({
+    id: profesor.id,
+    apellido: profesor.apellido || "",
+    nombre: profesor.nombre || "",
+    email: profesor.email || "",
+    tipo: "Profesor",
+    area_desempeño: profesor.area_desempeño || "",
+    estado: profesor.is_active,
+  }));
+
+  const formateadoMonAcad = monitoresAcad.map((monitor: any) => ({
+    id: monitor.id,
+    apellido: monitor.apellido || "",
+    nombre: monitor.nombre || "",
+    email: monitor.email || "",
+    tipo: "Monitor Académico",
+    area_desempeño: monitor.area_desempeño || "",
+    estado: monitor.is_active,
+  }));
+
+  const formateadoMonAdmin = monitoresAdmin.map((monitor: any) => ({
+    id: monitor.id,
+    apellido: monitor.apellido || "",
+    nombre: monitor.nombre || "",
+    email: monitor.email || "",
+    tipo: "Monitor Administrativo",
+    area_desempeño: monitor.area_desempeño || "",
+    estado: monitor.is_active,
+  }));
+
+  // Une todos los arrays
+  const todosFuncionarios = [
+    ...formateadoProfesores,
+    ...formateadoMonAcad,
+    ...formateadoMonAdmin,
+  ];
+
+  setRows(todosFuncionarios);
+}
 
         setLoading(false);
       } catch (error) {
@@ -210,24 +224,24 @@ export default function VerRegistros() {
 
   // Filtros
 
-  const [selectedEstamento, setSelectedEstamento] = React.useState<string[]>(
+  const [selectedTipo, setSelectedTipo] = React.useState<string[]>(
     [],
   );
-  const [selectedGrado, setSelectedGrado] = React.useState<string[]>([]);
+  const [selectedArea, setSelectedArea] = React.useState<string[]>([]);
   const [selectedEstado, setSelectedEstado] = React.useState<string[]>([]);
 
-  const handleChangeEstamento = (event: SelectChangeEvent<string[]>) => {
+  const handleChangeTipo = (event: SelectChangeEvent<string[]>) => {
     const {
       target: { value },
     } = event;
-    setSelectedEstamento(typeof value === "string" ? value.split(",") : value);
+    setSelectedTipo(typeof value === "string" ? value.split(",") : value);
   };
 
-  const handleChangeGrado = (event: SelectChangeEvent<string[]>) => {
+  const handleChangeArea = (event: SelectChangeEvent<string[]>) => {
     const {
       target: { value },
     } = event;
-    setSelectedGrado(typeof value === "string" ? value.split(",") : value);
+    setSelectedArea(typeof value === "string" ? value.split(",") : value);
   };
 
   const handleChangeEstado = (event: SelectChangeEvent<string[]>) => {
@@ -266,27 +280,27 @@ export default function VerRegistros() {
     if (rows.length === 0) return rows;
     return rows.filter((row) => {
 
-      const estamentoMatch =
-        selectedEstamento.length === 0 ||
-        selectedEstamento.includes(row.estamento);
+      const tipoMatch =
+        selectedTipo.length === 0 ||
+        selectedTipo.includes(row.area_desempeño);
 
-      const gradoMatch =
-        selectedGrado.length === 0 || selectedGrado.includes(row.grado);
+      const areaMatch =
+        selectedArea.length === 0 || selectedArea.includes(row.area_desempeño);
 
       const estadoAsString = row.estado ? "Verificado" : "No verificado";
       const estadoMatch =
         selectedEstado.length === 0 || selectedEstado.includes(estadoAsString);
 
       return (
-        estamentoMatch &&
-        gradoMatch &&
+        tipoMatch &&
+        areaMatch &&
         estadoMatch
       );
     });
   }, [
     rows,
-    selectedEstamento,
-    selectedGrado,
+    selectedTipo,
+    selectedArea,
     selectedEstado,
   ]);
 
@@ -307,7 +321,7 @@ export default function VerRegistros() {
           severity="success"
           sx={{ width: "100%" }}
         >
-          Inscrito eliminado exitosamente.
+          Funcionario eliminado exitosamente.
         </Alert>
       </Snackbar>
       <div className="mx-auto mt-4 flex w-11/12 justify-around rounded-2xl bg-white p-2 shadow-md">
@@ -315,41 +329,41 @@ export default function VerRegistros() {
 
         {/* Filtro por Estamento */}
         <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
-          <InputLabel id="filtro-estamento">Estamentos</InputLabel>
+          <InputLabel id="filtro-estamento">Tipo</InputLabel>
           <Select
             labelId="filtro-estamento"
             id="filtro-estamento"
             label="filtro-estamento"
             multiple
-            value={selectedEstamento}
-            onChange={handleChangeEstamento}
+            value={selectedTipo}
+            onChange={handleChangeTipo}
             renderValue={(selected) => selected.join(", ")}
           >
-            {[...new Set(rows.map((row) => row.estamento))].map((estamento) => (
-              <MenuItem key={estamento} value={estamento}>
-                <Checkbox checked={selectedEstamento.indexOf(estamento) > -1} />
-                <ListItemText primary={estamento} />
+            {[...new Set(rows.map((row) => row.tipo))].map((tipo) => (
+              <MenuItem key={tipo} value={tipo}>
+                <Checkbox checked={selectedTipo.indexOf(tipo) > -1} />
+                <ListItemText primary={tipo} />
               </MenuItem>
             ))}
           </Select>
         </FormControl>
 
-        {/* Filtro por Grado */}
+        {/* Filtro por Area de desempeño */}
         <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
-          <InputLabel id="filtro-grado">Grado</InputLabel>
+          <InputLabel id="filtro-area">Area de desempeño</InputLabel>
           <Select
-            labelId="filtro-grado"
-            id="filtro-grado"
-            label="filtro-grado"
+            labelId="filtro-area"
+            id="filtro-area"
+            label="filtro-area"
             multiple
-            value={selectedGrado}
-            onChange={handleChangeGrado}
+            value={selectedArea}
+            onChange={handleChangeArea}
             renderValue={(selected) => selected.join(", ")}
           >
-            {[...new Set(rows.map((row) => row.grado))].map((grado) => (
-              <MenuItem key={grado} value={grado}>
-                <Checkbox checked={selectedGrado.indexOf(grado) > -1} />
-                <ListItemText primary={grado} />
+            {[...new Set(rows.map((row) => row.area_desempeño))].map((area) => (
+              <MenuItem key={area} value={area}>
+                <Checkbox checked={selectedArea.indexOf(area) > -1} />
+                <ListItemText primary={area} />
               </MenuItem>
             ))}
           </Select>
@@ -378,14 +392,14 @@ export default function VerRegistros() {
       </div>
 
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 text-center shadow-md">
-        <Button
+        {/* <Button
           variant="outlined"
           startIcon={<FileDownloadIcon />}
           className="m-4 rounded-xl border-primary text-primary hover:bg-primary hover:text-white"
           onClick={handleExportExcel}
         >
           Exportar a Excel
-        </Button>
+        </Button> */}
         <Paper
           className="border-none shadow-none"
           sx={{ height: 800, width: "100%" }}

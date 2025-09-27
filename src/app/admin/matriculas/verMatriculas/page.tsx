@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { TrashIcon } from "@heroicons/react/24/outline";
 
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 
@@ -147,8 +147,8 @@ export default function VerMatriculas() {
 
   const [rows, setRows] = useState<EstudianteRow[]>([]);
   const [success, setSuccess] = useState(false);
-
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
+
   const [loading, setLoading] = useState(true);
 
   // Función para eliminar una matricula
@@ -192,7 +192,8 @@ export default function VerMatriculas() {
           },
         });
 
-        // Formatea los datos para la tabla
+        if (response.status === 200) {
+          // Formatea los datos para la tabla
         const formateado = response.data.map((matricula: any) => ({
           id: matricula.id_inscripcion,
           apellido: matricula.estudiante.apellido || "",
@@ -213,7 +214,9 @@ export default function VerMatriculas() {
         console.log("Datos formateados:", formateado); // Verifica los datos formateados
 
         setRows(formateado);
+        }
         setEstudiantes(response.data);
+
         setLoading(false);
       } catch (error) {
         console.error("Error al obtener los datos de matriculas:", error);
@@ -329,6 +332,10 @@ export default function VerMatriculas() {
     selectedTipo,
     selectedEstado,
   ]);
+
+  if(loading!){
+    return ( <div>Loading...</div> )
+  }
 
   return (
     <div>
