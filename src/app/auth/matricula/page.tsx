@@ -16,10 +16,10 @@ import {
   FormLabel,
   Button,
   SelectChangeEvent,
+  Switch,
 } from "@mui/material";
 
 export default function Matricula() {
-
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -128,10 +128,10 @@ export default function Matricula() {
       formDataToSend.append("certificado", certificado);
     }
 
-     // Imprime todos los datos que se van a enviar
-  for (let pair of formDataToSend.entries()) {
-    console.log(`${pair[0]}:`, pair[1]);
-  }
+    // Imprime todos los datos que se van a enviar
+    for (let pair of formDataToSend.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
 
     try {
       await axios.post(`${API_BASE_URL}/matricula/mat/`, formDataToSend, {
@@ -141,7 +141,6 @@ export default function Matricula() {
       });
       alert("Matrícula enviada correctamente.");
       router.push("/auth/login"); // Redirige al login
-   
     } catch (error) {
       console.error("Error al enviar la matrícula:", error);
       alert("Hubo un error al enviar la matrícula.");
@@ -287,25 +286,32 @@ export default function Matricula() {
                 type="file"
                 accept=".pdf"
                 className="block w-full text-sm text-gray-500"
-                onChange={(e) =>
-                  setCertificado(e.target.files?.[0] || null)
-                }
+                onChange={(e) => setCertificado(e.target.files?.[0] || null)}
               />
             </div>
           )}
         </div>
         {/* Checkbox para términos */}
-        <div className="my-4 flex items-center justify-center gap-2">
-          <input
-            type="checkbox"
-            id="terminos"
+        <div className="my-4 flex flex-col items-center justify-center gap-2 py-3">
+          <label
+            htmlFor="terminos"
+            className="text-justify text-sm text-gray-600"
+          >
+            Al enviar este formulario, autorizo a la Universidad del Valle para
+            que haga uso de mis datos personales con fines académicos,
+            estadísticos y/o socioeducativos, de acuerdo con lo establecido en
+            la normatividad vigente. <br /> <br />
+            Declaro que he leído y acepto las Condiciones Generales y estoy de
+            acuerdo con la <a className="underline" target="_blank" href="https://drive.google.com/file/d/1rP_wVpq9jBoj-aaajw1FI2jXH4cUhG_g/view?pli=1">Política de Privacidad</a> en relación con el tratamiento
+            de mis datos personales bajo la Universidad del Valle.
+          </label>
+
+          <Switch
             checked={terminos}
             onChange={(e) => setTerminos(e.target.checked)}
+            id="terminos"
             required
           />
-          <label htmlFor="terminos" className="text-sm">
-            Acepto los términos de la inscripción
-          </label>
         </div>
         <Button
           type="submit"
