@@ -59,7 +59,31 @@ const grados: string[] = [
 ];
 
 const generos = ["Masculino", "Femenino"];
-
+const epss = [
+  "Emssanar",
+  "Sura",
+  "Sanitas",
+  "Nueva EPS",
+  "Compensar",
+  "Coomeva",
+  "Salud Total",
+  "Famisanar",
+  "Cafesalud",
+  "Medimás",
+  "SOS",
+  "Cruz Blanca",
+  "Aliansalud",
+  "Colsubsidio",
+  "Ecoopsos",
+  "Comfenalco Valle",
+  "Comfandi",
+  "Mutual Ser",
+  "Caprecom",
+  "EPS Convida",
+  "EPS Savia Salud",
+  "EPS Comfachocó",
+  "EPS Comfaoriente",
+];
 export default function Registro() {
   const router = useRouter();
 
@@ -163,11 +187,6 @@ export default function Registro() {
         }
 
         console.log("Acudiente agregado con éxito");
-        // Actualiza formData con el id_acudiente
-        // setFormData((prevFormData) => ({
-        //   ...prevFormData,
-        //   id_acudiente,
-        // }));
 
         const responseEstudiante = await axios.post(
           `${API_BASE_URL}/estudiante/est/`,
@@ -437,6 +456,7 @@ export default function Registro() {
                 }
               />
 
+              {/* Campo Genero */}
               <Autocomplete
                 className="inputs-textfield w-full sm:w-1/3"
                 freeSolo
@@ -542,10 +562,6 @@ export default function Registro() {
               onChange={(e) =>
                 setFormData({ ...formData, ciudad_residencia: e.target.value })
               }
-              // value={formData.ciudad_residencia}
-              // onChange={(e) =>
-              //   setFormData({ ...formData, ciudad_residencia: e.target.value })
-              // }
             >
               {cargandoCiudades ? (
                 <MenuItem disabled>
@@ -597,23 +613,25 @@ export default function Registro() {
           Información de Salud
         </h2>
         <div className="flex flex-wrap justify-around gap-4 text-gray-600">
-          {/* Campo Selector EPS*/}
-          <FormControl className="inputs-textfield w-full sm:w-1/4">
-            <InputLabel id="eps">EPS</InputLabel>
-            <Select
-              labelId="eps"
-              id="eps"
-              label="EPS"
-              required
-              value={formData.eps || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, eps: e.target.value })
-              }
-            >
-              <MenuItem value={"Emssanar"}>Emssanar</MenuItem>
-              {/* Puedes agregar más opciones si es necesario */}
-            </Select>
-          </FormControl>
+          {/* Campo eps */}
+          <Autocomplete
+            className="inputs-textfield w-full sm:w-1/3"
+            freeSolo
+            options={epss}
+            value={formData.eps}
+            onChange={(_, newValue) =>
+              setFormData({ ...formData, eps: newValue || "" })
+            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="EPS"
+                required
+                variant="outlined"
+                fullWidth
+              />
+            )}
+          />
 
           {/* Campo Select Discapacidad */}
           <FormControl className="inputs-textfield w-full sm:w-1/4">

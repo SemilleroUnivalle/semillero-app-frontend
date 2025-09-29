@@ -16,6 +16,7 @@ import {
   Alert,
   ToggleButton,
   ToggleButtonGroup,
+  Autocomplete,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -147,6 +148,33 @@ const grados: string[] = [
   "11",
   "Egresado colegios",
   "Docente",
+];
+
+const generos = ["Masculino", "Femenino"];
+const epss = [
+  "Emssanar",
+  "Sura",
+  "Sanitas",
+  "Nueva EPS",
+  "Compensar",
+  "Coomeva",
+  "Salud Total",
+  "Famisanar",
+  "Cafesalud",
+  "Medimás",
+  "SOS",
+  "Cruz Blanca",
+  "Aliansalud",
+  "Colsubsidio",
+  "Ecoopsos",
+  "Comfenalco Valle",
+  "Comfandi",
+  "Mutual Ser",
+  "Caprecom",
+  "EPS Convida",
+  "EPS Savia Salud",
+  "EPS Comfachocó",
+  "EPS Comfaoriente",
 ];
 
 export default function DetallarMatricula() {
@@ -506,7 +534,6 @@ export default function DetallarMatricula() {
     }
   };
 
-
   // Estados para las verificaciones
   const [estadoInformacion, setEstadoInformacion] = useState<
     true | false | null
@@ -518,9 +545,9 @@ export default function DetallarMatricula() {
     null,
   );
 
-  const [estadoReciboPago, setEstadoReciboPago] = useState<
-    true | false | null
-  >(null);
+  const [estadoReciboPago, setEstadoReciboPago] = useState<true | false | null>(
+    null,
+  );
   const [estadoCertificado, setEstadoCertificado] = useState<
     true | false | null
   >(null);
@@ -687,7 +714,6 @@ export default function DetallarMatricula() {
               }
               InputProps={{ readOnly: !editable }}
             />
-
             <TextField
               className={
                 editable
@@ -704,7 +730,6 @@ export default function DetallarMatricula() {
               }
               InputProps={{ readOnly: !editable }}
             />
-
             {/* Campo Tipo de Documento */}
             <FormControl
               className={
@@ -736,7 +761,6 @@ export default function DetallarMatricula() {
                 </MenuItem>
               </Select>
             </FormControl>
-
             <TextField
               className={
                 editable
@@ -753,66 +777,34 @@ export default function DetallarMatricula() {
                 })
               }
             />
-
-            <FormControl
+            {/* Campo Genero */}
+            <Autocomplete
               className={
                 editable
                   ? "inputs-textfield w-full sm:w-1/4"
                   : "inputs-textfield-readonly w-full sm:w-1/4"
               }
-            >
-              <InputLabel id="genero">Género</InputLabel>
-              <Select
-                labelId="genero"
-                id="genero"
-                label="Género"
-                required
-                value={formDataEstudiante.genero}
-                onChange={
-                  editable
-                    ? (e) => {
-                        setFormDataEstudiante({
-                          ...formDataEstudiante,
-                          genero: e.target.value,
-                        });
-                        // setMostrarOtroGenero(e.target.value === "Otro");
-                      }
-                    : undefined
-                }
-                inputProps={{ readOnly: !editable }}
-                disabled={!editable}
-              >
-                <MenuItem value="Masculino">Masculino</MenuItem>
-                <MenuItem value="Femenino">Femenino</MenuItem>
-                <MenuItem value="Otro">Otro</MenuItem>
-              </Select>
-            </FormControl>
-            {/* {mostrarOtroGenero && (
-              <TextField
-                className={
-                  editable
-                    ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                    : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-                }
-                label="Otro género"
-                name="otro_genero"
-                variant="outlined"
-                type="text"
-                fullWidth
-                required
-                value={formDataEstudiante.otro_genero || ""}
-                onChange={
-                  editable
-                    ? (e) =>
-                        setFormDataEstudiante({
-                          ...formDataEstudiante,
-                          otro_genero: e.target.value,
-                        })
-                    : undefined
-                }
-                InputProps={{ readOnly: !editable }}
-              />
-            )} */}
+              freeSolo
+              options={generos}
+              value={formDataEstudiante.genero}
+              disabled={!editable}
+              onChange={(_, newValue) =>
+                setFormDataEstudiante({
+                  ...formDataEstudiante,
+                  genero: newValue || "",
+                })
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Género"
+                  required
+                  variant="outlined"
+                  fullWidth
+                />
+              )}
+            />
+            ß
             <TextField
               className={
                 editable
@@ -987,21 +979,32 @@ export default function DetallarMatricula() {
           </h2>
 
           <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-            <TextField
+            {/* Campo eps */}
+            <Autocomplete
               className={
                 editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+                  ? "inputs-textfield w-full sm:w-1/4"
+                  : "inputs-textfield-readonly w-full sm:w-1/4"
               }
-              label="EPS"
+              freeSolo
+              options={epss}
               value={formDataEstudiante.eps}
-              onChange={(e) =>
+              onChange={(_, newValue) =>
                 setFormDataEstudiante({
                   ...formDataEstudiante,
-                  eps: e.target.value,
+                  eps: newValue || "",
                 })
               }
-              InputProps={{ readOnly: !editable }}
+              disabled={!editable}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="EPS"
+                  required
+                  variant="outlined"
+                  fullWidth
+                />
+              )}
             />
 
             {/* Campo Select Discapacidad */}
@@ -1465,41 +1468,6 @@ export default function DetallarMatricula() {
       </h2>
       {/* Información de Matricula */}
       <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-        {/* <FormControl
-  className={
-    editable
-      ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-      : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-  }
-> */}
-        {/* <InputLabel id="modulo-label">Módulo inscrito</InputLabel>
-  <Select
-    labelId="modulo-label"
-    id="modulo"
-    name="modulo"
-    value={formDataMatricula.modulo.id_modulo}
-    onChange={(e: SelectChangeEvent<number>) => {
-      // Busca el módulo seleccionado en tu lista de módulos
-      const moduloSeleccionado = listaModulos.find(
-        (modulo) => modulo.id_modulo === Number(e.target.value)
-      );
-      if (moduloSeleccionado) {
-        setFormDataMatricula({
-          ...formDataMatricula,
-          modulo: moduloSeleccionado,
-        });
-      }
-    }}
-    disabled={!editable}
-    label="Módulo inscrito"
-  >
-    {listaModulos.map((modulo) => (
-      <MenuItem key={modulo.id_modulo} value={modulo.id_modulo}>
-        {modulo.nombre_modulo}
-      </MenuItem>
-    ))}
-  </Select>
-</FormControl> */}
 
         <TextField
           className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"

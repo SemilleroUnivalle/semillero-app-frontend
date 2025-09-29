@@ -16,6 +16,7 @@ import {
   Alert,
   ToggleButton,
   ToggleButtonGroup,
+  Autocomplete,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -73,6 +74,33 @@ interface FuncionarioInterface {
   tabulado_pdf: string;
   estado_mat_financiera_pdf: string;
 }
+
+const generos = ["Masculino", "Femenino"];
+const epss = [
+  "Emssanar",
+  "Sura",
+  "Sanitas",
+  "Nueva EPS",
+  "Compensar",
+  "Coomeva",
+  "Salud Total",
+  "Famisanar",
+  "Cafesalud",
+  "Medimás",
+  "SOS",
+  "Cruz Blanca",
+  "Aliansalud",
+  "Colsubsidio",
+  "Ecoopsos",
+  "Comfenalco Valle",
+  "Comfandi",
+  "Mutual Ser",
+  "Caprecom",
+  "EPS Convida",
+  "EPS Savia Salud",
+  "EPS Comfachocó",
+  "EPS Comfaoriente",
+];
 
 export default function DetallarFuncionarios() {
   const router = useRouter();
@@ -183,7 +211,6 @@ export default function DetallarFuncionarios() {
           const user = JSON.parse(userString);
           token = user.token;
         }
-        
 
         if (tipo === "Monitor Académico") {
           endpoint = `${API_BASE_URL}/monitor_academico/mon/${id}/`;
@@ -294,15 +321,12 @@ export default function DetallarFuncionarios() {
         console.log(`${pair[0]}:`, pair[1]);
       }
       console.log("Endpoint:", endpoint);
-      const response = await axios.patch(endpoint,
-        formDataToSend,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Token ${token}`,
-          },
+      const response = await axios.patch(endpoint, formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Token ${token}`,
         },
-      );
+      });
 
       if (response.status === 200) {
         alert("Actualización exitosa");
@@ -529,62 +553,34 @@ export default function DetallarFuncionarios() {
               }
             />
 
-            <FormControl
+            {/* Campo Genero */}
+            <Autocomplete
               className={
                 editable
                   ? "inputs-textfield w-full sm:w-1/4"
                   : "inputs-textfield-readonly w-full sm:w-1/4"
               }
-            >
-              <InputLabel id="genero">Género</InputLabel>
-              <Select
-                labelId="genero"
-                id="genero"
-                label="Género"
-                required
-                value={formData.genero}
-                onChange={
-                  editable
-                    ? (e) => {
-                        setFormData({ ...formData, genero: e.target.value });
-                        setMostrarOtroGenero(e.target.value === "Otro");
-                      }
-                    : undefined
-                }
-                inputProps={{ readOnly: !editable }}
-                disabled={!editable}
-              >
-                <MenuItem value="Masculino">Masculino</MenuItem>
-                <MenuItem value="Femenino">Femenino</MenuItem>
-                <MenuItem value="Otro">Otro</MenuItem>
-              </Select>
-            </FormControl>
-            {/* {mostrarOtroGenero && (
-              <TextField
-                className={
-                  editable
-                    ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                    : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-                }
-                label="Otro género"
-                name="otro_genero"
-                variant="outlined"
-                type="text"
-                fullWidth
-                required
-                value={formData.otro_genero || ""}
-                onChange={
-                  editable
-                    ? (e) =>
-                        setFormData({
-                          ...formData,
-                          otro_genero: e.target.value,
-                        })
-                    : undefined
-                }
-                InputProps={{ readOnly: !editable }}
-              />
-            )} */}
+              freeSolo
+              options={generos}
+              value={formData.genero}
+              disabled={!editable}
+              onChange={(_, newValue) =>
+                setFormData({
+                  ...formData,
+                  genero: newValue || "",
+                })
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Género"
+                  required
+                  variant="outlined"
+                  fullWidth
+                />
+              )}
+            />
+
             <TextField
               className={
                 editable
@@ -750,18 +746,29 @@ export default function DetallarFuncionarios() {
           </h2>
 
           <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-            <TextField
+            {/* Campo eps */}
+            <Autocomplete
               className={
                 editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+                  ? "inputs-textfield w-full sm:w-1/4"
+                  : "inputs-textfield-readonly w-full sm:w-1/4"
               }
-              label="EPS"
+              freeSolo
+              options={epss}
               value={formData.eps}
-              onChange={(e) =>
-                setFormData({ ...formData, eps: e.target.value })
+              onChange={(_, newValue) =>
+                setFormData({ ...formData, eps: newValue || "" })
               }
-              InputProps={{ readOnly: !editable }}
+              disabled={!editable}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="EPS"
+                  required
+                  variant="outlined"
+                  fullWidth
+                />
+              )}
             />
 
             {/* Campo Select Discapacidad */}

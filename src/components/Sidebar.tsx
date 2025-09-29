@@ -8,6 +8,7 @@ import {
   CogIcon,
 } from "@heroicons/react/24/outline";
 import GroupWorkOutlinedIcon from '@mui/icons-material/GroupWorkOutlined';
+import AssignmentIndOutlinedIcon from '@mui/icons-material/AssignmentIndOutlined';
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -21,7 +22,7 @@ const links = [
   {
     name: "Matrículas",
     href: "/admin/matriculas/verMatriculas",
-    icon: UsersIcon,
+    icon: AssignmentIndOutlinedIcon,
   },
   {
     name: "Funcionarios",
