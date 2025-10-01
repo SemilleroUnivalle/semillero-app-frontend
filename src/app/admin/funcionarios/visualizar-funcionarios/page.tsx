@@ -20,8 +20,6 @@ import {
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { TrashIcon } from "@heroicons/react/24/outline";
 
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
-
 import axios from "axios";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { API_BASE_URL } from "../../../../../config";
@@ -155,22 +153,26 @@ export default function VisualizarFuncionarios() {
         });
 
 
-        if (
-  responseProfesor.status === 200 &&
-  responseMonitorAcad.status === 200 &&
-  responseMonitorAdmin.status === 200
-) {
-  const profesores = Array.isArray(responseProfesor.data)
-    ? responseProfesor.data
-    : [];
+const profesores =
+  responseProfesor.status === 204
+    ? []
+    : Array.isArray(responseProfesor.data)
+      ? responseProfesor.data
+      : responseProfesor.data?.results || [];
 
-  const monitoresAcad = Array.isArray(responseMonitorAcad.data)
-    ? responseMonitorAcad.data
-    : [];
+const monitoresAcad =
+  responseMonitorAcad.status === 204
+    ? []
+    : Array.isArray(responseMonitorAcad.data)
+      ? responseMonitorAcad.data
+      : responseMonitorAcad.data?.results || [];
 
-  const monitoresAdmin = Array.isArray(responseMonitorAdmin.data)
-    ? responseMonitorAdmin.data
-    : [];
+const monitoresAdmin =
+  responseMonitorAdmin.status === 204
+    ? []
+    : Array.isArray(responseMonitorAdmin.data)
+      ? responseMonitorAdmin.data
+      : responseMonitorAdmin.data?.results || [];
 
   const formateadoProfesores = profesores.map((profesor: any) => ({
     id: profesor.id,
@@ -210,7 +212,7 @@ export default function VisualizarFuncionarios() {
   ];
 
   setRows(todosFuncionarios);
-}
+
 
         setLoading(false);
       } catch (error) {

@@ -18,7 +18,6 @@ import {
   ToggleButtonGroup,
   Autocomplete,
 } from "@mui/material";
-import { DocumentIcon } from "@heroicons/react/24/outline";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -925,20 +924,6 @@ export default function DetallarRegistro() {
             Información Académica
           </h2>
           <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-            {/* Campo Colegio */}
-            <TextField
-              className={
-                editable
-                  ? "inputs-textfield w-full sm:w-1/4"
-                  : "inputs-textfield-readonly w-full sm:w-1/4"
-              }
-              label="Colegio"
-              value={formData.colegio}
-              onChange={(e) =>
-                setFormData({ ...formData, colegio: e.target.value })
-              }
-              InputProps={{ readOnly: !editable }}
-            />
             {/* Campo Grado */}
             <FormControl
               className={
@@ -976,12 +961,30 @@ export default function DetallarRegistro() {
             {!esDocente ? (
               <>
                 <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
+
+                  {/* Campo Colegio */}
+                  <TextField
+                    className={
+                      editable
+                        ? "inputs-textfield w-full sm:w-1/4"
+                        : "inputs-textfield-readonly w-full sm:w-1/4"
+                    }
+                    label="Colegio"
+                    value={formData.colegio}
+                    onChange={(e) =>
+                      setFormData({ ...formData, colegio: e.target.value })
+                    }
+                    InputProps={{ readOnly: !editable }}
+                  />
+
                   {/* Campo Estamento Colegio */}
-                  <FormControl className={
-                editable
-                  ? "inputs-textfield w-full sm:w-1/4"
-                  : "inputs-textfield-readonly w-full sm:w-1/4"
-              }>
+                  <FormControl
+                    className={
+                      editable
+                        ? "inputs-textfield w-full sm:w-1/4"
+                        : "inputs-textfield-readonly w-full sm:w-1/4"
+                    }
+                  >
                     <InputLabel id="estamento">Estamento</InputLabel>
                     <Select
                       labelId="estamento"

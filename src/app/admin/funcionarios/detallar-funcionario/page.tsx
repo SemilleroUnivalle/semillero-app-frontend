@@ -19,6 +19,7 @@ import {
   Autocomplete,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -73,6 +74,7 @@ interface FuncionarioInterface {
   d10_pdf: string;
   tabulado_pdf: string;
   estado_mat_financiera_pdf: string;
+  tipo: string;
 }
 
 const generos = ["Masculino", "Femenino"];
@@ -145,6 +147,7 @@ export default function DetallarFuncionarios() {
     d10_pdf: "",
     tabulado_pdf: "",
     estado_mat_financiera_pdf: "",
+    tipo: "",
   });
 
   const [success, setSuccess] = useState(false);
@@ -234,6 +237,7 @@ export default function DetallarFuncionarios() {
               ...formData,
               ...res.data,
             });
+            setFormData((prevData) => ({ ...prevData, tipo: tipo }));
           })
           .catch(() => setLoading(false)); // <-- termina la carga en error
       } else {
@@ -277,8 +281,9 @@ export default function DetallarFuncionarios() {
   }, [editable, departamentoSeleccionado, departamentos]);
   1;
 
-  // ...existing code...
+  //Funcion para guardar cambios
   const handleSave = async () => {
+
     try {
       const formDataToSend = new FormData();
 
@@ -288,6 +293,7 @@ export default function DetallarFuncionarios() {
         "id_estudiante",
         "foto",
         "documento_identidad",
+        "tipo",
 
         "is_active",
       ];
@@ -302,12 +308,38 @@ export default function DetallarFuncionarios() {
         formDataToSend.append(key, value);
       }
 
+      // Agregar archivos si existen
       if (fotoPerfil) {
         formDataToSend.append("foto", fotoPerfil);
       }
       if (documentoIdentidad) {
         formDataToSend.append("documento_identidad", documentoIdentidad);
       }
+      if (rut) {
+        formDataToSend.append("rut", rut);
+      }
+      if (certificadoBancario) {
+        formDataToSend.append("certificado_bancario", certificadoBancario);
+      }
+      if (d10) {
+        formDataToSend.append("d10", d10);
+      }
+      if (tabulado) {
+        formDataToSend.append("tabulado", tabulado);
+      }
+      if (matriculaFinanciera) {
+        formDataToSend.append("matricula_financiera", matriculaFinanciera);
+      }
+      if (hojaVida) {
+        formDataToSend.append("hoja_vida", hojaVida);
+      }
+      if (certificadoLaboral) {
+        formDataToSend.append("certificado_laboral", certificadoLaboral);
+      }
+      if (certificadoAcademico) {
+        formDataToSend.append("certificado_academico", certificadoAcademico);
+      }
+
 
       // Obtener token del localStorage
       const userString = localStorage.getItem("user");
@@ -320,6 +352,15 @@ export default function DetallarFuncionarios() {
       for (let pair of formDataToSend.entries()) {
         console.log(`${pair[0]}:`, pair[1]);
       }
+
+      if (formData.tipo === "Monitor Académico") {
+          endpoint = `${API_BASE_URL}/monitor_academico/mon/${formData.id}/`;
+        } else if (formData.tipo === "Monitor Administrativo") {
+          endpoint = `${API_BASE_URL}/monitor_administrativo/mon/${formData.id}/`;
+        } else if (formData.tipo === "Profesor") {
+          endpoint = `${API_BASE_URL}/profesor/prof/${formData.id}/`;
+        }
+
       console.log("Endpoint:", endpoint);
       const response = await axios.patch(endpoint, formDataToSend, {
         headers: {
@@ -336,11 +377,11 @@ export default function DetallarFuncionarios() {
       }
     } catch (error) {
       console.error("Error de conexión:", error);
-      alert("Hubo un error al actualizar el estudiante.");
+      alert("Hubo un error al actualizar el funcionario.");
     }
   };
 
-  // Función para eliminar un inscrito
+  // Función para eliminar un funcionario
   const handleDelete = async (id: number) => {
     const confirmDelete = window.confirm(
       "¿Estás seguro de que deseas eliminar este funcionario?",
@@ -882,370 +923,828 @@ export default function DetallarFuncionarios() {
           <h2 className="text-md my-4 text-center font-semibold text-primary">
             Información Académica
           </h2>
+
           <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-            <TextField
+            {/* Campo cargo o posición */}
+            <FormControl
               className={
                 editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+                  ? "inputs-textfield w-full sm:w-1/4"
+                  : "inputs-textfield-readonly w-full sm:w-1/4"
               }
-              label="Grado Escolaridad"
-              value={formData.grado_escolaridad}
-              onChange={(e) =>
-                setFormData({ ...formData, grado_escolaridad: e.target.value })
-              }
-              InputProps={{ readOnly: !editable }}
-            />
-
-            <TextField
-              className={
-                editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-              }
-              label="Area de Desempeño"
-              value={formData.area_desempeño}
-              onChange={(e) =>
-                setFormData({ ...formData, area_desempeño: e.target.value })
-              }
-              InputProps={{ readOnly: !editable }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Documentos */}
-      <div className="mt-4 flex flex-col items-center">
-        {formData.documento_identidad_pdf && (
-          <Button
-            variant="outlined"
-            color="primary"
-            href={formData.documento_identidad_pdf}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2"
-          >
-            Ver documento de identidad
-          </Button>
-        )}
-
-        {editable && (
-          <div className="my-4 flex flex-col items-center gap-3">
-            <InputLabel id="documento_identidad">
-              Documento de identidad
-            </InputLabel>
-            <Button
-              variant="contained"
-              component="label"
-              className="my-2 rounded-2xl bg-primary"
             >
-              {documentoIdentidad ? "Cambiar Documento" : "Elegir Documento"}
-              <input
-                name="documento_identidad"
-                type="file"
-                accept=".pdf"
-                hidden
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setDocumentoIdentidad(file);
-                  }
-                }}
-              />
-            </Button>
-            {documentoIdentidad && (
-              <Typography variant="caption" color="textSecondary">
-                {documentoIdentidad.name}
-              </Typography>
+              <InputLabel id="posicion">Cargo o posición</InputLabel>
+              <Select
+                labelId="posicion"
+                id="posicion"
+                name="posicion"
+                label="Cargo o posición"
+                required
+                disabled={!editable}
+                value={formData.tipo || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, tipo: e.target.value })
+                }
+              >
+                <MenuItem value="Profesor">Profesor</MenuItem>
+                <MenuItem value="Monitor Académico">Monitor Académico</MenuItem>
+                <MenuItem value="Monitor Administrativo">
+                  Monitor Administrativo
+                </MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* Campo grado de escolaridad */}
+            <FormControl
+              className={
+                editable
+                  ? "inputs-textfield w-full sm:w-1/4"
+                  : "inputs-textfield-readonly w-full sm:w-1/4"
+              }
+            >
+              <InputLabel id="grado_escolaridad">
+                Grado de escolaridad
+              </InputLabel>
+              <Select
+                labelId="grado_escolaridad"
+                id="grado_escolaridad"
+                name="grado_escolaridad"
+                label="Grado de escolaridad"
+                required
+                disabled={!editable}
+                value={formData.grado_escolaridad || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    grado_escolaridad: e.target.value,
+                  })
+                }
+              >
+                <MenuItem value="Técnico">Técnico</MenuItem>
+                <MenuItem value="Tecnólogo">Tecnólogo</MenuItem>
+                <MenuItem value="Licenciatura">Licenciatura</MenuItem>
+                <MenuItem value="Especialización">Especialización</MenuItem>
+                <MenuItem value="Maestría">Maestría</MenuItem>
+                <MenuItem value="Doctorado">Doctorado</MenuItem>
+                <MenuItem value="Otro">Otro</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* Campo área de enseñanza */}
+            <FormControl
+              className={
+                editable
+                  ? "inputs-textfield w-full sm:w-1/4"
+                  : "inputs-textfield-readonly w-full sm:w-1/4"
+              }
+            >
+              <InputLabel id="area_ensenanza">Área de enseñanza</InputLabel>
+              <Select
+                labelId="area_ensenanza"
+                id="area_ensenanza"
+                name="area_ensenanza"
+                label="Área de enseñanza"
+                disabled={!editable}
+                required
+                value={formData.area_desempeño || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    area_desempeño: e.target.value,
+                  })
+                }
+              >
+                <MenuItem value="Matemáticas">Matemáticas</MenuItem>
+                <MenuItem value="Ciencias Naturales">
+                  Ciencias Naturales
+                </MenuItem>
+                <MenuItem value="Ciencias Sociales">Ciencias Sociales</MenuItem>
+                <MenuItem value="Lengua Castellana">Lengua Castellana</MenuItem>
+                <MenuItem value="Inglés">Inglés</MenuItem>
+                <MenuItem value="Educación Física">Educación Física</MenuItem>
+                <MenuItem value="Artes">Artes</MenuItem>
+                <MenuItem value="Tecnología">Tecnología</MenuItem>
+                <MenuItem value="Otra">Otra</MenuItem>
+              </Select>
+            </FormControl>
+          </div>
+
+          {/* Documentos */}
+          <h2 className="text-md my-4 text-center font-semibold text-primary">
+            Documentación
+          </h2>
+
+          <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
+            {/* Documento de identidad */}
+            <div className="flex w-full flex-col sm:w-1/4">
+              {formData.documento_identidad_pdf && (
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  href={formData.documento_identidad_pdf}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 h-full rounded-2xl border-primary text-primary"
+                  startIcon={<PictureAsPdfIcon />}
+                >
+                  Ver documento de identidad
+                </Button>
+              )}
+              {editable && (
+                <div className="my-4 flex flex-col items-center gap-3">
+                  <InputLabel id="documento_identidad">
+                    Documento de identidad
+                  </InputLabel>
+                  <Button
+                    variant="contained"
+                    component="label"
+                    className="my-2 rounded-2xl bg-primary"
+                  >
+                    {documentoIdentidad
+                      ? "Cambiar Documento"
+                      : "Elegir Documento"}
+                    <input
+                      name="documento_identidad"
+                      type="file"
+                      accept=".pdf"
+                      hidden
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setDocumentoIdentidad(file);
+                        }
+                      }}
+                    />
+                  </Button>
+                  {documentoIdentidad && (
+                    <Typography variant="caption" color="textSecondary">
+                      {documentoIdentidad.name}
+                    </Typography>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* RUT */}
+            <div className="flex w-full flex-col sm:w-1/4">
+              {formData.rut_pdf && (
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  href={formData.rut_pdf}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 h-full rounded-2xl border-primary text-primary"
+                  startIcon={<PictureAsPdfIcon />}
+                >
+                  Ver RUT
+                </Button>
+              )}
+              {editable && (
+                <div className="my-4 flex flex-col items-center gap-3">
+                  <InputLabel id="rut_pdf">RUT</InputLabel>
+                  <Button
+                    variant="contained"
+                    component="label"
+                    className="my-2 rounded-2xl bg-primary"
+                  >
+                    {documentoIdentidad
+                      ? "Cambiar Documento"
+                      : "Elegir Documento"}
+                    <input
+                      name="rut_pdf"
+                      type="file"
+                      accept=".pdf"
+                      hidden
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setRut(file);
+                        }
+                      }}
+                    />
+                  </Button>
+                  {rut && (
+                    <Typography variant="caption" color="textSecondary">
+                      {rut.name}
+                    </Typography>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Certificado Bancario */}
+            <div className="flex w-full flex-col sm:w-1/4">
+              {formData.certificado_bancario_pdf && (
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  href={formData.certificado_bancario_pdf}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 h-full rounded-2xl border-primary text-primary"
+                  startIcon={<PictureAsPdfIcon />}
+                >
+                  Ver Certificado Bancario
+                </Button>
+              )}
+              {editable && (
+                <div className="my-4 flex flex-col items-center gap-3">
+                  <InputLabel id="certificado_bancario">
+                    Certificado Bancario
+                  </InputLabel>
+                  <Button
+                    variant="contained"
+                    component="label"
+                    className="my-2 rounded-2xl bg-primary"
+                  >
+                    {certificadoBancario
+                      ? "Cambiar Documento"
+                      : "Elegir Documento"}
+                    <input
+                      name="certificado_bancario"
+                      type="file"
+                      accept=".pdf"
+                      hidden
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setCertificadoBancario(file);
+                        }
+                      }}
+                    />
+                  </Button>
+                  {certificadoBancario && (
+                    <Typography variant="caption" color="textSecondary">
+                      {certificadoBancario.name}
+                    </Typography>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Documentos para profesores */}
+            {formData.tipo === "Profesor" && (
+              <>
+                {/* Hoja de Vida */}
+
+                <div className="flex w-full flex-col sm:w-1/4">
+                  {formData.hoja_vida_pdf && (
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      href={formData.hoja_vida_pdf}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 h-full rounded-2xl border-primary text-primary"
+                      startIcon={<PictureAsPdfIcon />}
+                    >
+                      Ver Hoja de Vida
+                    </Button>
+                  )}
+
+                  {editable && (
+                    <div className="my-4 flex flex-col items-center gap-3">
+                      <InputLabel id="hoja_vida">Hoja de Vida</InputLabel>
+                      <Button
+                        variant="contained"
+                        component="label"
+                        className="my-2 rounded-2xl bg-primary"
+                      >
+                        {hojaVida ? "Cambiar Documento" : "Elegir Documento"}
+                        <input
+                          name="hoja_vida"
+                          type="file"
+                          accept=".pdf"
+                          hidden
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setHojaVida(file);
+                            }
+                          }}
+                        />
+                      </Button>
+                      {hojaVida && (
+                        <Typography variant="caption" color="textSecondary">
+                          {hojaVida.name}
+                        </Typography>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Certificado Laboral */}
+                <div className="flex w-full flex-col sm:w-1/4">
+                  {formData.certificado_laboral_pdf && (
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      href={formData.certificado_laboral_pdf}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 h-full rounded-2xl border-primary text-primary"
+                      startIcon={<PictureAsPdfIcon />}
+                    >
+                      Ver Certificado Laboral
+                    </Button>
+                  )}
+
+                  {editable && (
+                    <div className="my-4 flex flex-col items-center gap-3">
+                      <InputLabel id="certificado_laboral">
+                        Certificado Laboral
+                      </InputLabel>
+                      <Button
+                        variant="contained"
+                        component="label"
+                        className="my-2 rounded-2xl bg-primary"
+                      >
+                        {certificadoLaboral
+                          ? "Cambiar Documento"
+                          : "Elegir Documento"}
+                        <input
+                          name="certificado_laboral"
+                          type="file"
+                          accept=".pdf"
+                          hidden
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setCertificadoLaboral(file);
+                            }
+                          }}
+                        />
+                      </Button>
+                      {certificadoLaboral && (
+                        <Typography variant="caption" color="textSecondary">
+                          {certificadoLaboral.name}
+                        </Typography>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Certificado Académico */}
+                <div className="flex w-full flex-col sm:w-1/4">
+                  {formData.certificado_academico_pdf && (
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      href={formData.certificado_academico_pdf}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 h-full rounded-2xl border-primary text-primary"
+                      startIcon={<PictureAsPdfIcon />}
+                    >
+                      Ver Certificado Académico
+                    </Button>
+                  )}
+
+                  {editable && (
+                    <div className="my-4 flex flex-col items-center gap-3">
+                      <InputLabel id="certificado_academico">
+                        Certificado Académico
+                      </InputLabel>
+                      <Button
+                        variant="contained"
+                        component="label"
+                        className="my-2 rounded-2xl bg-primary"
+                      >
+                        {certificadoAcademico
+                          ? "Cambiar Documento"
+                          : "Elegir Documento"}
+                        <input
+                          name="certificado_academico"
+                          type="file"
+                          accept=".pdf"
+                          hidden
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setCertificadoAcademico(file);
+                            }
+                          }}
+                        />
+                      </Button>
+                      {certificadoAcademico && (
+                        <Typography variant="caption" color="textSecondary">
+                          {certificadoAcademico.name}
+                        </Typography>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* Documentos para monitores académicos y administrativos */}
+            {formData.tipo !== "Profesor" && (
+              <>
+                {/* D10 */}
+                <div className="flex w-full flex-col sm:w-1/4">
+                  {formData.d10_pdf && (
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      href={formData.d10_pdf}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 h-full rounded-2xl border-primary text-primary"
+                      startIcon={<PictureAsPdfIcon />}
+                    >
+                      Ver D10
+                    </Button>
+                  )}
+
+                  {editable && (
+                    <div className="my-4 flex flex-col items-center gap-3">
+                      <InputLabel id="d10">D10</InputLabel>
+                      <Button
+                        variant="contained"
+                        component="label"
+                        className="my-2 rounded-2xl bg-primary"
+                      >
+                        {d10 ? "Cambiar Documento" : "Elegir Documento"}
+                        <input
+                          name="d10"
+                          type="file"
+                          accept=".pdf"
+                          hidden
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setD10(file);
+                            }
+                          }}
+                        />
+                      </Button>
+                      {d10 && (
+                        <Typography variant="caption" color="textSecondary">
+                          {d10.name}
+                        </Typography>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Tabulado */}
+                <div className="flex w-full flex-col sm:w-1/4">
+                  {formData.tabulado_pdf && (
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      href={formData.tabulado_pdf}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 h-full rounded-2xl border-primary text-primary"
+                      startIcon={<PictureAsPdfIcon />}
+                    >
+                      Ver Tabulado
+                    </Button>
+                  )}
+
+                  {editable && (
+                    <div className="my-4 flex flex-col items-center gap-3">
+                      <InputLabel id="tabulado">Tabulado</InputLabel>
+                      <Button
+                        variant="contained"
+                        component="label"
+                        className="my-2 rounded-2xl bg-primary"
+                      >
+                        {tabulado ? "Cambiar Documento" : "Elegir Documento"}
+                        <input
+                          name="tabulado"
+                          type="file"
+                          accept=".pdf"
+                          hidden
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setTabulado(file);
+                            }
+                          }}
+                        />
+                      </Button>
+                      {tabulado && (
+                        <Typography variant="caption" color="textSecondary">
+                          {tabulado.name}
+                        </Typography>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Estado Matrícula Financiera */}
+                <div className="flex w-full flex-col sm:w-1/4">
+                  {formData.estado_mat_financiera_pdf && (
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      href={formData.estado_mat_financiera_pdf}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 h-full rounded-2xl border-primary text-primary"
+                      startIcon={<PictureAsPdfIcon />}
+                    >
+                      Ver Estado de Matrícula Financiera
+                    </Button>
+                  )}
+
+                  {editable && (
+                    <div className="my-4 flex flex-col items-center gap-3">
+                      <InputLabel id="estado_mat_financiera">
+                        Estado Matrícula Financiera
+                      </InputLabel>
+                      <Button
+                        variant="contained"
+                        component="label"
+                        className="my-2 rounded-2xl bg-primary"
+                      >
+                        {matriculaFinanciera
+                          ? "Cambiar Documento"
+                          : "Elegir Documento"}
+                        <input
+                          name="estado_mat_financiera"
+                          type="file"
+                          accept=".pdf"
+                          hidden
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setMatriculaFinanciera(file);
+                            }
+                          }}
+                        />
+                      </Button>
+                      {matriculaFinanciera && (
+                        <Typography variant="caption" color="textSecondary">
+                          {matriculaFinanciera.name}
+                        </Typography>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </div>
-        )}
 
-        {formData.rut_pdf && (
-          <Button
-            variant="outlined"
-            color="primary"
-            href={formData.rut_pdf}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2"
-          >
-            Ver RUT
-          </Button>
-        )}
+          {/* Verificaciones */}
+          <h2 className="text-md my-4 text-center font-semibold text-primary">
+            Verificaciones
+          </h2>
 
-        {formData.certificado_bancario_pdf && (
-          <Button
-            variant="outlined"
-            color="primary"
-            href={formData.certificado_bancario_pdf}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2"
-          >
-            Ver Certificado Bancario
-          </Button>
-        )}
+          <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
+            <div>
+              <Typography variant="body1" color="textSecondary">
+                Información verificada
+              </Typography>
+              <ToggleButtonGroup
+                className="border-rounded rounded-xl"
+                value={estadoInformacion}
+                exclusive
+                onChange={handleEstadoInformacion}
+                aria-label="Estado de verificación"
+                sx={{ marginY: 2, borderRadius: 8 }}
+              >
+                <ToggleButton
+                  value={true}
+                  aria-label="Aprobado"
+                  color="success"
+                >
+                  <CheckCircleIcon></CheckCircleIcon>
+                </ToggleButton>
+                <ToggleButton
+                  value={false}
+                  aria-label="Rechazado"
+                  color="error"
+                >
+                  <CancelIcon></CancelIcon>
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </div>
 
-        {formData.hoja_vida_pdf && (
-          <Button
-            variant="outlined"
-            color="primary"
-            href={formData.hoja_vida_pdf}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2"
-          >
-            Ver Hoja de Vida
-          </Button>
-        )}
+            <div>
+              <Typography variant="body1" color="textSecondary">
+                Fotografía verificada
+              </Typography>
+              <ToggleButtonGroup
+                value={estadoFotoPerfil}
+                exclusive
+                onChange={handleEstadoFotoPerfil}
+                aria-label="Estado de verificación"
+                sx={{ marginY: 2 }}
+              >
+                <ToggleButton
+                  value={true}
+                  aria-label="Aprobado"
+                  color="success"
+                >
+                  <CheckCircleIcon></CheckCircleIcon>
+                </ToggleButton>
+                <ToggleButton
+                  value={false}
+                  aria-label="Rechazado"
+                  color="error"
+                >
+                  <CancelIcon></CancelIcon>
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </div>
 
-        {formData.certificado_laboral_pdf && (
-          <Button
-            variant="outlined"
-            color="primary"
-            href={formData.certificado_laboral_pdf}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2"
-          >
-            Ver Certificado Laboral
-          </Button>
-        )}
-        {formData.certificado_academico_pdf && (
-          <Button
-            variant="outlined"
-            color="primary"
-            href={formData.certificado_academico_pdf}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2"
-          >
-            Ver Certificado Académico
-          </Button>
-        )}
+            <div>
+              <Typography variant="body1" color="textSecondary">
+                Documento de identidad verificado
+              </Typography>
+              <ToggleButtonGroup
+                value={estadoDocumentoIdentidad}
+                exclusive
+                onChange={handleEstadoDocumentoIdentidad}
+                aria-label="Estado de verificación"
+                sx={{ marginY: 2 }}
+              >
+                <ToggleButton
+                  value={true}
+                  aria-label="Aprobado"
+                  color="success"
+                >
+                  <CheckCircleIcon></CheckCircleIcon>
+                </ToggleButton>
+                <ToggleButton
+                  value={false}
+                  aria-label="Rechazado"
+                  color="error"
+                >
+                  <CancelIcon></CancelIcon>
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </div>
 
-        {formData.d10_pdf && (
-          <Button
-            variant="outlined"
-            color="primary"
-            href={formData.d10_pdf}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2"
-          >
-            Ver D10
-          </Button>
-        )}
+            <div>
+              <Typography variant="body1" color="textSecondary">
+                RUT verificado
+              </Typography>
+              <ToggleButtonGroup
+                value={estadoDocumentoIdentidad}
+                exclusive
+                onChange={handleEstadoDocumentoIdentidad}
+                aria-label="Estado de verificación"
+                sx={{ marginY: 2 }}
+              >
+                <ToggleButton
+                  value={true}
+                  aria-label="Aprobado"
+                  color="success"
+                >
+                  <CheckCircleIcon></CheckCircleIcon>
+                </ToggleButton>
+                <ToggleButton
+                  value={false}
+                  aria-label="Rechazado"
+                  color="error"
+                >
+                  <CancelIcon></CancelIcon>
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </div>
 
-        {formData.tabulado_pdf && (
-          <Button
-            variant="outlined"
-            color="primary"
-            href={formData.tabulado_pdf}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2"
-          >
-            Ver Tabulado
-          </Button>
-        )}
+            <div>
+              <Typography variant="body1" color="textSecondary">
+                Certificado bancario verificado
+              </Typography>
+              <ToggleButtonGroup
+                value={estadoDocumentoIdentidad}
+                exclusive
+                onChange={handleEstadoDocumentoIdentidad}
+                aria-label="Estado de verificación"
+                sx={{ marginY: 2 }}
+              >
+                <ToggleButton
+                  value={true}
+                  aria-label="Aprobado"
+                  color="success"
+                >
+                  <CheckCircleIcon></CheckCircleIcon>
+                </ToggleButton>
+                <ToggleButton
+                  value={false}
+                  aria-label="Rechazado"
+                  color="error"
+                >
+                  <CancelIcon></CancelIcon>
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </div>
 
-        {formData.estado_mat_financiera_pdf && (
-          <Button
-            variant="outlined"
-            color="primary"
-            href={formData.estado_mat_financiera_pdf}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2"
-          >
-            Ver Estado de Matrícula Financiera
-          </Button>
-        )}
+            <div>
+              <Typography variant="body1" color="textSecondary">
+                Certificado bancario verificado
+              </Typography>
+              <ToggleButtonGroup
+                value={estadoDocumentoIdentidad}
+                exclusive
+                onChange={handleEstadoDocumentoIdentidad}
+                aria-label="Estado de verificación"
+                sx={{ marginY: 2 }}
+              >
+                <ToggleButton
+                  value={true}
+                  aria-label="Aprobado"
+                  color="success"
+                >
+                  <CheckCircleIcon></CheckCircleIcon>
+                </ToggleButton>
+                <ToggleButton
+                  value={false}
+                  aria-label="Rechazado"
+                  color="error"
+                >
+                  <CancelIcon></CancelIcon>
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </div>
+            <div>
+              <Typography variant="body1" color="textSecondary">
+                Hoja de vida verificada
+              </Typography>
+              <ToggleButtonGroup
+                value={estadoDocumentoIdentidad}
+                exclusive
+                onChange={handleEstadoDocumentoIdentidad}
+                aria-label="Estado de verificación"
+                sx={{ marginY: 2 }}
+              >
+                <ToggleButton
+                  value={true}
+                  aria-label="Aprobado"
+                  color="success"
+                >
+                  <CheckCircleIcon></CheckCircleIcon>
+                </ToggleButton>
+                <ToggleButton
+                  value={false}
+                  aria-label="Rechazado"
+                  color="error"
+                >
+                  <CancelIcon></CancelIcon>
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </div>
 
-        <h2 className="text-md my-4 text-center font-semibold text-primary">
-          Verificaciones
-        </h2>
-
-        <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-          <div>
-            <Typography variant="body1" color="textSecondary">
-              Información verificada
-            </Typography>
-            <ToggleButtonGroup
-              className="border-rounded rounded-xl"
-              value={estadoInformacion}
-              exclusive
-              onChange={handleEstadoInformacion}
-              aria-label="Estado de verificación"
-              sx={{ marginY: 2, borderRadius: 8 }}
-            >
-              <ToggleButton value={true} aria-label="Aprobado" color="success">
-                <CheckCircleIcon></CheckCircleIcon>
-              </ToggleButton>
-              <ToggleButton value={false} aria-label="Rechazado" color="error">
-                <CancelIcon></CancelIcon>
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </div>
-
-          <div>
-            <Typography variant="body1" color="textSecondary">
-              Fotografía verificada
-            </Typography>
-            <ToggleButtonGroup
-              value={estadoFotoPerfil}
-              exclusive
-              onChange={handleEstadoFotoPerfil}
-              aria-label="Estado de verificación"
-              sx={{ marginY: 2 }}
-            >
-              <ToggleButton value={true} aria-label="Aprobado" color="success">
-                <CheckCircleIcon></CheckCircleIcon>
-              </ToggleButton>
-              <ToggleButton value={false} aria-label="Rechazado" color="error">
-                <CancelIcon></CancelIcon>
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </div>
-
-          <div>
-            <Typography variant="body1" color="textSecondary">
-              Documento de identidad verificado
-            </Typography>
-            <ToggleButtonGroup
-              value={estadoDocumentoIdentidad}
-              exclusive
-              onChange={handleEstadoDocumentoIdentidad}
-              aria-label="Estado de verificación"
-              sx={{ marginY: 2 }}
-            >
-              <ToggleButton value={true} aria-label="Aprobado" color="success">
-                <CheckCircleIcon></CheckCircleIcon>
-              </ToggleButton>
-              <ToggleButton value={false} aria-label="Rechazado" color="error">
-                <CancelIcon></CancelIcon>
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </div>
-
-          <div>
-            <Typography variant="body1" color="textSecondary">
-              RUT verificado
-            </Typography>
-            <ToggleButtonGroup
-              value={estadoDocumentoIdentidad}
-              exclusive
-              onChange={handleEstadoDocumentoIdentidad}
-              aria-label="Estado de verificación"
-              sx={{ marginY: 2 }}
-            >
-              <ToggleButton value={true} aria-label="Aprobado" color="success">
-                <CheckCircleIcon></CheckCircleIcon>
-              </ToggleButton>
-              <ToggleButton value={false} aria-label="Rechazado" color="error">
-                <CancelIcon></CancelIcon>
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </div>
-
-          <div>
-            <Typography variant="body1" color="textSecondary">
-              Certificado bancario verificado
-            </Typography>
-            <ToggleButtonGroup
-              value={estadoDocumentoIdentidad}
-              exclusive
-              onChange={handleEstadoDocumentoIdentidad}
-              aria-label="Estado de verificación"
-              sx={{ marginY: 2 }}
-            >
-              <ToggleButton value={true} aria-label="Aprobado" color="success">
-                <CheckCircleIcon></CheckCircleIcon>
-              </ToggleButton>
-              <ToggleButton value={false} aria-label="Rechazado" color="error">
-                <CancelIcon></CancelIcon>
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </div>
-
-          <div>
-            <Typography variant="body1" color="textSecondary">
-              Certificado bancario verificado
-            </Typography>
-            <ToggleButtonGroup
-              value={estadoDocumentoIdentidad}
-              exclusive
-              onChange={handleEstadoDocumentoIdentidad}
-              aria-label="Estado de verificación"
-              sx={{ marginY: 2 }}
-            >
-              <ToggleButton value={true} aria-label="Aprobado" color="success">
-                <CheckCircleIcon></CheckCircleIcon>
-              </ToggleButton>
-              <ToggleButton value={false} aria-label="Rechazado" color="error">
-                <CancelIcon></CancelIcon>
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </div>
-          <div>
-            <Typography variant="body1" color="textSecondary">
-              Hoja de vida verificada
-            </Typography>
-            <ToggleButtonGroup
-              value={estadoDocumentoIdentidad}
-              exclusive
-              onChange={handleEstadoDocumentoIdentidad}
-              aria-label="Estado de verificación"
-              sx={{ marginY: 2 }}
-            >
-              <ToggleButton value={true} aria-label="Aprobado" color="success">
-                <CheckCircleIcon></CheckCircleIcon>
-              </ToggleButton>
-              <ToggleButton value={false} aria-label="Rechazado" color="error">
-                <CancelIcon></CancelIcon>
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </div>
-
-          <div>
-            <Typography variant="body1" color="textSecondary">
-              Certificado laboral verificado
-            </Typography>
-            <ToggleButtonGroup
-              value={estadoDocumentoIdentidad}
-              exclusive
-              onChange={handleEstadoDocumentoIdentidad}
-              aria-label="Estado de verificación"
-              sx={{ marginY: 2 }}
-            >
-              <ToggleButton value={true} aria-label="Aprobado" color="success">
-                <CheckCircleIcon></CheckCircleIcon>
-              </ToggleButton>
-              <ToggleButton value={false} aria-label="Rechazado" color="error">
-                <CancelIcon></CancelIcon>
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </div>
-          <div>
-            <Typography variant="body1" color="textSecondary">
-              Certificado académico verificado
-            </Typography>
-            <ToggleButtonGroup
-              value={estadoDocumentoIdentidad}
-              exclusive
-              onChange={handleEstadoDocumentoIdentidad}
-              aria-label="Estado de verificación"
-              sx={{ marginY: 2 }}
-            >
-              <ToggleButton value={true} aria-label="Aprobado" color="success">
-                <CheckCircleIcon></CheckCircleIcon>
-              </ToggleButton>
-              <ToggleButton value={false} aria-label="Rechazado" color="error">
-                <CancelIcon></CancelIcon>
-              </ToggleButton>
-            </ToggleButtonGroup>
+            <div>
+              <Typography variant="body1" color="textSecondary">
+                Certificado laboral verificado
+              </Typography>
+              <ToggleButtonGroup
+                value={estadoDocumentoIdentidad}
+                exclusive
+                onChange={handleEstadoDocumentoIdentidad}
+                aria-label="Estado de verificación"
+                sx={{ marginY: 2 }}
+              >
+                <ToggleButton
+                  value={true}
+                  aria-label="Aprobado"
+                  color="success"
+                >
+                  <CheckCircleIcon></CheckCircleIcon>
+                </ToggleButton>
+                <ToggleButton
+                  value={false}
+                  aria-label="Rechazado"
+                  color="error"
+                >
+                  <CancelIcon></CancelIcon>
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </div>
+            <div>
+              <Typography variant="body1" color="textSecondary">
+                Certificado académico verificado
+              </Typography>
+              <ToggleButtonGroup
+                value={estadoDocumentoIdentidad}
+                exclusive
+                onChange={handleEstadoDocumentoIdentidad}
+                aria-label="Estado de verificación"
+                sx={{ marginY: 2 }}
+              >
+                <ToggleButton
+                  value={true}
+                  aria-label="Aprobado"
+                  color="success"
+                >
+                  <CheckCircleIcon></CheckCircleIcon>
+                </ToggleButton>
+                <ToggleButton
+                  value={false}
+                  aria-label="Rechazado"
+                  color="error"
+                >
+                  <CancelIcon></CancelIcon>
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </div>
           </div>
         </div>
 
