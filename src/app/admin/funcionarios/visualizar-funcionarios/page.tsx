@@ -76,7 +76,7 @@ export default function VisualizarFuncionarios() {
           <Tooltip title="Eliminar inscripcion" placement="top">
             <TrashIcon
               className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
-              onClick={() => handleDelete(params.row.id)}
+              onClick={() => handleDelete(params.row) }
             />
           </Tooltip>
         </div>
@@ -101,27 +101,41 @@ export default function VisualizarFuncionarios() {
 
   const [loading, setLoading] = useState(true);
 
-  // Función para eliminar un inscrito
-  const handleDelete = async (id: number) => {
+  // Función para eliminar un funcionario
+  const handleDelete = async (row: FuncionarioRow) => {
     const confirmDelete = window.confirm(
       "¿Estás seguro de que deseas eliminar este funcionario?",
     );
     if (!confirmDelete) return;
 
+    let endpoint = "";
+    if (row.tipo === "Profesor") {
+      endpoint = `${API_BASE_URL}/profesor/prof/${row.id}/`;
+    } else if (row.tipo === "Monitor Académico") {
+      endpoint = `${API_BASE_URL}/monitor_academico/mon/${row.id}/`;
+    } else if (row.tipo === "Monitor Administrativo") {
+      endpoint = `${API_BASE_URL}/monitor_administrativo/mon/${row.id}/`;
+    } else {
+      alert("Tipo de funcionario desconocido.");
+      return;
+    }
+
+    console.log("Endpoint para eliminar:", endpoint);
+
     try {
-      await axios.delete(`${API_BASE_URL}/estudiante/est/${id}/`, {
+      await axios.delete(endpoint, {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
         },
       });
 
-      setRows((prevRows) => prevRows.filter((row) => row.id !== id));
+      setRows((prevRows) => prevRows.filter((row) => row.id !== row.id));
 
       setSuccess(true);
     } catch (error) {
-      console.error("Error al eliminar el inscrito:", error);
+      console.error("Error al eliminar el funcionario:", error);
       alert(
-        "Hubo un error al eliminar el inscrito. Por favor, inténtalo de nuevo.",
+        "Hubo un error al eliminar el funcionario. Por favor, inténtalo de nuevo.",
       );
     }
   };

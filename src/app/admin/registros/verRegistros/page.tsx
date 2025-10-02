@@ -16,6 +16,7 @@ import {
   Snackbar,
   Alert,
   dividerClasses,
+  Chip,
 } from "@mui/material";
 
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
@@ -50,14 +51,46 @@ export default function VerRegistros() {
       field: "estado",
       headerName: "Estado",
       flex: 0.5,
-      type: "boolean",
+      renderCell: (params) => {
+        if (params.value === "Revisado") {
+          return (
+            <Chip
+              label="Revisado"
+              color="success"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        if (params.value === "No revisado") {
+          return (
+            <Chip
+              label="No revisado"
+              color="error"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        if (params.value === "Pendiente") {
+          return (
+            <Chip
+              label="Pendiente"
+              color="warning"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        return null;
+      },
     },
     {
       field: "editar",
       headerName: "Acciones",
       sortable: false,
       filterable: false,
-      flex: 1,
+      flex: 0.5,
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
@@ -99,7 +132,7 @@ export default function VerRegistros() {
     modulo: string;
     estamento: string;
     grado: string;
-    estado: boolean;
+    estado: string;
   }
 
   interface Estudiante {
@@ -134,6 +167,7 @@ export default function VerRegistros() {
     constancia_estudios: string | null;
     user: number;
     acudiente: number;
+    estado: string;
   }
 
   const [rows, setRows] = useState<EstudianteRow[]>([]);
@@ -184,18 +218,18 @@ export default function VerRegistros() {
 
         if (response.status === 200) {
           // Formatea los datos para la tabla
-        const formateado = response.data.map((student: any) => ({
-          id: student.id_estudiante,
-          apellido: student.apellido || "",
-          nombre: student.nombre || "",
-          email: student.email || "",
-          direccion: student.direccion_residencia || "",
-          estamento: student.estamento || "",
-          grado: student.grado || "", // No viene en el endpoint, lo dejas vacío
-          estado: student.is_active,
-        }));
+          const formateado = response.data.map((student: any) => ({
+            id: student.id_estudiante,
+            apellido: student.apellido || "",
+            nombre: student.nombre || "",
+            email: student.email || "",
+            direccion: student.direccion_residencia || "",
+            estamento: student.estamento || "",
+            grado: student.grado || "", // No viene en el endpoint, lo dejas vacío
+            estado: student.estado || "",
+          }));
 
-        setRows(formateado);
+          setRows(formateado);
         }
 
         setLoading(false);
@@ -265,7 +299,6 @@ export default function VerRegistros() {
   const filteredRows = React.useMemo(() => {
     if (rows.length === 0) return rows;
     return rows.filter((row) => {
-
       const estamentoMatch =
         selectedEstamento.length === 0 ||
         selectedEstamento.includes(row.estamento);
@@ -277,23 +310,13 @@ export default function VerRegistros() {
       const estadoMatch =
         selectedEstado.length === 0 || selectedEstado.includes(estadoAsString);
 
-      return (
-        estamentoMatch &&
-        gradoMatch &&
-        estadoMatch
-      );
+      return estamentoMatch && gradoMatch && estadoMatch;
     });
-  }, [
-    rows,
-    selectedEstamento,
-    selectedGrado,
-    selectedEstado,
-  ]);
+  }, [rows, selectedEstamento, selectedGrado, selectedEstado]);
 
-  if(loading!){
-    return ( <div>Loading...</div> )
+  if (loading!) {
+    return <div>Loading...</div>;
   }
-
 
   return (
     <div>
@@ -311,8 +334,6 @@ export default function VerRegistros() {
         </Alert>
       </Snackbar>
       <div className="mx-auto mt-4 flex w-11/12 justify-around rounded-2xl bg-white p-2 shadow-md">
-        
-
         {/* Filtro por Estamento */}
         <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
           <InputLabel id="filtro-estamento">Estamentos</InputLabel>
@@ -367,7 +388,7 @@ export default function VerRegistros() {
             onChange={handleChangeEstado}
             renderValue={(selected) => selected.join(", ")}
           >
-            {["Verificado", "No verificado"].map((estado) => (
+            {[...new Set(rows.map((row) => row.estado))].map((estado) => (
               <MenuItem key={estado} value={estado}>
                 <Checkbox checked={selectedEstado.indexOf(estado) > -1} />
                 <ListItemText primary={estado} />

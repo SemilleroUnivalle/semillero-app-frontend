@@ -80,6 +80,9 @@ interface EstudianteInterface {
   tipo_discapacidad: string;
   is_active: boolean;
   acudiente: AcudienteInterface;
+  verificacion_informacion: boolean | null;
+  verificacion_foto: boolean | null;
+  verificacion_documento_identidad: boolean | null;
 }
 
 const grados: string[] = [
@@ -173,6 +176,9 @@ export default function DetallarRegistro() {
       numero_documento_acudiente: "",
       celular_acudiente: "",
     },
+    verificacion_informacion: null,
+    verificacion_foto: null,
+    verificacion_documento_identidad: null,
   });
 
   const [formDataAcudiente, setFormDataAcudiente] =
@@ -309,7 +315,7 @@ export default function DetallarRegistro() {
   }, [editable, departamentoSeleccionado, departamentos]);
   1;
 
-  // ...existing code...
+  // Función para guardar los cambios
   const handleSave = async () => {
     try {
       const formDataToSend = new FormData();
@@ -399,43 +405,107 @@ export default function DetallarRegistro() {
     }
   };
 
-  // Estado para el toggle
-  const [estadoInformacion, setEstadoInformacion] = useState<
-    true | false | null
-  >(null);
-  const [estadoDocumentoIdentidad, setEstadoDocumentoIdentidad] = useState<
-    true | false | null
-  >(null);
-  const [estadoFotoPerfil, setEstadoFotoPerfil] = useState<true | false | null>(
-    null,
+  const [estadoInformacion, setEstadoInformacion] = useState<boolean | null>(
+    formData.verificacion_informacion,
   );
+  const [estadoFotoPerfil, setEstadoFotoPerfil] = useState<boolean | null>(
+    formData.verificacion_foto,
+  );
+  const [estadoDocumentoIdentidad, setEstadoDocumentoIdentidad] = useState<
+    boolean | null
+  >(formData.verificacion_documento_identidad);
+
+  useEffect(() => {
+    setEstadoInformacion(formData.verificacion_informacion);
+    setEstadoFotoPerfil(formData.verificacion_foto);
+    setEstadoDocumentoIdentidad(formData.verificacion_documento_identidad);
+  }, [formData]);
 
   // Handler para el cambio
-  const handleEstadoInformacion = (
+  const handleEstadoInformacion = async (
     event: React.MouseEvent<HTMLElement>,
     newEstado: true | false | null,
   ) => {
-    if (newEstado !== null) {
-      setEstadoInformacion(newEstado);
-      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    if (newEstado !== null && formData.id_estudiante) {
+      try {
+        const userString = localStorage.getItem("user");
+        let token = "";
+        if (userString) {
+          const user = JSON.parse(userString);
+          token = user.token;
+        }
+        await axios.patch(
+          `${API_BASE_URL}/estudiante/est/${formData.id_estudiante}/`,
+          { verificacion_informacion: newEstado },
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          },
+        );
+        setEstadoInformacion(newEstado); // Actualiza el estado local si lo usas
+        console.log("Verificación de información actualizada a:", newEstado);
+      } catch (error) {
+        console.error(
+          "Error al actualizar verificación de información:",
+          error,
+        );
+      }
     }
   };
-  const handleEstadoFotoPerfil = (
+  const handleEstadoFotoPerfil = async (
     event: React.MouseEvent<HTMLElement>,
     newEstado: true | false | null,
   ) => {
-    if (newEstado !== null) {
-      setEstadoFotoPerfil(newEstado);
-      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    if (newEstado !== null && formData.id_estudiante) {
+      try {
+        const userString = localStorage.getItem("user");
+        let token = "";
+        if (userString) {
+          const user = JSON.parse(userString);
+          token = user.token;
+        }
+        await axios.patch(
+          `${API_BASE_URL}/estudiante/est/${formData.id_estudiante}/`,
+          { verificacion_foto: newEstado },
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          },
+        );
+        setEstadoFotoPerfil(newEstado);
+      } catch (error) {
+        console.error("Error al actualizar verificación de foto:", error);
+      }
     }
   };
-  const handleEstadoDocumentoIdentidad = (
+
+  const handleEstadoDocumentoIdentidad = async (
     event: React.MouseEvent<HTMLElement>,
     newEstado: true | false | null,
   ) => {
-    if (newEstado !== null) {
-      setEstadoDocumentoIdentidad(newEstado);
-      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    if (newEstado !== null && formData.id_estudiante) {
+      try {
+        const userString = localStorage.getItem("user");
+        let token = "";
+        if (userString) {
+          const user = JSON.parse(userString);
+          token = user.token;
+        }
+        await axios.patch(
+          `${API_BASE_URL}/estudiante/est/${formData.id_estudiante}/`,
+          { verificacion_documento_identidad: newEstado },
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          },
+        );
+        setEstadoDocumentoIdentidad(newEstado);
+      } catch (error) {
+        console.error("Error al actualizar verificación de documento:", error);
+      }
     }
   };
 
@@ -961,7 +1031,6 @@ export default function DetallarRegistro() {
             {!esDocente ? (
               <>
                 <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-
                   {/* Campo Colegio */}
                   <TextField
                     className={
@@ -1286,31 +1355,7 @@ export default function DetallarRegistro() {
           </div>
         )}
 
-        {estudiante.constancia_estudios && (
-          <Button
-            variant="outlined"
-            color="primary"
-            href={estudiante.constancia_estudios}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2"
-          >
-            Ver constancia de estudios
-          </Button>
-        )}
-        {estudiante.recibo_pago && (
-          <Button
-            variant="outlined"
-            color="primary"
-            href={estudiante.recibo_pago}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2"
-          >
-            Ver recibo de pago
-          </Button>
-        )}
-
+        {/* Verificaciones */}
         <h2 className="text-md my-4 text-center font-semibold text-primary">
           Verificaciones
         </h2>
