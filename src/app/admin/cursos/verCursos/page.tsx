@@ -6,7 +6,7 @@ import axios from "axios";
 import { Paper } from "@mui/material";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
-import { Box, Alert, Snackbar, Tooltip } from "@mui/material";
+import { Box, Alert, Snackbar, Tooltip, Button, Avatar } from "@mui/material";
 
 import { GridColDef, DataGrid } from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
@@ -34,12 +34,34 @@ export default function VerCursos() {
       id_categoria: string;
       nombre: string;
     };
+    intensidad_horaria: number;
+    dirigido_a: string;
+    incluye: string;
   }
 
   const router = useRouter();
   const [success, setSuccess] = useState(false);
+  const [expandirTodos, setExpandirTodos] = useState(false);
+  const [acordeonesAbiertos, setAcordeonesAbiertos] = useState<
+    Record<string, boolean>
+  >({});
 
   const columnsOfertas: GridColDef[] = [
+    {
+      field: "logo",
+      headerName: "Logo",
+      flex: 0.5,
+      renderCell: () => (
+        <div className="flex h-full w-full flex-row items-center justify-around">
+          {" "}
+          <Avatar
+            src="/NAS.png"
+            // alt={nombreCategoria}
+            sx={{ width: 32, height: 32 }}
+          />{" "}
+        </div>
+      ),
+    },
     { field: "id", headerName: "ID", flex: 0.5 },
     { field: "nombre", headerName: "Nombre", flex: 1 },
     { field: "categoria", headerName: "Categoría", flex: 1 },
@@ -59,7 +81,7 @@ export default function VerCursos() {
             <VisibilityOutlinedIcon
               className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
               onClick={() => {
-                const rowData = params.row;
+                const rowData = params.row.moduloCompleto;
 
                 localStorage.setItem(
                   "cursoSeleccionado",
@@ -73,7 +95,7 @@ export default function VerCursos() {
             <PencilSquareIcon
               className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
               onClick={() => {
-                const rowData = params.row;
+                const rowData = params.row.moduloCompleto;
 
                 localStorage.setItem(
                   "cursoSeleccionado",
@@ -130,6 +152,9 @@ export default function VerCursos() {
                   id_modulo: mod.id_modulo,
                   nombre_modulo: mod.nombre_modulo,
                   descripcion_modulo: mod.descripcion_modulo,
+                  intensidad_horaria: mod.intensidad_horaria,
+                  dirigido_a: mod.dirigido_a,
+                  incluye: mod.incluye,
                   id_area: {
                     id_area: mod.id_area.id_area,
                     nombre_area: mod.id_area.nombre_area,
@@ -173,6 +198,9 @@ export default function VerCursos() {
           id_categoria: data.id_categoria.id_categoria,
           categoria: data.id_categoria.nombre,
           descripcion: data.descripcion_modulo,
+          intensidad_horaria: data.intensidad_horaria,
+          dirigido_a: data.dirigido_a,
+          incluye: data.incluye,
         }));
         console.log("Modulos:", formateado);
         // setRows(formateado);
@@ -226,18 +254,6 @@ export default function VerCursos() {
     }
   };
 
-  const todosLosCursos = Object.keys(modulosPorCategoria).flatMap(
-    (nombreCategoria) =>
-      modulosPorCategoria[nombreCategoria].map((mod) => ({
-        id: mod.id_modulo,
-        nombre: mod.nombre_modulo,
-        descripcion: mod.descripcion_modulo,
-        id_area: mod.id_area,
-        area: mod.id_area.nombre_area,
-        id_categoria: mod.id_categoria,
-        categoria: nombreCategoria,
-      })),
-  );
 
   //Barra de busqueda
 
@@ -277,6 +293,23 @@ export default function VerCursos() {
       {/* Contenedor de cursos */}
 
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 shadow-md">
+        <div className="flex flex-row-reverse items-start">
+          <Button
+            variant="contained"
+            color="primary"
+            className="rounded-lg bg-transparent text-xs font-semibold text-primary shadow-none"
+            onClick={() => {
+              const nuevoEstado: Record<string, boolean> = {};
+              Object.keys(modulosPorCategoria).forEach((cat) => {
+                nuevoEstado[cat] = !expandirTodos;
+              });
+              setAcordeonesAbiertos(nuevoEstado);
+              setExpandirTodos((prev) => !prev);
+            }}
+          >
+            {expandirTodos ? "Contraer todos" : "Expandir todos"}
+          </Button>
+        </div>
         {/* <input
          type="text"
          placeholder="Buscar..."
@@ -285,50 +318,6 @@ export default function VerCursos() {
          className="mb-4 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm focus:border-primary focus:outline-none sm:w-1/3"
        /> */}
 
-        {/* Acordeón para todos los cursos */}
-        <Box className="py-1" borderRadius={0}>
-          <Accordion className="border-b shadow-none" defaultExpanded>
-            <AccordionSummary
-              expandIcon={<Tooltip title="Expandir todos" placement="top"><ArrowDownwardIcon /></Tooltip>}
-              aria-controls="panel-todos-content"
-              id="panel-todos-header"
-            >
-              <Typography component="span" fontWeight="bold">
-                Todos los cursos
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Paper
-                className="border-none shadow-none"
-                sx={{ height: "auto", width: "100%" }}
-              >
-                <DataGrid
-                  rows={todosLosCursos}
-                  columns={columnsOfertas}
-                  initialState={{ pagination: { paginationModel } }}
-                  pageSizeOptions={[20, 40]}
-                  sx={{
-                    border: 0,
-                    "& .MuiDataGrid-columnHeaderTitle": {
-                      fontWeight: "bold",
-                      color: "#575757",
-                      fontSize: "1rem",
-                    },
-
-                    "& .MuiDataGrid-columnHeader": {
-                      backgroundColor: "#e8e8e8",
-                    },
-                  }}
-                  localeText={{
-                    noRowsLabel: "No hay filas",
-                    // ...otras traducciones...
-                  }}
-                />
-              </Paper>
-            </AccordionDetails>
-          </Accordion>
-        </Box>
-
         {loading ? (
           <div className="py-8 text-center">Cargando cursos...</div>
         ) : Object.keys(modulosPorCategoria).length === 0 ? (
@@ -336,12 +325,27 @@ export default function VerCursos() {
         ) : (
           Object.keys(modulosPorCategoria).map((nombreCategoria) => (
             <Box className="py-1" key={nombreCategoria} borderRadius={0}>
-              <Accordion className="border-b shadow-none">
+              <Accordion
+                className="border-b shadow-none"
+                expanded={!!acordeonesAbiertos[nombreCategoria]}
+                onChange={() =>
+                  setAcordeonesAbiertos((prev) => ({
+                    ...prev,
+                    [nombreCategoria]: !prev[nombreCategoria],
+                  }))
+                }
+              >
                 <AccordionSummary
                   expandIcon={<ArrowDownwardIcon />}
                   aria-controls="panel1-content"
                   id="panel1-header"
                 >
+                  {/* {nombreCategoria}
+                  <Avatar
+                    src="/NAS.png"
+                    alt={nombreCategoria}
+                    sx={{ width: 32, height: 32, marginRight: 2 }}
+                  /> */}
                   <Typography component="span">{nombreCategoria}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
@@ -358,6 +362,7 @@ export default function VerCursos() {
                         area: mod.id_area.nombre_area,
                         id_categoria: mod.id_categoria,
                         categoria: nombreCategoria,
+                        moduloCompleto: mod,
                       }))}
                       columns={columnsOfertas}
                       initialState={{ pagination: { paginationModel } }}

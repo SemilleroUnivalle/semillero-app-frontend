@@ -9,7 +9,7 @@ export default function Navbar() {
   const menuItems = [
     { name: "Inicio", path: "/estudiante/inicio" },
     { name: "Perfil", path: "/estudiante/perfil" },
-    { name: "Matrícula", path: "/estudiante/matricula" },
+    { name: "Matrículas", path: "/estudiante/matriculas" },
     { name: "Portafolio", path: "/estudiante/portafolio" },
   ];
 

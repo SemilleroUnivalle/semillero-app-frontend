@@ -16,10 +16,10 @@ import {
   FormLabel,
   Button,
   SelectChangeEvent,
-  Switch,
 } from "@mui/material";
 
-export default function Matricula() {
+export default function NuevaMatricula() {
+
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -33,7 +33,6 @@ export default function Matricula() {
   });
 
   // Estados para los archivos
-  const [constanciaEstudio, setConstanciaEstudio] = useState<File | null>(null);
   const [reciboPago, setReciboPago] = useState<File | null>(null);
   const [certificado, setCertificado] = useState<File | null>(null);
 
@@ -42,12 +41,11 @@ export default function Matricula() {
 
   // Estado para las ofertas académicas activas
   const [ofertas, setOfertas] = useState<any>({});
-  const [loading, setLoading] = useState(true);
 
   const [estamento, setEstamento] = useState<string>("");
 
   useEffect(() => {
-    const est = localStorage.getItem("estamento");
+    const est = JSON.parse(localStorage.getItem("estudiante") || "{}").estamento;
     if (est) setEstamento(est);
   }, []);
 
@@ -58,9 +56,9 @@ export default function Matricula() {
       .then((res) => {
         console.log("Ofertas académicas obtenidas:", res.data);
         setOfertas(res.data);
-        setLoading(false);
+
       })
-      .catch(() => setLoading(false));
+      .catch(() => console.log("No se pudo obtener las ofertas"));
   }, []);
 
   // Obtén la lista de ofertas académicas
@@ -96,13 +94,13 @@ export default function Matricula() {
     }));
   };
 
-  // if (loading) return <div>Cargando ofertas...</div>;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const id_estudiante = localStorage.getItem("id_estudiante");
-    const estamento = localStorage.getItem("estamento");
+    const estudiante = JSON.parse(localStorage.getItem("estudiante") || "{}");
+    const id_estudiante = estudiante.id_estudiante;
+    const estamento = estudiante.estamento;
 
     console.log("Estamento del usuario:", estamento);
     console.log("ID del estudiante:", id_estudiante);
@@ -118,9 +116,6 @@ export default function Matricula() {
     formDataToSend.append("tipo_vinculacion", formData.tipo_vinculacion);
     formDataToSend.append("terminos", terminos ? "True" : "False");
 
-    if (constanciaEstudio) {
-      formDataToSend.append("constancia", constanciaEstudio);
-    }
     if (reciboPago) {
       formDataToSend.append("recibo_pago", reciboPago);
     }
@@ -128,10 +123,10 @@ export default function Matricula() {
       formDataToSend.append("certificado", certificado);
     }
 
-    // Imprime todos los datos que se van a enviar
-    for (let pair of formDataToSend.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
+     // Imprime todos los datos que se van a enviar
+  for (let pair of formDataToSend.entries()) {
+    console.log(`${pair[0]}:`, pair[1]);
+  }
 
     try {
       await axios.post(`${API_BASE_URL}/matricula/mat/`, formDataToSend, {
@@ -141,6 +136,7 @@ export default function Matricula() {
       });
       alert("Matrícula enviada correctamente.");
       router.push("/auth/login"); // Redirige al login
+   
     } catch (error) {
       console.error("Error al enviar la matrícula:", error);
       alert("Hubo un error al enviar la matrícula.");
@@ -148,7 +144,7 @@ export default function Matricula() {
   };
 
   return (
-    <div className="mx-auto my-4 w-full rounded-2xl bg-white p-5 text-center shadow-md">
+    <div className="mx-auto my-4 w-3/4 rounded-2xl bg-white p-5 text-center shadow-md">
       <h2 className="text-center font-semibold text-primary">
         Oferta Académica
       </h2>
@@ -286,32 +282,25 @@ export default function Matricula() {
                 type="file"
                 accept=".pdf"
                 className="block w-full text-sm text-gray-500"
-                onChange={(e) => setCertificado(e.target.files?.[0] || null)}
+                onChange={(e) =>
+                  setCertificado(e.target.files?.[0] || null)
+                }
               />
             </div>
           )}
         </div>
         {/* Checkbox para términos */}
-        <div className="my-4 flex flex-col items-center justify-center gap-2 py-3">
-          <label
-            htmlFor="terminos"
-            className="text-justify text-sm text-gray-600"
-          >
-            Al enviar este formulario, autorizo a la Universidad del Valle para
-            que haga uso de mis datos personales con fines académicos,
-            estadísticos y/o socioeducativos, de acuerdo con lo establecido en
-            la normatividad vigente. <br /> <br />
-            Declaro que he leído y acepto las Condiciones Generales y estoy de
-            acuerdo con la <a className="underline" target="_blank" href="https://drive.google.com/file/d/1rP_wVpq9jBoj-aaajw1FI2jXH4cUhG_g/view?pli=1">Política de Privacidad</a> en relación con el tratamiento
-            de mis datos personales bajo la Universidad del Valle.
-          </label>
-
-          <Switch
+        <div className="my-4 flex items-center justify-center gap-2">
+          <input
+            type="checkbox"
+            id="terminos"
             checked={terminos}
             onChange={(e) => setTerminos(e.target.checked)}
-            id="terminos"
             required
           />
+          <label htmlFor="terminos" className="text-sm">
+            Acepto los términos de la inscripción
+          </label>
         </div>
         <Button
           type="submit"

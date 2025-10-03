@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import {
+  Button,
   Paper,
   Select,
   MenuItem,
@@ -11,46 +12,125 @@ import {
   SelectChangeEvent,
   Checkbox,
   ListItemText,
+  Tooltip,
+  Snackbar,
+  Alert,
+  Chip,
 } from "@mui/material";
+
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import { TrashIcon } from "@heroicons/react/24/outline";
+
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+
 import axios from "axios";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { API_BASE_URL } from "../../../../../config";
+import { useRouter } from "next/navigation";
 
-const columns: GridColDef[] = [
-  { field: "id", headerName: "ID", flex: 0.5 },
-  { field: "apellido", headerName: "Apellidos", flex: 1 },
-  { field: "nombre", headerName: "Nombres", flex: 1 },
-  { field: "email", headerName: "Correo Electrónico", flex: 1 },
-  {
-    field: "periodo",
-    headerName: "Periodo",
-    flex: 1,
-  },
-  {
-    field: "modulo",
-    headerName: "Módulo",
-    flex: 1,
-  },
-  {
-    field: "estamento",
-    headerName: "Estamento",
-    flex: 1,
-  },
-  {
-    field: "tipo",
-    headerName: "Tipo de Inscrito",
-    flex: 1,
-  },
-  {
-    field: "estado",
-    headerName: "Estado",
-    flex: 1,
-    type: "boolean",
-  },
-];
+export default function VerMatriculas() {
+  const router = useRouter();
 
-const paginationModel = { page: 0, pageSize: 50 };
+  const columns: GridColDef[] = [
+    { field: "id", headerName: "ID", flex: 0.5 },
+    { field: "apellido", headerName: "Apellidos", flex: 1 },
+    { field: "nombre", headerName: "Nombres", flex: 1 },
+    { field: "email", headerName: "Correo Electrónico", flex: 1 },
+    {
+      field: "periodo",
+      headerName: "Periodo",
+      flex: 1,
+    },
+    {
+      field: "modulo",
+      headerName: "Módulo",
+      flex: 1,
+    },
+    {
+      field: "estamento",
+      headerName: "Estamento",
+      flex: 1,
+    },
+    {
+      field: "tipo",
+      headerName: "Tipo de Inscrito",
+      flex: 1,
+    },
+    {
+      field: "estado",
+      headerName: "Estado",
+      flex: 1,
+      renderCell: (params) => {
+        if (params.value === "Revisado") {
+          return (
+            <Chip
+              label="Revisado"
+              color="success"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        if (params.value === "No revisado") {
+          return (
+            <Chip
+              label="No revisado"
+              color="error"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        if (params.value === "Pendiente") {
+          return (
+            <Chip
+              label="Pendiente"
+              color="warning"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        return null;
+      },
+    },
+    {
+      field: "editar",
+      headerName: "Acciones",
+      sortable: false,
+      filterable: false,
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+        <div className="flex h-full w-full flex-row items-center justify-around">
+          <Tooltip title="Ver detalles" placement="top">
+            <VisibilityOutlinedIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+              onClick={() => {
+                const rowData = params.row;
 
-export default function Page() {
+                localStorage.setItem(
+                  "matriculaSeleccionada",
+                  JSON.stringify(rowData),
+                ); // 👉 Guarda la fila completa como JSON
+                router.push("/admin/matriculas/detallarMatricula");
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="Eliminar matricula" placement="top">
+            <TrashIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
+              onClick={() => handleDelete(params.row.id)}
+            />
+          </Tooltip>
+        </div>
+      ),
+    },
+  ];
+
+  const paginationModel = { page: 0, pageSize: 50 };
+
   interface EstudianteRow {
     id: number;
     apellido: string;
@@ -61,79 +141,124 @@ export default function Page() {
     modulo: string;
     estamento: string;
     tipo: string;
-    estado: boolean;
+    estado: string;
+  }
+
+  interface Estudiante {
+    id_estudiante: number;
+    nombre: string;
+    apellido: string;
+    contrasena: string;
+    numero_documento: string;
+    email: string;
+    is_active: boolean;
+    ciudad_residencia: string;
+    eps: string;
+    grado: string;
+    colegio: string;
+    tipo_documento: string;
+    genero: string;
+    fecha_nacimiento: string;
+    telefono_fijo: string;
+    celular: string;
+    departamento_residencia: string;
+    comuna_residencia: string;
+    direccion_residencia: string;
+    estamento: string;
+    discapacidad: boolean;
+    tipo_discapacidad: string;
+    descripcion_discapacidad: string;
+    area_desempeño: string | null;
+    grado_escolaridad: string | null;
+    documento_identidad: string | null;
+    recibo_pago: string | null;
+    foto: string | null;
+    constancia_estudios: string | null;
+    user: number;
+    acudiente: number;
   }
 
   const [rows, setRows] = useState<EstudianteRow[]>([]);
+  const [success, setSuccess] = useState(false);
+  const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
+
+  const [loading, setLoading] = useState(true);
+
+  // Función para eliminar una matricula
+  const handleDelete = async (id: number) => {
+    const confirmDelete = window.confirm(
+      "¿Estás seguro de que deseas eliminar esta matrícula?",
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`${API_BASE_URL}/matricula/mat/${id}/`, {
+        headers: {
+          Authorization: `Token ${localStorage.getItem("token")}`,
+        },
+      });
+
+      setRows((prevRows) => prevRows.filter((row) => row.id !== id));
+
+      setSuccess(true);
+    } catch (error) {
+      console.error("Error al eliminar la matrícula:", error);
+      alert(
+        "Hubo un error al eliminar la matrícula. Por favor, inténtalo de nuevo.",
+      );
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(
-          `https://jsonplaceholder.typicode.com/users`,
-        );
-        const estudiantes = response.data;
+        const userString = localStorage.getItem("user");
+        let token = "";
+        if (userString) {
+          const user = JSON.parse(userString);
+          token = user.token;
+        }
 
-        const formateado = estudiantes.map(
-          (student: {
-            id: number;
-            username: string;
-            name: string;
-            email: string;
-            address: {
-              city: string;
-              street: string;
-              suite: string;
-              zipcode: string;
-            };
-          }) => ({
-            id: student.id,
-            apellido: student.username,
-            nombre: student.name,
-            email: student.email,
-            direccion: student.address,
-            periodo: student.address.city,
-            modulo: student.address.street,
-            estamento: student.address.suite,
-            tipo: student.address.zipcode,
-            estado: true,
-          }),
-        );
+        const response = await axios.get(`${API_BASE_URL}/matricula/mat/`, {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        });
 
-        setRows(formateado);
+        if (response.status === 200) {
+          // Formatea los datos para la tabla
+          const formateado = response.data.map((matricula: any) => ({
+            id: matricula.id_inscripcion,
+            apellido: matricula.estudiante.apellido || "",
+            nombre: matricula.estudiante.nombre || "",
+            email: matricula.estudiante.email || "",
+            direccion: matricula.estudiante.direccion_residencia || "",
+            periodo:
+              matricula.oferta_categoria &&
+              matricula.oferta_categoria.id_oferta_academica
+                ? matricula.oferta_categoria.id_oferta_academica.nombre
+                : "", // Cambiar cuando los datos no esten nulos
+            modulo: matricula.modulo.nombre_modulo || "",
+            estamento: matricula.estudiante.estamento || "",
+            tipo: matricula.tipo_vinculacion || "",
+            estado: matricula.estado, // true si es "Verificado", false en otro caso
+          }));
+
+          console.log("Datos formateados:", formateado); // Verifica los datos formateados
+
+          setRows(formateado);
+        }
+        setEstudiantes(response.data);
+
+        setLoading(false);
       } catch (error) {
-        console.error("Error al obtener los datos de los estudiantes:", error);
+        console.error("Error al obtener los datos de matriculas:", error);
+        setLoading(false);
       }
     };
 
     fetchData();
   }, []);
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         `${API_BASE_URL}/estudiante/est/`,
-  //       );
-  //       const estudiantes = response.data;
-
-  //       const formateado = estudiantes.map((student: any) => ({
-  //         id: student.id,
-  //         apellido: student.apellido,
-  //         nombre: student.nombre,
-  //         email: student.email,
-  //         numero_identificacion: student.numero_identificacion || "Sin asignar",
-  //         direccion: student.direccion,
-  //       }));
-
-  //       setRows(formateado);
-  //     } catch (error) {
-  //       console.error("Error al obtener los datos de los estudiantes:", error);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, []);
 
   // Filtros
 
@@ -179,6 +304,31 @@ export default function Page() {
     setSelectedEstado(typeof value === "string" ? value.split(",") : value);
   };
 
+  const handleExportExcel = async () => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/estudiante/est/export-excel/`,
+        {
+          responseType: "blob", // Importante para archivos
+          headers: {
+            Authorization: `Token ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+      // Crear un enlace para descargar el archivo
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "Inscripciones.xlsx"); // Nombre del archivo
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      alert("No se pudo exportar el archivo.");
+      console.error(error);
+    }
+  };
+
   const filteredRows = React.useMemo(() => {
     if (rows.length === 0) return rows;
     return rows.filter((row) => {
@@ -216,10 +366,25 @@ export default function Page() {
     selectedEstado,
   ]);
 
+  if (loading!) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div>
-      <h1>Estudiantes inscritos</h1>
-
+      <Snackbar
+        open={success}
+        autoHideDuration={4000}
+        onClose={() => setSuccess(false)}
+      >
+        <Alert
+          onClose={() => setSuccess(false)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          Inscrito eliminado exitosamente.
+        </Alert>
+      </Snackbar>
       <div className="mx-auto mt-4 flex w-11/12 justify-between rounded-2xl bg-white p-2 shadow-md">
         {/* Filtro por Periodos */}
         <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
@@ -315,7 +480,7 @@ export default function Page() {
             onChange={handleChangeEstado}
             renderValue={(selected) => selected.join(", ")}
           >
-            {["Activo", "Inactivo"].map((estado) => (
+            {[...new Set(rows.map((row) => row.estado))].map((estado) => (
               <MenuItem key={estado} value={estado}>
                 <Checkbox checked={selectedEstado.indexOf(estado) > -1} />
                 <ListItemText primary={estado} />
@@ -325,7 +490,15 @@ export default function Page() {
         </FormControl>
       </div>
 
-      <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 shadow-md">
+      <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 text-center shadow-md">
+        <Button
+          variant="outlined"
+          startIcon={<FileDownloadIcon />}
+          className="m-4 rounded-xl border-primary text-primary hover:bg-primary hover:text-white"
+          onClick={handleExportExcel}
+        >
+          Exportar a Excel
+        </Button>
         <Paper
           className="border-none shadow-none"
           sx={{ height: 800, width: "100%" }}

@@ -5,17 +5,29 @@ import {
   TagIcon,
   HomeIcon,
   BookOpenIcon,
+  CogIcon,
 } from "@heroicons/react/24/outline";
-
+import GroupWorkOutlinedIcon from '@mui/icons-material/GroupWorkOutlined';
+import AssignmentIndOutlinedIcon from '@mui/icons-material/AssignmentIndOutlined';
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const links = [
   { name: "Inicio", href: "/admin/inicio", icon: HomeIcon },
   {
-    name: "Inscripciones",
-    href: "/admin/inscripciones",
+    name: "Registros",
+    href: "/admin/registros/verRegistros",
     icon: UsersIcon,
+  },
+  {
+    name: "Matrículas",
+    href: "/admin/matriculas/verMatriculas",
+    icon: AssignmentIndOutlinedIcon,
+  },
+  {
+    name: "Funcionarios",
+    href: "/admin/funcionarios/visualizar-funcionarios",
+    icon: GroupWorkOutlinedIcon,
   },
   {
     name: "Cursos",
@@ -26,6 +38,11 @@ const links = [
     name: "Oferta Académica",
     href: "/admin/oferta/verOfertas",
     icon: TagIcon,
+  },
+  {
+    name: "Ajustes",
+    href: "/admin/ajustes/ajustes",
+    icon: CogIcon,
   },
 ];
 

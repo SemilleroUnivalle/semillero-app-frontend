@@ -18,8 +18,8 @@ const links = [
     icon: UserIcon,
   },
   {
-    name: "Matrícula",
-    href: "/estudiante/matricula",
+    name: "Matrículas",
+    href: "/estudiante/matriculas",
     icon: ClipboardDocumentCheckIcon,
   },
   { name: "Portafolio", href: "/estudiante/portafolio", icon: FolderIcon },
