@@ -65,6 +65,8 @@ export default function Login() {
         // Redirigir según el tipo de usuario o fase de registro
         if (data.tipo_usuario === "administrador") {
           router.push("/admin/inicio"); // Página de admin
+        } else if (data.tipo_usuario === "profesor"){
+          router.push("/docente/inicio");
         } else {
           router.push("/estudiante/inicio"); // Página principal del estudiante
         }
