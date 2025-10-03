@@ -15,6 +15,7 @@ import {
   Tooltip,
   Snackbar,
   Alert,
+  Chip,
 } from "@mui/material";
 
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
@@ -47,7 +48,39 @@ export default function VisualizarFuncionarios() {
       field: "estado",
       headerName: "Estado",
       flex: 0.5,
-      type: "boolean",
+      renderCell: (params) => {
+        if (params.value === "Revisado") {
+          return (
+            <Chip
+              label="Revisado"
+              color="success"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        if (params.value === "No revisado") {
+          return (
+            <Chip
+              label="No revisado"
+              color="error"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        if (params.value === "Pendiente") {
+          return (
+            <Chip
+              label="Pendiente"
+              color="warning"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        return null;
+      },
     },
     {
       field: "editar",
@@ -93,7 +126,7 @@ export default function VisualizarFuncionarios() {
     email: string;
     tipo: string;
     area_desempeño: string;
-    estado: boolean;
+    estado: string;
   }
 
   const [rows, setRows] = useState<FuncionarioRow[]>([]);
@@ -195,7 +228,7 @@ const monitoresAdmin =
     email: profesor.email || "",
     tipo: "Profesor",
     area_desempeño: profesor.area_desempeño || "",
-    estado: profesor.is_active,
+    estado: profesor.estado,
   }));
 
   const formateadoMonAcad = monitoresAcad.map((monitor: any) => ({
@@ -205,7 +238,7 @@ const monitoresAdmin =
     email: monitor.email || "",
     tipo: "Monitor Académico",
     area_desempeño: monitor.area_desempeño || "",
-    estado: monitor.is_active,
+    estado: monitor.estado,
   }));
 
   const formateadoMonAdmin = monitoresAdmin.map((monitor: any) => ({
@@ -215,7 +248,7 @@ const monitoresAdmin =
     email: monitor.email || "",
     tipo: "Monitor Administrativo",
     area_desempeño: monitor.area_desempeño || "",
-    estado: monitor.is_active,
+    estado: monitor.estado,
   }));
 
   // Une todos los arrays

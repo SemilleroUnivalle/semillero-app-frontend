@@ -43,7 +43,11 @@ interface CiudadApi {
   id: number;
   name: string;
 }
-
+interface AuditInterface {
+  id: number;
+  usuario: string;
+  timestamp: string;
+}
 interface FuncionarioInterface {
   id: number;
   nombre: string;
@@ -74,7 +78,30 @@ interface FuncionarioInterface {
   d10_pdf: string;
   tabulado_pdf: string;
   estado_mat_financiera_pdf: string;
+  foto: string;
   tipo: string;
+  verificacion_informacion: boolean | null;
+  verificacion_documento_identidad: boolean | null;
+  verificacion_foto: boolean | null;
+  verificacion_hoja_vida: boolean | null;
+  verificacion_certificado_laboral: boolean | null;
+  verificacion_certificado_academico: boolean | null;
+  verificacion_rut: boolean | null;
+  verificacion_certificado_bancario: boolean | null;
+  verificacion_d10: boolean | null;
+  verificacion_tabulado: boolean | null;
+  verificacion_estado_mat_financiera: boolean | null;
+  audit_informacion: AuditInterface | null;
+  audit_documento_identidad: AuditInterface | null;
+  audit_foto: AuditInterface | null;
+  audit_hoja_vida: AuditInterface | null;
+  audit_certificado_laboral: AuditInterface | null;
+  audit_certificado_academico: AuditInterface | null;
+  audit_rut: AuditInterface | null;
+  audit_certificado_bancario: AuditInterface | null;
+  audit_d10: AuditInterface | null;
+  audit_tabulado: AuditInterface | null;
+  audit_estado_mat_financiera: AuditInterface | null;
 }
 
 const generos = ["Masculino", "Femenino"];
@@ -148,6 +175,29 @@ export default function DetallarFuncionarios() {
     tabulado_pdf: "",
     estado_mat_financiera_pdf: "",
     tipo: "",
+    foto: "",
+    verificacion_informacion: null,
+    verificacion_documento_identidad: null,
+    verificacion_foto: null,
+    verificacion_hoja_vida: null,
+    verificacion_certificado_laboral: null,
+    verificacion_certificado_academico: null,
+    verificacion_rut: null,
+    verificacion_certificado_bancario: null,
+    verificacion_d10: null,
+    verificacion_tabulado: null,
+    verificacion_estado_mat_financiera: null,
+    audit_informacion: null,
+    audit_documento_identidad: null,
+    audit_foto: null,
+    audit_hoja_vida: null,
+    audit_certificado_laboral: null,
+    audit_certificado_academico: null,
+    audit_rut: null,
+    audit_certificado_bancario: null,
+    audit_d10: null,
+    audit_tabulado: null,
+    audit_estado_mat_financiera: null,
   });
 
   const [success, setSuccess] = useState(false);
@@ -180,7 +230,34 @@ export default function DetallarFuncionarios() {
 
   const [mostrarOtroGenero, setMostrarOtroGenero] = useState(false);
   const [mostrarTipoDiscapacidad, setTipoDiscapacidad] = useState(false);
-  let endpoint = "";
+
+  const [funcionarioId, setFuncionarioId] = useState<number | null>(null);
+  const [funcionarioTipo, setFuncionarioTipo] = useState<string | null>(null);
+
+  const [endpoint, setEndpoint] = useState<string>("");
+
+  useEffect(() => {
+    const storedData = localStorage.getItem("funcionarioSeleccionado");
+    if (storedData) {
+      const seleccionado = JSON.parse(storedData);
+      setFuncionarioId(seleccionado.id);
+      setFuncionarioTipo(seleccionado.tipo);
+
+      let url = "";
+      if (seleccionado.tipo === "Monitor Académico") {
+        url = `${API_BASE_URL}/monitor_academico/mon/${seleccionado.id}/`;
+      } else if (seleccionado.tipo === "Monitor Administrativo") {
+        url = `${API_BASE_URL}/monitor_administrativo/mon/${seleccionado.id}/`;
+      } else if (seleccionado.tipo === "Profesor") {
+        url = `${API_BASE_URL}/profesor/prof/${seleccionado.id}/`;
+      }
+      setEndpoint(url);
+      console.log("Funcionario seleccionado:", seleccionado);
+      console.log("Endpoint establecido:", url);
+    } else {
+      console.error("No se encontró funcionarioSeleccionado en localStorage");
+    }
+  }, []);
 
   // Obtener datos del funcionario y departamentos
   useEffect(() => {
@@ -202,52 +279,37 @@ export default function DetallarFuncionarios() {
       }
     };
 
-    const storedData = localStorage.getItem("funcionarioSeleccionado");
-    if (storedData) {
-      const seleccionado = JSON.parse(storedData);
-      const id = seleccionado.id;
-      const tipo = seleccionado.tipo;
-      if (id) {
-        const userString = localStorage.getItem("user");
-        let token = "";
-        if (userString) {
-          const user = JSON.parse(userString);
-          token = user.token;
-        }
-
-        if (tipo === "Monitor Académico") {
-          endpoint = `${API_BASE_URL}/monitor_academico/mon/${id}/`;
-        } else if (tipo === "Monitor Administrativo") {
-          endpoint = `${API_BASE_URL}/monitor_administrativo/mon/${id}/`;
-        } else if (tipo === "Profesor") {
-          endpoint = `${API_BASE_URL}/profesor/prof/${id}/`;
-        }
-        axios
-          .get(endpoint, {
-            headers: {
-              Authorization: `Token ${token}`,
-            },
-          })
-          .then((res) => {
-            // setEstudiante(res.data);
-            setDepartamentoSeleccionado(res.data.departamento_residencia || "");
-            setLoading(false); // <-- termina la carga
-            // En tu useEffect después de obtener el estudiante
-            setFormData({
-              ...formData,
-              ...res.data,
-            });
-            setFormData((prevData) => ({ ...prevData, tipo: tipo }));
-          })
-          .catch(() => setLoading(false)); // <-- termina la carga en error
-      } else {
-        setLoading(false); // <-- termina la carga si no hay id
-      }
-    } else {
-      setLoading(false); // <-- termina la carga si no hay datos
+    const userString = localStorage.getItem("user");
+    let token = "";
+    if (userString) {
+      const user = JSON.parse(userString);
+      token = user.token;
     }
+
+    axios
+      .get(endpoint, {
+        headers: {
+          Authorization: `Token ${token}`,
+        },
+      })
+      .then((res) => {
+        // setEstudiante(res.data);
+        setDepartamentoSeleccionado(res.data.departamento_residencia || "");
+        setLoading(false); // <-- termina la carga
+        // En tu useEffect después de obtener el estudiante
+        setFormData({
+          ...formData,
+          ...res.data,
+        });
+        setFormData((prevData) => ({
+          ...prevData,
+          tipo: funcionarioTipo ?? "",
+        }));
+      })
+      .catch(() => setLoading(false)); // <-- termina la carga en error
+
     fetchDepartamentos();
-  }, []);
+  }, [endpoint, funcionarioId, funcionarioTipo]);
 
   // Obtener ciudades cuando cambia el departamento seleccionado en modo edición
   useEffect(() => {
@@ -283,7 +345,6 @@ export default function DetallarFuncionarios() {
 
   //Funcion para guardar cambios
   const handleSave = async () => {
-
     try {
       const formDataToSend = new FormData();
 
@@ -291,15 +352,27 @@ export default function DetallarFuncionarios() {
       const camposExcluidos = [
         "contrasena",
         "id_estudiante",
-        "foto",
-        "documento_identidad",
         "tipo",
-
         "is_active",
       ];
 
       for (const key in formData) {
-        if (camposExcluidos.includes(key)) continue; // Salta los campos excluidos
+        if (
+          camposExcluidos.includes(key) ||
+          [
+            "foto",
+            "documento_identidad_pdf",
+            "rut_pdf",
+            "certificado_bancario_pdf",
+            "hoja_vida_pdf",
+            "certificado_laboral_pdf",
+            "certificado_academico_pdf",
+            "d10_pdf",
+            "tabulado_pdf",
+            "estado_mat_financiera_pdf",
+          ].includes(key)
+        )
+          continue;
 
         let value = (formData as any)[key];
         if (typeof value === "boolean") {
@@ -313,33 +386,68 @@ export default function DetallarFuncionarios() {
         formDataToSend.append("foto", fotoPerfil);
       }
       if (documentoIdentidad) {
-        formDataToSend.append("documento_identidad", documentoIdentidad);
+        formDataToSend.append("documento_identidad_pdf", documentoIdentidad);
+      } else if (formData.documento_identidad_pdf) {
+        formDataToSend.append(
+          "documento_identidad_pdf",
+          formData.documento_identidad_pdf,
+        );
       }
       if (rut) {
-        formDataToSend.append("rut", rut);
+        formDataToSend.append("rut_pdf", rut);
+      } else if (formData.rut_pdf) {
+        formDataToSend.append("rut_pdf", formData.rut_pdf);
       }
       if (certificadoBancario) {
-        formDataToSend.append("certificado_bancario", certificadoBancario);
+        formDataToSend.append("certificado_bancario_pdf", certificadoBancario);
+      } else if (formData.certificado_bancario_pdf) {
+        formDataToSend.append(
+          "certificado_bancario_pdf",
+          formData.certificado_bancario_pdf,
+        );
       }
       if (d10) {
-        formDataToSend.append("d10", d10);
+        formDataToSend.append("d10_pdf", d10);
+      } else if (formData.d10_pdf) {
+        formDataToSend.append("d10_pdf", formData.d10_pdf);
       }
       if (tabulado) {
-        formDataToSend.append("tabulado", tabulado);
+        formDataToSend.append("tabulado_pdf", tabulado);
+      } else if (formData.tabulado_pdf) {
+        formDataToSend.append("tabulado_pdf", formData.tabulado_pdf);
       }
       if (matriculaFinanciera) {
-        formDataToSend.append("matricula_financiera", matriculaFinanciera);
+        formDataToSend.append("estado_mat_financiera_pdf", matriculaFinanciera);
+      } else if (formData.estado_mat_financiera_pdf) {
+        formDataToSend.append(
+          "estado_mat_financiera_pdf",
+          formData.estado_mat_financiera_pdf,
+        );
       }
       if (hojaVida) {
-        formDataToSend.append("hoja_vida", hojaVida);
+        formDataToSend.append("hoja_vida_pdf", hojaVida);
+      } else if (formData.hoja_vida_pdf) {
+        formDataToSend.append("hoja_vida_pdf", formData.hoja_vida_pdf);
       }
       if (certificadoLaboral) {
-        formDataToSend.append("certificado_laboral", certificadoLaboral);
+        formDataToSend.append("certificado_laboral_pdf", certificadoLaboral);
+      } else if (formData.certificado_laboral_pdf) {
+        formDataToSend.append(
+          "certificado_laboral_pdf",
+          formData.certificado_laboral_pdf,
+        );
       }
       if (certificadoAcademico) {
-        formDataToSend.append("certificado_academico", certificadoAcademico);
+        formDataToSend.append(
+          "certificado_academico_pdf",
+          certificadoAcademico,
+        );
+      } else if (formData.certificado_academico_pdf) {
+        formDataToSend.append(
+          "certificado_academico_pdf",
+          formData.certificado_academico_pdf,
+        );
       }
-
 
       // Obtener token del localStorage
       const userString = localStorage.getItem("user");
@@ -352,14 +460,6 @@ export default function DetallarFuncionarios() {
       for (let pair of formDataToSend.entries()) {
         console.log(`${pair[0]}:`, pair[1]);
       }
-
-      if (formData.tipo === "Monitor Académico") {
-          endpoint = `${API_BASE_URL}/monitor_academico/mon/${formData.id}/`;
-        } else if (formData.tipo === "Monitor Administrativo") {
-          endpoint = `${API_BASE_URL}/monitor_administrativo/mon/${formData.id}/`;
-        } else if (formData.tipo === "Profesor") {
-          endpoint = `${API_BASE_URL}/profesor/prof/${formData.id}/`;
-        }
 
       console.log("Endpoint:", endpoint);
       const response = await axios.patch(endpoint, formDataToSend, {
@@ -405,45 +505,209 @@ export default function DetallarFuncionarios() {
     }
   };
 
-  // Estado para el toggle
-  const [estadoInformacion, setEstadoInformacion] = useState<
-    true | false | null
-  >(null);
-  const [estadoDocumentoIdentidad, setEstadoDocumentoIdentidad] = useState<
-    true | false | null
-  >(null);
-  const [estadoFotoPerfil, setEstadoFotoPerfil] = useState<true | false | null>(
-    null,
+  // Estados para cada verificación
+  const [estadoInformacion, setEstadoInformacion] = useState<boolean | null>(
+    formData.verificacion_informacion,
   );
+  const [estadoDocumentoIdentidad, setEstadoDocumentoIdentidad] = useState<
+    boolean | null
+  >(formData.verificacion_documento_identidad);
+  const [estadoFotoPerfil, setEstadoFotoPerfil] = useState<boolean | null>(
+    formData.verificacion_foto,
+  );
+  const [estadoHojaVida, setEstadoHojaVida] = useState<boolean | null>(
+    formData.verificacion_hoja_vida,
+  );
+  const [estadoCertificadoLaboral, setEstadoCertificadoLaboral] = useState<
+    boolean | null
+  >(formData.verificacion_certificado_laboral);
+  const [estadoCertificadoAcademico, setEstadoCertificadoAcademico] = useState<
+    boolean | null
+  >(formData.verificacion_certificado_academico);
+  const [estadoRut, setEstadoRut] = useState<boolean | null>(
+    formData.verificacion_rut,
+  );
+  const [estadoCertificadoBancario, setEstadoCertificadoBancario] = useState<
+    boolean | null
+  >(formData.verificacion_certificado_bancario);
+  const [estadoD10, setEstadoD10] = useState<boolean | null>(
+    formData.verificacion_d10,
+  );
+  const [estadoTabulado, setEstadoTabulado] = useState<boolean | null>(
+    formData.verificacion_tabulado,
+  );
+  const [estadoMatFinanciera, setEstadoMatFinanciera] = useState<
+    boolean | null
+  >(formData.verificacion_estado_mat_financiera);
 
-  // Handler para el cambio
-  const handleEstadoInformacion = (
+  useEffect(() => {
+    setEstadoInformacion(formData.verificacion_informacion);
+    setEstadoFotoPerfil(formData.verificacion_foto);
+    setEstadoDocumentoIdentidad(formData.verificacion_documento_identidad);
+    setEstadoRut(formData.verificacion_rut);
+    setEstadoCertificadoBancario(formData.verificacion_certificado_bancario);
+    setEstadoHojaVida(formData.verificacion_hoja_vida);
+    setEstadoCertificadoLaboral(formData.verificacion_certificado_laboral);
+    setEstadoCertificadoAcademico(formData.verificacion_certificado_academico);
+    setEstadoD10(formData.verificacion_d10);
+    setEstadoTabulado(formData.verificacion_tabulado);
+    setEstadoMatFinanciera(formData.verificacion_estado_mat_financiera);
+  }, [formData]);
+
+  // Handler genérico para cualquier verificación
+  const handleEstadoVerificacion = async (
+    campo: keyof FuncionarioInterface,
+    setter: React.Dispatch<React.SetStateAction<boolean | null>>,
     event: React.MouseEvent<HTMLElement>,
     newEstado: true | false | null,
   ) => {
-    if (newEstado !== null) {
-      setEstadoInformacion(newEstado);
-      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    if (newEstado !== null && formData.id) {
+      try {
+        const userString = localStorage.getItem("user");
+        let token = "";
+        if (userString) {
+          const user = JSON.parse(userString);
+          token = user.token;
+        }
+        console.log("Endpoint:", endpoint);
+        const response = await axios.patch(
+          `${endpoint}`,
+          { [campo]: newEstado },
+          { headers: { Authorization: `Token ${token}` } },
+        );
+        setter(newEstado);
+        if (response.status === 200) {
+          console.log(`Verificación de ${campo} actualizada a:`, newEstado);
+        }
+      } catch (error) {
+        console.error(`Error al actualizar verificación de ${campo}:`, error);
+      }
     }
   };
-  const handleEstadoFotoPerfil = (
-    event: React.MouseEvent<HTMLElement>,
-    newEstado: true | false | null,
-  ) => {
-    if (newEstado !== null) {
-      setEstadoFotoPerfil(newEstado);
-      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
-    }
-  };
-  const handleEstadoDocumentoIdentidad = (
-    event: React.MouseEvent<HTMLElement>,
-    newEstado: true | false | null,
-  ) => {
-    if (newEstado !== null) {
-      setEstadoDocumentoIdentidad(newEstado);
-      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
-    }
-  };
+
+  // Array de configuraciones para cada verificación
+  const verificaciones: {
+    label: string;
+    campo: keyof FuncionarioInterface;
+    value: boolean | null;
+    setter: React.Dispatch<React.SetStateAction<boolean | null>>;
+    audit: AuditInterface | null;
+  }[] = [
+    {
+      label: "Información verificada",
+      campo: "verificacion_informacion",
+      value: estadoInformacion,
+      setter: setEstadoInformacion,
+      audit: formData.audit_informacion,
+    },
+    {
+      label: "Fotografía verificada",
+      campo: "verificacion_foto",
+      value: estadoFotoPerfil,
+      setter: setEstadoFotoPerfil,
+      audit: formData.audit_foto,
+    },
+    {
+      label: "Documento de identidad verificado",
+      campo: "verificacion_documento_identidad",
+      value: estadoDocumentoIdentidad,
+      setter: setEstadoDocumentoIdentidad,
+      audit: formData.audit_documento_identidad,
+    },
+    {
+      label: "RUT verificado",
+      campo: "verificacion_rut",
+      value: estadoRut,
+      setter: setEstadoRut,
+      audit: formData.audit_rut,
+    },
+    {
+      label: "Certificado bancario verificado",
+      campo: "verificacion_certificado_bancario",
+      value: estadoCertificadoBancario,
+      setter: setEstadoCertificadoBancario,
+      audit: formData.audit_certificado_bancario,
+    },
+    {
+      label: "Hoja de vida verificada",
+      campo: "verificacion_hoja_vida",
+      value: estadoHojaVida,
+      setter: setEstadoHojaVida,
+      audit: formData.audit_hoja_vida,
+    },
+    {
+      label: "Certificado laboral verificado",
+      campo: "verificacion_certificado_laboral",
+      value: estadoCertificadoLaboral,
+      setter: setEstadoCertificadoLaboral,
+      audit: formData.audit_certificado_laboral,
+    },
+    {
+      label: "Certificado académico verificado",
+      campo: "verificacion_certificado_academico",
+      value: estadoCertificadoAcademico,
+      setter: setEstadoCertificadoAcademico,
+      audit: formData.audit_certificado_academico,
+    },
+    {
+      label: "D10 verificado",
+      campo: "verificacion_d10",
+      value: estadoD10,
+      setter: setEstadoD10,
+      audit: formData.audit_d10,
+    },
+    {
+      label: "Tabulado verificado",
+      campo: "verificacion_tabulado",
+      value: estadoTabulado,
+      setter: setEstadoTabulado,
+      audit: formData.audit_tabulado,
+    },
+    {
+      label: "Estado matrícula financiera verificado",
+      campo: "verificacion_estado_mat_financiera",
+      value: estadoMatFinanciera,
+      setter: setEstadoMatFinanciera,
+      audit: formData.audit_estado_mat_financiera,
+    },
+  ];
+
+  const verificacionesFiltradas = verificaciones.filter((ver) => {
+    // Campos comunes para todos
+    const camposComunes = [
+      "verificacion_informacion",
+      "verificacion_foto",
+      "verificacion_documento_identidad",
+      "verificacion_rut",
+      "verificacion_certificado_bancario",
+    ];
+
+    // Campos solo para profesor
+    const camposProfesor = [
+      "verificacion_hoja_vida",
+      "verificacion_certificado_laboral",
+      "verificacion_certificado_academico",
+    ];
+
+    // Campos solo para monitor
+    const camposMonitor = [
+      "verificacion_d10",
+      "verificacion_tabulado",
+      "verificacion_estado_mat_financiera",
+    ];
+
+    if (camposComunes.includes(ver.campo)) return true;
+    if (funcionarioTipo === "Profesor" && camposProfesor.includes(ver.campo))
+      return true;
+    if (
+      (funcionarioTipo === "Monitor Académico" ||
+        funcionarioTipo === "Monitor Administrativo") &&
+      camposMonitor.includes(ver.campo)
+    )
+      return true;
+
+    return false;
+  });
 
   if (loading) {
     return (
@@ -478,7 +742,7 @@ export default function DetallarFuncionarios() {
         {/* Fotografía */}
         <div className="my-4 flex flex-col items-center justify-around">
           <Avatar
-            // src={formData.foto || ""}
+            src={image ? image : formData.foto}
             sx={{ width: 150, height: 150 }}
             alt="Foto del estudiante"
           />
@@ -1495,256 +1759,67 @@ export default function DetallarFuncionarios() {
           </h2>
 
           <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-            <div>
-              <Typography variant="body1" color="textSecondary">
-                Información verificada
-              </Typography>
-              <ToggleButtonGroup
-                className="border-rounded rounded-xl"
-                value={estadoInformacion}
-                exclusive
-                onChange={handleEstadoInformacion}
-                aria-label="Estado de verificación"
-                sx={{ marginY: 2, borderRadius: 8 }}
+            {verificacionesFiltradas.map((ver) => (
+              <div
+                key={ver.campo}
+                className="flex w-full flex-col items-center sm:w-1/4"
               >
-                <ToggleButton
-                  value={true}
-                  aria-label="Aprobado"
-                  color="success"
+                <Typography variant="body1" color="textSecondary">
+                  {ver.label}
+                </Typography>
+                <ToggleButtonGroup
+                  value={ver.value}
+                  exclusive
+                  onChange={(event, newEstado) =>
+                    handleEstadoVerificacion(
+                      ver.campo,
+                      ver.setter,
+                      event,
+                      newEstado,
+                    )
+                  }
+                  aria-label="Estado de verificación"
+                  sx={{ marginY: 2, borderRadius: 8 }}
                 >
-                  <CheckCircleIcon></CheckCircleIcon>
-                </ToggleButton>
-                <ToggleButton
-                  value={false}
-                  aria-label="Rechazado"
-                  color="error"
-                >
-                  <CancelIcon></CancelIcon>
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </div>
-
-            <div>
-              <Typography variant="body1" color="textSecondary">
-                Fotografía verificada
-              </Typography>
-              <ToggleButtonGroup
-                value={estadoFotoPerfil}
-                exclusive
-                onChange={handleEstadoFotoPerfil}
-                aria-label="Estado de verificación"
-                sx={{ marginY: 2 }}
-              >
-                <ToggleButton
-                  value={true}
-                  aria-label="Aprobado"
-                  color="success"
-                >
-                  <CheckCircleIcon></CheckCircleIcon>
-                </ToggleButton>
-                <ToggleButton
-                  value={false}
-                  aria-label="Rechazado"
-                  color="error"
-                >
-                  <CancelIcon></CancelIcon>
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </div>
-
-            <div>
-              <Typography variant="body1" color="textSecondary">
-                Documento de identidad verificado
-              </Typography>
-              <ToggleButtonGroup
-                value={estadoDocumentoIdentidad}
-                exclusive
-                onChange={handleEstadoDocumentoIdentidad}
-                aria-label="Estado de verificación"
-                sx={{ marginY: 2 }}
-              >
-                <ToggleButton
-                  value={true}
-                  aria-label="Aprobado"
-                  color="success"
-                >
-                  <CheckCircleIcon></CheckCircleIcon>
-                </ToggleButton>
-                <ToggleButton
-                  value={false}
-                  aria-label="Rechazado"
-                  color="error"
-                >
-                  <CancelIcon></CancelIcon>
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </div>
-
-            <div>
-              <Typography variant="body1" color="textSecondary">
-                RUT verificado
-              </Typography>
-              <ToggleButtonGroup
-                value={estadoDocumentoIdentidad}
-                exclusive
-                onChange={handleEstadoDocumentoIdentidad}
-                aria-label="Estado de verificación"
-                sx={{ marginY: 2 }}
-              >
-                <ToggleButton
-                  value={true}
-                  aria-label="Aprobado"
-                  color="success"
-                >
-                  <CheckCircleIcon></CheckCircleIcon>
-                </ToggleButton>
-                <ToggleButton
-                  value={false}
-                  aria-label="Rechazado"
-                  color="error"
-                >
-                  <CancelIcon></CancelIcon>
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </div>
-
-            <div>
-              <Typography variant="body1" color="textSecondary">
-                Certificado bancario verificado
-              </Typography>
-              <ToggleButtonGroup
-                value={estadoDocumentoIdentidad}
-                exclusive
-                onChange={handleEstadoDocumentoIdentidad}
-                aria-label="Estado de verificación"
-                sx={{ marginY: 2 }}
-              >
-                <ToggleButton
-                  value={true}
-                  aria-label="Aprobado"
-                  color="success"
-                >
-                  <CheckCircleIcon></CheckCircleIcon>
-                </ToggleButton>
-                <ToggleButton
-                  value={false}
-                  aria-label="Rechazado"
-                  color="error"
-                >
-                  <CancelIcon></CancelIcon>
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </div>
-
-            <div>
-              <Typography variant="body1" color="textSecondary">
-                Certificado bancario verificado
-              </Typography>
-              <ToggleButtonGroup
-                value={estadoDocumentoIdentidad}
-                exclusive
-                onChange={handleEstadoDocumentoIdentidad}
-                aria-label="Estado de verificación"
-                sx={{ marginY: 2 }}
-              >
-                <ToggleButton
-                  value={true}
-                  aria-label="Aprobado"
-                  color="success"
-                >
-                  <CheckCircleIcon></CheckCircleIcon>
-                </ToggleButton>
-                <ToggleButton
-                  value={false}
-                  aria-label="Rechazado"
-                  color="error"
-                >
-                  <CancelIcon></CancelIcon>
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </div>
-            <div>
-              <Typography variant="body1" color="textSecondary">
-                Hoja de vida verificada
-              </Typography>
-              <ToggleButtonGroup
-                value={estadoDocumentoIdentidad}
-                exclusive
-                onChange={handleEstadoDocumentoIdentidad}
-                aria-label="Estado de verificación"
-                sx={{ marginY: 2 }}
-              >
-                <ToggleButton
-                  value={true}
-                  aria-label="Aprobado"
-                  color="success"
-                >
-                  <CheckCircleIcon></CheckCircleIcon>
-                </ToggleButton>
-                <ToggleButton
-                  value={false}
-                  aria-label="Rechazado"
-                  color="error"
-                >
-                  <CancelIcon></CancelIcon>
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </div>
-
-            <div>
-              <Typography variant="body1" color="textSecondary">
-                Certificado laboral verificado
-              </Typography>
-              <ToggleButtonGroup
-                value={estadoDocumentoIdentidad}
-                exclusive
-                onChange={handleEstadoDocumentoIdentidad}
-                aria-label="Estado de verificación"
-                sx={{ marginY: 2 }}
-              >
-                <ToggleButton
-                  value={true}
-                  aria-label="Aprobado"
-                  color="success"
-                >
-                  <CheckCircleIcon></CheckCircleIcon>
-                </ToggleButton>
-                <ToggleButton
-                  value={false}
-                  aria-label="Rechazado"
-                  color="error"
-                >
-                  <CancelIcon></CancelIcon>
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </div>
-            <div>
-              <Typography variant="body1" color="textSecondary">
-                Certificado académico verificado
-              </Typography>
-              <ToggleButtonGroup
-                value={estadoDocumentoIdentidad}
-                exclusive
-                onChange={handleEstadoDocumentoIdentidad}
-                aria-label="Estado de verificación"
-                sx={{ marginY: 2 }}
-              >
-                <ToggleButton
-                  value={true}
-                  aria-label="Aprobado"
-                  color="success"
-                >
-                  <CheckCircleIcon></CheckCircleIcon>
-                </ToggleButton>
-                <ToggleButton
-                  value={false}
-                  aria-label="Rechazado"
-                  color="error"
-                >
-                  <CancelIcon></CancelIcon>
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </div>
+                  <ToggleButton
+                    value={true}
+                    aria-label="Aprobado"
+                    color="success"
+                  >
+                    <CheckCircleIcon />
+                  </ToggleButton>
+                  <ToggleButton
+                    value={false}
+                    aria-label="Rechazado"
+                    color="error"
+                  >
+                    <CancelIcon />
+                  </ToggleButton>
+                </ToggleButtonGroup>
+                {ver.audit && (
+                  <div>
+                    <p className="text-xs">
+                      <span className="font-bold">Usuario: </span>
+                      {ver.audit.usuario}
+                      <br />
+                      <span className="font-bold">Fecha: </span>
+                      {ver.audit.timestamp
+                        ? new Date(ver.audit.timestamp).toLocaleString(
+                            "es-CO",
+                            {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )
+                        : ""}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 

@@ -54,6 +54,12 @@ interface AcudienteInterface {
   celular_acudiente: string;
 }
 
+interface AuditInterface {
+  id: number;
+  usuario: string;
+  timestamp: string;
+}
+
 interface EstudianteInterface {
   id_estudiante: number | null;
   nombre: string;
@@ -83,6 +89,9 @@ interface EstudianteInterface {
   verificacion_informacion: boolean | null;
   verificacion_foto: boolean | null;
   verificacion_documento_identidad: boolean | null;
+  audit_foto: AuditInterface | null;
+  audit_documento_identidad: AuditInterface | null;
+  audit_informacion: AuditInterface | null;
 }
 
 const grados: string[] = [
@@ -142,6 +151,7 @@ export default function DetallarRegistro() {
     useState<string>("");
   const [cargandoCiudades, setCargandoCiudades] = useState<boolean>(false);
 
+  // Estado para el formulario
   const [formData, setFormData] = useState<EstudianteInterface>({
     id_estudiante: null,
     nombre: "",
@@ -179,6 +189,9 @@ export default function DetallarRegistro() {
     verificacion_informacion: null,
     verificacion_foto: null,
     verificacion_documento_identidad: null,
+    audit_foto: null,
+    audit_documento_identidad: null,
+    audit_informacion: null,
   });
 
   const [formDataAcudiente, setFormDataAcudiente] =
@@ -202,6 +215,7 @@ export default function DetallarRegistro() {
     null,
   );
   const [image, setImage] = useState<string | null>(null);
+  const [documento, setDocumento] = useState<string | null>(null);
 
   // Manejo de campo para otro género
 
@@ -320,19 +334,18 @@ export default function DetallarRegistro() {
     try {
       const formDataToSend = new FormData();
 
-      // Lista de campos que NO se deben enviar
+      // Lista de campos que NO se deben enviar automáticamente
       const camposExcluidos = [
         "contrasena",
         "id_estudiante",
+        "is_active",
         "foto",
         "documento_identidad",
-
-        "is_active",
       ];
 
+      // Agrega los campos normales
       for (const key in formData) {
-        if (camposExcluidos.includes(key)) continue; // Salta los campos excluidos
-
+        if (camposExcluidos.includes(key)) continue;
         let value = (formData as any)[key];
         if (typeof value === "boolean") {
           value = value ? "True" : "False";
@@ -340,6 +353,7 @@ export default function DetallarRegistro() {
         formDataToSend.append(key, value);
       }
 
+      // Solo agrega archivos si el usuario seleccionó uno nuevo
       if (fotoPerfil) {
         formDataToSend.append("foto", fotoPerfil);
       }
@@ -347,23 +361,24 @@ export default function DetallarRegistro() {
         formDataToSend.append("documento_identidad", documentoIdentidad);
       }
 
-      // Obtener token del localStorage
+      // Token
       const userString = localStorage.getItem("user");
       let token = "";
       if (userString) {
         const user = JSON.parse(userString);
         token = user.token;
       }
-      // Debug: Mostrar los datos que se van a enviar
+
+      // Debug
       for (let pair of formDataToSend.entries()) {
         console.log(`${pair[0]}:`, pair[1]);
       }
+
       const response = await axios.patch(
         `${API_BASE_URL}/estudiante/est/${formData.id_estudiante}/`,
         formDataToSend,
         {
           headers: {
-            "Content-Type": "multipart/form-data",
             Authorization: `Token ${token}`,
           },
         },
@@ -551,7 +566,7 @@ export default function DetallarRegistro() {
         {/* Fotografía */}
         <div className="my-4 flex flex-col items-center justify-around">
           <Avatar
-            src={estudiante.foto || ""}
+            src={image ? image : estudiante.foto}
             sx={{ width: 150, height: 150 }}
             alt="Foto del estudiante"
           />
@@ -571,11 +586,6 @@ export default function DetallarRegistro() {
                   const file = e.target.files?.[0];
                   if (file) {
                     setFotoPerfil(file);
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      setImage(reader.result as string);
-                    };
-                    reader.readAsDataURL(file);
                   }
                 }}
               />
@@ -1380,6 +1390,25 @@ export default function DetallarRegistro() {
                 <CancelIcon></CancelIcon>
               </ToggleButton>
             </ToggleButtonGroup>
+            <div>
+              <p className="text-xs">
+                <span className="font-bold">Usuario: </span>
+                {formData.audit_informacion?.usuario}
+                <br />
+                <span className="font-bold">Fecha: </span>
+                {formData.audit_informacion?.timestamp
+                  ? new Date(
+                      formData.audit_informacion.timestamp,
+                    ).toLocaleString("es-CO", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : ""}
+              </p>
+            </div>
           </div>
 
           <div>
@@ -1400,6 +1429,25 @@ export default function DetallarRegistro() {
                 <CancelIcon></CancelIcon>
               </ToggleButton>
             </ToggleButtonGroup>
+            <div>
+              <p className="text-xs">
+                <span className="font-bold">Usuario:</span>{" "}
+                {formData.audit_documento_identidad?.usuario}
+                <br />
+                <span className="font-bold">Fecha: </span>
+                {formData.audit_documento_identidad?.timestamp
+                  ? new Date(
+                      formData.audit_documento_identidad.timestamp,
+                    ).toLocaleString("es-CO", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : ""}
+              </p>
+            </div>
           </div>
           <div>
             <Typography variant="body1" color="textSecondary">
@@ -1419,6 +1467,26 @@ export default function DetallarRegistro() {
                 <CancelIcon></CancelIcon>
               </ToggleButton>
             </ToggleButtonGroup>
+            <div>
+              <p className="text-xs">
+                <span className="font-bold">Usuario:</span>{" "}
+                {formData.audit_foto?.usuario}
+                <br />
+                <span className="font-bold">Fecha: </span>
+                {formData.audit_foto?.timestamp
+                  ? new Date(formData.audit_foto.timestamp).toLocaleString(
+                      "es-CO",
+                      {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      },
+                    )
+                  : ""}
+              </p>
+            </div>
           </div>
         </div>
 

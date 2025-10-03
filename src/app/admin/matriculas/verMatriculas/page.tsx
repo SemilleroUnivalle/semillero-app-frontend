@@ -15,6 +15,7 @@ import {
   Tooltip,
   Snackbar,
   Alert,
+  Chip,
 } from "@mui/material";
 
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
@@ -59,7 +60,39 @@ export default function VerMatriculas() {
       field: "estado",
       headerName: "Estado",
       flex: 1,
-      type: "boolean",
+      renderCell: (params) => {
+        if (params.value === "Revisado") {
+          return (
+            <Chip
+              label="Revisado"
+              color="success"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        if (params.value === "No revisado") {
+          return (
+            <Chip
+              label="No revisado"
+              color="error"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        if (params.value === "Pendiente") {
+          return (
+            <Chip
+              label="Pendiente"
+              color="warning"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        return null;
+      },
     },
     {
       field: "editar",
@@ -108,7 +141,7 @@ export default function VerMatriculas() {
     modulo: string;
     estamento: string;
     tipo: string;
-    estado: boolean;
+    estado: string;
   }
 
   interface Estudiante {
@@ -194,26 +227,26 @@ export default function VerMatriculas() {
 
         if (response.status === 200) {
           // Formatea los datos para la tabla
-        const formateado = response.data.map((matricula: any) => ({
-          id: matricula.id_inscripcion,
-          apellido: matricula.estudiante.apellido || "",
-          nombre: matricula.estudiante.nombre || "",
-          email: matricula.estudiante.email || "",
-          direccion: matricula.estudiante.direccion_residencia || "",
-          periodo:
-            matricula.oferta_categoria &&
-            matricula.oferta_categoria.id_oferta_academica
-              ? matricula.oferta_categoria.id_oferta_academica.nombre
-              : "", // Cambiar cuando los datos no esten nulos
-          modulo: matricula.modulo.nombre_modulo || "",
-          estamento: matricula.estudiante.estamento || "",
-          tipo: matricula.tipo_vinculacion || "",
-          estado: matricula.estado === "A", // true si es "Verificado", false en otro caso
-        }));
+          const formateado = response.data.map((matricula: any) => ({
+            id: matricula.id_inscripcion,
+            apellido: matricula.estudiante.apellido || "",
+            nombre: matricula.estudiante.nombre || "",
+            email: matricula.estudiante.email || "",
+            direccion: matricula.estudiante.direccion_residencia || "",
+            periodo:
+              matricula.oferta_categoria &&
+              matricula.oferta_categoria.id_oferta_academica
+                ? matricula.oferta_categoria.id_oferta_academica.nombre
+                : "", // Cambiar cuando los datos no esten nulos
+            modulo: matricula.modulo.nombre_modulo || "",
+            estamento: matricula.estudiante.estamento || "",
+            tipo: matricula.tipo_vinculacion || "",
+            estado: matricula.estado, // true si es "Verificado", false en otro caso
+          }));
 
-        console.log("Datos formateados:", formateado); // Verifica los datos formateados
+          console.log("Datos formateados:", formateado); // Verifica los datos formateados
 
-        setRows(formateado);
+          setRows(formateado);
         }
         setEstudiantes(response.data);
 
@@ -333,8 +366,8 @@ export default function VerMatriculas() {
     selectedEstado,
   ]);
 
-  if(loading!){
-    return ( <div>Loading...</div> )
+  if (loading!) {
+    return <div>Loading...</div>;
   }
 
   return (
@@ -447,7 +480,7 @@ export default function VerMatriculas() {
             onChange={handleChangeEstado}
             renderValue={(selected) => selected.join(", ")}
           >
-            {["Activo", "Inactivo"].map((estado) => (
+            {[...new Set(rows.map((row) => row.estado))].map((estado) => (
               <MenuItem key={estado} value={estado}>
                 <Checkbox checked={selectedEstado.indexOf(estado) > -1} />
                 <ListItemText primary={estado} />

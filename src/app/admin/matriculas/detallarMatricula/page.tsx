@@ -54,32 +54,44 @@ export interface Acudiente {
   email_acudiente: string;
 }
 
+interface AuditInterface {
+  id: number;
+  usuario: string;
+  timestamp: string;
+}
+
 export interface Estudiante {
-  id_estudiante: number;
-  acudiente: Acudiente;
+  id_estudiante: number | null;
   nombre: string;
   apellido: string;
   numero_documento: string;
-  email: string;
-  is_active: boolean;
-  ciudad_residencia: string;
-  eps: string;
-  grado: string;
-  colegio: string;
   tipo_documento: string;
-  genero: string;
   fecha_nacimiento: string;
-  grado_escolaridad: string;
-  area_desempeño: string;
-  telefono_fijo: string;
+  genero: string;
+  email: string;
   celular: string;
+  telefono_fijo: string;
   departamento_residencia: string;
+  ciudad_residencia: string;
   comuna_residencia: string;
   direccion_residencia: string;
+  colegio: string;
+  grado: string;
   estamento: string;
+  eps: string;
+  area_desempeño: string;
+  grado_escolaridad: string;
   discapacidad: boolean;
-  tipo_discapacidad: string;
   descripcion_discapacidad: string;
+  tipo_discapacidad: string;
+  is_active: boolean;
+  acudiente: Acudiente;
+  verificacion_informacion: boolean | null;
+  verificacion_foto: boolean | null;
+  verificacion_documento_identidad: boolean | null;
+  audit_foto: AuditInterface | null;
+  audit_documento_identidad: AuditInterface | null;
+  audit_informacion: AuditInterface | null;
 }
 
 export interface Categoria {
@@ -121,7 +133,7 @@ export interface OfertaCategoria {
   id_categoria: number;
 }
 
-export interface MatriculaResponse {
+export interface Matricula {
   id_inscripcion: number;
   modulo: Modulo;
   estudiante: Estudiante;
@@ -133,8 +145,11 @@ export interface MatriculaResponse {
   terminos: boolean;
   observaciones: string | null;
   recibo_pago: string;
-  constancia: string | null;
   certificado: string;
+  verificacion_recibo_pago: boolean | null;
+  verificacion_certificado: boolean | null;
+  audit_documento_recibo_pago: AuditInterface | null;
+  audit_certificado: AuditInterface | null;
 }
 
 const grados: string[] = [
@@ -184,7 +199,6 @@ export default function DetallarMatricula() {
   const router = useRouter();
 
   const [estudiante, setEstudiante] = useState<any>(null);
-  const [matricula, setMatricula] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editable, setEditable] = useState(false);
 
@@ -195,8 +209,9 @@ export default function DetallarMatricula() {
     useState<string>("");
   const [cargandoCiudades, setCargandoCiudades] = useState<boolean>(false);
 
+  // Estados para el formulario de estudiante, acudiente y matrícula
   const [formDataEstudiante, setFormDataEstudiante] = useState<Estudiante>({
-    id_estudiante: 0,
+    id_estudiante: null,
     nombre: "",
     apellido: "",
     numero_documento: "",
@@ -214,11 +229,11 @@ export default function DetallarMatricula() {
     grado: "",
     estamento: "",
     eps: "",
-    grado_escolaridad: "",
-    area_desempeño: "",
     discapacidad: false,
     descripcion_discapacidad: "",
     tipo_discapacidad: "",
+    area_desempeño: "",
+    grado_escolaridad: "",
     is_active: true,
     acudiente: {
       id_acudiente: 0,
@@ -229,6 +244,12 @@ export default function DetallarMatricula() {
       numero_documento_acudiente: "",
       celular_acudiente: "",
     },
+    verificacion_informacion: null,
+    verificacion_foto: null,
+    verificacion_documento_identidad: null,
+    audit_foto: null,
+    audit_documento_identidad: null,
+    audit_informacion: null,
   });
 
   const [formDataAcudiente, setFormDataAcudiente] = useState<Acudiente>({
@@ -243,54 +264,55 @@ export default function DetallarMatricula() {
     celular_acudiente: formDataEstudiante.acudiente.celular_acudiente || "",
   });
 
-  const [formDataMatricula, setFormDataMatricula] = useState<MatriculaResponse>(
-    {
-      id_inscripcion: 0,
-      modulo: {
-        id_modulo: 0,
-        id_categoria: {
-          id_categoria: 0,
-          nombre: "",
-          estado: false,
-        },
-        nombre_modulo: "",
-        descripcion_modulo: "",
-        intensidad_horaria: 0,
-        dirigido_a: null,
-        incluye: null,
-        id_area: 0,
-        id_oferta_categoria: [],
-        imagen_modulo: null,
-        estado: false,
-      },
-      estudiante: formDataEstudiante,
-      oferta_categoria: {
-        id_oferta_categoria: 0,
-        id_oferta_academica: {
-          id_oferta_academica: 0,
-          fecha_inicio: "",
-          nombre: "",
-          estado: false,
-        },
-        precio_publico: "",
-        precio_privado: "",
-        precio_univalle: "",
-        precio_univalle_egresados: null,
-        fecha_finalizacion: "",
-        estado: false,
+  const [formDataMatricula, setFormDataMatricula] = useState<Matricula>({
+    id_inscripcion: 0,
+    modulo: {
+      id_modulo: 0,
+      id_categoria: {
         id_categoria: 0,
+        nombre: "",
+        estado: false,
       },
-      estado: "",
-      grupo: "",
-      fecha_inscripcion: "",
-      tipo_vinculacion: "",
-      terminos: false,
-      observaciones: null,
-      recibo_pago: "",
-      constancia: null,
-      certificado: "",
+      nombre_modulo: "",
+      descripcion_modulo: "",
+      intensidad_horaria: 0,
+      dirigido_a: null,
+      incluye: null,
+      id_area: 0,
+      id_oferta_categoria: [],
+      imagen_modulo: null,
+      estado: false,
     },
-  );
+    estudiante: formDataEstudiante,
+    oferta_categoria: {
+      id_oferta_categoria: 0,
+      id_oferta_academica: {
+        id_oferta_academica: 0,
+        fecha_inicio: "",
+        nombre: "",
+        estado: false,
+      },
+      precio_publico: "",
+      precio_privado: "",
+      precio_univalle: "",
+      precio_univalle_egresados: null,
+      fecha_finalizacion: "",
+      estado: false,
+      id_categoria: 0,
+    },
+    estado: "",
+    grupo: "",
+    fecha_inscripcion: "",
+    tipo_vinculacion: "",
+    terminos: false,
+    observaciones: null,
+    recibo_pago: "",
+    certificado: "",
+    verificacion_recibo_pago: null,
+    verificacion_certificado: null,
+    audit_documento_recibo_pago: null,
+    audit_certificado: null,
+  });
 
   const [success, setSuccess] = useState(false);
 
@@ -353,11 +375,13 @@ export default function DetallarMatricula() {
             setDepartamentoSeleccionado(
               res.data.estudiante.departamento_residencia || "",
             );
-            setMatricula(res.data);
             setFormDataMatricula({
               ...formDataMatricula,
               ...res.data,
             });
+
+            console.log(res.data);
+
             setLoading(false); // <-- termina la carga
             // En tu useEffect después de obtener el estudiante
             setFormDataEstudiante({
@@ -365,6 +389,7 @@ export default function DetallarMatricula() {
               ...res.data.estudiante,
             });
           })
+
           .catch(() => setLoading(false)); // <-- termina la carga en error
       } else {
         setLoading(false); // <-- termina la carga si no hay id
@@ -540,79 +565,182 @@ export default function DetallarMatricula() {
   };
 
   // Estados para las verificaciones
-  const [estadoInformacion, setEstadoInformacion] = useState<
-    true | false | null
-  >(null);
+  const [estadoInformacion, setEstadoInformacion] = useState<boolean | null>(
+    formDataEstudiante.verificacion_informacion,
+  );
+  const [estadoFotoPerfil, setEstadoFotoPerfil] = useState<boolean | null>(
+    formDataEstudiante.verificacion_foto,
+  );
   const [estadoDocumentoIdentidad, setEstadoDocumentoIdentidad] = useState<
-    true | false | null
-  >(null);
-  const [estadoFotoPerfil, setEstadoFotoPerfil] = useState<true | false | null>(
-    null,
+    boolean | null
+  >(formDataEstudiante.verificacion_documento_identidad);
+
+  const [estadoReciboPago, setEstadoReciboPago] = useState<boolean | null>(
+    formDataMatricula.verificacion_recibo_pago,
+  );
+  const [estadoCertificado, setEstadoCertificado] = useState<boolean | null>(
+    formDataMatricula.verificacion_certificado,
   );
 
-  const [estadoReciboPago, setEstadoReciboPago] = useState<true | false | null>(
-    null,
-  );
-  const [estadoCertificado, setEstadoCertificado] = useState<
-    true | false | null
-  >(null);
-  const [estadoInformacionMatricula, setEstadoInformacionMatricula] = useState<
-    true | false | null
-  >(null);
+  useEffect(() => {
+    setEstadoInformacion(formDataEstudiante.verificacion_informacion);
+    setEstadoFotoPerfil(formDataEstudiante.verificacion_foto);
+    setEstadoDocumentoIdentidad(
+      formDataEstudiante.verificacion_documento_identidad,
+    );
+    setEstadoReciboPago(formDataMatricula.verificacion_recibo_pago);
+    setEstadoCertificado(formDataMatricula.verificacion_certificado);
+  }, [formDataEstudiante]);
 
-  // Handler para el cambio de estado de cada verificacion
-  const handleEstadoInformacion = (
+  // Manejadores para los cambios en los estados de verificación
+
+  const handleEstadoInformacion = async (
     event: React.MouseEvent<HTMLElement>,
     newEstado: true | false | null,
   ) => {
-    if (newEstado !== null) {
-      setEstadoInformacion(newEstado);
-      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    if (newEstado !== null && formDataEstudiante.id_estudiante) {
+      try {
+        const userString = localStorage.getItem("user");
+        let token = "";
+        if (userString) {
+          const user = JSON.parse(userString);
+          token = user.token;
+        }
+        await axios.patch(
+          `${API_BASE_URL}/estudiante/est/${formDataEstudiante.id_estudiante}/`,
+          { verificacion_informacion: newEstado },
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          },
+        );
+        setEstadoInformacion(newEstado); // Actualiza el estado local si lo usas
+        console.log("Verificación de información actualizada a:", newEstado);
+      } catch (error) {
+        console.error(
+          "Error al actualizar verificación de información:",
+          error,
+        );
+      }
     }
   };
-  const handleEstadoFotoPerfil = (
+
+  const handleEstadoFotoPerfil = async (
     event: React.MouseEvent<HTMLElement>,
     newEstado: true | false | null,
   ) => {
-    if (newEstado !== null) {
-      setEstadoFotoPerfil(newEstado);
-      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    if (newEstado !== null && formDataEstudiante.id_estudiante) {
+      try {
+        const userString = localStorage.getItem("user");
+        let token = "";
+        if (userString) {
+          const user = JSON.parse(userString);
+          token = user.token;
+        }
+        await axios.patch(
+          `${API_BASE_URL}/estudiante/est/${formDataEstudiante.id_estudiante}/`,
+          { verificacion_foto: newEstado },
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          },
+        );
+        setEstadoFotoPerfil(newEstado);
+      } catch (error) {
+        console.error("Error al actualizar verificación de foto:", error);
+      }
     }
   };
-  const handleEstadoDocumentoIdentidad = (
+
+  const handleEstadoDocumentoIdentidad = async (
     event: React.MouseEvent<HTMLElement>,
     newEstado: true | false | null,
   ) => {
-    if (newEstado !== null) {
-      setEstadoDocumentoIdentidad(newEstado);
-      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    if (newEstado !== null && formDataEstudiante.id_estudiante) {
+      try {
+        const userString = localStorage.getItem("user");
+        let token = "";
+        if (userString) {
+          const user = JSON.parse(userString);
+          token = user.token;
+        }
+        await axios.patch(
+          `${API_BASE_URL}/estudiante/est/${formDataEstudiante.id_estudiante}/`,
+          { verificacion_documento_identidad: newEstado },
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          },
+        );
+        setEstadoDocumentoIdentidad(newEstado);
+      } catch (error) {
+        console.error("Error al actualizar verificación de documento:", error);
+      }
     }
   };
-  const handleEstadoReciboPago = (
+
+  const handleEstadoReciboPago = async (
     event: React.MouseEvent<HTMLElement>,
     newEstado: true | false | null,
   ) => {
-    if (newEstado !== null) {
-      setEstadoReciboPago(newEstado);
-      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    if (newEstado !== null && formDataMatricula.id_inscripcion) {
+      try {
+        const userString = localStorage.getItem("user");
+        let token = "";
+        if (userString) {
+          const user = JSON.parse(userString);
+          token = user.token;
+        }
+        await axios.patch(
+          `${API_BASE_URL}/matricula/mat/${formDataMatricula.id_inscripcion}/`,
+          { verificacion_recibo_pago: newEstado },
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          },
+        );
+        setEstadoReciboPago(newEstado);
+      } catch (error) {
+        console.error(
+          "Error al actualizar verificación de recibo de pago:",
+          error,
+        );
+      }
     }
   };
-  const handleEstadoCertificado = (
+
+  const handleEstadoCertificado = async (
     event: React.MouseEvent<HTMLElement>,
     newEstado: true | false | null,
   ) => {
-    if (newEstado !== null) {
-      setEstadoCertificado(newEstado);
-      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
-    }
-  };
-  const handleEstadoInformacionMatricula = (
-    event: React.MouseEvent<HTMLElement>,
-    newEstado: true | false | null,
-  ) => {
-    if (newEstado !== null) {
-      setEstadoInformacionMatricula(newEstado);
-      // Aquí puedes agregar lógica para enviar el estado al backend si lo necesitas
+    if (newEstado !== null && formDataMatricula.id_inscripcion) {
+      try {
+        const userString = localStorage.getItem("user");
+        let token = "";
+        if (userString) {
+          const user = JSON.parse(userString);
+          token = user.token;
+        }
+        await axios.patch(
+          `${API_BASE_URL}/matricula/mat/${formDataMatricula.id_inscripcion}/`,
+          { verificacion_certificado: newEstado },
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          },
+        );
+        setEstadoCertificado(newEstado);
+      } catch (error) {
+        console.error(
+          "Error al actualizar verificación de certificado:",
+          error,
+        );
+      }
     }
   };
 
@@ -1488,6 +1616,7 @@ export default function DetallarMatricula() {
             </div>
           )}
         </div>
+
         {/* Verificaciones de informacion personal */}
         <h2 className="text-md my-4 text-center font-semibold text-primary">
           Verificaciones
@@ -1512,6 +1641,25 @@ export default function DetallarMatricula() {
                 <CancelIcon></CancelIcon>
               </ToggleButton>
             </ToggleButtonGroup>
+            <div>
+              <p className="text-xs">
+                <span className="font-bold">Usuario: </span>
+                {formDataEstudiante.audit_informacion?.usuario}
+                <br />
+                <span className="font-bold">Fecha: </span>
+                {formDataEstudiante.audit_informacion?.timestamp
+                  ? new Date(
+                      formDataEstudiante.audit_informacion.timestamp,
+                    ).toLocaleString("es-CO", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : ""}
+              </p>
+            </div>
           </div>
 
           <div>
@@ -1532,6 +1680,25 @@ export default function DetallarMatricula() {
                 <CancelIcon></CancelIcon>
               </ToggleButton>
             </ToggleButtonGroup>
+            <div>
+              <p className="text-xs">
+                <span className="font-bold">Usuario:</span>{" "}
+                {formDataEstudiante.audit_documento_identidad?.usuario}
+                <br />
+                <span className="font-bold">Fecha: </span>
+                {formDataEstudiante.audit_documento_identidad?.timestamp
+                  ? new Date(
+                      formDataEstudiante.audit_documento_identidad.timestamp,
+                    ).toLocaleString("es-CO", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : ""}
+              </p>
+            </div>
           </div>
           <div>
             <Typography variant="body1" color="textSecondary">
@@ -1551,6 +1718,25 @@ export default function DetallarMatricula() {
                 <CancelIcon></CancelIcon>
               </ToggleButton>
             </ToggleButtonGroup>
+            <div>
+              <p className="text-xs">
+                <span className="font-bold">Usuario:</span>{" "}
+                {formDataEstudiante.audit_foto?.usuario}
+                <br />
+                <span className="font-bold">Fecha: </span>
+                {formDataEstudiante.audit_foto?.timestamp
+                  ? new Date(
+                      formDataEstudiante.audit_foto.timestamp,
+                    ).toLocaleString("es-CO", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : ""}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -1585,14 +1771,15 @@ export default function DetallarMatricula() {
 
       {/* Documentos de Matricula */}
       <div className="mt-3 flex w-full flex-wrap justify-around gap-4 text-gray-600">
-        {matricula.recibo_pago && (
+        {formDataMatricula.recibo_pago && (
           <Button
             variant="outlined"
             color="primary"
-            href={matricula.recibo_pago}
+            href={formDataMatricula.recibo_pago}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2"
+            className="mt-2 rounded-2xl border-primary text-primary"
+            startIcon={<PictureAsPdfIcon />}
           >
             Ver recibo de pago
           </Button>
@@ -1630,14 +1817,15 @@ export default function DetallarMatricula() {
           </div>
         )}
 
-        {matricula.certificado && (
+        {formDataMatricula.certificado && (
           <Button
             variant="outlined"
             color="primary"
-            href={matricula.certificado}
+            href={formDataMatricula.certificado}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2"
+            className="mt-2 rounded-2xl border-primary text-primary"
+            startIcon={<PictureAsPdfIcon />}
           >
             Ver certificado
           </Button>
@@ -1650,27 +1838,6 @@ export default function DetallarMatricula() {
       </h2>
 
       <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-        <div>
-          <Typography variant="body1" color="textSecondary">
-            Información de matrícula verificada
-          </Typography>
-          <ToggleButtonGroup
-            className="border-rounded rounded-xl"
-            value={estadoInformacionMatricula}
-            exclusive
-            onChange={handleEstadoInformacionMatricula}
-            aria-label="Estado de verificación"
-            sx={{ marginY: 2, borderRadius: 8 }}
-          >
-            <ToggleButton value={true} aria-label="Aprobado" color="success">
-              <CheckCircleIcon></CheckCircleIcon>
-            </ToggleButton>
-            <ToggleButton value={false} aria-label="Rechazado" color="error">
-              <CancelIcon></CancelIcon>
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </div>
-
         <div>
           <Typography variant="body1" color="textSecondary">
             Recibo de pago verificado
@@ -1689,6 +1856,25 @@ export default function DetallarMatricula() {
               <CancelIcon></CancelIcon>
             </ToggleButton>
           </ToggleButtonGroup>
+          <div>
+            <p className="text-xs">
+              <span className="font-bold">Usuario: </span>
+              {formDataMatricula.audit_documento_recibo_pago?.usuario}
+              <br />
+              <span className="font-bold">Fecha: </span>
+              {formDataMatricula.audit_documento_recibo_pago?.timestamp
+                ? new Date(
+                    formDataMatricula.audit_documento_recibo_pago.timestamp,
+                  ).toLocaleString("es-CO", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : ""}
+            </p>
+          </div>
         </div>
         <div>
           <Typography variant="body1" color="textSecondary">
@@ -1708,6 +1894,25 @@ export default function DetallarMatricula() {
               <CancelIcon></CancelIcon>
             </ToggleButton>
           </ToggleButtonGroup>
+          <div>
+            <p className="text-xs">
+              <span className="font-bold">Usuario: </span>
+              {formDataMatricula.audit_certificado?.usuario}
+              <br />
+              <span className="font-bold">Fecha: </span>
+              {formDataMatricula.audit_certificado?.timestamp
+                ? new Date(
+                    formDataMatricula.audit_certificado.timestamp,
+                  ).toLocaleString("es-CO", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : ""}
+            </p>
+          </div>
         </div>
       </div>
 
