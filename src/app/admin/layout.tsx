@@ -2,7 +2,6 @@
 import "../globals.css";
 import { StyledEngineProvider } from "@mui/material/styles";
 import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
-import Head from "next/head";
 
 import Sidebar from "../../components/Sidebar";
 import axios from "axios";
@@ -44,16 +43,9 @@ export default function LayoutAdmin({
   };
   return (
     <StyledEngineProvider injectFirst>
-      <Head>
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=logout&display=optional"
-        />
-      </Head>
       <div className="flex flex-row">
         <div className="sticky top-0 h-screen w-1/5 bg-white p-4">
-          {/* <h1 className="block text-center md:hidden">SUV</h1>
-          <h1 className="hidden md:block">Semillero Univalle</h1> */}
+
           <Image
             className="m-4"
             src="/logoGrisSemillero.png"

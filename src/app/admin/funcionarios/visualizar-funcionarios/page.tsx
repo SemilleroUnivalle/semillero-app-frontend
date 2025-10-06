@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import {
-  Button,
+
   Paper,
   Select,
   MenuItem,
@@ -25,6 +25,15 @@ import axios from "axios";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { API_BASE_URL } from "../../../../../config";
 import { useRouter } from "next/navigation";
+
+interface ProfesorApi {
+  id: number;
+  apellido?: string;
+  nombre?: string;
+  email?: string;
+  area_desempeño?: string;
+  estado: string;
+}
 
 export default function VisualizarFuncionarios() {
   const router = useRouter();
@@ -221,7 +230,7 @@ const monitoresAdmin =
       ? responseMonitorAdmin.data
       : responseMonitorAdmin.data?.results || [];
 
-  const formateadoProfesores = profesores.map((profesor: any) => ({
+  const formateadoProfesores = profesores.map((profesor: ProfesorApi) => ({
     id: profesor.id,
     apellido: profesor.apellido || "",
     nombre: profesor.nombre || "",
@@ -231,7 +240,7 @@ const monitoresAdmin =
     estado: profesor.estado,
   }));
 
-  const formateadoMonAcad = monitoresAcad.map((monitor: any) => ({
+  const formateadoMonAcad = monitoresAcad.map((monitor: ProfesorApi) => ({
     id: monitor.id,
     apellido: monitor.apellido || "",
     nombre: monitor.nombre || "",
@@ -241,7 +250,7 @@ const monitoresAdmin =
     estado: monitor.estado,
   }));
 
-  const formateadoMonAdmin = monitoresAdmin.map((monitor: any) => ({
+  const formateadoMonAdmin = monitoresAdmin.map((monitor: ProfesorApi) => ({
     id: monitor.id,
     apellido: monitor.apellido || "",
     nombre: monitor.nombre || "",
@@ -300,30 +309,6 @@ const monitoresAdmin =
     setSelectedEstado(typeof value === "string" ? value.split(",") : value);
   };
 
-  const handleExportExcel = async () => {
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL}/estudiante/est/export-excel/`,
-        {
-          responseType: "blob", // Importante para archivos
-          headers: {
-            Authorization: `Token ${localStorage.getItem("token")}`,
-          },
-        },
-      );
-      // Crear un enlace para descargar el archivo
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "Inscripciones.xlsx"); // Nombre del archivo
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (error) {
-      alert("No se pudo exportar el archivo.");
-      console.error(error);
-    }
-  };
 
   const filteredRows = React.useMemo(() => {
     if (rows.length === 0) return rows;

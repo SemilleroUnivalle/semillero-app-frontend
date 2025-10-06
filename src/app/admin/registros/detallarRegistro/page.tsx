@@ -25,74 +25,14 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 import { useRouter } from "next/navigation";
-
-// Interfaces para Departamentos y Municipios
-interface Departamento {
-  id: number;
-  nombre: string;
-}
-interface DepartamentoApi {
-  id: number;
-  name: string;
-}
-interface Ciudad {
-  id: number;
-  nombre: string;
-}
-interface CiudadApi {
-  id: number;
-  name: string;
-}
-
-interface AcudienteInterface {
-  id_acudiente: number;
-  nombre_acudiente: string;
-  apellido_acudiente: string;
-  tipo_documento_acudiente: string;
-  email_acudiente: string;
-  numero_documento_acudiente: string;
-  celular_acudiente: string;
-}
-
-interface AuditInterface {
-  id: number;
-  usuario: string;
-  timestamp: string;
-}
-
-interface EstudianteInterface {
-  id_estudiante: number | null;
-  nombre: string;
-  apellido: string;
-  numero_documento: string;
-  tipo_documento: string;
-  fecha_nacimiento: string;
-  genero: string;
-  email: string;
-  celular: string;
-  telefono_fijo: string;
-  departamento_residencia: string;
-  ciudad_residencia: string;
-  comuna_residencia: string;
-  direccion_residencia: string;
-  colegio: string;
-  grado: string;
-  estamento: string;
-  eps: string;
-  area_desempeño: string;
-  grado_escolaridad: string;
-  discapacidad: boolean;
-  descripcion_discapacidad: string;
-  tipo_discapacidad: string;
-  is_active: boolean;
-  acudiente: AcudienteInterface;
-  verificacion_informacion: boolean | null;
-  verificacion_foto: boolean | null;
-  verificacion_documento_identidad: boolean | null;
-  audit_foto: AuditInterface | null;
-  audit_documento_identidad: AuditInterface | null;
-  audit_informacion: AuditInterface | null;
-}
+import {
+  Estudiante,
+  Acudiente,
+  Ciudad,
+  Departamento,
+  DepartamentoApi,
+  CiudadApi,
+} from "@/interfaces/interfaces";
 
 const grados: string[] = [
   "1",
@@ -140,7 +80,6 @@ const epss = [
 export default function DetallarRegistro() {
   const router = useRouter();
 
-  const [estudiante, setEstudiante] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editable, setEditable] = useState(false);
 
@@ -152,8 +91,8 @@ export default function DetallarRegistro() {
   const [cargandoCiudades, setCargandoCiudades] = useState<boolean>(false);
 
   // Estado para el formulario
-  const [formData, setFormData] = useState<EstudianteInterface>({
-    id_estudiante: null,
+  const [formData, setFormData] = useState<Estudiante>({
+    id_estudiante: 0,
     nombre: "",
     apellido: "",
     numero_documento: "",
@@ -192,20 +131,20 @@ export default function DetallarRegistro() {
     audit_foto: null,
     audit_documento_identidad: null,
     audit_informacion: null,
+    foto: "",
+    documento_identidad: "",
   });
 
-  const [formDataAcudiente, setFormDataAcudiente] =
-    useState<AcudienteInterface>({
-      id_acudiente: 0,
-      nombre_acudiente: formData.acudiente.nombre_acudiente || "",
-      apellido_acudiente: formData.acudiente.apellido_acudiente || "",
-      tipo_documento_acudiente:
-        formData.acudiente.tipo_documento_acudiente || "",
-      numero_documento_acudiente:
-        formData.acudiente.numero_documento_acudiente || "",
-      email_acudiente: formData.acudiente.email_acudiente || "",
-      celular_acudiente: formData.acudiente.celular_acudiente || "",
-    });
+  const [formDataAcudiente, setFormDataAcudiente] = useState<Acudiente>({
+    id_acudiente: 0,
+    nombre_acudiente: formData.acudiente.nombre_acudiente || "",
+    apellido_acudiente: formData.acudiente.apellido_acudiente || "",
+    tipo_documento_acudiente: formData.acudiente.tipo_documento_acudiente || "",
+    numero_documento_acudiente:
+      formData.acudiente.numero_documento_acudiente || "",
+    email_acudiente: formData.acudiente.email_acudiente || "",
+    celular_acudiente: formData.acudiente.celular_acudiente || "",
+  });
 
   const [success, setSuccess] = useState(false);
 
@@ -262,7 +201,6 @@ export default function DetallarRegistro() {
             },
           })
           .then((res) => {
-            setEstudiante(res.data);
             setDepartamentoSeleccionado(res.data.departamento_residencia || "");
             setLoading(false); // <-- termina la carga
             // En tu useEffect después de obtener el estudiante
@@ -535,7 +473,7 @@ export default function DetallarRegistro() {
     );
   }
 
-  if (!estudiante) {
+  if (!formData) {
     return (
       <Box className="mx-auto flex max-w-md flex-col items-center justify-center rounded-xl bg-white p-4 shadow">
         <Typography>No se encontró información del estudiante.</Typography>
@@ -566,7 +504,7 @@ export default function DetallarRegistro() {
         {/* Fotografía */}
         <div className="my-4 flex flex-col items-center justify-around">
           <Avatar
-            src={image ? image : estudiante.foto}
+            src={image ?? formData.foto ?? undefined}
             sx={{ width: 150, height: 150 }}
             alt="Foto del estudiante"
           />
@@ -709,7 +647,7 @@ export default function DetallarRegistro() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Fecha de nacimiento"
-              value={estudiante.fecha_nacimiento || ""}
+              value={formData.fecha_nacimiento || ""}
               InputProps={{ readOnly: !editable }}
             />
           </div>
@@ -821,14 +759,14 @@ export default function DetallarRegistro() {
                 <TextField
                   className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
                   label="Departamento"
-                  value={estudiante.departamento_residencia || ""}
+                  value={formData.departamento_residencia || ""}
                   InputProps={{ readOnly: true }}
                 />
 
                 <TextField
                   className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
                   label="Ciudad"
-                  value={estudiante.ciudad_residencia || ""}
+                  value={formData.ciudad_residencia || ""}
                   InputProps={{ readOnly: true }}
                 />
               </>
@@ -856,7 +794,7 @@ export default function DetallarRegistro() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Dirección"
-              value={estudiante.direccion_residencia || ""}
+              value={formData.direccion_residencia || ""}
               InputProps={{ readOnly: !editable }}
             />
           </div>
@@ -1318,11 +1256,11 @@ export default function DetallarRegistro() {
 
       {/* Documentos */}
       <div className="mt-4 flex flex-col items-center">
-        {estudiante.documento_identidad && (
+        {formData.documento_identidad && (
           <div className="flex flex-col items-center">
             <Button
               variant="outlined"
-              href={estudiante.documento_identidad}
+              href={formData.documento_identidad}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-2 rounded-2xl border-primary text-primary"
@@ -1509,7 +1447,7 @@ export default function DetallarRegistro() {
             variant="contained"
             className="text-md mt-4 w-1/3 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
             onClick={() => {
-              handleDelete(estudiante.id_estudiante);
+              handleDelete(formData.id_estudiante);
             }}
           >
             Eliminar

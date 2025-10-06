@@ -1,6 +1,16 @@
 "use client";
 
 import {
+  Estudiante,
+  Acudiente,
+  Ciudad,
+  Matricula,
+  Departamento,
+  DepartamentoApi,
+  CiudadApi,
+} from "@/interfaces/interfaces";
+
+import {
   TextField,
   InputLabel,
   Select,
@@ -25,132 +35,6 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 import { useRouter } from "next/navigation";
-
-// Interfaces para Departamentos y Municipios
-interface Departamento {
-  id: number;
-  nombre: string;
-}
-interface DepartamentoApi {
-  id: number;
-  name: string;
-}
-interface Ciudad {
-  id: number;
-  nombre: string;
-}
-interface CiudadApi {
-  id: number;
-  name: string;
-}
-
-export interface Acudiente {
-  id_acudiente: number;
-  nombre_acudiente: string;
-  apellido_acudiente: string;
-  tipo_documento_acudiente: string;
-  numero_documento_acudiente: string;
-  celular_acudiente: string;
-  email_acudiente: string;
-}
-
-interface AuditInterface {
-  id: number;
-  usuario: string;
-  timestamp: string;
-}
-
-export interface Estudiante {
-  id_estudiante: number | null;
-  nombre: string;
-  apellido: string;
-  numero_documento: string;
-  tipo_documento: string;
-  fecha_nacimiento: string;
-  genero: string;
-  email: string;
-  celular: string;
-  telefono_fijo: string;
-  departamento_residencia: string;
-  ciudad_residencia: string;
-  comuna_residencia: string;
-  direccion_residencia: string;
-  colegio: string;
-  grado: string;
-  estamento: string;
-  eps: string;
-  area_desempeño: string;
-  grado_escolaridad: string;
-  discapacidad: boolean;
-  descripcion_discapacidad: string;
-  tipo_discapacidad: string;
-  is_active: boolean;
-  acudiente: Acudiente;
-  verificacion_informacion: boolean | null;
-  verificacion_foto: boolean | null;
-  verificacion_documento_identidad: boolean | null;
-  audit_foto: AuditInterface | null;
-  audit_documento_identidad: AuditInterface | null;
-  audit_informacion: AuditInterface | null;
-}
-
-export interface Categoria {
-  id_categoria: number;
-  nombre: string;
-  estado: boolean;
-}
-
-export interface Modulo {
-  id_modulo: number;
-  id_categoria: Categoria;
-  nombre_modulo: string;
-  descripcion_modulo: string;
-  intensidad_horaria: number;
-  dirigido_a: string | null;
-  incluye: string | null;
-  imagen_modulo: string | null;
-  estado: boolean;
-  id_area: number;
-  id_oferta_categoria: number[];
-}
-
-export interface OfertaAcademica {
-  id_oferta_academica: number;
-  nombre: string;
-  fecha_inicio: string;
-  estado: boolean;
-}
-
-export interface OfertaCategoria {
-  id_oferta_categoria: number;
-  id_oferta_academica: OfertaAcademica;
-  precio_publico: string;
-  precio_privado: string;
-  precio_univalle: string;
-  precio_univalle_egresados: string | null;
-  fecha_finalizacion: string;
-  estado: boolean;
-  id_categoria: number;
-}
-
-export interface Matricula {
-  id_inscripcion: number;
-  modulo: Modulo;
-  estudiante: Estudiante;
-  oferta_categoria: OfertaCategoria;
-  estado: string;
-  grupo: string;
-  fecha_inscripcion: string;
-  tipo_vinculacion: string;
-  terminos: boolean;
-  observaciones: string | null;
-  recibo_pago: string;
-  certificado: string;
-  verificacion_recibo_pago: boolean | null;
-  verificacion_certificado: boolean | null;
-  audit_documento_recibo_pago: AuditInterface | null;
-  audit_certificado: AuditInterface | null;
-}
 
 const grados: string[] = [
   "1",
@@ -198,7 +82,7 @@ const epss = [
 export default function DetallarMatricula() {
   const router = useRouter();
 
-  const [estudiante, setEstudiante] = useState<any>(null);
+  const [estudiante, setEstudiante] = useState<Estudiante | null>(null);
   const [loading, setLoading] = useState(true);
   const [editable, setEditable] = useState(false);
 
@@ -211,7 +95,7 @@ export default function DetallarMatricula() {
 
   // Estados para el formulario de estudiante, acudiente y matrícula
   const [formDataEstudiante, setFormDataEstudiante] = useState<Estudiante>({
-    id_estudiante: null,
+    id_estudiante: 0,
     nombre: "",
     apellido: "",
     numero_documento: "",
@@ -250,6 +134,8 @@ export default function DetallarMatricula() {
     audit_foto: null,
     audit_documento_identidad: null,
     audit_informacion: null,
+    foto: "",
+    documento_identidad: "",
   });
 
   const [formDataAcudiente, setFormDataAcudiente] = useState<Acudiente>({
@@ -285,6 +171,7 @@ export default function DetallarMatricula() {
     },
     estudiante: formDataEstudiante,
     oferta_categoria: {
+      modulo
       id_oferta_categoria: 0,
       id_oferta_academica: {
         id_oferta_academica: 0,
@@ -298,7 +185,11 @@ export default function DetallarMatricula() {
       precio_univalle_egresados: null,
       fecha_finalizacion: "",
       estado: false,
-      id_categoria: 0,
+      id_categoria: {
+        id_categoria: 0,
+        nombre:"",
+        estado:false,
+      },
     },
     estado: "",
     grupo: "",
@@ -447,7 +338,6 @@ export default function DetallarMatricula() {
       fetchCiudades();
     }
   }, [editable, departamentoSeleccionado, departamentos]);
-  1;
 
   function getToken() {
     const userString = localStorage.getItem("user");
@@ -481,11 +371,11 @@ export default function DetallarMatricula() {
       for (const key in formDataEstudiante) {
         if (camposExcluidos.includes(key)) continue; // Salta los campos excluidos
 
-        let value = (formDataEstudiante as any)[key];
+        let value = formDataEstudiante[key as keyof Estudiante];
         if (typeof value === "boolean") {
           value = value ? "True" : "False";
         }
-        formDataToSend.append(key, value);
+        formDataToSend.append(key, value as string | Blob);
       }
 
       if (fotoPerfil) {
@@ -497,7 +387,7 @@ export default function DetallarMatricula() {
 
       // Obtener token del localStorage
 
-      for (let pair of formDataToSend.entries()) {
+      for (const pair of formDataToSend.entries()) {
         console.log(`${pair[0]}:`, pair[1]);
       }
       const response = await axios.patch(
@@ -945,7 +835,7 @@ export default function DetallarMatricula() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Fecha de nacimiento"
-              value={estudiante.fecha_nacimiento || ""}
+              value={formDataEstudiante.fecha_nacimiento || ""}
               InputProps={{ readOnly: !editable }}
             />
           </div>
@@ -1066,14 +956,14 @@ export default function DetallarMatricula() {
                 <TextField
                   className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
                   label="Departamento"
-                  value={estudiante.departamento_residencia || ""}
+                  value={formDataEstudiante.departamento_residencia || ""}
                   InputProps={{ readOnly: true }}
                 />
 
                 <TextField
                   className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
                   label="Ciudad"
-                  value={estudiante.ciudad_residencia || ""}
+                  value={formDataEstudiante.ciudad_residencia || ""}
                   InputProps={{ readOnly: true }}
                 />
               </>
@@ -1101,7 +991,7 @@ export default function DetallarMatricula() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Dirección"
-              value={estudiante.direccion_residencia || ""}
+              value={formDataEstudiante.direccion_residencia || ""}
               InputProps={{ readOnly: !editable }}
             />
           </div>
@@ -1956,7 +1846,7 @@ export default function DetallarMatricula() {
           variant="contained"
           className="text-md mt-4 w-1/3 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
           onClick={() => {
-            handleDelete(estudiante.id_estudiante);
+            handleDelete(formDataEstudiante.id_estudiante);
           }}
         >
           Eliminar

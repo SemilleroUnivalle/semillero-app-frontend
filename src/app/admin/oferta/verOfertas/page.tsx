@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { OfertaCategoria } from "@/interfaces/interfaces";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Paper, Alert, Snackbar, Tooltip } from "@mui/material";
@@ -17,27 +18,6 @@ export default function Page() {
     id: number;
     nombre: string;
     fecha_inicio: string;
-  }
-
-  interface OfertaCategoria {
-    id_oferta_categoria: number;
-    modulo: any[]; // Si tienes la estructura de "modulo", reemplaza "any" por la interfaz correspondiente
-    precio_publico: string;
-    precio_privado: string;
-    precio_univalle: string;
-    fecha_finalizacion: string; // Formato: "YYYY-MM-DD"
-    estado: boolean;
-    id_oferta_academica: {
-      id_oferta_academica: number;
-      nombre: string;
-      fecha_inicio: string; // Formato: "YYYY-MM-DD"
-      estado: string;
-    };
-    id_categoria: {
-      id_categoria: number;
-      nombre: string;
-      estado: boolean;
-    };
   }
 
 
@@ -148,7 +128,7 @@ export default function Page() {
             ofertasPorAcademica[id].push(oferta);
           });
         });
-6
+        
         // Construir filas: una por cada oferta académica
         const rows = Object.values(ofertasPorAcademica).map((ofertas) => {
           const primera = ofertas[0];

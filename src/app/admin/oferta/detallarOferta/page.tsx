@@ -61,7 +61,7 @@ export default function DetallarOferta() {
 
 
   // Estado para la oferta seleccionada
-  const [oferta, setOferta] = useState<Oferta | null>(null);
+  const [oferta] = useState<Oferta | null>(null);
 
   // Estado para el nombre y fecha de inicio de la oferta
   const [nombreOferta, setNombreOferta] = useState("");

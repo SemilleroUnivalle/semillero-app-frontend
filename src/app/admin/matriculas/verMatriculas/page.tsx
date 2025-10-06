@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import {Matricula} from "@/interfaces/interfaces"
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -131,56 +132,21 @@ export default function VerMatriculas() {
 
   const paginationModel = { page: 0, pageSize: 50 };
 
-  interface EstudianteRow {
-    id: number;
-    apellido: string;
-    nombre: string;
-    email: string;
-    direccion: string;
-    periodo: string;
-    modulo: string;
-    estamento: string;
-    tipo: string;
-    estado: string;
-  }
+  interface MatriculaRow {
+  id: number;
+  apellido: string;
+  nombre: string;
+  email: string;
+  direccion: string;
+  periodo: string;
+  modulo: string;
+  estamento: string;
+  tipo: string;
+  estado: string;
+}
 
-  interface Estudiante {
-    id_estudiante: number;
-    nombre: string;
-    apellido: string;
-    contrasena: string;
-    numero_documento: string;
-    email: string;
-    is_active: boolean;
-    ciudad_residencia: string;
-    eps: string;
-    grado: string;
-    colegio: string;
-    tipo_documento: string;
-    genero: string;
-    fecha_nacimiento: string;
-    telefono_fijo: string;
-    celular: string;
-    departamento_residencia: string;
-    comuna_residencia: string;
-    direccion_residencia: string;
-    estamento: string;
-    discapacidad: boolean;
-    tipo_discapacidad: string;
-    descripcion_discapacidad: string;
-    area_desempeño: string | null;
-    grado_escolaridad: string | null;
-    documento_identidad: string | null;
-    recibo_pago: string | null;
-    foto: string | null;
-    constancia_estudios: string | null;
-    user: number;
-    acudiente: number;
-  }
-
-  const [rows, setRows] = useState<EstudianteRow[]>([]);
+  const [rows, setRows] = useState<MatriculaRow[]>([]);
   const [success, setSuccess] = useState(false);
-  const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
 
   const [loading, setLoading] = useState(true);
 
@@ -227,7 +193,7 @@ export default function VerMatriculas() {
 
         if (response.status === 200) {
           // Formatea los datos para la tabla
-          const formateado = response.data.map((matricula: any) => ({
+          const formateado = response.data.map((matricula: Matricula) => ({
             id: matricula.id_inscripcion,
             apellido: matricula.estudiante.apellido || "",
             nombre: matricula.estudiante.nombre || "",
@@ -248,7 +214,7 @@ export default function VerMatriculas() {
 
           setRows(formateado);
         }
-        setEstudiantes(response.data);
+
 
         setLoading(false);
       } catch (error) {

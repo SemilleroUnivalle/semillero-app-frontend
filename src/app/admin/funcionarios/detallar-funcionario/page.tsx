@@ -228,7 +228,6 @@ export default function DetallarFuncionarios() {
 
   // Manejo de campo para otro género
 
-  const [mostrarOtroGenero, setMostrarOtroGenero] = useState(false);
   const [mostrarTipoDiscapacidad, setTipoDiscapacidad] = useState(false);
 
   const [funcionarioId, setFuncionarioId] = useState<number | null>(null);
@@ -293,16 +292,11 @@ export default function DetallarFuncionarios() {
         },
       })
       .then((res) => {
-        // setEstudiante(res.data);
         setDepartamentoSeleccionado(res.data.departamento_residencia || "");
-        setLoading(false); // <-- termina la carga
-        // En tu useEffect después de obtener el estudiante
-        setFormData({
-          ...formData,
-          ...res.data,
-        });
+        setLoading(false);
         setFormData((prevData) => ({
           ...prevData,
+          ...res.data,
           tipo: funcionarioTipo ?? "",
         }));
       })
@@ -341,7 +335,6 @@ export default function DetallarFuncionarios() {
       fetchCiudades();
     }
   }, [editable, departamentoSeleccionado, departamentos]);
-  1;
 
   //Funcion para guardar cambios
   const handleSave = async () => {
@@ -374,11 +367,11 @@ export default function DetallarFuncionarios() {
         )
           continue;
 
-        let value = (formData as any)[key];
+        let value = formData[key as keyof FuncionarioInterface];
         if (typeof value === "boolean") {
           value = value ? "True" : "False";
         }
-        formDataToSend.append(key, value);
+        formDataToSend.append(key, value as string | Blob);
       }
 
       // Agregar archivos si existen
@@ -457,7 +450,7 @@ export default function DetallarFuncionarios() {
         token = user.token;
       }
 
-      for (let pair of formDataToSend.entries()) {
+      for (const pair of formDataToSend.entries()) {
         console.log(`${pair[0]}:`, pair[1]);
       }
 
@@ -482,7 +475,7 @@ export default function DetallarFuncionarios() {
   };
 
   // Función para eliminar un funcionario
-  const handleDelete = async (id: number) => {
+  const handleDelete = async () => {
     const confirmDelete = window.confirm(
       "¿Estás seguro de que deseas eliminar este funcionario?",
     );
@@ -1842,7 +1835,7 @@ export default function DetallarFuncionarios() {
             variant="contained"
             className="text-md mt-4 w-1/3 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
             onClick={() => {
-              handleDelete(formData.id);
+              handleDelete();
             }}
           >
             Eliminar
