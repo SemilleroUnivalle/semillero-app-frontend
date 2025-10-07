@@ -65,7 +65,40 @@ export interface Estudiante {
   audit_informacion: AuditInterface | null;
   foto: string | null;
   documento_identidad: string |  null;
+  estado: string;
 }
+
+export interface ProfesorInterface {
+  id: number | null;
+  nombre: string;
+  apellido: string;
+  numero_documento: string;
+  tipo_documento: string;
+  fecha_nacimiento: string;
+  genero: string;
+  email: string;
+  celular: string;
+  telefono_fijo: string;
+  departamento_residencia: string;
+  ciudad_residencia: string;
+  comuna_residencia: string;
+  direccion_residencia: string;
+  area_desempeño: string;
+  eps: string;
+  is_active: boolean;
+  grado_escolaridad: string;
+  foto: string | null;
+  documento_identidad_pdf: string | null;
+  rut_pdf: string | null;
+  certificado_laboral_pdf: string | null;
+  certificado_bancario_pdf: string | null;
+  hoja_vida_pdf: string | null;
+  certificado_academico_pdf: string | null;
+  modulo: Modulo;
+  colegio?: string;
+  estamento?: string;
+}
+
 
 export interface Categoria {
   id_categoria: number;
@@ -97,7 +130,7 @@ export interface OfertaAcademica {
 export interface OfertaCategoria {
   id_oferta_categoria: number;
   id_oferta_academica: OfertaAcademica;
-  modulo: Modulo;
+  modulo: Modulo[];
   precio_publico: string;
   precio_privado: string;
   precio_univalle: string;

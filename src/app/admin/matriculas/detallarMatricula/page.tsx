@@ -136,6 +136,7 @@ export default function DetallarMatricula() {
     audit_informacion: null,
     foto: "",
     documento_identidad: "",
+    estado: "",
   });
 
   const [formDataAcudiente, setFormDataAcudiente] = useState<Acudiente>({
@@ -171,7 +172,23 @@ export default function DetallarMatricula() {
     },
     estudiante: formDataEstudiante,
     oferta_categoria: {
-      modulo
+      modulo: [{
+        id_modulo: 0,
+        id_categoria: {
+          id_categoria: 0,
+          nombre: "",
+          estado: false,
+        },
+        nombre_modulo: "",
+        descripcion_modulo: "",
+        intensidad_horaria: 0,
+        dirigido_a: null,
+        incluye: null,
+        imagen_modulo: null,
+        estado: false,
+        id_area: 0,
+        id_oferta_categoria: [],
+      }],
       id_oferta_categoria: 0,
       id_oferta_academica: {
         id_oferta_academica: 0,
@@ -187,8 +204,8 @@ export default function DetallarMatricula() {
       estado: false,
       id_categoria: {
         id_categoria: 0,
-        nombre:"",
-        estado:false,
+        nombre: "",
+        estado: false,
       },
     },
     estado: "",

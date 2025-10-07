@@ -98,20 +98,20 @@ export default function Registro() {
   // Manejar envío del formulario
   // Enviar datos al backend
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  try {
-    const formDataToSend = new FormData();
-    for (const key in formData) {
-      let value = (formData as any)[key];
-      if (typeof value === "boolean") value = value ? "True" : "False";
-      formDataToSend.append(key, value);
-    }
-    
-    
-    // Verificar el contenido de formDataToSend
-      for (let pair of formDataToSend.entries()) {
+    try {
+      const formDataToSend = new FormData();
+      for (const key in formData) {
+        const typedKey = key as keyof typeof formData;
+        let value = formData[typedKey];
+        if (typeof value === "boolean") value = value ? "True" : "False";
+        formDataToSend.append(key, value as string | Blob);
+      }
+
+      // Verificar el contenido de formDataToSend
+      for (const pair of formDataToSend.entries()) {
         console.log(`${pair[0]}:`, pair[1]);
       }
 
@@ -149,37 +149,39 @@ const handleSubmit = async (e: React.FormEvent) => {
         formDataToSend.append("certificado_academico_pdf", certificadoEstudios);
       }
 
+      // Determina el endpoint según la posición
+      let endpoint = "";
+      if (posicion === "Docente") {
+        endpoint = `${API_BASE_URL}/profesor/prof/`;
+      } else if (posicion === "Administrativo") {
+        endpoint = `${API_BASE_URL}/monitor_administrativo/mon/`;
+      } else if (posicion === "Académico") {
+        endpoint = `${API_BASE_URL}/monitor_academico/mon/`;
+      } else {
+        alert("Selecciona una posición válida.");
+        return;
+      }
 
-    // Determina el endpoint según la posición
-    let endpoint = "";
-    if (posicion === "Docente") {
-      endpoint = `${API_BASE_URL}/profesor/prof/`;
-    } else if (posicion === "Administrativo") {
-      endpoint = `${API_BASE_URL}/monitor_administrativo/mon/`;
-    } else if (posicion === "Académico") {
-      endpoint = `${API_BASE_URL}/monitor_academico/mon/`;
-    } else {
-      alert("Selecciona una posición válida.");
-      return;
+      const response = await axios.post(endpoint, formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.status === 201) {
+        alert("Registro exitoso");
+        router.push("/auth/login");
+      } else {
+        alert("Error al registrar. Intenta de nuevo.");
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        alert(error.response?.data?.detail || "Error de conexión");
+      } else {
+        alert("Error de conexión");
+      }
     }
-
-    const response = await axios.post(endpoint, formDataToSend, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-
-    if (response.status === 201) {
-      alert("Registro exitoso");
-      router.push("/auth/login");
-    } else {
-      alert("Error al registrar. Intenta de nuevo.");
-    }
-  } catch (error: any) {
-    alert(error.response?.data?.detail || "Error de conexión");
-  }
-};
-
+  };
 
   // Manejo de estado para mostrar campos de discapacidad
   const [mostrarTipoDiscapacidad, setTipoDiscapacidad] = useState(false);
@@ -732,9 +734,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           >
             7<MenuItem value="Docente">Docente</MenuItem>
             <MenuItem value="Académico">Monitor Académico</MenuItem>
-            <MenuItem value="Administrativo">
-              Monitor Administrativo
-            </MenuItem>
+            <MenuItem value="Administrativo">Monitor Administrativo</MenuItem>
           </Select>
         </FormControl>
 

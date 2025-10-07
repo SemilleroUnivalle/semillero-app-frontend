@@ -142,14 +142,10 @@ export default function Registro() {
 
       // Añadir todos los campos del formData al FormData
       for (const key in formData) {
-        let value = (formData as any)[key];
-
-        // Convertir booleanos a strings esperados por el backend
-        if (typeof value === "boolean") {
-          value = value ? "True" : "False"; // O "true"/"false" según lo que espere tu backend
-        }
-
-        formDataToSend.append(key, value);
+        const typedKey = key as keyof typeof formData;
+        let value = formData[typedKey];
+        if (typeof value === "boolean") value = value ? "True" : "False";
+        formDataToSend.append(key, value as string | Blob);
       }
       // Crear un acudiente primero para obtener su ID
       const responseAcudiente = await axios.post(
@@ -173,7 +169,7 @@ export default function Registro() {
         console.log("ID del acudiente:", id_acudiente);
 
         formDataToSend.append("acudiente", id_acudiente);
-        for (let pair of formDataToSend.entries()) {
+        for (const pair of formDataToSend.entries()) {
           console.log(`${pair[0]}:`, pair[1]);
         }
 
@@ -245,16 +241,16 @@ export default function Registro() {
   const [image, setImage] = useState<string | null>(null);
 
   // Mastrar imagen seleccionada
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]; // Obtener el archivo seleccionado
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage(reader.result as string); // Guardar la URL de la imagen en el estado
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  // const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = event.target.files?.[0]; // Obtener el archivo seleccionado
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       setImage(reader.result as string); // Guardar la URL de la imagen en el estado
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // };
   const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {

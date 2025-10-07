@@ -22,60 +22,14 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../config";
-
-// Interfaces para Departamentos y Municipios
-interface Departamento {
-  id: number;
-  nombre: string;
-}
-interface DepartamentoApi {
-  id: number;
-  name: string;
-}
-interface Ciudad {
-  id: number;
-  nombre: string;
-}
-interface CiudadApi {
-  id: number;
-  name: string;
-}
-
-interface AcudienteInterface {
-  id_acudiente: number;
-  nombre_acudiente: string;
-  apellido_acudiente: string;
-  tipo_documento_acudiente: string;
-  email_acudiente: string;
-  numero_documento_acudiente: string;
-  celular_acudiente: string;
-}
-
-interface EstudianteInterface {
-  id_estudiante: number | null;
-  nombre: string;
-  apellido: string;
-  numero_documento: string;
-  tipo_documento: string;
-  fecha_nacimiento: string;
-  genero: string;
-  email: string;
-  celular: string;
-  telefono_fijo: string;
-  departamento_residencia: string;
-  ciudad_residencia: string;
-  comuna_residencia: string;
-  direccion_residencia: string;
-  colegio: string;
-  grado: string;
-  estamento: string;
-  eps: string;
-  discapacidad: boolean;
-  descripcion_discapacidad: string;
-  tipo_discapacidad: string;
-  is_active: boolean;
-  acudiente: AcudienteInterface;
-}
+import {
+  Estudiante,
+  Departamento,
+  Ciudad,
+  CiudadApi,
+  DepartamentoApi,
+  Acudiente,
+} from "@/interfaces/interfaces";
 
 const grados: string[] = [
   "1",
@@ -94,8 +48,6 @@ const grados: string[] = [
 ];
 
 export default function DetallarRegistro() {
-
-  const [estudiante, setEstudiante] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editable, setEditable] = useState(false);
 
@@ -106,8 +58,8 @@ export default function DetallarRegistro() {
     useState<string>("");
   const [cargandoCiudades, setCargandoCiudades] = useState<boolean>(false);
 
-  const [formData, setFormData] = useState<EstudianteInterface>({
-    id_estudiante: null,
+  const [formData, setFormData] = useState<Estudiante>({
+    id_estudiante: 0,
     nombre: "",
     apellido: "",
     numero_documento: "",
@@ -138,20 +90,29 @@ export default function DetallarRegistro() {
       numero_documento_acudiente: "",
       celular_acudiente: "",
     },
+    verificacion_informacion: null,
+    verificacion_foto: null,
+    verificacion_documento_identidad: null,
+    audit_foto: null,
+    audit_documento_identidad: null,
+    audit_informacion: null,
+    foto: null,
+    documento_identidad: null,
+    estado: "",
+    area_desempeño: "",
+    grado_escolaridad: "",
   });
 
-  const [formDataAcudiente, setFormDataAcudiente] =
-    useState<AcudienteInterface>({
-      id_acudiente: 0,
-      nombre_acudiente: formData.acudiente.nombre_acudiente || "",
-      apellido_acudiente: formData.acudiente.apellido_acudiente || "",
-      tipo_documento_acudiente:
-        formData.acudiente.tipo_documento_acudiente || "",
-      numero_documento_acudiente:
-        formData.acudiente.numero_documento_acudiente || "",
-      email_acudiente: formData.acudiente.email_acudiente || "",
-      celular_acudiente: formData.acudiente.celular_acudiente || "",
-    });
+  const [formDataAcudiente, setFormDataAcudiente] = useState<Acudiente>({
+    id_acudiente: 0,
+    nombre_acudiente: formData.acudiente.nombre_acudiente || "",
+    apellido_acudiente: formData.acudiente.apellido_acudiente || "",
+    tipo_documento_acudiente: formData.acudiente.tipo_documento_acudiente || "",
+    numero_documento_acudiente:
+      formData.acudiente.numero_documento_acudiente || "",
+    email_acudiente: formData.acudiente.email_acudiente || "",
+    celular_acudiente: formData.acudiente.celular_acudiente || "",
+  });
 
   const [success, setSuccess] = useState(false);
 
@@ -164,7 +125,6 @@ export default function DetallarRegistro() {
 
   // Manejo de campo para otro género
 
-  const [mostrarOtroGenero, setMostrarOtroGenero] = useState(false);
   const [mostrarTipoDiscapacidad, setTipoDiscapacidad] = useState(false);
 
   const [esDocente, setEsDocente] = useState(false);
@@ -207,7 +167,6 @@ export default function DetallarRegistro() {
             },
           })
           .then((res) => {
-            setEstudiante(res.data);
             setDepartamentoSeleccionado(res.data.departamento_residencia || "");
             setLoading(false); // <-- termina la carga
             // En tu useEffect después de obtener el estudiante
@@ -273,7 +232,6 @@ export default function DetallarRegistro() {
       fetchCiudades();
     }
   }, [editable, departamentoSeleccionado, departamentos]);
-  1;
 
   // ...existing code...
   const handleSave = async () => {
@@ -289,15 +247,14 @@ export default function DetallarRegistro() {
 
         "is_active",
       ];
-
       for (const key in formData) {
-        if (camposExcluidos.includes(key)) continue; // Salta los campos excluidos
-
-        let value = (formData as any)[key];
+        if (camposExcluidos.includes(key)) continue;
+        const typedKey = key as keyof Estudiante;
+        let value = formData[typedKey];
         if (typeof value === "boolean") {
           value = value ? "True" : "False";
         }
-        formDataToSend.append(key, value);
+        formDataToSend.append(key, value as string | Blob);
       }
 
       if (fotoPerfil) {
@@ -315,7 +272,7 @@ export default function DetallarRegistro() {
         token = user.token;
       }
 
-      for (let pair of formDataToSend.entries()) {
+      for (const pair of formDataToSend.entries()) {
         console.log(`${pair[0]}:`, pair[1]);
       }
       const response = await axios.patch(
@@ -341,8 +298,6 @@ export default function DetallarRegistro() {
     }
   };
 
-
-
   // Estado para el toggle
   // const [estadoInformacion, setEstadoInformacion] = useState<
   //   true | false | null
@@ -353,7 +308,6 @@ export default function DetallarRegistro() {
   // const [estadoFotoPerfil, setEstadoFotoPerfil] = useState<true | false | null>(
   //   null,
   // );
-
 
   if (loading) {
     return (
@@ -366,9 +320,9 @@ export default function DetallarRegistro() {
     );
   }
 
-  if (!estudiante) {
+  if (!formData) {
     return (
-      <Box className="mt-4 mx-auto flex max-w-md flex-col items-center justify-center rounded-xl bg-white p-4 shadow">
+      <Box className="mx-auto mt-4 flex max-w-md flex-col items-center justify-center rounded-xl bg-white p-4 shadow">
         <Typography>No se encontró información del estudiante.</Typography>
       </Box>
     );
@@ -397,7 +351,7 @@ export default function DetallarRegistro() {
         {/* Fotografía */}
         <div className="my-4 flex flex-col items-center justify-around">
           <Avatar
-            src={estudiante.foto || ""}
+            src={image ||formData.foto || ""}
             sx={{ width: 150, height: 150 }}
             alt="Foto del estudiante"
           />
@@ -531,7 +485,6 @@ export default function DetallarRegistro() {
                   editable
                     ? (e) => {
                         setFormData({ ...formData, genero: e.target.value });
-                        setMostrarOtroGenero(e.target.value === "Otro");
                       }
                     : undefined
                 }
@@ -576,7 +529,7 @@ export default function DetallarRegistro() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Fecha de nacimiento"
-              value={estudiante.fecha_nacimiento || ""}
+              value={formData.fecha_nacimiento || ""}
               InputProps={{ readOnly: !editable }}
             />
           </div>
@@ -688,14 +641,14 @@ export default function DetallarRegistro() {
                 <TextField
                   className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
                   label="Departamento"
-                  value={estudiante.departamento_residencia || ""}
+                  value={formData.departamento_residencia || ""}
                   InputProps={{ readOnly: true }}
                 />
 
                 <TextField
                   className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
                   label="Ciudad"
-                  value={estudiante.ciudad_residencia || ""}
+                  value={formData.ciudad_residencia || ""}
                   InputProps={{ readOnly: true }}
                 />
               </>
@@ -723,7 +676,7 @@ export default function DetallarRegistro() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Dirección"
-              value={estudiante.direccion_residencia || ""}
+              value={formData.direccion_residencia || ""}
               InputProps={{ readOnly: !editable }}
             />
           </div>
@@ -916,7 +869,7 @@ export default function DetallarRegistro() {
               </>
             )}
 
-<FormControl
+            <FormControl
               className={
                 editable
                   ? "inputs-textfield w-full sm:w-1/4"
@@ -944,9 +897,6 @@ export default function DetallarRegistro() {
                 <MenuItem value="Cobertura">Cobertura</MenuItem>
               </Select>
             </FormControl>
-
-
-  
           </div>
 
           {/* Contenedor Informacion de Acudiente */}
@@ -1103,11 +1053,11 @@ export default function DetallarRegistro() {
       </div>
       {/* Documentos */}
       <div className="mt-4 flex flex-col items-center">
-        {estudiante.documento_identidad && (
+        {formData.documento_identidad && (
           <Button
             variant="outlined"
             color="primary"
-            href={estudiante.documento_identidad}
+            href={formData.documento_identidad}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-2"
@@ -1146,31 +1096,6 @@ export default function DetallarRegistro() {
               </Typography>
             )}
           </div>
-        )}
-
-        {estudiante.constancia_estudios && (
-          <Button
-            variant="outlined"
-            color="primary"
-            href={estudiante.constancia_estudios}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2"
-          >
-            Ver constancia de estudios
-          </Button>
-        )}
-        {estudiante.recibo_pago && (
-          <Button
-            variant="outlined"
-            color="primary"
-            href={estudiante.recibo_pago}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2"
-          >
-            Ver recibo de pago
-          </Button>
         )}
 
         <h2 className="text-md my-4 text-center font-semibold text-primary">
@@ -1253,7 +1178,6 @@ export default function DetallarRegistro() {
           >
             {editable ? "Guardar" : "Editar"}
           </Button>
-
         </div>
       </div>
     </div>

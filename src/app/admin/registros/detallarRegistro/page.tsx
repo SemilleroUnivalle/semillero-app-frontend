@@ -133,6 +133,7 @@ export default function DetallarRegistro() {
     audit_informacion: null,
     foto: "",
     documento_identidad: "",
+    estado: "",
   });
 
   const [formDataAcudiente, setFormDataAcudiente] = useState<Acudiente>({
@@ -153,12 +154,11 @@ export default function DetallarRegistro() {
   const [documentoIdentidad, setDocumentoIdentidad] = useState<File | null>(
     null,
   );
-  const [image, setImage] = useState<string | null>(null);
-  const [documento, setDocumento] = useState<string | null>(null);
+  const [image] = useState<string | null>(null);
+  // const [documento, setDocumento] = useState<string | null>(null);
 
   // Manejo de campo para otro género
 
-  const [mostrarOtroGenero, setMostrarOtroGenero] = useState(false);
   const [mostrarTipoDiscapacidad, setTipoDiscapacidad] = useState(false);
 
   const [esDocente, setEsDocente] = useState(false);
@@ -265,7 +265,6 @@ export default function DetallarRegistro() {
       fetchCiudades();
     }
   }, [editable, departamentoSeleccionado, departamentos]);
-  1;
 
   // Función para guardar los cambios
   const handleSave = async () => {
@@ -284,11 +283,13 @@ export default function DetallarRegistro() {
       // Agrega los campos normales
       for (const key in formData) {
         if (camposExcluidos.includes(key)) continue;
-        let value = (formData as any)[key];
+        // Usa keyof Estudiante para tipar correctamente
+        const typedKey = key as keyof typeof formData;
+        let value = formData[typedKey];
         if (typeof value === "boolean") {
           value = value ? "True" : "False";
         }
-        formDataToSend.append(key, value);
+        formDataToSend.append(key, value as string | Blob);
       }
 
       // Solo agrega archivos si el usuario seleccionó uno nuevo
@@ -308,7 +309,7 @@ export default function DetallarRegistro() {
       }
 
       // Debug
-      for (let pair of formDataToSend.entries()) {
+      for (const pair of formDataToSend.entries()) {
         console.log(`${pair[0]}:`, pair[1]);
       }
 

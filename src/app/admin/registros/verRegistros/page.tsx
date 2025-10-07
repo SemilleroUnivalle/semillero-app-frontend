@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Estudiante } from "@/interfaces/interfaces";
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -134,41 +135,6 @@ export default function VerRegistros() {
     estado: string;
   }
 
-  interface Estudiante {
-    id_estudiante: number;
-    nombre: string;
-    apellido: string;
-    contrasena: string;
-    numero_documento: string;
-    email: string;
-    is_active: boolean;
-    ciudad_residencia: string;
-    eps: string;
-    grado: string;
-    colegio: string;
-    grado_documento: string;
-    genero: string;
-    fecha_nacimiento: string;
-    telefono_fijo: string;
-    celular: string;
-    departamento_residencia: string;
-    comuna_residencia: string;
-    direccion_residencia: string;
-    estamento: string;
-    discapacidad: boolean;
-    grado_discapacidad: string;
-    descripcion_discapacidad: string;
-    area_desempeño: string | null;
-    grado_escolaridad: string | null;
-    documento_identidad: string | null;
-    recibo_pago: string | null;
-    foto: string | null;
-    constancia_estudios: string | null;
-    user: number;
-    acudiente: number;
-    estado: string;
-  }
-
   const [rows, setRows] = useState<EstudianteRow[]>([]);
   const [success, setSuccess] = useState(false);
 
@@ -217,7 +183,7 @@ export default function VerRegistros() {
 
         if (response.status === 200) {
           // Formatea los datos para la tabla
-          const formateado = response.data.map((student: any) => ({
+          const formateado = response.data.map((student: Estudiante) => ({
             id: student.id_estudiante,
             apellido: student.apellido || "",
             nombre: student.nombre || "",

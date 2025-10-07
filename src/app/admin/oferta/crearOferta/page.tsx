@@ -142,6 +142,7 @@ export default function CrearOferta() {
         {
           nombre: nombreOferta,
           fecha_inicio: fechaInicio,
+          estado: true,
         },
         {
           headers: {

@@ -20,73 +20,10 @@ import axios from "axios";
 import { API_BASE_URL } from "../../../../config";
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import IconButton from '@mui/material/IconButton';
-
-// Interfaces para Departamentos y Municipios
-interface Departamento {
-  id: number;
-  nombre: string;
-}
-interface DepartamentoApi {
-  id: number;
-  name: string;
-}
-interface Ciudad {
-  id: number;
-  nombre: string;
-}
-interface CiudadApi {
-  id: number;
-  name: string;
-}
-
-// INTERFACES ACTUALIZADAS PARA PROFESOR
-interface ModuloInterface {
-  id_modulo: number;
-  nombre_modulo: string;
-  descripcion_modulo: string;
-  intensidad_horaria: number;
-  dirigido_a: string | null;
-  incluye: string | null;
-  imagen_modulo: string | null;
-  estado: boolean;
-  id_categoria: number;
-  id_area: number;
-  id_oferta_categoria: number[];
-}
-
-interface ProfesorInterface {
-  id: number | null;
-  nombre: string;
-  apellido: string;
-  numero_documento: string;
-  tipo_documento: string;
-  fecha_nacimiento: string;
-  genero: string;
-  email: string;
-  celular: string;
-  telefono_fijo: string;
-  departamento_residencia: string;
-  ciudad_residencia: string;
-  comuna_residencia: string;
-  direccion_residencia: string;
-  area_desempeño: string;
-  eps: string;
-  is_active: boolean;
-  grado_escolaridad: string;
-  foto: string | null;
-  documento_identidad_pdf: string | null;
-  rut_pdf: string | null;
-  certificado_laboral_pdf: string | null;
-  certificado_bancario_pdf: string | null;
-  hoja_vida_pdf: string | null;
-  certificado_academico_pdf: string | null;
-  modulo: ModuloInterface | null;
-  colegio?: string;
-  estamento?: string;
-}
+import {ProfesorInterface, Departamento, Ciudad, DepartamentoApi, CiudadApi} from "@/interfaces/interfaces";
 
 export default function DetallarRegistro() {
-  const [profesor, setProfesor] = useState<any>(null);
+  const [profesor, setProfesor] = useState<ProfesorInterface | null>(null);
   const [loading, setLoading] = useState(true);
   const [editable, setEditable] = useState(false);
 
@@ -122,11 +59,27 @@ export default function DetallarRegistro() {
     certificado_bancario_pdf: null,
     hoja_vida_pdf: null,
     certificado_academico_pdf: null,
-    modulo: null,
+    modulo: {
+    id_modulo: 0,
+    id_categoria: {
+      id_categoria: 0,
+      nombre: "",
+      estado: false,
+    },
+    nombre_modulo: "",
+    descripcion_modulo: "",
+    intensidad_horaria: 0,
+    dirigido_a: null,
+    incluye: null,
+    imagen_modulo: null,
+    estado: false,
+    id_area: 0,
+    id_oferta_categoria: [],
+  },
     colegio: "",
     estamento: "",
   });
-
+         
   const [success, setSuccess] = useState(false);
 
   // Estados para manejo de archivos
@@ -140,7 +93,7 @@ export default function DetallarRegistro() {
   const [image, setImage] = useState<string | null>(null);
 
   // Manejo de campos condicionales (ejemplo: otro género, discapacidad, docente)
-  const [mostrarOtroGenero, setMostrarOtroGenero] = useState(false);
+
 
   // Extrae la función fetchDepartamentos para poder reutilizarla
   const fetchDepartamentos = async () => {
@@ -223,7 +176,7 @@ export default function DetallarRegistro() {
   }, [editable, departamentoSeleccionado, departamentos]);
 
   // Mapea la respuesta del backend a tu estructura interna de Profesor
-  function mapBackendToFormDataProfesor(data: any): ProfesorInterface {
+  function mapBackendToFormDataProfesor(data: ProfesorInterface): ProfesorInterface {
     return {
       id: data.id ?? null,
       nombre: data.nombre ?? "",
@@ -278,13 +231,14 @@ export default function DetallarRegistro() {
 
     // Campos normales
     for (const key in formData) {
-      if (camposExcluidos.includes(key)) continue;
-      let value = (formData as any)[key];
-      if (typeof value === "boolean") {
-        value = value ? "True" : "False";
-      }
-      formDataToSend.append(key, value);
-    }
+  if (camposExcluidos.includes(key)) continue;
+  const typedKey = key as keyof ProfesorInterface;
+  let value = formData[typedKey];
+  if (typeof value === "boolean") {
+    value = value ? "True" : "False";
+  }
+  formDataToSend.append(key, value as string | Blob);
+}
 
     // Solo envía si el usuario seleccionó un archivo válido
     if (foto && foto.type.startsWith("image/")) {
@@ -302,7 +256,7 @@ export default function DetallarRegistro() {
       token = user.token;
     }
 
-    for (let pair of formDataToSend.entries()) {
+    for (const pair of formDataToSend.entries()) {
       console.log(`${pair[0]}:`, pair[1]);
     }
 
@@ -509,8 +463,7 @@ export default function DetallarRegistro() {
                   editable
                     ? (e) => {
                         setFormData({ ...formData, genero: e.target.value });
-                        setMostrarOtroGenero(e.target.value === "Otro");
-                      }
+                        }
                     : undefined
                 }
                 inputProps={{ readOnly: !editable }}

@@ -12,109 +12,19 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
+import { Estudiante, Matricula} from "@/interfaces/interfaces";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../config";
 
-// Interfaces para Departamentos y Municipios
 
-export interface Acudiente {
-  id_acudiente: number;
-  nombre_acudiente: string;
-  apellido_acudiente: string;
-  tipo_documento_acudiente: string;
-  numero_documento_acudiente: string;
-  celular_acudiente: string;
-  email_acudiente: string;
-}
-
-export interface Estudiante {
-  id_estudiante: number;
-  acudiente: Acudiente;
-  nombre: string;
-  apellido: string;
-  numero_documento: string;
-  email: string;
-  is_active: boolean;
-  ciudad_residencia: string;
-  eps: string;
-  grado: string;
-  colegio: string;
-  tipo_documento: string;
-  genero: string;
-  fecha_nacimiento: string;
-  telefono_fijo: string;
-  celular: string;
-  departamento_residencia: string;
-  comuna_residencia: string;
-  direccion_residencia: string;
-  estamento: string;
-  discapacidad: boolean;
-  tipo_discapacidad: string;
-  descripcion_discapacidad: string;
-}
-
-export interface Categoria {
-  id_categoria: number;
-  nombre: string;
-  estado: boolean;
-}
-
-export interface Modulo {
-  id_modulo: number;
-  id_categoria: Categoria;
-  nombre_modulo: string;
-  descripcion_modulo: string;
-  intensidad_horaria: number;
-  dirigido_a: string | null;
-  incluye: string | null;
-  imagen_modulo: string | null;
-  estado: boolean;
-  id_area: number;
-  id_oferta_categoria: number[];
-}
-
-export interface OfertaAcademica {
-  id_oferta_academica: number;
-  nombre: string;
-  fecha_inicio: string;
-  estado: boolean;
-}
-
-export interface OfertaCategoria {
-  id_oferta_categoria: number;
-  id_oferta_academica: OfertaAcademica;
-  precio_publico: string;
-  precio_privado: string;
-  precio_univalle: string;
-  precio_univalle_egresados: string | null;
-  fecha_finalizacion: string;
-  estado: boolean;
-  id_categoria: number;
-}
-
-export interface MatriculaResponse {
-  id_inscripcion: number;
-  modulo: Modulo;
-  estudiante: Estudiante;
-  oferta_categoria: OfertaCategoria;
-  estado: string;
-  grupo: string;
-  fecha_inscripcion: string;
-  tipo_vinculacion: string;
-  terminos: boolean;
-  observaciones: string | null;
-  recibo_pago: string;
-  constancia: string | null;
-  certificado: string;
-}
 
 export default function DetallarMatricula() {
 
-  const [estudiante, setEstudiante] = useState<any>(null);
-  const [matricula, setMatricula] = useState<any>(null);
+  const [estudiante, setEstudiante] = useState<Estudiante | null>(null);
+  const [matricula, setMatricula] = useState<Matricula>();
   const [loading, setLoading] = useState(true);
   const [editable, setEditable] = useState(false);
 
@@ -151,21 +61,21 @@ export default function DetallarMatricula() {
       numero_documento_acudiente: "",
       celular_acudiente: "",
     },
+    verificacion_informacion: null,
+    verificacion_foto: null,
+    verificacion_documento_identidad: null,
+    audit_foto: null,
+    audit_documento_identidad: null,
+    audit_informacion: null,
+    foto: null,
+    documento_identidad: null,
+    estado: "",
+    area_desempeño: "",
+    grado_escolaridad: "",
   });
 
-  const [formDataAcudiente, setFormDataAcudiente] = useState<Acudiente>({
-    id_acudiente: 0,
-    nombre_acudiente: formDataEstudiante.acudiente.nombre_acudiente || "",
-    apellido_acudiente: formDataEstudiante.acudiente.apellido_acudiente || "",
-    tipo_documento_acudiente:
-      formDataEstudiante.acudiente.tipo_documento_acudiente || "",
-    numero_documento_acudiente:
-      formDataEstudiante.acudiente.numero_documento_acudiente || "",
-    email_acudiente: formDataEstudiante.acudiente.email_acudiente || "",
-    celular_acudiente: formDataEstudiante.acudiente.celular_acudiente || "",
-  });
 
-  const [formDataMatricula, setFormDataMatricula] = useState<MatriculaResponse>(
+  const [formDataMatricula, setFormDataMatricula] = useState<Matricula>(
     {
       id_inscripcion: 0,
       modulo: {
@@ -187,6 +97,7 @@ export default function DetallarMatricula() {
       },
       estudiante: formDataEstudiante,
       oferta_categoria: {
+        modulo: [],
         id_oferta_categoria: 0,
         id_oferta_academica: {
           id_oferta_academica: 0,
@@ -200,7 +111,11 @@ export default function DetallarMatricula() {
         precio_univalle_egresados: null,
         fecha_finalizacion: "",
         estado: false,
-        id_categoria: 0,
+        id_categoria: {
+          id_categoria: 0,
+          nombre: "",
+          estado: false,
+        },
       },
       estado: "",
       grupo: "",
@@ -209,20 +124,18 @@ export default function DetallarMatricula() {
       terminos: false,
       observaciones: null,
       recibo_pago: "",
-      constancia: null,
       certificado: "",
+      verificacion_certificado: null,
+      verificacion_recibo_pago: null,
+      audit_documento_recibo_pago: null,
+      audit_certificado: null,
     },
   );
 
   const [success, setSuccess] = useState(false);
-  const [matriculaVerificada, setMatriculaVerificada] = useState(
-    formDataMatricula.estado === "A",
-  ); // Estado para matrícula verificada
 
   // Estados para manejo de archivos
-  const [documentoIdentidad, setDocumentoIdentidad] = useState<File | null>(
-    null,
-  );
+
   const [reciboPago, setReciboPago] = useState<File | null>(null);
   const [certificado, setCertificado] = useState<File | null>(null);
 
@@ -264,7 +177,7 @@ export default function DetallarMatricula() {
             ...formDataEstudiante,
             ...res.data.estudiante,
           });
-          setMatriculaVerificada(res.data.estado);
+
         })
         .catch(() => setLoading(false)); // <-- termina la carga en error
     } else {
@@ -272,24 +185,6 @@ export default function DetallarMatricula() {
     }
 
   }, []);
-
-  useEffect(() => {
-    if (formDataEstudiante.acudiente) {
-      setFormDataAcudiente({
-        id_acudiente: formDataEstudiante.acudiente.id_acudiente || 0,
-        nombre_acudiente: formDataEstudiante.acudiente.nombre_acudiente || "",
-        apellido_acudiente:
-          formDataEstudiante.acudiente.apellido_acudiente || "",
-        tipo_documento_acudiente:
-          formDataEstudiante.acudiente.tipo_documento_acudiente || "",
-        numero_documento_acudiente:
-          formDataEstudiante.acudiente.numero_documento_acudiente || "",
-        celular_acudiente: formDataEstudiante.acudiente.celular_acudiente || "",
-        email_acudiente: formDataEstudiante.acudiente.email_acudiente || "",
-      });
-    }
-  }, [formDataEstudiante.acudiente]);
-
 
 
   
@@ -318,13 +213,13 @@ export default function DetallarMatricula() {
 
   // Estados para las verificaciones
 
-  const [estadoReciboPago, setEstadoReciboPago] = useState<true | false | null>(
+  const [estadoReciboPago] = useState<true | false | null>(
     null,
   );
-  const [estadoCertificado, setEstadoCertificado] = useState<
+  const [estadoCertificado] = useState<
     true | false | null
   >(null);
-  const [estadoInformacionMatricula, setEstadoInformacionMatricula] = useState<
+  const [estadoInformacionMatricula] = useState<
     true | false | null
   >(null);
 
@@ -392,7 +287,7 @@ export default function DetallarMatricula() {
       {/* Documentos de Matricula */}
       <div className="mt-3 flex w-full flex-wrap justify-around gap-4 text-gray-600">
         <div>
-          {matricula.recibo_pago && (
+          {matricula?.recibo_pago && (
             <Button
               variant="outlined"
               color="primary"
@@ -439,7 +334,7 @@ export default function DetallarMatricula() {
         </div>
 
         <div>
-          {matricula.certificado && (
+          {matricula?.certificado && (
             <Button
               variant="outlined"
               color="primary"

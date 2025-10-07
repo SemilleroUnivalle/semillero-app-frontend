@@ -20,7 +20,6 @@ export default function Page() {
     fecha_inicio: string;
   }
 
-
   const router = useRouter();
 
   const [success, setSuccess] = useState(false);
@@ -121,14 +120,14 @@ export default function Page() {
 
         // Agrupar por id_oferta_academica
         const ofertasPorAcademica: Record<number, OfertaCategoria[]> = {};
-        Object.values(res).forEach((ofertasArray: any) => {
-          ofertasArray.forEach((oferta: any) => {
+        Object.values(res).forEach((ofertasArray) => {
+          (ofertasArray as OfertaCategoria[]).forEach((oferta) => {
             const id = oferta.id_oferta_academica?.id_oferta_academica;
             if (!ofertasPorAcademica[id]) ofertasPorAcademica[id] = [];
             ofertasPorAcademica[id].push(oferta);
           });
         });
-        
+
         // Construir filas: una por cada oferta académica
         const rows = Object.values(ofertasPorAcademica).map((ofertas) => {
           const primera = ofertas[0];

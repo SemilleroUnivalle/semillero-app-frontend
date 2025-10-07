@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { API_BASE_URL } from "../../../../config";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { Modulo, OfertaCategoria } from "@/interfaces/interfaces";
 
 import {
   InputLabel,
@@ -19,7 +20,6 @@ import {
 } from "@mui/material";
 
 export default function NuevaMatricula() {
-
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -40,12 +40,14 @@ export default function NuevaMatricula() {
   const [terminos, setTerminos] = useState(false);
 
   // Estado para las ofertas académicas activas
-  const [ofertas, setOfertas] = useState<any>({});
+  const [ofertas, setOfertas] = useState<Record<string, OfertaCategoria[]>>({});
 
   const [estamento, setEstamento] = useState<string>("");
 
   useEffect(() => {
-    const est = JSON.parse(localStorage.getItem("estudiante") || "{}").estamento;
+    const est = JSON.parse(
+      localStorage.getItem("estudiante") || "{}",
+    ).estamento;
     if (est) setEstamento(est);
   }, []);
 
@@ -56,7 +58,6 @@ export default function NuevaMatricula() {
       .then((res) => {
         console.log("Ofertas académicas obtenidas:", res.data);
         setOfertas(res.data);
-
       })
       .catch(() => console.log("No se pudo obtener las ofertas"));
   }, []);
@@ -64,27 +65,26 @@ export default function NuevaMatricula() {
   // Obtén la lista de ofertas académicas
   const ofertasAcademicas = Object.values(ofertas)
     .flat()
-    .map((oferta: any) => oferta.id_oferta_academica)
+    .map((oferta) => oferta.id_oferta_academica)
     .filter(
       (value, index, self) =>
         self.findIndex(
           (v) => v.id_oferta_academica === value.id_oferta_academica,
         ) === index,
     );
-
   // Categorías disponibles según la oferta seleccionada
   const categoriasDisponibles = formData.oferta
-    ? ofertas[formData.oferta]?.map((cat: any) => cat.id_categoria) || []
+    ? ofertas[formData.oferta]?.map((ofertaCat) => ofertaCat.id_categoria) || []
     : [];
 
   // Módulos disponibles según la categoría seleccionada
   const modulosDisponibles =
     formData.oferta && formData.area
       ? ofertas[formData.oferta]?.find(
-          (cat: any) => cat.id_categoria.id_categoria === Number(formData.area),
+          (ofertaCat) =>
+            ofertaCat.id_categoria.id_categoria === Number(formData.area),
         )?.modulo || []
       : [];
-
   const handleChange = (event: SelectChangeEvent<string>, field: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -93,7 +93,6 @@ export default function NuevaMatricula() {
       ...(field === "area" ? { modulo: "" } : {}),
     }));
   };
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,10 +122,10 @@ export default function NuevaMatricula() {
       formDataToSend.append("certificado", certificado);
     }
 
-     // Imprime todos los datos que se van a enviar
-  for (let pair of formDataToSend.entries()) {
-    console.log(`${pair[0]}:`, pair[1]);
-  }
+    // Imprime todos los datos que se van a enviar
+    for (const pair of formDataToSend.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
 
     try {
       await axios.post(`${API_BASE_URL}/matricula/mat/`, formDataToSend, {
@@ -136,7 +135,6 @@ export default function NuevaMatricula() {
       });
       alert("Matrícula enviada correctamente.");
       router.push("/auth/login"); // Redirige al login
-   
     } catch (error) {
       console.error("Error al enviar la matrícula:", error);
       alert("Hubo un error al enviar la matrícula.");
@@ -160,7 +158,7 @@ export default function NuevaMatricula() {
             value={formData.oferta}
             onChange={(e) => handleChange(e, "oferta")}
           >
-            {ofertasAcademicas.map((oferta: any) => (
+            {ofertasAcademicas.map((oferta) => (
               <MenuItem
                 key={oferta.id_oferta_academica}
                 value={oferta.id_oferta_academica}
@@ -185,7 +183,7 @@ export default function NuevaMatricula() {
               value={formData.area}
               onChange={(e) => handleChange(e, "area")}
             >
-              {categoriasDisponibles.map((cat: any) => (
+              {categoriasDisponibles.map((cat) => (
                 <MenuItem key={cat.id_categoria} value={cat.id_categoria}>
                   {cat.nombre}
                 </MenuItem>
@@ -206,7 +204,7 @@ export default function NuevaMatricula() {
               value={formData.modulo}
               onChange={(e) => handleChange(e, "modulo")}
             >
-              {modulosDisponibles.map((modulo: any) => (
+              {modulosDisponibles.map((modulo: Modulo) => (
                 <MenuItem key={modulo.id_modulo} value={modulo.id_modulo}>
                   {modulo.nombre_modulo}
                 </MenuItem>
@@ -282,9 +280,7 @@ export default function NuevaMatricula() {
                 type="file"
                 accept=".pdf"
                 className="block w-full text-sm text-gray-500"
-                onChange={(e) =>
-                  setCertificado(e.target.files?.[0] || null)
-                }
+                onChange={(e) => setCertificado(e.target.files?.[0] || null)}
               />
             </div>
           )}
