@@ -13,6 +13,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+type LinkItem = {
+  name: string;
+  href: string;
+  icon: React.ElementType;
+};
 
 // Links para administrador
 const adminLinks = [
@@ -50,7 +55,7 @@ export default function NavLinks() {
     }
   }, []);
 
-  let links = [];
+  let links: LinkItem[] = [];
   if (tipoUsuario === "administrador") {
     links = adminLinks;
   } else if (tipoUsuario === "profesor") {
