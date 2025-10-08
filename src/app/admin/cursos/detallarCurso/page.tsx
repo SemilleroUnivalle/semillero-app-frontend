@@ -18,11 +18,14 @@ import { useRouter } from "next/navigation";
 
 export default function DetallarCurso() {
   interface Curso {
-    id: number;
-    nombre: string;
-    descripcion: string;
-    id_area: string;
-    id_categoria: string;
+    id_modulo: number;
+    nombre_modulo: string;
+    descripcion_modulo: string;
+    id_area: { id_area: string; nombre_area: string };
+    id_categoria: { id_categoria: string; nombre: string };
+    intensidad_horaria: number;
+    dirigido_a: string;
+    incluye: string;
   }
 
   interface Area {
@@ -41,9 +44,12 @@ export default function DetallarCurso() {
   // Estado para manejar los datos del formulario
   const [formData, setFormData] = useState({
     nombre_modulo: "", // Usar el nombre del curso seleccionado
-    descripcion_curso: "", // Usar la descripción del curso seleccionado
+    descripcion_modulo: "", // Usar la descripción del curso seleccionado
     id_area: "", // Usar el área del curso seleccionado
     id_categoria: "", // Usar la categoría del curso seleccionado
+    intensidad_horaria: 0, // Usar la intensidad horaria del curso seleccionado
+    dirigido_a: "", // Usar el dirigido del curso seleccionado
+    incluye: "", // Usar el incluye del curso seleccionado
   });
   //Estado para manejar el mensaje de éxito
   const [success, setSuccess] = useState(false);
@@ -60,10 +66,13 @@ export default function DetallarCurso() {
   useEffect(() => {
     if (curso) {
       setFormData({
-        nombre_modulo: curso.nombre || "",
-        descripcion_curso: curso.descripcion || "",
-        id_area: curso.id_area || "",
-        id_categoria: curso.id_categoria || "",
+        nombre_modulo: curso.nombre_modulo || "",
+        descripcion_modulo: curso.descripcion_modulo || "",
+        id_area: curso.id_area.id_area || "",
+        id_categoria: curso.id_categoria.id_categoria || "",
+        intensidad_horaria: curso.intensidad_horaria,
+        dirigido_a: curso.dirigido_a || "",
+        incluye: curso.incluye || "",
       });
     }
   }, [curso]);
@@ -162,7 +171,7 @@ export default function DetallarCurso() {
       <div className="flex w-full flex-col gap-3 sm:w-1/3">
         {/* Campo nombre del curso */}
         <TextField
-          className="inputs-textfield w-full"
+          className="inputs-textfield-readonly w-full"
           label="Nombre"
           name="nombre_modulo"
           variant="outlined"
@@ -170,14 +179,14 @@ export default function DetallarCurso() {
           fullWidth
           value={formData.nombre_modulo}
           slotProps={{
-            input: {
-              readOnly: true,
-            },
-          }}
+              input: {
+                readOnly: true,
+              },
+            }}
         />
 
         {/* Campo selector de categoria */}
-        <FormControl className="inputs-textfield w-full">
+        <FormControl className="inputs-textfield-readonly w-full">
           <InputLabel id="categoria_curso">Categoría</InputLabel>
           <Select
             labelId="categoria_curso"
@@ -202,7 +211,7 @@ export default function DetallarCurso() {
         </FormControl>
 
         {/* Campo selector de area */}
-        <FormControl className="inputs-textfield w-full">
+        <FormControl className="inputs-textfield-readonly w-full">
           <InputLabel id="area_curso">Área</InputLabel>
           <Select
             labelId="area_curso"
@@ -228,7 +237,7 @@ export default function DetallarCurso() {
 
         {/* Campo descripción */}
         <TextField
-          className="inputs-textfield w-full"
+          className="inputs-textfield-readonly w-full"
           label="Descripción"
           name="descripcion_curso"
           variant="outlined"
@@ -241,7 +250,54 @@ export default function DetallarCurso() {
               readOnly: true,
             },
           }}
-          value={formData.descripcion_curso}
+          value={formData.descripcion_modulo}
+        />
+        {/* Campo Intensidad Horaria*/}
+        <TextField
+          className="inputs-textfield-readonly w-full"
+          label="Intensidad Horaria"
+          name="intensidad_horaria"
+          variant="outlined"
+          type="text"
+          fullWidth
+          slotProps={{
+            input: {
+              readOnly: true,
+            },
+          }}
+          value={formData.intensidad_horaria}
+        />
+
+        {/* Campo Dirigido a*/}
+        <TextField
+          className="inputs-textfield-readonly w-full"
+          label="Dirigido a"
+          name="dirigido_a"
+          variant="outlined"
+          type="text"
+          fullWidth
+          value={formData.dirigido_a}
+          slotProps={{
+            input: {
+              readOnly: true,
+            },
+          }}
+        />
+
+        {/* Campo Incluye*/}
+        <TextField
+          className="inputs-textfield-readonly w-full"
+          label="Incluye"
+          name="incluye"
+          variant="outlined"
+          type="text"
+          fullWidth
+          slotProps={{
+            input: {
+              readOnly: true,
+            },
+          }}
+          value={formData.incluye}
         />
         <div className="flex flex-row gap-2">
           <Button
@@ -253,7 +309,7 @@ export default function DetallarCurso() {
           </Button>
           <Button
             variant="contained"
-            onClick={() => curso && handleDelete(curso.id)}
+            onClick={() => curso && handleDelete(curso.id_modulo)}
             className="text-md mt-4 w-1/2 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
           >
             Eliminar

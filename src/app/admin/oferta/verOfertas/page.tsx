@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
+import { OfertaCategoria } from "@/interfaces/interfaces";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Paper, Alert, Snackbar } from "@mui/material";
+import { Paper, Alert, Snackbar, Tooltip } from "@mui/material";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { GridColDef, DataGrid } from "@mui/x-data-grid";
@@ -26,56 +27,58 @@ export default function Page() {
   const [rows, setRows] = useState<OfertaRow[]>([]);
 
   const columnsOfertas: GridColDef[] = [
-    { field: "id", headerName: "ID", width: 70 },
-    { field: "nombre", headerName: "Nombre", width: 300 },
-    { field: "fecha_inicio", headerName: "Fecha inicio", width: 300 },
+    { field: "id", headerName: "ID", flex: 1 },
+    { field: "nombre", headerName: "Nombre", flex: 1 },
+    { field: "fecha_inicio", headerName: "Fecha inicio", flex: 1 },
     {
       field: "editar",
       headerName: "Acciones",
       sortable: false,
       filterable: false,
-      width: 300,
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
       renderCell: (params) => (
         <div className="flex h-full w-full flex-row items-center justify-around">
-          <VisibilityOutlinedIcon
-            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
-            onClick={() => {
-              const fullData = params.row._original;
-              localStorage.setItem(
-                "ofertaSeleccionada",
-                JSON.stringify(fullData),
-              );
-              console.log(fullData); // 👉 Guarda la fila completa como JSON
-              router.push("/admin/oferta/detallarOferta/"); // 👉 Navega a la pantalla de modificar
-            }}
-          />
-          <PencilSquareIcon
-            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
-            onClick={() => {
-              const fullData = params.row._original;
+          <Tooltip title="Ver detalles" placement="top">
+            <VisibilityOutlinedIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+              onClick={() => {
+                const fullData = params.row._original;
+                localStorage.setItem(
+                  "ofertaSeleccionada",
+                  JSON.stringify(fullData),
+                );
+                console.log("Estos son los datos enviados", fullData); // 👉 Guarda la fila completa como JSON
+                router.push("/admin/oferta/detallarOferta/"); // 👉 Navega a la pantalla de modificar
+              }}
+            />
+          </Tooltip>
 
-              localStorage.setItem(
-                "ofertaSeleccionada",
-                JSON.stringify(fullData),
-              ); // 👉 Guarda la fila completa como JSON
-              router.push("/admin/oferta/modificarOfertas/"); // 👉 Navega a la pantalla de modificar
-            }}
-          />
-          <TrashIcon
-            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
-            onClick={() => handleDelete(params.row.id)}
-          />
+          <Tooltip title="Editar oferta" placement="top">
+            <PencilSquareIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+              onClick={() => {
+                const fullData = params.row._original;
+
+                localStorage.setItem(
+                  "ofertaSeleccionada",
+                  JSON.stringify(fullData),
+                ); // 👉 Guarda la fila completa como JSON
+                router.push("/admin/oferta/modificarOfertas/"); // 👉 Navega a la pantalla de modificar
+              }}
+            />
+          </Tooltip>
+
+          <Tooltip title="Eliminar oferta" placement="top">
+            <TrashIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
+              onClick={() => handleDelete(params.row.id)}
+            />
+          </Tooltip>
         </div>
       ),
     },
-
-    // { field: "username", headerName: "NAS Virtual", width: 130 },
-    // {
-    //   field: "estado",
-    //   headerName: "Estado",
-    //   width: 130,
-    //   type: "boolean",
-    // },
   ];
 
   // Función para eliminar un curso
@@ -106,7 +109,7 @@ export default function Page() {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          `${API_BASE_URL}/oferta_categoria/ofer/`,
+          `${API_BASE_URL}/oferta_categoria/ofer/por-oferta-academica/`,
           {
             headers: {
               Authorization: `Token ${localStorage.getItem("token")}`,
@@ -115,23 +118,28 @@ export default function Page() {
         );
         const res = response.data;
 
-        if (!res || (Array.isArray(res) && res.length === 0)) {
-          console.log("Error: No se encontraron ofertas");
-        } else {
-          const formateado = res.map(
-            (data: {
-              id_oferta_categoria: number;
-              id_oferta_academica: { nombre: string; fecha_inicio: string };
-            }) => ({
-              id: data.id_oferta_categoria,
-              nombre: data.id_oferta_academica.nombre,
-              fecha_inicio: data.id_oferta_academica.fecha_inicio,
-              _original: data, // Guarda el objeto original
-            }),
-          );
+        // Agrupar por id_oferta_academica
+        const ofertasPorAcademica: Record<number, OfertaCategoria[]> = {};
+        Object.values(res).forEach((ofertasArray) => {
+          (ofertasArray as OfertaCategoria[]).forEach((oferta) => {
+            const id = oferta.id_oferta_academica?.id_oferta_academica;
+            if (!ofertasPorAcademica[id]) ofertasPorAcademica[id] = [];
+            ofertasPorAcademica[id].push(oferta);
+          });
+        });
 
-          setRows(formateado);
-        }
+        // Construir filas: una por cada oferta académica
+        const rows = Object.values(ofertasPorAcademica).map((ofertas) => {
+          const primera = ofertas[0];
+          return {
+            id: primera.id_oferta_academica.id_oferta_academica,
+            nombre: primera.id_oferta_academica.nombre,
+            fecha_inicio: primera.id_oferta_academica.fecha_inicio,
+            _original: ofertas, // Guarda todas las ofertas_categoria asociadas
+          };
+        });
+
+        setRows(rows);
       } catch (error) {
         console.error("Error al obtener los datos de las categorías:", error);
       }
@@ -210,13 +218,14 @@ export default function Page() {
             pageSizeOptions={[20, 40]}
             sx={{
               border: 0,
-              "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: "#e8e8e8", // Fondo de todo el header
-              },
               "& .MuiDataGrid-columnHeaderTitle": {
-                fontWeight: "bold", // Negrita en el título
-                color: "#575757", // Color del texto
-                fontSize: "1rem", // (opcional) Tamaño de letra
+                fontWeight: "bold",
+                color: "#575757",
+                fontSize: "1rem",
+              },
+
+              "& .MuiDataGrid-columnHeader": {
+                backgroundColor: "#e8e8e8",
               },
             }}
             localeText={{

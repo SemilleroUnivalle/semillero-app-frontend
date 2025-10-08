@@ -10,8 +10,8 @@ import {
   SelectChangeEvent,
   Avatar,
   Button,
+  Autocomplete,
 } from "@mui/material";
-import Link from "next/link";
 import { useState, useEffect } from "react";
 
 import { useRouter } from "next/navigation";
@@ -58,16 +58,47 @@ const grados: string[] = [
   "Docente",
 ];
 
+const generos = ["Masculino", "Femenino"];
+const epss = [
+  "Emssanar",
+  "Sura",
+  "Sanitas",
+  "Nueva EPS",
+  "Compensar",
+  "Coomeva",
+  "Salud Total",
+  "Famisanar",
+  "Cafesalud",
+  "Medimás",
+  "SOS",
+  "Cruz Blanca",
+  "Aliansalud",
+  "Colsubsidio",
+  "Ecoopsos",
+  "Comfenalco Valle",
+  "Comfandi",
+  "Mutual Ser",
+  "Caprecom",
+  "EPS Convida",
+  "EPS Savia Salud",
+  "EPS Comfachocó",
+  "EPS Comfaoriente",
+];
 export default function Registro() {
-
   const router = useRouter();
 
+  const [esDocente, setEsDocente] = useState(false);
+  const [fotoPerfil, setFotoPerfil] = useState<File | null>(null);
+  // Estado para el documento de identidad
+  const [documentoIdentidad, setDocumentoIdentidad] = useState<File | null>(
+    null,
+  );
 
   const [formData, setFormData] = useState({
     nombre: "",
     apellido: "",
-    numero_identificacion: "",
-    tipo_identificacion: "",
+    numero_documento: "",
+    tipo_documento: "",
     fecha_nacimiento: "",
     genero: "",
     email: "",
@@ -84,14 +115,17 @@ export default function Registro() {
     discapacidad: false,
     descripcion_discapacidad: "",
     tipo_discapacidad: "",
-    acudiente: "",
+    is_active: true,
+    area_desempeño: "",
+    grado_escolaridad: "",
+    ciudad_documento: "cali",
   });
 
   const [formDataAcudiente, setFormDataAcudiente] = useState({
     nombre_acudiente: "",
     apellido_acudiente: "",
-    tipo_identificacion_acudiente: "",
-    numero_identificacion_acudiente: "",
+    tipo_documento_acudiente: "",
+    numero_documento_acudiente: "",
     email_acudiente: "",
     celular_acudiente: "",
   });
@@ -101,42 +135,74 @@ export default function Registro() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log("Datos enviados del estudiante:", formData);
     console.log("Datos enviados del acudiente:", formDataAcudiente);
 
     try {
+      const formDataToSend = new FormData();
+
+      // Añadir todos los campos del formData al FormData
+      for (const key in formData) {
+        const typedKey = key as keyof typeof formData;
+        let value = formData[typedKey];
+        if (typeof value === "boolean") value = value ? "True" : "False";
+        formDataToSend.append(key, value as string | Blob);
+      }
       // Crear un acudiente primero para obtener su ID
       const responseAcudiente = await axios.post(
         `${API_BASE_URL}/acudiente/acu/`,
         formDataAcudiente,
         {
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: {},
         },
       );
 
-      if (responseAcudiente.status === 200) {
-        const id_acudiente = responseAcudiente.data.id_acudiente; // Obtener el ID del acudiente creado
+      if (
+        responseAcudiente.status === 201 ||
+        responseAcudiente.status === 200
+      ) {
+        let id_acudiente = null; // Inicializar id_acudiente
+        if (responseAcudiente.status === 201) {
+          id_acudiente = responseAcudiente.data.id_acudiente; // Obtener el ID del acudiente creado
+        } else {
+          id_acudiente = responseAcudiente.data.data.id_acudiente; // Obtener el ID del acudiente creado
+        }
+        console.log("ID del acudiente:", id_acudiente);
+
+        formDataToSend.append("acudiente", id_acudiente);
+        for (const pair of formDataToSend.entries()) {
+          console.log(`${pair[0]}:`, pair[1]);
+        }
+
+        // Paso 2: añadir archivos (asegúrate de capturarlos)
+        if (fotoPerfil) {
+          formDataToSend.append("foto", fotoPerfil);
+        }
+
+        if (documentoIdentidad) {
+          formDataToSend.append("documento_identidad", documentoIdentidad);
+        }
+
         console.log("Acudiente agregado con éxito");
-        // Actualiza formData con el id_acudiente
-        setFormData((prevFormData) => ({
-          ...prevFormData,
-          id_acudiente,
-        }));
 
         const responseEstudiante = await axios.post(
           `${API_BASE_URL}/estudiante/est/`,
-          formData,
+          formDataToSend,
           {
             headers: {
-              "Content-Type": "application/json",
+              "Content-Type": "multipart/form-data",
             },
           },
         );
-        if (responseEstudiante.status === 200) {
+        if (responseEstudiante.status === 201) {
           console.log("Estudiante agregado con éxito");
+          localStorage.setItem("id_estudiante", responseEstudiante.data.id);
+          console.log(
+            "ID del estudiante guardado en localStorage:",
+            responseEstudiante.data.id,
+          );
+
           alert("Registro exitoso");
+          localStorage.setItem("estamento", formData.estamento);
           router.push("/auth/matricula"); // Redirigir a la página de matricula
         } else {
           console.error(
@@ -152,13 +218,14 @@ export default function Registro() {
       }
     } catch (error) {
       console.error("Error de conexión:", error);
-      alert("Hubo un error de conexión al intentar actualizar la información");
+      alert(
+        "Acudiente: hubo un error de conexión al intentar crear el estudiante.",
+      );
     }
   };
 
   // Manejo de campo para otro género
 
-  const [mostrarOtroGenero, setMostrarOtroGenero] = useState(false);
   const [mostrarTipoDiscapacidad, setTipoDiscapacidad] = useState(false);
 
   // Manejo de estados para seleccion de departamento y municipio
@@ -174,14 +241,28 @@ export default function Registro() {
   const [image, setImage] = useState<string | null>(null);
 
   // Mastrar imagen seleccionada
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]; // Obtener el archivo seleccionado
-    if (file) {
+  // const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = event.target.files?.[0]; // Obtener el archivo seleccionado
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       setImage(reader.result as string); // Guardar la URL de la imagen en el estado
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // };
+  const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      setFotoPerfil(file);
+
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImage(reader.result as string); // Guardar la URL de la imagen en el estado
+        setImage(reader.result as string);
       };
       reader.readAsDataURL(file);
+    } else {
+      alert("Por favor selecciona una imagen válida (JPG, PNG, etc.)");
     }
   };
 
@@ -275,7 +356,7 @@ export default function Registro() {
                 type="file"
                 accept="image/*"
                 hidden
-                onChange={handleFileChange}
+                onChange={handleFotoChange}
               />
             </Button>
           </div>
@@ -322,24 +403,18 @@ export default function Registro() {
                   id="tipo_documento"
                   label="tipo_documento"
                   required
-                  value={formData.tipo_identificacion}
+                  value={formData.tipo_documento}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      tipo_identificacion: e.target.value,
+                      tipo_documento: e.target.value,
                     })
                   }
                 >
-                  <MenuItem value={"Tarjeta de identidad"}>
-                    Tarjeta de identidad
-                  </MenuItem>
-                  <MenuItem value={"Cédula de ciudadania"}>
-                    Cédula de ciudadanía
-                  </MenuItem>
-                  <MenuItem value={"Cédula de extrangería"}>
-                    Cédula de extrangería
-                  </MenuItem>
-                  <MenuItem value={"Permiso de protección temporal"}>
+                  <MenuItem value={"TI"}>Tarjeta de identidad</MenuItem>
+                  <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
+                  <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
+                  <MenuItem value={"PPT"}>
                     Permiso de protección temporal
                   </MenuItem>
                 </Select>
@@ -353,11 +428,11 @@ export default function Registro() {
                 type="number"
                 fullWidth
                 required
-                value={formData.numero_identificacion}
+                value={formData.numero_documento}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    numero_identificacion: e.target.value,
+                    numero_documento: e.target.value,
                   })
                 }
               />
@@ -376,40 +451,26 @@ export default function Registro() {
                   setFormData({ ...formData, fecha_nacimiento: e.target.value })
                 }
               />
-              {/* Campo Género */}
-              <FormControl className="inputs-textfield w-full sm:w-1/3">
-                <InputLabel id="genero">Género</InputLabel>
-                <Select
-                  labelId="genero"
-                  id="genero"
-                  label="Género"
-                  required
-                  value={formData.genero} // Conectamos con el estado
-                  onChange={(e) => {
-                    const selectedGenero = e.target.value;
-                    setFormData({ ...formData, genero: selectedGenero });
-                    setMostrarOtroGenero(selectedGenero === "Otro");
-                  }}
-                >
-                  <MenuItem value="Masculino">Masculino</MenuItem>
-                  <MenuItem value="Femenino">Femenino</MenuItem>
-                  <MenuItem value="Otro">Otro</MenuItem>
-                </Select>
-              </FormControl>
-              {/* Campo Otro Genero */}
-              {mostrarOtroGenero && (
-                <TextField
-                  className="inputs-textfield flex w-full flex-col sm:w-1/4"
-                  label="Otro género"
-                  name="otro_genero"
-                  variant="outlined"
-                  type="text"
-                  fullWidth
-                  required
-                  // value={formData.otro_genero}
-                  // onChange={handleChange}
-                />
-              )}
+
+              {/* Campo Genero */}
+              <Autocomplete
+                className="inputs-textfield w-full sm:w-1/3"
+                freeSolo
+                options={generos}
+                value={formData.genero}
+                onChange={(_, newValue) =>
+                  setFormData({ ...formData, genero: newValue || "" })
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Género"
+                    required
+                    variant="outlined"
+                    fullWidth
+                  />
+                )}
+              />
             </div>
           </div>
         </div>
@@ -497,10 +558,6 @@ export default function Registro() {
               onChange={(e) =>
                 setFormData({ ...formData, ciudad_residencia: e.target.value })
               }
-              // value={formData.ciudad_residencia}
-              // onChange={(e) =>
-              //   setFormData({ ...formData, ciudad_residencia: e.target.value })
-              // }
             >
               {cargandoCiudades ? (
                 <MenuItem disabled>
@@ -547,89 +604,30 @@ export default function Registro() {
           />
         </div>
 
-        {/* Contenedor Informacion Académica */}
-        <h2 className="text-md my-4 text-center font-semibold text-primary">
-          Información Académica
-        </h2>
-        <div className="flex flex-wrap justify-around gap-4 text-gray-600">
-          {/* Campo Colegio */}
-          <TextField
-            className="inputs-textfield flex w-full flex-col sm:w-1/4"
-            label="Colegio"
-            name="colegio"
-            variant="outlined"
-            type="text"
-            fullWidth
-            required
-            value={formData.colegio}
-            onChange={(e) =>
-              setFormData({ ...formData, colegio: e.target.value })
-            }
-          />
-          {/* Campo Estamento Colegio */}
-          <FormControl className="inputs-textfield w-full sm:w-1/4">
-            <InputLabel id="estamento">Estamento</InputLabel>
-            <Select
-              labelId="estamento"
-              name="estamento"
-              id="estamento"
-              label="Estamento"
-              required
-              value={formData.estamento}
-              onChange={(e) =>
-                setFormData({ ...formData, estamento: e.target.value })
-              }
-            >
-              <MenuItem value={"Público"}>Público</MenuItem>
-              <MenuItem value={"Privado"}>Privado</MenuItem>
-              <MenuItem value={"Cobertura"}>Cobertura</MenuItem>
-            </Select>
-          </FormControl>
-
-          {/* Campo Select Grado Estudiantil */}
-          <FormControl className="inputs-textfield w-full sm:w-1/4">
-            <InputLabel id="grado">Grado</InputLabel>
-            <Select
-              labelId="grado"
-              id="grado"
-              label="Grado"
-              required
-              value={formData.grado || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, grado: e.target.value })
-              }
-            >
-              {grados.map((grado) => (
-                <MenuItem key={grado} value={grado}>
-                  {grado}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </div>
-
         {/* Infomacion de Salud */}
         <h2 className="text-md my-4 text-center font-semibold text-primary">
           Información de Salud
         </h2>
         <div className="flex flex-wrap justify-around gap-4 text-gray-600">
-          {/* Campo Selector EPS*/}
-          <FormControl className="inputs-textfield w-full sm:w-1/4">
-            <InputLabel id="eps">EPS</InputLabel>
-            <Select
-              labelId="eps"
-              id="eps"
-              label="EPS"
-              required
-              value={formData.eps || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, eps: e.target.value })
-              }
-            >
-              <MenuItem value={"Emssanar"}>Emssanar</MenuItem>
-              {/* Puedes agregar más opciones si es necesario */}
-            </Select>
-          </FormControl>
+          {/* Campo eps */}
+          <Autocomplete
+            className="inputs-textfield w-full sm:w-1/3"
+            freeSolo
+            options={epss}
+            value={formData.eps}
+            onChange={(_, newValue) =>
+              setFormData({ ...formData, eps: newValue || "" })
+            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="EPS"
+                required
+                variant="outlined"
+                fullWidth
+              />
+            )}
+          />
 
           {/* Campo Select Discapacidad */}
           <FormControl className="inputs-textfield w-full sm:w-1/4">
@@ -706,131 +704,256 @@ export default function Registro() {
             />
           )}
         </div>
-        {/* Contenedor Informacion de Acudiente */}
 
+        {/* Contenedor Informacion Académica */}
         <h2 className="text-md my-4 text-center font-semibold text-primary">
-          Información de Acudiente
+          Información Académica
         </h2>
         <div className="flex flex-wrap justify-around gap-4 text-gray-600">
-          {/* Campo Nombres del Acudiente */}
-          <TextField
-            className="inputs-textfield flex w-full flex-col sm:w-1/4"
-            label="Nombres del acudiente"
-            name="nombre_acudiente"
-            variant="outlined"
-            fullWidth
-            type="text"
-            required
-            value={formDataAcudiente.nombre_acudiente}
-            onChange={(e) =>
-              setFormDataAcudiente({
-                ...formDataAcudiente,
-                nombre_acudiente: e.target.value,
-              })
-            }
-          />
-          {/* Campo Apellidos del acudiente  */}
-          <TextField
-            className="inputs-textfield flex w-full flex-col sm:w-1/4"
-            label="Apellidos del acudiente"
-            name="apellido_acudiente"
-            variant="outlined"
-            fullWidth
-            type="text"
-            required
-            value={formDataAcudiente.apellido_acudiente}
-            onChange={(e) =>
-              setFormDataAcudiente({
-                ...formDataAcudiente,
-                apellido_acudiente: e.target.value,
-              })
-            }
-          />
-          {/* Campo Tipo de Documento */}
+          {/* Campo Select Grado Estudiantil */}
           <FormControl className="inputs-textfield w-full sm:w-1/4">
-            <InputLabel id="tipo_documento_acudiente">
-              Tipo de documento
-            </InputLabel>
+            <InputLabel id="grado">Grado</InputLabel>
             <Select
-              labelId="tipo_documento_acudiente"
-              id="tipo_documento_acudiente"
-              label="tipo_documento_acudiente"
+              labelId="grado"
+              id="grado"
+              label="Grado"
               required
-              value={formDataAcudiente.tipo_identificacion_acudiente}
-              onChange={(e) =>
-                setFormDataAcudiente({
-                  ...formDataAcudiente,
-                  tipo_identificacion_acudiente: e.target.value,
-                })
-              }
+              value={formData.grado || ""}
+              onChange={(e) => {
+                setFormData({ ...formData, grado: e.target.value });
+                setEsDocente(e.target.value === "Docente");
+              }}
             >
-              <MenuItem value={"Tarjeta de identidad"}>
-                Tarjeta de identidad
-              </MenuItem>
-              <MenuItem value={"Cédula de ciudadania"}>
-                Cédula de ciudadanía
-              </MenuItem>
-              <MenuItem value={"Cédula de extrangería"}>
-                Cédula de extrangería
-              </MenuItem>
-              <MenuItem value={"Permiso de protección temporal"}>
-                Permiso de protección temporal
-              </MenuItem>
+              {grados.map((grado) => (
+                <MenuItem key={grado} value={grado}>
+                  {grado}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
-          {/* Campo Numero de Documento */}
-          <TextField
-            className="inputs-textfield flex w-full flex-col sm:w-1/4"
-            label="Número de identificación"
-            name="numero_identificacion"
-            variant="outlined"
-            type="number"
-            fullWidth
-            required
-            value={formDataAcudiente.numero_identificacion_acudiente}
-            onChange={(e) =>
-              setFormDataAcudiente({
-                ...formDataAcudiente,
-                numero_identificacion_acudiente: e.target.value,
-              })
-            }
-          />
-          {/* Campo Correo Electronico del Acudiente */}
-          <TextField
-            className="inputs-textfield flex w-full flex-col sm:w-1/4"
-            label="Correo Electrónico"
-            name="email"
-            variant="outlined"
-            type="email"
-            fullWidth
-            required
-            value={formDataAcudiente.email_acudiente}
-            onChange={(e) =>
-              setFormDataAcudiente({
-                ...formDataAcudiente,
-                email_acudiente: e.target.value,
-              })
-            }
-          />
-          {/* Campo Celular del Acudiente */}
-          <TextField
-            className="inputs-textfield flex w-full flex-col sm:w-1/4"
-            label="Celular"
-            name="celular"
-            variant="outlined"
-            type="number"
-            fullWidth
-            required
-            value={formDataAcudiente.celular_acudiente}
-            onChange={(e) =>
-              setFormDataAcudiente({
-                ...formDataAcudiente,
-                celular_acudiente: e.target.value,
-              })
-            }
-          />
         </div>
 
+        {/* Mostrar campos según si es docente o no */}
+        {!esDocente ? (
+          <>
+            <div className="flex flex-wrap justify-around gap-4 text-gray-600">
+              {/* Campo Colegio */}
+              <TextField
+                className="inputs-textfield flex w-full flex-col sm:w-1/4"
+                label="Colegio"
+                name="colegio"
+                variant="outlined"
+                type="text"
+                fullWidth
+                required
+                value={formData.colegio}
+                onChange={(e) =>
+                  setFormData({ ...formData, colegio: e.target.value })
+                }
+              />
+              {/* Campo Estamento Colegio */}
+              <FormControl className="inputs-textfield w-full sm:w-1/4">
+                <InputLabel id="estamento">Estamento</InputLabel>
+                <Select
+                  labelId="estamento"
+                  name="estamento"
+                  id="estamento"
+                  label="Estamento"
+                  required
+                  value={formData.estamento}
+                  onChange={(e) =>
+                    setFormData({ ...formData, estamento: e.target.value })
+                  }
+                >
+                  <MenuItem value={"Público"}>Público</MenuItem>
+                  <MenuItem value={"Privado"}>Privado</MenuItem>
+                  <MenuItem value={"Cobertura"}>Cobertura</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
+
+            {/* Contenedor Informacion de Acudiente */}
+
+            <h2 className="text-md my-4 text-center font-semibold text-primary">
+              Información de Acudiente
+            </h2>
+            <div className="flex flex-wrap justify-around gap-4 text-gray-600">
+              {/* Campo Nombres del Acudiente */}
+              <TextField
+                className="inputs-textfield flex w-full flex-col sm:w-1/4"
+                label="Nombres del acudiente"
+                name="nombre_acudiente"
+                variant="outlined"
+                fullWidth
+                type="text"
+                required
+                value={formDataAcudiente.nombre_acudiente}
+                onChange={(e) =>
+                  setFormDataAcudiente({
+                    ...formDataAcudiente,
+                    nombre_acudiente: e.target.value,
+                  })
+                }
+              />
+              {/* Campo Apellidos del acudiente  */}
+              <TextField
+                className="inputs-textfield flex w-full flex-col sm:w-1/4"
+                label="Apellidos del acudiente"
+                name="apellido_acudiente"
+                variant="outlined"
+                fullWidth
+                type="text"
+                required
+                value={formDataAcudiente.apellido_acudiente}
+                onChange={(e) =>
+                  setFormDataAcudiente({
+                    ...formDataAcudiente,
+                    apellido_acudiente: e.target.value,
+                  })
+                }
+              />
+              {/* Campo Tipo de Documento */}
+              <FormControl className="inputs-textfield w-full sm:w-1/4">
+                <InputLabel id="tipo_documento_acudiente">
+                  Tipo de documento
+                </InputLabel>
+                <Select
+                  labelId="tipo_documento_acudiente"
+                  id="tipo_documento_acudiente"
+                  label="tipo_documento_acudiente"
+                  required
+                  value={formDataAcudiente.tipo_documento_acudiente || ""}
+                  onChange={(e) =>
+                    setFormDataAcudiente({
+                      ...formDataAcudiente,
+                      tipo_documento_acudiente: e.target.value,
+                    })
+                  }
+                >
+                  <MenuItem value={"TI"}>Tarjeta de identidad</MenuItem>
+                  <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
+                  <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
+                  <MenuItem value={"PPT"}>
+                    Permiso de protección temporal
+                  </MenuItem>
+                </Select>
+              </FormControl>
+              {/* Campo Numero de Documento */}
+              <TextField
+                className="inputs-textfield flex w-full flex-col sm:w-1/4"
+                label="Número de identificación"
+                name="numero_identificacion"
+                variant="outlined"
+                type="number"
+                fullWidth
+                required
+                value={formDataAcudiente.numero_documento_acudiente}
+                onChange={(e) =>
+                  setFormDataAcudiente({
+                    ...formDataAcudiente,
+                    numero_documento_acudiente: e.target.value,
+                  })
+                }
+              />
+              {/* Campo Correo Electronico del Acudiente */}
+              <TextField
+                className="inputs-textfield flex w-full flex-col sm:w-1/4"
+                label="Correo Electrónico"
+                name="email"
+                variant="outlined"
+                type="email"
+                fullWidth
+                required
+                value={formDataAcudiente.email_acudiente}
+                onChange={(e) =>
+                  setFormDataAcudiente({
+                    ...formDataAcudiente,
+                    email_acudiente: e.target.value,
+                  })
+                }
+              />
+              {/* Campo Celular del Acudiente */}
+              <TextField
+                className="inputs-textfield flex w-full flex-col sm:w-1/4"
+                label="Celular"
+                name="celular"
+                variant="outlined"
+                type="number"
+                fullWidth
+                required
+                value={formDataAcudiente.celular_acudiente}
+                onChange={(e) =>
+                  setFormDataAcudiente({
+                    ...formDataAcudiente,
+                    celular_acudiente: e.target.value,
+                  })
+                }
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex flex-wrap justify-around gap-4 text-gray-600">
+              <FormControl className="inputs-textfield w-full sm:w-1/4">
+                <InputLabel id="grado_escolaridad">
+                  Grado de escolaridad
+                </InputLabel>
+                <Select
+                  labelId="grado_escolaridad"
+                  id="grado_escolaridad"
+                  name="grado_escolaridad"
+                  label="Grado de escolaridad"
+                  required
+                  value={formData.grado_escolaridad || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      grado_escolaridad: e.target.value,
+                    })
+                  }
+                >
+                  <MenuItem value="Técnico">Técnico</MenuItem>
+                  <MenuItem value="Tecnólogo">Tecnólogo</MenuItem>
+                  <MenuItem value="Licenciatura">Licenciatura</MenuItem>
+                  <MenuItem value="Especialización">Especialización</MenuItem>
+                  <MenuItem value="Maestría">Maestría</MenuItem>
+                  <MenuItem value="Doctorado">Doctorado</MenuItem>
+                  <MenuItem value="Otro">Otro</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl className="inputs-textfield w-full sm:w-1/4">
+                <InputLabel id="area_ensenanza">Área de enseñanza</InputLabel>
+                <Select
+                  labelId="area_ensenanza"
+                  id="area_ensenanza"
+                  name="area_ensenanza"
+                  label="Área de enseñanza"
+                  required
+                  value={formData.area_desempeño || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, area_desempeño: e.target.value })
+                  }
+                >
+                  <MenuItem value="Matemáticas">Matemáticas</MenuItem>
+                  <MenuItem value="Ciencias Naturales">
+                    Ciencias Naturales
+                  </MenuItem>
+                  <MenuItem value="Ciencias Sociales">
+                    Ciencias Sociales
+                  </MenuItem>
+                  <MenuItem value="Lengua Castellana">
+                    Lengua Castellana
+                  </MenuItem>
+                  <MenuItem value="Inglés">Inglés</MenuItem>
+                  <MenuItem value="Educación Física">Educación Física</MenuItem>
+                  <MenuItem value="Artes">Artes</MenuItem>
+                  <MenuItem value="Tecnología">Tecnología</MenuItem>
+                  <MenuItem value="Otra">Otra</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
+          </>
+        )}
         {/* Campo Seleccionar Documento de Identidad */}
         <h2 className="text-md my-4 text-center font-semibold text-primary">
           Documentación
@@ -844,29 +967,29 @@ export default function Registro() {
             type="file"
             accept=".pdf"
             className="block w-1/2 text-sm text-gray-500"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                setDocumentoIdentidad(file);
+              }
+            }}
           />
         </div>
-
         <Button
           type="submit"
-          variant="contained"
-          className="mx-auto my-5 flex rounded-2xl bg-primary"
+          variant="outlined"
+          className="mt-4 w-3/4 rounded-2xl border-2 border-[#C20E1A] py-2 font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white"
         >
           Continuar
         </Button>
       </form>
-      {/* Botón de matricula*/}
-      <Link href="/auth/matricula">
-        <button className="mt-4 w-3/4 rounded-2xl border-2 border-[#C20E1A] py-2 font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white">
-          Continuar
-        </button>
-      </Link>
+
       {/* Botón de iniciar sesión*/}
-      <Link href="/auth/login">
+      {/* <Link href="/auth/login">
         <button className="mt-4 w-3/4 rounded-2xl border-2 border-[#C20E1A] py-2 font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white">
           Iniciar sesión
         </button>
-      </Link>
+      </Link> */}
     </div>
   );
 }

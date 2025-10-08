@@ -6,7 +6,7 @@ import axios from "axios";
 import { Paper } from "@mui/material";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
-import { Box, Alert, Snackbar } from "@mui/material";
+import { Box, Alert, Snackbar, Tooltip, Button, Avatar } from "@mui/material";
 
 import { GridColDef, DataGrid } from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
@@ -34,53 +34,83 @@ export default function VerCursos() {
       id_categoria: string;
       nombre: string;
     };
+    intensidad_horaria: number;
+    dirigido_a: string;
+    incluye: string;
   }
 
   const router = useRouter();
   const [success, setSuccess] = useState(false);
+  const [expandirTodos, setExpandirTodos] = useState(false);
+  const [acordeonesAbiertos, setAcordeonesAbiertos] = useState<
+    Record<string, boolean>
+  >({});
 
   const columnsOfertas: GridColDef[] = [
-    { field: "id", headerName: "ID", width: 70 },
-    { field: "nombre", headerName: "Nombre", width: 170 },
-    { field: "categoria", headerName: "Categoría", width: 170 },
-    { field: "area", headerName: "Área", width: 170 },
-    { field: "descripcion", headerName: "Descripción", width: 170 },
+    {
+      field: "logo",
+      headerName: "Logo",
+      flex: 0.5,
+      renderCell: () => (
+        <div className="flex h-full w-full flex-row items-center justify-around">
+          {" "}
+          <Avatar
+            src="/NAS.png"
+            // alt={nombreCategoria}
+            sx={{ width: 32, height: 32 }}
+          />{" "}
+        </div>
+      ),
+    },
+    { field: "id", headerName: "ID", flex: 0.5 },
+    { field: "nombre", headerName: "Nombre", flex: 1 },
+    { field: "categoria", headerName: "Categoría", flex: 1 },
+    { field: "area", headerName: "Área", flex: 1, width: 90 },
+    { field: "descripcion", headerName: "Descripción", flex: 1 },
     {
       field: "editar",
       headerName: "Acciones",
       sortable: false,
       filterable: false,
-      width: 130,
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
       renderCell: (params) => (
         <div className="flex h-full w-full flex-row items-center justify-around">
-          <VisibilityOutlinedIcon
-            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
-            onClick={() => {
-              const rowData = params.row;
+          <Tooltip title="Ver detalles" placement="top">
+            <VisibilityOutlinedIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+              onClick={() => {
+                const rowData = params.row.moduloCompleto;
 
-              localStorage.setItem(
-                "cursoSeleccionado",
-                JSON.stringify(rowData),
-              ); // 👉 Guarda la fila completa como JSON
-              router.push("/admin/cursos/detallarCurso/");
-            }}
-          />
-          <PencilSquareIcon
-            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
-            onClick={() => {
-              const rowData = params.row;
+                localStorage.setItem(
+                  "cursoSeleccionado",
+                  JSON.stringify(rowData),
+                ); // 👉 Guarda la fila completa como JSON
+                router.push("/admin/cursos/detallarCurso/");
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="Editar curso" placement="top">
+            <PencilSquareIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+              onClick={() => {
+                const rowData = params.row.moduloCompleto;
 
-              localStorage.setItem(
-                "cursoSeleccionado",
-                JSON.stringify(rowData),
-              ); // 👉 Guarda la fila completa como JSON
-              router.push("/admin/cursos/modificarCursos/"); // 👉 Navega a la pantalla de modificar
-            }}
-          />
-          <TrashIcon
-            className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
-            onClick={() => handleDelete(params.row.id)}
-          />
+                localStorage.setItem(
+                  "cursoSeleccionado",
+                  JSON.stringify(rowData),
+                ); // 👉 Guarda la fila completa como JSON
+                router.push("/admin/cursos/modificarCursos/"); // 👉 Navega a la pantalla de modificar
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="Eliminar curso" placement="top">
+            <TrashIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
+              onClick={() => handleDelete(params.row.id)}
+            />
+          </Tooltip>
         </div>
       ),
     },
@@ -122,6 +152,9 @@ export default function VerCursos() {
                   id_modulo: mod.id_modulo,
                   nombre_modulo: mod.nombre_modulo,
                   descripcion_modulo: mod.descripcion_modulo,
+                  intensidad_horaria: mod.intensidad_horaria,
+                  dirigido_a: mod.dirigido_a,
+                  incluye: mod.incluye,
                   id_area: {
                     id_area: mod.id_area.id_area,
                     nombre_area: mod.id_area.nombre_area,
@@ -165,6 +198,9 @@ export default function VerCursos() {
           id_categoria: data.id_categoria.id_categoria,
           categoria: data.id_categoria.nombre,
           descripcion: data.descripcion_modulo,
+          intensidad_horaria: data.intensidad_horaria,
+          dirigido_a: data.dirigido_a,
+          incluye: data.incluye,
         }));
         console.log("Modulos:", formateado);
         // setRows(formateado);
@@ -218,6 +254,7 @@ export default function VerCursos() {
     }
   };
 
+
   //Barra de busqueda
 
   // const [searchText, setSearchText] = React.useState("");
@@ -256,6 +293,23 @@ export default function VerCursos() {
       {/* Contenedor de cursos */}
 
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 shadow-md">
+        <div className="flex flex-row-reverse items-start">
+          <Button
+            variant="contained"
+            color="primary"
+            className="rounded-lg bg-transparent text-xs font-semibold text-primary shadow-none"
+            onClick={() => {
+              const nuevoEstado: Record<string, boolean> = {};
+              Object.keys(modulosPorCategoria).forEach((cat) => {
+                nuevoEstado[cat] = !expandirTodos;
+              });
+              setAcordeonesAbiertos(nuevoEstado);
+              setExpandirTodos((prev) => !prev);
+            }}
+          >
+            {expandirTodos ? "Contraer todos" : "Expandir todos"}
+          </Button>
+        </div>
         {/* <input
          type="text"
          placeholder="Buscar..."
@@ -271,12 +325,27 @@ export default function VerCursos() {
         ) : (
           Object.keys(modulosPorCategoria).map((nombreCategoria) => (
             <Box className="py-1" key={nombreCategoria} borderRadius={0}>
-              <Accordion className="border-b shadow-none">
+              <Accordion
+                className="border-b shadow-none"
+                expanded={!!acordeonesAbiertos[nombreCategoria]}
+                onChange={() =>
+                  setAcordeonesAbiertos((prev) => ({
+                    ...prev,
+                    [nombreCategoria]: !prev[nombreCategoria],
+                  }))
+                }
+              >
                 <AccordionSummary
                   expandIcon={<ArrowDownwardIcon />}
                   aria-controls="panel1-content"
                   id="panel1-header"
                 >
+                  {/* {nombreCategoria}
+                  <Avatar
+                    src="/NAS.png"
+                    alt={nombreCategoria}
+                    sx={{ width: 32, height: 32, marginRight: 2 }}
+                  /> */}
                   <Typography component="span">{nombreCategoria}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
@@ -293,17 +362,21 @@ export default function VerCursos() {
                         area: mod.id_area.nombre_area,
                         id_categoria: mod.id_categoria,
                         categoria: nombreCategoria,
+                        moduloCompleto: mod,
                       }))}
                       columns={columnsOfertas}
                       initialState={{ pagination: { paginationModel } }}
                       pageSizeOptions={[20, 40]}
                       sx={{
                         border: 0,
-                        "& .MuiDataGrid-columnHeaders": {},
                         "& .MuiDataGrid-columnHeaderTitle": {
-                          fontWeight: "bold", // Negrita en el título
-                          color: "#575757", // Color del texto
-                          fontSize: "1rem", // (opcional) Tamaño de letra
+                          fontWeight: "bold",
+                          color: "#575757",
+                          fontSize: "1rem",
+                        },
+
+                        "& .MuiDataGrid-columnHeader": {
+                          backgroundColor: "#e8e8e8",
                         },
                       }}
                       localeText={{

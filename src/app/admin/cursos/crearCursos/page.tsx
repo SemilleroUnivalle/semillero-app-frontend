@@ -30,11 +30,15 @@ export default function CrearCursos() {
 
   const [otraArea, setOtraArea] = useState<string>(""); // Para especificar otra área
   const [otraCategoria, setOtraCategoria] = useState<string>(""); // Para especificar otra
+
   const [formData, setFormData] = useState({
     nombre_modulo: "",
     descripcion_modulo: "",
     id_area: "",
     id_categoria: "",
+    intensidad_horaria: "",
+    dirigido_a: "",
+    incluye: "",
   });
 
   const [success, setSuccess] = useState(false);
@@ -97,6 +101,9 @@ export default function CrearCursos() {
           id_area: areaId,
           id_categoria: categoriaId,
           descripcion_modulo: formData.descripcion_modulo,
+          intensidad_horaria: formData.intensidad_horaria,
+          dirigido_a: formData.dirigido_a,
+          incluye: formData.incluye,
         },
         {
           headers: {
@@ -113,6 +120,9 @@ export default function CrearCursos() {
         descripcion_modulo: "",
         id_area: "",
         id_categoria: "",
+        intensidad_horaria: "",
+        dirigido_a: "",
+        incluye: "",
       }); // Cierra el modal
     } catch (error) {
       console.error("Error al crear el curso:", error);
@@ -239,17 +249,19 @@ export default function CrearCursos() {
 
           {/* Campo para especificar otra área */}
           {formData.id_categoria === "Otra" && (
-            <TextField
-              className="inputs-textfield w-full"
-              label="Especificar Categoría"
-              name="otra_categoria"
-              variant="outlined"
-              type="text"
-              value={otraCategoria}
-              onChange={(e) => setOtraCategoria(e.target.value)} // Actualiza el estado con el valor del campo de texto
-              fullWidth
-              required
-            />
+            <div className="flex flex-col gap-2 text-center">
+              <TextField
+                className="inputs-textfield w-full"
+                label="Especificar Categoría"
+                name="otra_categoria"
+                variant="outlined"
+                type="text"
+                value={otraCategoria}
+                onChange={(e) => setOtraCategoria(e.target.value)} // Actualiza el estado con el valor del campo de texto
+                fullWidth
+                required
+              />
+            </div>
           )}
 
           {/* Campo selector de area */}
@@ -276,17 +288,34 @@ export default function CrearCursos() {
 
           {/* Campo para especificar otra área */}
           {formData.id_area === "Otra" && (
-            <TextField
-              className="inputs-textfield w-full"
-              label="Especificar Área"
-              name="otra_area"
-              variant="outlined"
-              type="text"
-              fullWidth
-              value={otraArea}
-              onChange={(e) => setOtraArea(e.target.value)} // Actualiza el estado con el valor del campo de texto
-              required
-            />
+            <div className="flex flex-col gap-3">
+              <TextField
+                className="inputs-textfield w-full"
+                label="Especificar Área"
+                name="otra_area"
+                variant="outlined"
+                type="text"
+                fullWidth
+                value={otraArea}
+                onChange={(e) => setOtraArea(e.target.value)} // Actualiza el estado con el valor del campo de texto
+                required
+              />
+              <div className="solid rounded-2xl border border-secondary p-2">
+                <InputLabel id="img_area">Imagen para el área</InputLabel>
+                <input
+                  name="img_area"
+                  type="file"
+                  accept=".jpg"
+                  className="w-full text-sm text-gray-500"
+                  // onChange={(e) => {
+                  //   const file = e.target.files?.[0];
+                  //   if (file) {
+                  //     setDocumentoIdentidad(file);
+                  //   }
+                  // }}
+                />
+              </div>
+            </div>
           )}
 
           {/* Campo descripción */}
@@ -301,6 +330,45 @@ export default function CrearCursos() {
             fullWidth
             required
             value={formData.descripcion_modulo}
+            onChange={handleChange}
+          />
+
+          {/* Campo Intensidad Horaria*/}
+          <TextField
+            className="inputs-textfield w-full"
+            label="Intensidad Horaria"
+            name="intensidad_horaria"
+            variant="outlined"
+            type="number"
+            fullWidth
+            required
+            value={formData.intensidad_horaria}
+            onChange={handleChange}
+          />
+
+          {/* Campo Dirigido a*/}
+          <TextField
+            className="inputs-textfield w-full"
+            label="Dirigido a"
+            name="dirigido_a"
+            variant="outlined"
+            type="text"
+            fullWidth
+            required
+            value={formData.dirigido_a}
+            onChange={handleChange}
+          />
+
+          {/* Campo Incluye*/}
+          <TextField
+            className="inputs-textfield w-full"
+            label="Incluye"
+            name="incluye"
+            variant="outlined"
+            type="text"
+            fullWidth
+            required
+            value={formData.incluye}
             onChange={handleChange}
           />
 

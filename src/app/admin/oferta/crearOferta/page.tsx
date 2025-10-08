@@ -24,8 +24,15 @@ export default function CrearOferta() {
     descripcion_modulo: string;
     id_area: string;
     nombre_area: string;
-    id_categoria: string;
+    id_categoria: Categoria;
   }
+
+  interface Categoria {
+    nombre: string;
+    id_categoria: string;
+    estado: boolean;
+  }
+
   // Estado para los módulos seleccionados por categoría
   const [selectedCursosPorCategoria, setSelectedCursosPorCategoria] = useState<
     Record<string, number[]>
@@ -135,6 +142,7 @@ export default function CrearOferta() {
         {
           nombre: nombreOferta,
           fecha_inicio: fechaInicio,
+          estado: true,
         },
         {
           headers: {
@@ -210,7 +218,9 @@ export default function CrearOferta() {
 
         // Obtener el ID de la categoría del primer módulo de la categoría
         const idCategoria =
-          modulosPorCategoria[nombreCategoria][0]?.id_categoria;
+          modulosPorCategoria[nombreCategoria][0]?.id_categoria.id_categoria;
+
+        console.log("ID de la categoría:", idCategoria);
 
         if (!idCategoria) {
           setError(

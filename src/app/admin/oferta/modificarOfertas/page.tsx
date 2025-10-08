@@ -18,16 +18,6 @@ import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 
 export default function ModificarOferta() {
-
-  interface Modulo {
-    id_modulo: number;
-    nombre_modulo: string;
-    descripcion_modulo: string;
-    id_area: string;
-    nombre_area: string;
-    id_categoria: string;
-  }
-
   interface Oferta {
     id_oferta_academica: {
       id_oferta_academica: number;
@@ -45,6 +35,21 @@ export default function ModificarOferta() {
     id_oferta_categoria: number;
   }
 
+  interface Modulo {
+    id_modulo: number;
+    nombre_modulo: string;
+    descripcion_modulo: string;
+    id_area: string;
+    nombre_area: string;
+    id_categoria: Categoria;
+  }
+
+  interface Categoria {
+    id_categoria: number;
+    nombre: string;
+    fecha_inicio: string;
+    estado: boolean;
+  }
   // Estado para los módulos seleccionados por categoría
   const [selectedCursosPorCategoria, setSelectedCursosPorCategoria] = useState<
     Record<string, number[]>
@@ -64,7 +69,7 @@ export default function ModificarOferta() {
   const [success, setSuccess] = useState(false);
 
   // Estado para la oferta seleccionada
-const [oferta, setOferta] = useState<Oferta | null>(null);
+  const [oferta, setOferta] = useState<Oferta | null>(null);
 
   // Estado para el nombre y fecha de inicio de la oferta
   const [nombreOferta, setNombreOferta] = useState("");
@@ -80,32 +85,46 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
   useEffect(() => {
     const storedOferta = localStorage.getItem("ofertaSeleccionada");
     if (storedOferta) {
-      setOferta(JSON.parse(storedOferta));
+      const ofertas: Oferta[] = JSON.parse(storedOferta);
 
-      const oferta = JSON.parse(storedOferta);
+      // Precargar nombre y fecha de inicio de la oferta académica (toma la primera)
+      setNombreOferta(ofertas[0]?.id_oferta_academica?.nombre || "");
+      setFechaInicio(ofertas[0]?.id_oferta_academica?.fecha_inicio || "");
 
-      // Precargar nombre y fecha de inicio de la oferta académica
-      setNombreOferta(oferta.id_oferta_academica?.nombre || "");
-      setFechaInicio(oferta.id_oferta_academica?.fecha_inicio || "");
+      // Precargar módulos seleccionados, precios y fechas por cada categoría
+      const cursosPorCategoria: Record<string, number[]> = {};
+      const preciosPorCategoria: Record<
+        string,
+        { publico: string; privado: string; univalle: string }
+      > = {};
+      const fechasPorCategoria: Record<string, string> = {};
 
-      // Precargar módulos seleccionados por categoría
-     setSelectedCursosPorCategoria({
-  [oferta.id_categoria.nombre]: oferta.modulo.map((m: { id_modulo: number }) => m.id_modulo),
-});
+      ofertas.forEach((oferta) => {
+        const nombreCategoria = oferta.id_categoria?.nombre;
+        if (!nombreCategoria) return;
 
-      // Precargar precios por categoría
-      setPreciosPorCategoria({
-        [oferta.id_categoria.nombre]: {
+        // Módulos seleccionados
+        cursosPorCategoria[nombreCategoria] = oferta.modulo.map(
+          (m) => m.id_modulo,
+        );
+
+        // Precios
+        preciosPorCategoria[nombreCategoria] = {
           publico: oferta.precio_publico || "",
           privado: oferta.precio_privado || "",
           univalle: oferta.precio_univalle || "",
-        },
+        };
+
+        // Fecha de finalización
+        fechasPorCategoria[nombreCategoria] = oferta.fecha_finalizacion || "";
       });
 
-      // Precargar fecha de finalización por categoría
-      setFechasFinalizacionPorCategoria({
-        [oferta.id_categoria.nombre]: oferta.fecha_finalizacion || "",
-      });
+      setSelectedCursosPorCategoria(cursosPorCategoria);
+      setPreciosPorCategoria(preciosPorCategoria);
+      setFechasFinalizacionPorCategoria(fechasPorCategoria);
+
+      // 👇 Guarda la primera oferta en el estado
+      setOferta(ofertas[0]);
     }
   }, []);
 
@@ -127,7 +146,7 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
         const categoriasData = response.data;
 
         // Formatear los datos para que sean más fáciles de usar
-       const formateado: Record<string, Modulo[]> = {};
+        const formateado: Record<string, Modulo[]> = {};
 
         categoriasData.forEach(
           (categoria: { nombre: string; modulos: Modulo[] }) => {
@@ -171,13 +190,15 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
 
   // Manejo del envío del formulario
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    
+    e.preventDefault(); // Evita el comportamiento por defecto del formulario
+
+    const storedOferta = localStorage.getItem("ofertaSeleccionada");
+    const ofertas: Oferta[] = storedOferta ? JSON.parse(storedOferta) : [];
+
     if (!oferta) {
       setError("No se ha seleccionado ninguna oferta para modificar.");
       return;
     }
-
-    e.preventDefault(); // Evita el comportamiento por defecto del formulario
 
     console.log(oferta.id_oferta_academica.id_oferta_academica);
     // Marcar el formulario como tocado para que muestre validaciones
@@ -205,7 +226,7 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
         return;
       }
 
-      //Realizar la solicitud POST al endpoint /oferta_academica/ofer/
+      //Realizar la solicitud PATCH al endpoint /oferta_academica/ofer/
       const ofertaAcademicaResponse = await axios.patch(
         `${API_BASE_URL}/oferta_academica/ofer/${oferta.id_oferta_academica.id_oferta_academica}/`,
         {
@@ -218,7 +239,10 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
           },
         },
       );
-      console.log("Respuesta de la oferta académica:", ofertaAcademicaResponse.data);
+      console.log(
+        "Respuesta de la oferta académica:",
+        ofertaAcademicaResponse.data,
+      );
 
       // Obtener el ID de la oferta académica creada
       // const idOfertaAcademica =
@@ -285,9 +309,16 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
           return;
         }
 
+        const ofertaCategoria = ofertas.find(
+          (o) => o.id_categoria.nombre === nombreCategoria,
+        );
+        const idOfertaCategoria = ofertaCategoria?.id_oferta_categoria;
+
         // Obtener el ID de la categoría del primer módulo de la categoría
         const idCategoria =
-          modulosPorCategoria[nombreCategoria][0]?.id_categoria;
+          modulosPorCategoria[nombreCategoria][0]?.id_categoria.id_categoria;
+
+        console.log("Modulos por categori", idCategoria);
 
         if (!idCategoria) {
           setError(
@@ -307,11 +338,18 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
           id_categoria: idCategoria,
         };
 
-        console.log("Enviando datos:", data, "para la categoría:", oferta.id_oferta_categoria);
+        console.log(
+          "Enviando datos:",
+          data,
+          "para la categoría:",
+          oferta.id_oferta_categoria,
+        );
+        console.log(oferta);
+        console.log("idOfertaCategoria:", idOfertaCategoria);
 
         // Realizar la solicitud POST al endpoint /oferta_categoria/ofer/
         await axios.patch(
-          `${API_BASE_URL}/oferta_categoria/ofer/${oferta.id_oferta_categoria}/`,
+          `${API_BASE_URL}/oferta_categoria/ofer/${idOfertaCategoria}/`,
           data,
           {
             headers: {
@@ -327,11 +365,7 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
 
       setSuccess(true);
 
-      // Resetear el formulario
-      if (e.currentTarget && typeof e.currentTarget.reset === "function") {
-        e.currentTarget.reset();
-      }
-      setSelectedCursosPorCategoria({});
+    
     } catch (error) {
       console.error("Error al enviar los datos --:", error);
       setError("Hubo un problema al enviar los datos. Inténtalo de nuevo.");
@@ -598,7 +632,7 @@ const [oferta, setOferta] = useState<Oferta | null>(null);
               disabled={loading}
               className="text-md mt-4 w-full rounded-2xl bg-primary py-3 font-semibold capitalize text-white hover:bg-red-800 disabled:bg-gray-400"
             >
-              {loading ? "Procesando..." : "Crear oferta"}
+              {loading ? "Procesando..." : "Edita oferta"}
             </Button>
           </div>
         </form>

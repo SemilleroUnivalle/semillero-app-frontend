@@ -82,3 +82,51 @@ body {
 .selects .Mui-checked {
   color: #c20e1a; /* Color del check */ 
 }
+
+
+/*  */
+
+.inputs-textfield-readonly .MuiOutlinedInput-root {
+  background-color: #e8e8e8;
+  border-radius: 1rem; /* Borde redondeado */
+}
+
+.inputs-textfield-readonly .MuiOutlinedInput-input {
+  color: #575757; /* Letra gris */
+}
+
+.inputs-textfield-readonly .MuiOutlinedInput-root fieldset {
+  border-color: #757575; /* Borde normal (gris oscuro) */
+}
+
+.inputs-textfield-readonly .MuiOutlinedInput-root:hover fieldset {
+  border-color: #c20e1a; /* Borde al pasar el mouse */
+}
+
+.inputs-textfield-readonly .MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: #c20e1a; /* Borde al enfocar */
+}
+
+.inputs-textfield-readonly .MuiInputLabel-root {
+  color: #757575; /* Color inicial del label (gris) */
+}
+
+.inputs-textfield-readonly .MuiInputLabel-root.Mui-focused {
+  color: #757575; /* Color del label al enfocar (gris oscuro) */
+}
+
+.inputs-textfield-readonly .MuiOutlinedInput-root.Mui-error fieldset {
+  border-color: red !important; /* Borde rojo cuando hay error */
+}
+
+.inputs-textfield-readonly .MuiInputLabel-root.Mui-error {
+  color: red !important; /* Color del label cuando hay error */
+}
+
+.inputs-textfield-readonly .MuiOutlinedInput-root.Mui-error:hover fieldset {
+  border-color: darkred !important; /* Borde más oscuro al pasar el mouse */
+}
+
+
+
+
