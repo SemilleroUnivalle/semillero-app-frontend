@@ -7,26 +7,49 @@ import {
   BookOpenIcon,
   CogIcon,
 } from "@heroicons/react/24/outline";
-import GroupWorkOutlinedIcon from '@mui/icons-material/GroupWorkOutlined';
-import AssignmentIndOutlinedIcon from '@mui/icons-material/AssignmentIndOutlined';
+import GroupWorkOutlinedIcon from "@mui/icons-material/GroupWorkOutlined";
+import AssignmentIndOutlinedIcon from "@mui/icons-material/AssignmentIndOutlined";
+import LocalLibraryOutlinedIcon from '@mui/icons-material/LocalLibraryOutlined';
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type LinkItem = {
   name: string;
-  href: string;
+  href?: string;
   icon: React.ElementType;
+  children?: LinkItem[]; // <-- Permite submenús
 };
 
 // Links para administrador
 const adminLinks = [
   { name: "Inicio", href: "/admin/inicio", icon: HomeIcon },
   { name: "Registros", href: "/admin/registros/verRegistros", icon: UsersIcon },
-  { name: "Matrículas", href: "/admin/matriculas/verMatriculas", icon: AssignmentIndOutlinedIcon },
-  { name: "Funcionarios", href: "/admin/funcionarios/visualizar-funcionarios", icon: GroupWorkOutlinedIcon },
-  { name: "Cursos", href: "/admin/cursos/verCursos", icon: BookOpenIcon },
-  { name: "Oferta Académica", href: "/admin/oferta/verOfertas", icon: TagIcon },
+  {
+    name: "Matrículas",
+    href: "/admin/matriculas/verMatriculas",
+    icon: AssignmentIndOutlinedIcon,
+  },
+  {
+    name: "Funcionarios",
+    href: "/admin/funcionarios/visualizar-funcionarios",
+    icon: GroupWorkOutlinedIcon,
+  },
+  {
+    name: "Programación Académica",
+    icon: LocalLibraryOutlinedIcon,
+    children: [
+      { name: "Cursos", href: "/admin/cursos/verCursos", icon: BookOpenIcon },
+      {
+        name: "Oferta Académica",
+        href: "/admin/oferta/verOfertas",
+        icon: TagIcon,
+      },
+      {name: "Grupos", href: "/admin/grupos/ver-grupos", icon: UsersIcon},
+    ],
+  },
+
   { name: "Ajustes", href: "/admin/ajustes/ajustes", icon: CogIcon },
 ];
 
@@ -38,6 +61,7 @@ const profesorLinks = [
 ];
 
 export default function NavLinks() {
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const pathname = usePathname();
   const [tipoUsuario, setTipoUsuario] = useState(null);
 
@@ -60,25 +84,61 @@ export default function NavLinks() {
     links = adminLinks;
   } else if (tipoUsuario === "profesor") {
     links = profesorLinks;
-  } // Si quieres agregar links para otros tipos de usuario, puedes hacerlo aquí.
+  }
 
   return (
-    <>
+    <nav>
       {links.map((link) => {
         const LinkIcon = link.icon;
+        const hasChildren = !!link.children;
+
         return (
-          <Link
-            key={link.name}
-            href={link.href}
-            className={`text-md my-1 flex grow items-center justify-center gap-4 rounded-lg p-3 font-medium text-[#575757] hover:bg-[#C20E1A] hover:text-white md:flex-none md:justify-start md:p-2 md:px-3 ${
-              pathname === link.href ? "bg-[#C20E1A] text-gray-50" : ""
-            } `}
-          >
-            <LinkIcon className="w-5" />
-            <p className="hidden font-bold md:block">{link.name}</p>
-          </Link>
+          <div key={link.name}>
+            {hasChildren ? (
+              <div
+                className={`text-md my-1 flex grow items-center gap-4 rounded-lg p-3 font-medium text-[#575757] hover:bg-[#C20E1A] hover:text-white md:flex-none md:justify-start md:p-2 md:px-3 cursor-pointer ${
+                  openDropdown === link.name ? "bg-[#C20E1A] text-gray-50" : ""
+                }`}
+                onClick={() =>
+                  setOpenDropdown(openDropdown === link.name ? null : link.name)
+                }
+              >
+                <LinkIcon className="w-5" />
+                <p className="hidden font-bold md:block">{link.name}</p>
+                <span className="ml-auto">
+                  {openDropdown === link.name ? "▲" : "▼"}
+                </span>
+              </div>
+            ) : (
+              <Link
+                href={link.href!}
+                className={`text-md my-1 flex grow items-center gap-4 rounded-lg p-3 font-medium text-[#575757] hover:bg-[#C20E1A] hover:text-white md:flex-none md:justify-start md:p-2 md:px-3 ${
+                  pathname === link.href ? "bg-[#C20E1A] text-gray-50" : ""
+                }`}
+              >
+                <LinkIcon className="w-5" />
+                <p className="hidden font-bold md:block">{link.name}</p>
+              </Link>
+            )}
+            {hasChildren && openDropdown === link.name && (
+              <div className="ml-8 flex flex-col">
+                {link.children!.map((child) => (
+                  <Link
+                    key={child.name}
+                    href={child.href!}
+                    className={`my-1 flex items-center gap-2 rounded px-2 py-1 text-md text-[#575757] hover:bg-[#C20E1A] hover:text-white ${
+                      pathname === child.href ? "bg-[#C20E1A] text-gray-50" : ""
+                    }`}
+                  >
+                    <child.icon className="w-4" />
+                    {child.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         );
       })}
-    </>
+    </nav>
   );
 }
