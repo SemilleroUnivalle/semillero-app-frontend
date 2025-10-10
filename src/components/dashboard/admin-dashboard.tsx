@@ -1,7 +1,6 @@
 "use client"
 
-import type React from "react"
-
+import React from "react"
 import { useState, useEffect } from "react"
 import { Box, Container, Typography, Grid, Paper, Tabs, Tab, CircularProgress, Alert } from "@mui/material"
 import {
@@ -91,7 +90,8 @@ export function AdminDashboard() {
     )
   }
 
-  const mostPopularModule = data.enrollmentsByModule[0]
+  // Protección: puede que enrollmentsByModule sea [] o undefined
+  const mostPopularModule = data.enrollmentsByModule?.[0] ?? { name: "—", enrollments: 0 }
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue)
@@ -191,7 +191,7 @@ export function AdminDashboard() {
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                       Top 6 módulos con mayor inscripción
                     </Typography>
-                    <EnrollmentChart data={data.enrollmentsByModule} />
+                    <EnrollmentChart data={data.enrollmentsByModule ?? []} />
                   </Paper>
                 </Grid>
 
@@ -203,7 +203,7 @@ export function AdminDashboard() {
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                       Distribución público vs. privado
                     </Typography>
-                    <EstamentoSegmentation data={data.enrollmentsByEstamento} />
+                    <EstamentoSegmentation data={data.enrollmentsByEstamento ?? []} />
                   </Paper>
                 </Grid>
 
@@ -215,7 +215,7 @@ export function AdminDashboard() {
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                       Estudiantes matriculados por nivel educativo
                     </Typography>
-                    <ModuleDistribution data={data.enrollmentsByGrade} />
+                    <ModuleDistribution data={data.enrollmentsByGrade ?? []} />
                   </Paper>
                 </Grid>
 
@@ -227,7 +227,7 @@ export function AdminDashboard() {
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                       Distribución por género
                     </Typography>
-                    <DemographicsOverview genderData={data.genderDistribution} />
+                    <DemographicsOverview genderData={data.genderDistribution ?? []} />
                   </Paper>
                 </Grid>
               </Grid>
@@ -243,7 +243,7 @@ export function AdminDashboard() {
                   Rendimiento y popularidad de cada módulo
                 </Typography>
                 <Box display="flex" flexDirection="column" gap={2}>
-                  {data.enrollmentsByModule.map((module, index) => (
+                  {(data.enrollmentsByModule ?? []).map((module, index) => (
                     <Paper
                       key={index}
                       elevation={0}
@@ -292,7 +292,7 @@ export function AdminDashboard() {
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                       Últimas matriculaciones registradas
                     </Typography>
-                    <RecentEnrollments data={data.recentEnrollments} />
+                    <RecentEnrollments data={data.recentEnrollments ?? []} />
                   </Paper>
                 </Grid>
 
@@ -305,7 +305,7 @@ export function AdminDashboard() {
                       Colegios públicos vs. privados
                     </Typography>
                     <Box display="flex" flexDirection="column" gap={2}>
-                      {data.enrollmentsByEstamento.map((item, index) => (
+                      {(data.enrollmentsByEstamento ?? []).map((item, index) => (
                         <Box key={index}>
                           <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
                             <Box display="flex" alignItems="center" gap={1}>
@@ -349,4 +349,3 @@ export function AdminDashboard() {
     </Box>
   )
 }
-
