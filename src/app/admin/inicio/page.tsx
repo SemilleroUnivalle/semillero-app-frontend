@@ -1,5 +1,5 @@
-export default function Page (){
-    return(
-        <h1>Vista Inicio</h1>
-    );
+import { AdminDashboard } from "@/components/dashboard/admin-dashboard"
+
+export default function AdminInicioPage() {
+  return <AdminDashboard />
 }
