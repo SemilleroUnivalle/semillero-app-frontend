@@ -22,19 +22,16 @@ import {
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { TrashIcon } from "@heroicons/react/24/outline";
 
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
-
 import axios from "axios";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { API_BASE_URL } from "../../../../../config";
 import { useRouter } from "next/navigation";
 
-export default function VerMatriculas() {
+export default function VerGrupos() {
   const router = useRouter();
 
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", flex: 0.5 },
-    { field: "nombre", headerName: "Nombres", flex: 1 },
     {
       field: "periodo",
       headerName: "Periodo",
@@ -50,6 +47,7 @@ export default function VerMatriculas() {
       headerName: "Módulo",
       flex: 1,
     },
+    { field: "nombre", headerName: "Nombre", flex: 1 },
    
     {
       field: "tipo",
@@ -131,10 +129,10 @@ export default function VerMatriculas() {
 
   const paginationModel = { page: 0, pageSize: 50 };
 
-  interface MatriculaRow {
+  interface GruposRow {
   id: number;
-  apellido: string;
   nombre: string;
+  matriculas: Matricula[];
   email: string;
   direccion: string;
   periodo: string;
@@ -144,7 +142,7 @@ export default function VerMatriculas() {
   estado: string;
 }
 
-  const [rows, setRows] = useState<MatriculaRow[]>([]);
+  const [rows, setRows] = useState<GruposRow[]>([]);
   const [success, setSuccess] = useState(false);
 
   const [loading, setLoading] = useState(true);
@@ -437,14 +435,7 @@ export default function VerMatriculas() {
       </div>
 
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 text-center shadow-md">
-        <Button
-          variant="outlined"
-          startIcon={<FileDownloadIcon />}
-          className="m-4 rounded-xl border-primary text-primary hover:bg-primary hover:text-white"
-          onClick={handleExportExcel}
-        >
-          Exportar a Excel
-        </Button>
+  
         <Paper
           className="border-none shadow-none"
           sx={{ height: 800, width: "100%" }}

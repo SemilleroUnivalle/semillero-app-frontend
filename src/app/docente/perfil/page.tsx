@@ -146,7 +146,7 @@ export default function DetallarRegistro() {
 
   // Obtener ciudades cuando cambia el departamento seleccionado en modo edición
   useEffect(() => {
-    const fetchCiudades = async () => {
+    const fetchCiudades = async () => { 
       if (!departamentoSeleccionado) return;
       setCargandoCiudades(true);
       try {

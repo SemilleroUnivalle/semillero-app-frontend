@@ -99,6 +99,10 @@ export interface ProfesorInterface {
   estamento?: string;
 }
 
+export interface Area {
+    id_area: string;
+    nombre_area: string;
+  }
 
 export interface Categoria {
   id_categoria: number;

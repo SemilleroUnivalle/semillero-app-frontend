@@ -65,7 +65,7 @@ export default function LayoutCursos({
               Ver Grupos
             </Button>
           </Link>
-          <Link href="/admin/cursos/crearCursos/" className="w-full sm:w-1/4">
+          <Link href="/admin/grupos/crear-grupos" className="w-full sm:w-1/4">
             <Button
               className="w-full rounded-2xl bg-white p-4 capitalize text-secondary hover:bg-primary hover:text-white"
               variant="contained"

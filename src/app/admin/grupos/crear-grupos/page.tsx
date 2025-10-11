@@ -1,387 +1,820 @@
-
 "use client";
 
-import {
-  Button,
-  TextField,
-  FormControl,
-  Select,
-  InputLabel,
-  MenuItem,
-  SelectChangeEvent,
-} from "@mui/material";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import * as React from "react";
+import { useEffect, useState } from "react";
+import Box from "@mui/material/Box";
+import List from "@mui/material/List";
+import Card from "@mui/material/Card";
+import CardHeader from "@mui/material/CardHeader";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemText from "@mui/material/ListItemText";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import Checkbox from "@mui/material/Checkbox";
+import Button from "@mui/material/Button";
+import Divider from "@mui/material/Divider";
+import CircularProgress from "@mui/material/CircularProgress";
+import Typography from "@mui/material/Typography";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import { TextField, Autocomplete } from "@mui/material";
+import { Estudiante, Matricula } from "@/interfaces/interfaces";
+
 import { API_BASE_URL } from "../../../../../config";
 
-export default function CrearCursos() {
-  interface Area {
-    id_area: string;
-    nombre_area: string;
-  }
-  interface Categoria {
-    id_categoria: string;
-    nombre: string;
-  }
+// Interfaces para docentes y monitores
+interface Docente {
+  id: number;
+  nombre: string;
+  apellido: string;
+  email?: string;
+  numero_documento?: string;
+}
 
-  const [areas, setAreas] = useState<Area[]>([]);
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
+interface Monitor {
+  id: number;
+  nombre: string;
+  apellido: string;
+  email?: string;
+  numero_documento?: string;
+}
 
-  const [otraArea, setOtraArea] = useState<string>(""); // Para especificar otra área
-  const [otraCategoria, setOtraCategoria] = useState<string>(""); // Para especificar otra
+function not(a: readonly number[], b: readonly number[]) {
+  return a.filter((value) => !b.includes(value));
+}
 
-  const [formData, setFormData] = useState({
-    nombre_modulo: "",
-    descripcion_modulo: "",
-    id_area: "",
-    id_categoria: "",
-    intensidad_horaria: "",
-    dirigido_a: "",
-    incluye: "",
-  });
+function intersection(a: readonly number[], b: readonly number[]) {
+  return a.filter((value) => b.includes(value));
+}
 
-  const [success, setSuccess] = useState(false);
+function union(a: readonly number[], b: readonly number[]) {
+  return [...a, ...not(b, a)];
+}
 
-  // Manejar cambios en los campos del formulario
-  const handleChange = (
-    e:
-      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-      | SelectChangeEvent<string>,
-  ) => {
-    const { name, value } = e.target as
-      | HTMLInputElement
-      | { name: string; value: string };
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+export default function EstudiantesTransferList() {
+  const [checked, setChecked] = useState<readonly number[]>([]);
+  const [left, setLeft] = useState<readonly number[]>([]);
+  const [right, setRight] = useState<readonly number[]>([]);
+  const [matriculas, setMatriculas] = useState<Matricula[]>([]);
+  const [filteredEstudiantes, setFilteredEstudiantes] = useState<
+    readonly number[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Estados para docentes y monitores
+  const [docentes, setDocentes] = useState<Docente[]>([]);
+  const [monitores, setMonitores] = useState<Monitor[]>([]);
+  const [selectedDocente, setSelectedDocente] = useState<Docente | null>(null);
+  const [selectedMonitor, setSelectedMonitor] = useState<Monitor | null>(null);
+  const [loadingDocentes, setLoadingDocentes] = useState(false);
+  const [loadingMonitores, setLoadingMonitores] = useState(false);
+
+  // Estados para filtros
+  const [selectedPeriodos, setSelectedPeriodos] = useState<string[]>([]);
+  const [selectedCategorias, setSelectedCategorias] = useState<string[]>([]);
+  const [selectedModulos, setSelectedModulos] = useState<string[]>([]);
+  const [selectedEstamentos, setSelectedEstamentos] = useState<string[]>([]);
+
+  const leftChecked = intersection(checked, filteredEstudiantes);
+  const rightChecked = intersection(checked, right);
+
+  // Estado para el nombre del grupo
+  const [nombreGrupo, setNombreGrupo] = useState("");
+
+  // Estado para la creación del grupo
+  const [creatingGroup, setCreatingGroup] = useState(false);
+
+  // Función para obtener token
+  const getToken = () => {
+    const userString = localStorage.getItem("user");
+    if (userString) {
+      const user = JSON.parse(userString);
+      return user.token;
+    }
+    return "";
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Fetch matriculas data
+  useEffect(() => {
+    const fetchEstudiantes = async () => {
+      try {
+        const token = getToken();
 
-    try {
-      let areaId = formData.id_area; // Inicialmente, el área seleccionada
-      let categoriaId = formData.id_categoria; // Inicialmente, la categoría seleccionada
-
-      // Si seleccionaron "Otra" en el área, crea una nueva área
-      if (formData.id_area === "Otra") {
-        const nuevaAreaResponse = await axios.post(
-          `${API_BASE_URL}/area/are/`,
-          { nombre_area: otraArea }, // `otraArea` es el valor del campo de texto para especificar el área
-          {
-            headers: {
-              Authorization: `Token ${localStorage.getItem("token")}`,
-            },
-          },
-        );
-        areaId = nuevaAreaResponse.data.id_area; // Actualiza el área con el ID de la nueva área creada
-      }
-
-      // Si seleccionaron "Otra" en la categoría, crea una nueva categoría
-      if (formData.id_categoria === "Otra") {
-        const nuevaCategoriaResponse = await axios.post(
-          `${API_BASE_URL}/categoria/cat/`,
-          { nombre: otraCategoria }, // `otraCategoria` es el valor del campo de texto para especificar la categoría
-          {
-            headers: {
-              Authorization: `Token ${localStorage.getItem("token")}`,
-            },
-          },
-        );
-        categoriaId = nuevaCategoriaResponse.data.id_categoria; // Actualiza la categoría con el ID de la nueva categoría creada
-      }
-
-      // Crear el curso
-      const cursoResponse = await axios.post(
-        `${API_BASE_URL}/modulo/mod/`,
-        {
-          nombre_modulo: formData.nombre_modulo,
-          id_area: areaId,
-          id_categoria: categoriaId,
-          descripcion_modulo: formData.descripcion_modulo,
-          intensidad_horaria: formData.intensidad_horaria,
-          dirigido_a: formData.dirigido_a,
-          incluye: formData.incluye,
-        },
-        {
+        const response = await fetch(`${API_BASE_URL}/matricula/mat/`, {
           headers: {
-            Authorization: `Token ${localStorage.getItem("token")}`,
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
           },
-        },
-      );
+        });
 
-      console.log("Curso creado exitosamente:", cursoResponse.data);
-      alert("Curso creado exitosamente");
-      // Vaciar los datos
-      setFormData({
-        nombre_modulo: "",
-        descripcion_modulo: "",
-        id_area: "",
-        id_categoria: "",
-        intensidad_horaria: "",
-        dirigido_a: "",
-        incluye: "",
-      }); // Cierra el modal
-    } catch (error) {
-      console.error("Error al crear el curso:", error);
-      alert("Hubo un error al crear el curso. Por favor, inténtalo de nuevo.");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data: Matricula[] = await response.json();
+
+        setMatriculas(data);
+        // Inicialmente todos los matriculas están disponibles (izquierda)
+        const allIds = data.map((est) => est.id_inscripcion);
+        setLeft(allIds);
+        setFilteredEstudiantes(allIds);
+        setLoading(false);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+        setLoading(false);
+      }
+    };
+
+    fetchEstudiantes();
+  }, []);
+
+  // Fetch docentes
+  useEffect(() => {
+    const fetchDocentes = async () => {
+      setLoadingDocentes(true);
+      try {
+        const token = getToken();
+
+        const response = await fetch(`${API_BASE_URL}/profesor/prof`, {
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data: Docente[] = await response.json();
+        setDocentes(data);
+      } catch (err) {
+        console.error("Error fetching docentes:", err);
+      } finally {
+        setLoadingDocentes(false);
+      }
+    };
+
+    fetchDocentes();
+  }, []);
+
+  // Fetch monitores
+  useEffect(() => {
+    const fetchMonitores = async () => {
+      setLoadingMonitores(true);
+      try {
+        const token = getToken();
+
+        const response = await fetch(`${API_BASE_URL}/monitor_academico/mon`, {
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data: Monitor[] = await response.json();
+        setMonitores(data);
+      } catch (err) {
+        console.error("Error fetching monitores:", err);
+      } finally {
+        setLoadingMonitores(false);
+      }
+    };
+
+    fetchMonitores();
+  }, []);
+
+  // Efecto para aplicar filtros
+  useEffect(() => {
+    let filtered = matriculas.filter((matricula) => {
+      // Solo filtramos matriculas que están en la lista de disponibles (izquierda)
+      if (!left.includes(matricula.id_inscripcion)) return false;
+
+      const matchGrado =
+        selectedPeriodos.length === 0 ||
+        selectedPeriodos.includes(matricula.oferta_categoria.id_oferta_academica.nombre);
+      const matchCiudad =
+        selectedCategorias.length === 0 ||
+        selectedCategorias.includes(matricula.modulo.id_categoria.nombre);
+      const matchColegio =
+        selectedModulos.length === 0 ||
+        selectedModulos.includes(matricula.modulo.nombre_modulo);
+      const matchEstamento =
+        selectedEstamentos.length === 0 ||
+        selectedEstamentos.includes(matricula.estado);
+
+      return matchGrado && matchCiudad && matchColegio && matchEstamento;
+    });
+
+    setFilteredEstudiantes(filtered.map((est) => est.id_inscripcion
+  ));
+  }, [
+    selectedPeriodos,
+    selectedCategorias,
+    selectedModulos,
+    selectedEstamentos,
+    left,
+    matriculas,
+  ]);
+
+  // Handlers para filtros
+  const handleChangePeriodos = (
+    event: SelectChangeEvent<typeof selectedPeriodos>,
+  ) => {
+    const value = event.target.value;
+    setSelectedPeriodos(typeof value === "string" ? value.split(",") : value);
+  };
+
+  const handleChangeCategorias = (
+    event: SelectChangeEvent<typeof selectedCategorias>,
+  ) => {
+    const value = event.target.value;
+    setSelectedCategorias(typeof value === "string" ? value.split(",") : value);
+  };
+
+  const handleChangeColegios = (
+    event: SelectChangeEvent<typeof selectedModulos>,
+  ) => {
+    const value = event.target.value;
+    setSelectedModulos(typeof value === "string" ? value.split(",") : value);
+  };
+
+  const handleChangeEstamentos = (
+    event: SelectChangeEvent<typeof selectedEstamentos>,
+  ) => {
+    const value = event.target.value;
+    setSelectedEstamentos(typeof value === "string" ? value.split(",") : value);
+  };
+
+  const handleToggle = (value: number) => () => {
+    const currentIndex = checked.indexOf(value);
+    const newChecked = [...checked];
+
+    if (currentIndex === -1) {
+      newChecked.push(value);
+    } else {
+      newChecked.splice(currentIndex, 1);
+    }
+
+    setChecked(newChecked);
+  };
+
+  const numberOfChecked = (items: readonly number[]) =>
+    intersection(checked, items).length;
+
+  const handleToggleAll = (items: readonly number[]) => () => {
+    if (numberOfChecked(items) === items.length) {
+      setChecked(not(checked, items));
+    } else {
+      setChecked(union(checked, items));
     }
   };
 
-  useEffect(() => {
-    const fetchAreas = async () => {
-      try {
-        const response = await axios.get(`${API_BASE_URL}/area/are/`, {
-          headers: {
-            Authorization: `Token ${localStorage.getItem("token")}`,
-          },
-        });
-        const area = response.data;
+  const handleCheckedRight = () => {
+    setRight(right.concat(leftChecked));
+    setLeft(not(left, leftChecked));
+    setChecked(not(checked, leftChecked));
+  };
 
-        if (!area || (Array.isArray(area) && area.length === 0)) {
-          console.log("Error: No se encontraron áreas");
-        } else {
-          const formateado = area.map((are: Area) => ({
-            id_area: are.id_area,
-            nombre_area: are.nombre_area,
-          }));
+  const handleCheckedLeft = () => {
+    setLeft(left.concat(rightChecked));
+    setRight(not(right, rightChecked));
+    setChecked(not(checked, rightChecked));
+  };
 
-          setAreas(formateado);
-          console.log("Areas", formateado);
+  const getEstudianteById = (id: number): Matricula | undefined => {
+    return matriculas.find((est) => est.id_inscripcion === id);
+  };
+
+  // Función para limpiar filtros
+  const clearFilters = () => {
+    setSelectedPeriodos([]);
+    setSelectedCategorias([]);
+    setSelectedModulos([]);
+    setSelectedEstamentos([]);
+  };
+
+  const customList = (
+    title: React.ReactNode,
+    items: readonly number[],
+    showFilters = false,
+  ) => (
+    <Card>
+      <CardHeader
+        sx={{ px: 2, py: 1, bgcolor: "#e8e8e8" }}
+        avatar={
+          <Checkbox
+            onClick={handleToggleAll(items)}
+            checked={
+              numberOfChecked(items) === items.length && items.length !== 0
+            }
+            indeterminate={
+              numberOfChecked(items) !== items.length &&
+              numberOfChecked(items) !== 0
+            }
+            disabled={items.length === 0}
+            inputProps={{
+              "aria-label": "all items selected",
+            }}
+          />
         }
-      } catch (error) {
-        console.error("Error al obtener las areas", error);
-      }
-    };
+        title={title}
+        subheader={`${numberOfChecked(items)}/${items.length} seleccionados`}
+      />
+      <Divider />
 
-    const fetchCategorias = async () => {
+      <List
+        sx={{
+          width: 350,
+          height: 400,
+          bgcolor: "background.paper",
+          overflow: "auto",
+        }}
+        dense
+        component="div"
+        role="list"
+      >
+        {items.map((id: number) => {
+          const estudiante = getEstudianteById(id);
+          const labelId = `transfer-list-all-item-${id}-label`;
+
+          if (!estudiante) return null;
+
+          return (
+            <ListItemButton key={id} role="listitem" onClick={handleToggle(id)}>
+              <ListItemIcon>
+                <Checkbox
+                  checked={checked.includes(id)}
+                  tabIndex={-1}
+                  disableRipple
+                  inputProps={{
+                    "aria-labelledby": labelId,
+                  }}
+                />
+              </ListItemIcon>
+              <ListItemText
+                id={labelId}
+                primary={`${estudiante.estudiante.nombre} ${estudiante.estudiante.apellido}`}
+                secondary={
+                  <React.Fragment>
+                    <Typography
+                      component="span"
+                      variant="body2"
+                      color="text.primary"
+                    >
+                      Doc: {estudiante.estudiante.numero_documento}
+                    </Typography>
+                    <br />
+                    {`${estudiante.estudiante.grado}° - ${estudiante.estudiante.colegio}`}
+                    <br />
+                    <Typography
+                      component="span"
+                      variant="caption"
+                      color="text.secondary"
+                    >
+                      {estudiante.estudiante.ciudad_residencia} • {estudiante.estudiante.estamento}
+                    </Typography>
+                  </React.Fragment>
+                }
+                primaryTypographyProps={{
+                  fontSize: "0.95rem",
+                  fontWeight: "medium",
+                }}
+              />
+            </ListItemButton>
+          );
+        })}
+      </List>
+    </Card>
+  );
+
+  if (loading) {
+    return (
+      <Box sx={{ padding: 3, textAlign: "center" }}>
+        <CircularProgress />
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Cargando matriculas...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ padding: 3, textAlign: "center" }}>
+        <Typography variant="h6" color="error">
+          Error: {error}
+        </Typography>
+      </Box>
+    );
+  }
+
+  // Función para actualizar matriculas con el ID del grupo
+  const updateStudentsGroup = async (
+    studentIds: readonly number[],
+    groupId: number,
+  ) => {
+    const token = getToken();
+    const updatePromises = studentIds.map(async (studentId) => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/categoria/cat/`, {
-          headers: {
-            Authorization: `Token ${localStorage.getItem("token")}`,
+        const response = await fetch(
+          `${API_BASE_URL}/matricula/mat/${studentId}/`,
+          {
+            method: "PATCH",
+            headers: {
+              Authorization: `Token ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              grupo: groupId,
+            }),
           },
-        });
-        const categoria = response.data;
+        );
 
-        if (
-          !categoria ||
-          (Array.isArray(categoria) && categoria.length === 0)
-        ) {
-          console.log("Error: No se encontraron categorias");
-        } else {
-          const formateado = categoria.map((cat: Categoria) => ({
-            id_categoria: cat.id_categoria,
-            nombre: cat.nombre,
-          }));
-
-          setCategorias(formateado);
-          console.log("Categorias", formateado);
+        if (!response.ok) {
+          throw new Error(
+            `Error updating student ${studentId}: ${response.status}`,
+          );
         }
-      } catch (error) {
-        console.error("Error al obtener las catgeorias", error);
-      }
-    };
 
-    fetchAreas();
-    fetchCategorias();
-  }, []);
+        const updatedStudent = await response.json();
+        console.log(`Estudiante ${studentId} actualizado:`, updatedStudent);
+        return updatedStudent;
+      } catch (error) {
+        console.error(`Error updating student ${studentId}:`, error);
+        throw error;
+      }
+    });
+
+    try {
+      const results = await Promise.all(updatePromises);
+      console.log("Todos los matriculas actualizados exitosamente:", results);
+      return results;
+    } catch (error) {
+      console.error("Error updating some students:", error);
+      throw error;
+    }
+  };
+
+  // Función para crear el grupo
+  const handleCreateGroup = async () => {
+    // Validaciones
+    if (!nombreGrupo.trim()) {
+      alert("Debe ingresar un nombre para el grupo");
+      return;
+    }
+
+    if (right.length === 0) {
+      alert("Debe seleccionar al menos un estudiante");
+      return;
+    }
+
+    if (!selectedDocente) {
+      alert("Debe seleccionar un docente");
+      return;
+    }
+
+    if (!selectedMonitor) {
+      alert("Debe seleccionar un monitor académico");
+      return;
+    }
+
+    setCreatingGroup(true);
+
+    try {
+      const token = getToken();
+
+      const groupData = {
+        nombre: nombreGrupo.trim(),
+        profesor: selectedDocente.id,
+        monitor_academico: selectedMonitor.id,
+      };
+
+      console.log("Enviando datos del grupo:", groupData);
+
+      // Paso 1: Crear el grupo
+      const response = await fetch(`${API_BASE_URL}/grupo/grupo/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(groupData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`,
+        );
+      }
+
+      const createdGroup = await response.json();
+      console.log("Grupo creado exitosamente:", createdGroup);
+
+      // Paso 2: Actualizar los matriculas con el ID del grupo
+      console.log("Actualizando matriculas con el grupo ID:", createdGroup.id);
+      await updateStudentsGroup(right, createdGroup.id);
+
+      // Mostrar mensaje de éxito
+      alert(`¡Grupo "${nombreGrupo}" creado exitosamente!
+      
+Detalles:
+- ${right.length} matriculas asignados al grupo
+- Docente: ${selectedDocente.nombre} ${selectedDocente.apellido}
+- Monitor: ${selectedMonitor.nombre} ${selectedMonitor.apellido}
+- ID del grupo: ${createdGroup.id}`);
+
+      // Limpiar formulario
+      setNombreGrupo("");
+      setSelectedDocente(null);
+      setSelectedMonitor(null);
+      setRight([]);
+      setLeft(matriculas.map((est) => est.id_inscripcion));
+      setFilteredEstudiantes(matriculas.map((est) => est.id_inscripcion));
+      setChecked([]);
+      clearFilters();
+    } catch (err) {
+      console.error("Error creating group or updating students:", err);
+      alert(
+        `Error al crear el grupo o asignar matriculas: ${err instanceof Error ? err.message : "Error desconocido"}`,
+      );
+    } finally {
+      setCreatingGroup(false);
+    }
+  };
 
   return (
-    <div className="mx-auto mt-4 flex w-11/12 flex-col items-center justify-center rounded-2xl bg-white p-1 py-2 shadow-md">
-      <Snackbar
-        open={success}
-        autoHideDuration={4000}
-        onClose={() => setSuccess(false)}
-      >
-        <Alert
-          onClose={() => setSuccess(false)}
-          severity="success"
-          sx={{ width: "100%" }}
-        >
-          Curso creado exitosamente.
-        </Alert>
-      </Snackbar>
+    <Box className="mx-auto mt-4 flex w-11/12 flex-col justify-between gap-4 rounded-2xl bg-white p-2 shadow-md">
+      <h2 className="mb-2 text-center">Crear grupo</h2>
 
-      <h2 className="mb-2 text-center">Crear curso</h2>
-      <div className="w-full sm:w-1/3">
-        <form
-          action=""
-          method="post"
-          onSubmit={handleSubmit}
-          className="flex flex-col gap-3"
-        >
-          {/* Campo nombre del curso */}
-          <TextField
-            className="inputs-textfield w-full"
-            label="Nombre"
-            name="nombre_modulo"
-            variant="outlined"
-            type="text"
-            fullWidth
-            required
-            value={formData.nombre_modulo}
-            onChange={handleChange}
-          />
-
-          {/* Campo selector de categoria */}
-          <FormControl className="inputs-textfield w-full">
-            <InputLabel id="categoria_curso">Categoría</InputLabel>
-            <Select
-              labelId="categoria_curso"
-              id="categoria_curso"
-              name="id_categoria"
-              label="categoria_curso"
-              value={formData.id_categoria}
-              onChange={handleChange}
-              required
-            >
-              {/* Opciones de categoria */}
-              {categorias.map((cat) => (
-                <MenuItem key={cat.id_categoria} value={cat.id_categoria}>
-                  {cat.nombre}
-                </MenuItem>
-              ))}
-              <MenuItem value={"Otra"}>Otra</MenuItem>
-            </Select>
-          </FormControl>
-
-          {/* Campo para especificar otra área */}
-          {formData.id_categoria === "Otra" && (
-            <div className="flex flex-col gap-2 text-center">
-              <TextField
-                className="inputs-textfield w-full"
-                label="Especificar Categoría"
-                name="otra_categoria"
-                variant="outlined"
-                type="text"
-                value={otraCategoria}
-                onChange={(e) => setOtraCategoria(e.target.value)} // Actualiza el estado con el valor del campo de texto
-                fullWidth
-                required
-              />
-            </div>
+      {/* Autocompletes para Docente y Monitor */}
+      <Box className="flex flex-wrap justify-around text-gray-600">
+        {/* Campo nombre del curso */}
+        <TextField
+          className="inputs-textfield flex w-full flex-col sm:w-1/4"
+          label="Nombre del Grupo"
+          variant="outlined"
+          size="small"
+          fullWidth
+          required
+          value={nombreGrupo}
+          onChange={(e) => setNombreGrupo(e.target.value)}
+          placeholder="Ingrese el nombre del grupo"
+        />
+        {/* Autocomplete para Docente */}
+        <Autocomplete
+          className="inputs-textfield flex w-full sm:w-1/4"
+          options={docentes}
+          getOptionLabel={(option) => `${option.nombre} ${option.apellido}`}
+          value={selectedDocente}
+          onChange={(event, newValue) => setSelectedDocente(newValue)}
+          loading={loadingDocentes}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Seleccionar Docente"
+              variant="outlined"
+              size="small"
+              InputProps={{
+                ...params.InputProps,
+                endAdornment: (
+                  <React.Fragment>
+                    {loadingDocentes ? (
+                      <CircularProgress color="inherit" size={20} />
+                    ) : null}
+                    {params.InputProps.endAdornment}
+                  </React.Fragment>
+                ),
+              }}
+            />
           )}
-
-          {/* Campo selector de area */}
-          <FormControl className="inputs-textfield w-full">
-            <InputLabel id="area_curso">Área</InputLabel>
-            <Select
-              labelId="area_curso"
-              name="id_area"
-              id="area_curso"
-              label="area_curso"
-              value={formData.id_area}
-              onChange={handleChange}
-              required
-            >
-              {/* Opciones de área */}
-              {areas.map((area) => (
-                <MenuItem key={area.id_area} value={area.id_area}>
-                  {area.nombre_area}
-                </MenuItem>
-              ))}
-              <MenuItem value={"Otra"}>Otra</MenuItem>
-            </Select>
-          </FormControl>
-
-          {/* Campo para especificar otra área */}
-          {formData.id_area === "Otra" && (
-            <div className="flex flex-col gap-3">
-              <TextField
-                className="inputs-textfield w-full"
-                label="Especificar Área"
-                name="otra_area"
-                variant="outlined"
-                type="text"
-                fullWidth
-                value={otraArea}
-                onChange={(e) => setOtraArea(e.target.value)} // Actualiza el estado con el valor del campo de texto
-                required
-              />
-              <div className="solid rounded-2xl border border-secondary p-2">
-                <InputLabel id="img_area">Imagen para el área</InputLabel>
-                <input
-                  name="img_area"
-                  type="file"
-                  accept=".jpg"
-                  className="w-full text-sm text-gray-500"
-                  // onChange={(e) => {
-                  //   const file = e.target.files?.[0];
-                  //   if (file) {
-                  //     setDocumentoIdentidad(file);
-                  //   }
-                  // }}
-                />
-              </div>
-            </div>
+          renderOption={(props, option) => (
+            <Box component="li" {...props}>
+              <Box>
+                <Typography variant="body1">
+                  {option.nombre} {option.apellido}
+                </Typography>
+                {option.email && (
+                  <Typography variant="caption" color="text.secondary">
+                    {option.email}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
           )}
+          noOptionsText="No se encontraron docentes"
+        />
 
-          {/* Campo descripción */}
-          <TextField
-            className="inputs-textfield w-full"
-            label="Descripción"
-            name="descripcion_modulo"
-            variant="outlined"
-            type="text"
-            multiline
-            rows={4}
-            fullWidth
-            required
-            value={formData.descripcion_modulo}
-            onChange={handleChange}
-          />
+        {/* Autocomplete para Monitor */}
+        <Autocomplete
+          className="inputs-textfield flex w-full flex-col sm:w-1/4"
+          options={monitores}
+          getOptionLabel={(option) => `${option.nombre} ${option.apellido}`}
+          value={selectedMonitor}
+          onChange={(event, newValue) => setSelectedMonitor(newValue)}
+          loading={loadingMonitores}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Seleccionar Monitor Académico"
+              variant="outlined"
+              size="small"
+              InputProps={{
+                ...params.InputProps,
+                endAdornment: (
+                  <React.Fragment>
+                    {loadingMonitores ? (
+                      <CircularProgress color="inherit" size={20} />
+                    ) : null}
+                    {params.InputProps.endAdornment}
+                  </React.Fragment>
+                ),
+              }}
+            />
+          )}
+          renderOption={(props, option) => (
+            <Box component="li" {...props}>
+              <Box>
+                <Typography variant="body1">
+                  {option.nombre} {option.apellido}
+                </Typography>
+                {option.email && (
+                  <Typography variant="caption" color="text.secondary">
+                    {option.email}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          )}
+          noOptionsText="No se encontraron monitores"
+        />
+      </Box>
+      {/* Filtros */}
+      <Box className="flex flex-wrap justify-around text-gray-600">
+        {/* Filtro por Grados */}
 
-          {/* Campo Intensidad Horaria*/}
-          <TextField
-            className="inputs-textfield w-full"
-            label="Intensidad Horaria"
-            name="intensidad_horaria"
-            variant="outlined"
-            type="number"
-            fullWidth
-            required
-            value={formData.intensidad_horaria}
-            onChange={handleChange}
-          />
-
-          {/* Campo Dirigido a*/}
-          <TextField
-            className="inputs-textfield w-full"
-            label="Dirigido a"
-            name="dirigido_a"
-            variant="outlined"
-            type="text"
-            fullWidth
-            required
-            value={formData.dirigido_a}
-            onChange={handleChange}
-          />
-
-          {/* Campo Incluye*/}
-          <TextField
-            className="inputs-textfield w-full"
-            label="Incluye"
-            name="incluye"
-            variant="outlined"
-            type="text"
-            fullWidth
-            required
-            value={formData.incluye}
-            onChange={handleChange}
-          />
-
-          <Button
-            type="submit"
-            variant="contained"
-            className="text-md mt-4 w-full rounded-2xl bg-primary font-semibold capitalize text-white hover:bg-red-800"
+       
+        <FormControl className="inputs-textfield flex w-full flex-col sm:w-1/6">
+          <InputLabel>Periodos</InputLabel>
+          <Select
+            multiple
+            value={selectedPeriodos}
+            onChange={handleChangePeriodos}
+            renderValue={(selected) => selected.join(", ")}
+            label="Periodos"
           >
-            Crear Curso
+            {[...new Set(
+              matriculas
+                .filter(est => 
+                  est?.oferta_categoria?.id_oferta_academica?.nombre
+                )
+                .map(est => est.oferta_categoria.id_oferta_academica.nombre)
+            )]
+              .sort()
+              .map((periodo) => (
+                <MenuItem key={periodo} value={periodo}>
+                  <Checkbox checked={selectedPeriodos.indexOf(periodo) > -1} />
+                  <ListItemText primary={periodo} />
+                </MenuItem>
+              ))}
+          </Select>
+        </FormControl>
+
+        {/* Filtro por Categoria */}
+        <FormControl className="inputs-textfield flex w-full flex-col sm:w-1/6">
+          <InputLabel>Categoria</InputLabel>
+          <Select
+            multiple
+            value={selectedCategorias}
+            onChange={handleChangeCategorias}
+            renderValue={(selected) => selected.join(", ")}
+            label="Categorias"
+          >
+            {[...new Set(matriculas.map((est) => est.modulo.id_categoria.nombre))]
+              .sort()
+              .map((categoria) => (
+                <MenuItem key={categoria} value={categoria}>
+                  <Checkbox checked={selectedCategorias.indexOf(categoria) > -1} />
+                  <ListItemText primary={categoria} />
+                </MenuItem>
+              ))}
+          </Select>
+        </FormControl>
+
+        {/* Filtro por Colegios */}
+        <FormControl className="inputs-textfield flex w-full flex-col sm:w-1/6">
+          <InputLabel>Colegios</InputLabel>
+          <Select
+            multiple
+            value={selectedModulos}
+            onChange={handleChangeColegios}
+            renderValue={(selected) => selected.join(", ")}
+            label="Colegios"
+          >
+            {[...new Set(matriculas.map((est) => est.estudiante.colegio))]
+              .sort()
+              .map((colegio) => (
+                <MenuItem key={colegio} value={colegio}>
+                  <Checkbox checked={selectedModulos.indexOf(colegio) > -1} />
+                  <ListItemText primary={colegio} />
+                </MenuItem>
+              ))}
+          </Select>
+        </FormControl>
+
+        {/* Filtro por Estamentos */}
+        <FormControl className="inputs-textfield flex w-full flex-col sm:w-1/6">
+          <InputLabel>Estamentos</InputLabel>
+          <Select
+            multiple
+            value={selectedEstamentos}
+            onChange={handleChangeEstamentos}
+            renderValue={(selected) => selected.join(", ")}
+            label="Estamentos"
+          >
+            {[...new Set(matriculas.map((est) => est.estudiante.estamento))]
+              .sort()
+              .map((estamento) => (
+                <MenuItem key={estamento} value={estamento}>
+                  <Checkbox
+                    checked={selectedEstamentos.indexOf(estamento) > -1}
+                  />
+                  <ListItemText primary={estamento} />
+                </MenuItem>
+              ))}
+          </Select>
+        </FormControl>
+      </Box>
+
+      <Typography
+        variant="body1"
+        gutterBottom
+        textAlign="center"
+        color="text.secondary"
+      >
+        Selecciona los matriculas que formarán parte del nuevo grupo
+      </Typography>
+
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "flex-start",
+          gap: 2,
+          mt: 4,
+          flexWrap: "wrap",
+        }}
+      >
+        {customList("Estudiantes Disponibles", filteredEstudiantes, true)}
+
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 8 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleCheckedRight}
+            disabled={leftChecked.length === 0}
+            aria-label="agregar matriculas seleccionados"
+          >
+            &gt;
           </Button>
-        </form>
-      </div>
-    </div>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleCheckedLeft}
+            disabled={rightChecked.length === 0}
+            aria-label="remover matriculas seleccionados"
+          >
+            &lt;
+          </Button>
+        </Box>
+
+        {customList("Estudiantes en el Grupo", right)}
+      </Box>
+
+      <Box sx={{ mt: 3, textAlign: "center" }}>
+        <Typography variant="body2" sx={{ mb: 2 }}>
+          Seleccionados: {checked.length} | Disponibles:{" "}
+          {filteredEstudiantes.length} | En el grupo: {right.length}
+        </Typography>
+
+        <Button
+          className="text-md mt-4 w-full rounded-2xl bg-primary font-semibold capitalize text-white hover:bg-red-800 sm:w-1/3"
+          variant="contained"
+          color="primary"
+          size="large"
+          onClick={handleCreateGroup}
+          disabled={right.length === 0}
+        >
+          Crear Grupo ({right.length} matriculas)
+        </Button>
+      </Box>
+    </Box>
   );
 }
