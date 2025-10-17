@@ -222,7 +222,7 @@ export function AdminDashboard() {
                 <Grid item xs={12} lg={4}>
                   <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
                     <Typography variant="h6" fontWeight="bold" gutterBottom>
-                      Demografía
+                      Demografía de Estudiantes
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                       Distribución por género

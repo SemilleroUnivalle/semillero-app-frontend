@@ -52,7 +52,7 @@ function union(a: readonly number[], b: readonly number[]) {
   return [...a, ...not(b, a)];
 }
 
-export default function EstudiantesTransferList() {
+export default function CrearGruposManualmente() {
   const [checked, setChecked] = useState<readonly number[]>([]);
   const [left, setLeft] = useState<readonly number[]>([]);
   const [right, setRight] = useState<readonly number[]>([]);

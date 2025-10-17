@@ -53,6 +53,14 @@ export default function CrearGruposAutomatico() {
   const [loadingDocentes, setLoadingDocentes] = useState(false);
   const [loadingMonitores, setLoadingMonitores] = useState(false);
 
+  // Estados para eleccion de profesor y monitor
+  const [selectedMonitoresPorGrupo, setSelectedMonitoresPorGrupo] = useState<{
+    [key: number]: Monitor | null;
+  }>({});
+  const [selectedDocentesPorGrupo, setSelectedDocentesPorGrupo] = useState<{
+    [key: number]: Docente | null;
+  }>({});
+
   // Estados para filtros
   const [selectedPeriodos, setSelectedPeriodos] = useState<string[]>([]);
   const [selectedCategorias, setSelectedCategorias] = useState<string[]>([]);
@@ -62,9 +70,31 @@ export default function CrearGruposAutomatico() {
   const [tipoCreacion, setTipoCreacion] = useState<
     "cantidad_grupos" | "estudiantes_por_grupo"
   >("cantidad_grupos");
-  const [cantidadGrupos, setCantidadGrupos] = useState<number>(1);
-  const [estudiantesPorGrupo, setEstudiantesPorGrupo] = useState<number>(5);
+  const [cantidadGrupos, setCantidadGrupos] = useState<number>(0);
+  const [estudiantesPorGrupo, setEstudiantesPorGrupo] = useState<number>(0);
   const [prefijoNombre, setPrefijoNombre] = useState<string>("Grupo");
+
+  // Función para manejar selección de monitor por grupo
+  const handleMonitorSelection = (
+    grupoIndex: number,
+    monitor: Monitor | null,
+  ) => {
+    setSelectedMonitoresPorGrupo((prev) => ({
+      ...prev,
+      [grupoIndex]: monitor,
+    }));
+  };
+
+  // Función para manejar selección de docente por grupo
+  const handleDocenteSelection = (
+    grupoIndex: number,
+    docente: Docente | null,
+  ) => {
+    setSelectedDocentesPorGrupo((prev) => ({
+      ...prev,
+      [grupoIndex]: docente,
+    }));
+  };
 
   // Estado para la creación de grupos
   const [creatingGroups, setCreatingGroups] = useState(false);
@@ -209,6 +239,45 @@ export default function CrearGruposAutomatico() {
     setSelectedModulos(typeof value === "string" ? value.split(",") : value);
   };
 
+  // Función para verificar si un monitor ya está seleccionado en otro grupo
+  const isMonitorAlreadySelected = (
+    monitorId: number,
+    currentGrupoIndex: number,
+  ) => {
+    return Object.entries(selectedMonitoresPorGrupo).some(
+      ([grupoIdx, monitor]) =>
+        Number(grupoIdx) !== currentGrupoIndex && monitor?.id === monitorId,
+    );
+  };
+
+  const isDocenteAlreadySelected = (
+    docenteId: number,
+    currentGrupoIndex: number,
+  ) => {
+    return Object.entries(selectedDocentesPorGrupo).some(
+      ([grupoIdx, docente]) =>
+        Number(grupoIdx) !== currentGrupoIndex && docente?.id === docenteId,
+    );
+  };
+
+  // Obtener monitores disponibles para un grupo específico
+  const getAvailableMonitoresForGrupo = (grupoIndex: number) => {
+    return monitores.filter(
+      (monitor) => !isMonitorAlreadySelected(monitor.id, grupoIndex),
+    );
+  };
+
+  const getAvailableDocentesForGrupo = (grupoIndex: number) => {
+    return docentes.filter(
+      (docente) => !isDocenteAlreadySelected(docente.id, grupoIndex),
+    );
+  };
+
+  // Limpiar selecciones de monitores cuando cambian los grupos
+  React.useEffect(() => {
+    setSelectedMonitoresPorGrupo({});
+  }, [cantidadGrupos]);
+
   // Función para limpiar filtros
   const clearFilters = () => {
     setSelectedPeriodos([]);
@@ -283,37 +352,35 @@ export default function CrearGruposAutomatico() {
       return;
     }
 
-    // Verificar que hay suficientes docentes y monitores
-    const grupos = dividirEnGrupos(filteredMatriculas);
-
-    if (grupos.length > docentes.length) {
-      alert(
-        `Se necesitan al menos ${grupos.length} docentes para crear ${grupos.length} grupos. Solo hay ${docentes.length} disponibles.`,
-      );
+    // Verificar que todos los grupos tengan monitor asignado
+    const gruposConMonitor = Object.keys(selectedMonitoresPorGrupo).length;
+    if (gruposConMonitor !== gruposPreview.length) {
+      alert("Debe asignar un monitor a cada grupo antes de crear");
       return;
     }
 
-    if (grupos.length > monitores.length) {
-      alert(
-        `Se necesitan al menos ${grupos.length} monitores para crear ${grupos.length} grupos. Solo hay ${monitores.length} disponibles.`,
-      );
-      return;
-    }
+    // Usar la función optimizada para crear grupos reales
+    const grupos = dividirEnGruposParaCreacion(filteredMatriculas);
 
     setCreatingGroups(true);
 
     try {
       const token = getToken();
-      const docentesMezclados = shuffleArray(docentes);
-      const monitoresMezclados = shuffleArray(monitores);
 
       // Crear grupos y asignar estudiantes
       const resultados = [];
 
       for (let i = 0; i < grupos.length; i++) {
         const grupo = grupos[i];
-        const docente = docentesMezclados[i];
-        const monitor = monitoresMezclados[i];
+        const monitor = selectedMonitoresPorGrupo[i] || monitores[0];
+        const docente = selectedDocentesPorGrupo[i] || docentes[0];
+
+        if (!monitor) {
+          throw new Error(`No hay monitor asignado para el grupo ${i + 1}`);
+        }
+        if (!docente) {
+          throw new Error(`No hay docente asignado para el grupo ${i + 1}`);
+        }
 
         // Crear el grupo
         const groupData = {
@@ -400,11 +467,99 @@ Los grupos han sido creados y los estudiantes han sido asignados automáticament
     }
   };
 
+  // Agregar handlers optimizados para los inputs
+  const handleCantidadGruposChange = React.useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      if (value === "" || (!isNaN(Number(value)) && Number(value) >= 0)) {
+        setCantidadGrupos(value === "" ? 1 : Number(value));
+      }
+    },
+    [],
+  );
+
+  const handleEstudiantesPorGrupoChange = React.useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      if (value === "" || (!isNaN(Number(value)) && Number(value) >= 0)) {
+        setEstudiantesPorGrupo(value === "" ? 1 : Number(value));
+      }
+    },
+    [],
+  );
+
   // Calcular previsualización de grupos
   const gruposPreview = React.useMemo(() => {
-    if (filteredMatriculas.length === 0) return [];
-    return dividirEnGrupos(filteredMatriculas);
+    if (
+      filteredMatriculas.length === 0 ||
+      (tipoCreacion === "cantidad_grupos" && cantidadGrupos === 0) ||
+      (tipoCreacion === "estudiantes_por_grupo" && estudiantesPorGrupo === 0)
+    ) {
+      return [];
+    }
+
+    // NO mezclar para el preview, solo dividir
+    const grupos: Matricula[][] = [];
+
+    if (tipoCreacion === "cantidad_grupos" && cantidadGrupos > 0) {
+      const estudiantesPorGrupoCalculado = Math.ceil(
+        filteredMatriculas.length / cantidadGrupos,
+      );
+
+      for (let i = 0; i < cantidadGrupos; i++) {
+        const inicio = i * estudiantesPorGrupoCalculado;
+        const fin = inicio + estudiantesPorGrupoCalculado;
+        const grupo = filteredMatriculas.slice(inicio, fin);
+        if (grupo.length > 0) {
+          grupos.push(grupo);
+        }
+      }
+    } else if (
+      tipoCreacion === "estudiantes_por_grupo" &&
+      estudiantesPorGrupo > 0
+    ) {
+      for (let i = 0; i < filteredMatriculas.length; i += estudiantesPorGrupo) {
+        const grupo = filteredMatriculas.slice(i, i + estudiantesPorGrupo);
+        grupos.push(grupo);
+      }
+    }
+
+    return grupos;
   }, [filteredMatriculas, tipoCreacion, cantidadGrupos, estudiantesPorGrupo]);
+
+  const dividirEnGruposParaCreacion = React.useCallback(
+    (estudiantes: Matricula[]) => {
+      const estudiantesMezclados = shuffleArray(estudiantes);
+      const grupos: Matricula[][] = [];
+
+      if (tipoCreacion === "cantidad_grupos") {
+        const estudiantesPorGrupoCalculado = Math.ceil(
+          estudiantesMezclados.length / cantidadGrupos,
+        );
+
+        for (let i = 0; i < cantidadGrupos; i++) {
+          const inicio = i * estudiantesPorGrupoCalculado;
+          const fin = inicio + estudiantesPorGrupoCalculado;
+          const grupo = estudiantesMezclados.slice(inicio, fin);
+          if (grupo.length > 0) {
+            grupos.push(grupo);
+          }
+        }
+      } else {
+        for (
+          let i = 0;
+          i < estudiantesMezclados.length;
+          i += estudiantesPorGrupo
+        ) {
+          const grupo = estudiantesMezclados.slice(i, i + estudiantesPorGrupo);
+          grupos.push(grupo);
+        }
+      }
+
+      return grupos;
+    },
+    [tipoCreacion, cantidadGrupos, estudiantesPorGrupo],
+  );
 
   if (loading) {
     return (
@@ -531,7 +686,7 @@ Los grupos han sido creados y los estudiantes han sido asignados automáticament
 
       {/* Configuración de creación automática */}
       <Card sx={{ p: 3, mb: 3 }}>
-        <Typography className=" mb-4 font-semibold text-gray-600">
+        <Typography className="mb-4 font-semibold text-gray-600">
           Configuración de Grupos
         </Typography>
 
@@ -577,8 +732,8 @@ Los grupos han sido creados y los estudiantes han sido asignados automáticament
               type="number"
               variant="outlined"
               value={cantidadGrupos}
-              onChange={(e) => setCantidadGrupos(Number(e.target.value))}
-              inputProps={{ min: 1, max: filteredMatriculas.length }}
+              onChange={handleCantidadGruposChange}
+              // inputProps={{ min: 1, max: filteredMatriculas.length }}
               className="inputs-textfield flex w-full flex-col sm:w-1/4"
             />
           ) : (
@@ -587,8 +742,8 @@ Los grupos han sido creados y los estudiantes han sido asignados automáticament
               type="number"
               variant="outlined"
               value={estudiantesPorGrupo}
-              onChange={(e) => setEstudiantesPorGrupo(Number(e.target.value))}
-              inputProps={{ min: 1, max: filteredMatriculas.length }}
+              onChange={handleEstudiantesPorGrupoChange}
+              // inputProps={{ min: 1, max: filteredMatriculas.length }}
               className="inputs-textfield flex w-full flex-col sm:w-1/4"
             />
           )}
@@ -616,17 +771,94 @@ Los grupos han sido creados y los estudiantes han sido asignados automáticament
                   <Typography variant="body2" color="text.secondary">
                     {grupo.length} estudiantes
                   </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{ display: "block", mt: 1 }}
-                  >
-                    Docente: {docentes[index]?.nombre}{" "}
-                    {docentes[index]?.apellido || "No asignado"}
-                  </Typography>
-                  <Typography variant="caption" sx={{ display: "block" }}>
-                    Monitor: {monitores[index]?.nombre}{" "}
-                    {monitores[index]?.apellido || "No asignado"}
-                  </Typography>
+
+                  {/* Autocomplete para seleccionar monitor */}
+                  <Box sx={{ mt: 2 }}>
+                    <Autocomplete
+                    className="inputs-textfield mb-3 "
+
+                      size="small"
+                      options={getAvailableDocentesForGrupo(index)}
+                      getOptionLabel={(option) =>
+                        `${option.nombre} ${option.apellido}`
+                      }
+                      value={selectedDocentesPorGrupo[index] || null}
+                      onChange={(event, newValue) =>
+                        handleDocenteSelection(index, newValue)
+                      }
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Seleccionar Docente"
+                          variant="outlined"
+                          placeholder="Elige un docente"
+                        />
+                      )}
+                      renderOption={(props, option) => (
+                        <Box component="li" {...props} key={option.id}>
+                          <Box>
+                            <Typography variant="body2">
+                              {option.nombre} {option.apellido}
+                            </Typography>
+                            {option.email && (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {option.email}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
+                      )}
+                      noOptionsText="No hay docentes disponibles"
+                      isOptionEqualToValue={(option, value) =>
+                        option.id === value?.id
+                      }
+                    />
+
+                    <Autocomplete
+                    className="inputs-textfield"
+                      size="small"
+                      options={getAvailableMonitoresForGrupo(index)}
+                      getOptionLabel={(option) =>
+                        `${option.nombre} ${option.apellido}`
+                      }
+                      value={selectedMonitoresPorGrupo[index] || null}
+                      onChange={(event, newValue) =>
+                        handleMonitorSelection(index, newValue)
+                      }
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Seleccionar Monitor"
+                          variant="outlined"
+                          placeholder="Elige un monitor"
+                        />
+                      )}
+                      renderOption={(props, option) => (
+                        <Box component="li" {...props} key={option.id}>
+                          <Box>
+                            <Typography variant="body2">
+                              {option.nombre} {option.apellido}
+                            </Typography>
+                            {option.email && (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {option.email}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
+                      )}
+                      noOptionsText="No hay monitores disponibles"
+                      isOptionEqualToValue={(option, value) =>
+                        option.id === value?.id
+                      }
+                    />
+                  </Box>
                 </Card>
               ))}
             </Box>
@@ -648,12 +880,18 @@ Los grupos han sido creados y los estudiantes han sido asignados automáticament
           <li>Docentes disponibles: {docentes.length}</li>
           <li>Monitores disponibles: {monitores.length}</li>
           <li>Grupos que se crearán: {gruposPreview.length}</li>
+          <li>
+            Monitores asignados: {Object.keys(selectedMonitoresPorGrupo).length}{" "}
+            / {gruposPreview.length}
+          </li>
           {gruposPreview.length > docentes.length && (
             <li className="text-red-600">⚠️ No hay suficientes docentes</li>
           )}
-          {gruposPreview.length > monitores.length && (
-            <li className="text-red-600">⚠️ No hay suficientes monitores</li>
-          )}
+          {Object.keys(selectedMonitoresPorGrupo).length !==
+            gruposPreview.length &&
+            gruposPreview.length > 0 && (
+              <li className="text-red-600">⚠️ Faltan monitores por asignar</li>
+            )}
         </ul>
       </Card>
 
@@ -668,7 +906,8 @@ Los grupos han sido creados y los estudiantes han sido asignados automáticament
             creatingGroups ||
             filteredMatriculas.length === 0 ||
             gruposPreview.length > docentes.length ||
-            gruposPreview.length > monitores.length
+            Object.keys(selectedMonitoresPorGrupo).length !==
+              gruposPreview.length
           }
           startIcon={
             creatingGroups ? (

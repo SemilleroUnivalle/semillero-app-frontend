@@ -109,14 +109,14 @@ export default function VerGrupos() {
                 const rowData = params.row;
 
                 localStorage.setItem(
-                  "matriculaSeleccionada",
+                  "grupoSeleccionado",
                   JSON.stringify(rowData),
                 ); // 👉 Guarda la fila completa como JSON
-                router.push("/admin/matriculas/detallarMatricula");
+                router.push("/admin/grupos/detallar-grupo");
               }}
             />
           </Tooltip>
-          <Tooltip title="Eliminar matricula" placement="top">
+          <Tooltip title="Eliminar grupo" placement="top">
             <TrashIcon
               className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
               onClick={() => handleDelete(params.row.id)}
@@ -145,15 +145,15 @@ export default function VerGrupos() {
 
   const [loading, setLoading] = useState(true);
 
-  // Función para eliminar una matricula
+  // Función para eliminar un grupo
   const handleDelete = async (id: number) => {
     const confirmDelete = window.confirm(
-      "¿Estás seguro de que deseas eliminar esta matrícula?",
+      "¿Estás seguro de que deseas eliminar este grupo?",
     );
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/matricula/mat/${id}/`, {
+      await axios.delete(`${API_BASE_URL}/grupo/grupo/${id}/`, {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
         },
@@ -163,9 +163,9 @@ export default function VerGrupos() {
 
       setSuccess(true);
     } catch (error) {
-      console.error("Error al eliminar la matrícula:", error);
+      console.error("Error al eliminar el grupo:", error);
       alert(
-        "Hubo un error al eliminar la matrícula. Por favor, inténtalo de nuevo.",
+        "Hubo un error al eliminar el grupo. Por favor, inténtalo de nuevo.",
       );
     }
   };
