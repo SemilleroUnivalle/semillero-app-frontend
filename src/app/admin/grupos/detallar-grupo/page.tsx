@@ -6,7 +6,6 @@ import Box from "@mui/material/Box";
 import { TrashIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 
-
 import {
   Button,
   Paper,
@@ -32,7 +31,6 @@ import { TextField, Autocomplete } from "@mui/material";
 import { Estudiante, Matricula } from "@/interfaces/interfaces";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 
-
 import { API_BASE_URL } from "../../../../../config";
 
 // Interfaces para docentes y monitores
@@ -52,22 +50,22 @@ interface Monitor {
   numero_documento?: string;
 }
 
-function not(a: readonly number[], b: readonly number[]) {
-  return a.filter((value) => !b.includes(value));
-}
-
-function intersection(a: readonly number[], b: readonly number[]) {
-  return a.filter((value) => b.includes(value));
-}
-
-function union(a: readonly number[], b: readonly number[]) {
-  return [...a, ...not(b, a)];
+// Interface para las filas del DataGrid
+interface MatriculaRow {
+  id: number;
+  apellido: string;
+  nombre: string;
+  email: string;
+  estamento: string;
+  grado: string;
+  estado: string;
+  tipo_vinculacion: string;
+  colegio: string;
 }
 
 export default function DetallarGrupo() {
+  const router = useRouter();
 
-      const router = useRouter();
-     
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", flex: 0.5 },
     { field: "apellido", headerName: "Apellidos", flex: 1 },
@@ -145,10 +143,10 @@ export default function DetallarGrupo() {
               }}
             />
           </Tooltip>
-          <Tooltip title="Eliminar inscripcion" placement="top">
+          <Tooltip title="Eliminar del grupo" placement="top">
             <TrashIcon
               className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
-            //   onClick={() => handleDelete(params.row.id)}
+              onClick={() => handleRemoveFromGroup(params.row.id)}
             />
           </Tooltip>
         </div>
@@ -175,53 +173,11 @@ export default function DetallarGrupo() {
     colegio: string;
   }
 
-  const [rows, setRows] = useState<EstudianteRow[]>([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = getToken();
-         
-
-        const response = await axios.get(`${API_BASE_URL}/estudiante/est/`, {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        });
-
-        if (response.status === 200) {
-          // Formatea los datos para la tabla
-          const formateado = response.data.map((grupo: Grupo) => ({
-            id: grupo.estudiantes.id,
-            apellido: grupo.estudiantes.apellido || "",
-            nombre: grupo.estudiantes.nombre || "",
-            email: grupo.estudiantes.email || "",
-            tipo_vinculacion: grupo.estudiantes.tipo_vinculacion || "",
-            colegio: grupo.estudiantes.colegio || "",
-          }));
-
-          setRows(formateado);
-        }
-
-        setLoading(false);
-      } catch (error) {
-        console.error("Error al obtener los datos de los estudiantes:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  const [checked, setChecked] = useState<readonly number[]>([]);
-  const [left, setLeft] = useState<readonly number[]>([]);
-  const [right, setRight] = useState<readonly number[]>([]);
-  const [matriculas, setMatriculas] = useState<Matricula[]>([]);
-  const [filteredEstudiantes, setFilteredEstudiantes] = useState<
-    readonly number[]
-  >([]);
+  // Estados
+  const [rows, setRows] = useState<MatriculaRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [grupoId, setGrupoId] = useState<number | null>(null);
 
   // Estados para docentes y monitores
   const [docentes, setDocentes] = useState<Docente[]>([]);
@@ -231,14 +187,8 @@ export default function DetallarGrupo() {
   const [loadingDocentes, setLoadingDocentes] = useState(false);
   const [loadingMonitores, setLoadingMonitores] = useState(false);
 
-  const leftChecked = intersection(checked, filteredEstudiantes);
-  const rightChecked = intersection(checked, right);
-
   // Estado para el nombre del grupo
   const [nombreGrupo, setNombreGrupo] = useState("");
-
-  // Estado para la creación del grupo
-  const [creatingGroup, setCreatingGroup] = useState(false);
 
   // Función para obtener token
   const getToken = () => {
@@ -250,38 +200,62 @@ export default function DetallarGrupo() {
     return "";
   };
 
-  // Fetch matriculas data
+    // Cargar datos del grupo y matrículas
   useEffect(() => {
-    const fetchEstudiantes = async () => {
+    const fetchGrupoData = async () => {
       try {
         const token = getToken();
+        
+        // Obtener datos del grupo seleccionado desde localStorage
+        const grupoSeleccionado = localStorage.getItem("grupoSeleccionado");
+        if (!grupoSeleccionado) {
+          setError("No se encontró información del grupo seleccionado");
+          setLoading(false);
+          return;
+        }
 
-        const response = await fetch(`${API_BASE_URL}/matricula/mat/`, {
+        const grupo = JSON.parse(grupoSeleccionado);
+        setNombreGrupo(grupo.nombre || "");
+        setGrupoId(grupo.id);
+
+        // Fetch matrículas
+        const response = await axios.get(`${API_BASE_URL}/matricula/mat/`, {
           headers: {
             Authorization: `Token ${token}`,
-            "Content-Type": "application/json",
           },
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (response.status === 200) {
+          // Filtrar solo las matrículas que pertenecen a este grupo
+          const matriculasDelGrupo = response.data.filter(
+            (matricula: Matricula) => matricula.grupo === grupo.id
+          );
+
+          // Formatear los datos para la tabla
+          const formateado: MatriculaRow[] = matriculasDelGrupo.map((matricula: Matricula) => ({
+            id: matricula.id_inscripcion,
+            apellido: matricula.estudiante?.apellido || "",
+            nombre: matricula.estudiante?.nombre || "",
+            email: matricula.estudiante?.email || "",
+            estamento: matricula.estudiante?.estamento || "",
+            grado: matricula.estudiante?.grado || "",
+            estado: matricula.estado || "",
+            tipo_vinculacion: matricula.tipo_vinculacion || "",
+            colegio: matricula.estudiante?.colegio || "",
+          }));
+
+          setRows(formateado);
         }
 
-        const data: Matricula[] = await response.json();
-
-        setMatriculas(data);
-        // Inicialmente todos los matriculas están disponibles (izquierda)
-        const allIds = data.map((est) => est.id_inscripcion);
-        setLeft(allIds);
-        setFilteredEstudiantes(allIds);
         setLoading(false);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Error desconocido");
+      } catch (error) {
+        console.error("Error al obtener los datos del grupo:", error);
+        setError("Error al cargar los datos del grupo");
         setLoading(false);
       }
     };
 
-    fetchEstudiantes();
+    fetchGrupoData();
   }, []);
 
   // Fetch docentes
@@ -344,45 +318,77 @@ export default function DetallarGrupo() {
     fetchMonitores();
   }, []);
 
-  const handleToggle = (value: number) => () => {
-    const currentIndex = checked.indexOf(value);
-    const newChecked = [...checked];
 
-    if (currentIndex === -1) {
-      newChecked.push(value);
-    } else {
-      newChecked.splice(currentIndex, 1);
+
+  // Función para eliminar estudiante del grupo
+  const handleRemoveFromGroup = async (matriculaId: number) => {
+    const confirmDelete = window.confirm(
+      "¿Estás seguro de que deseas eliminar este estudiante del grupo?"
+    );
+    
+    if (!confirmDelete) return;
+
+    try {
+      const token = getToken();
+      
+      const response = await axios.patch(
+        `${API_BASE_URL}/matricula/mat/${matriculaId}/`,
+        { grupo: null },
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        // Actualizar la tabla removiendo la fila
+        setRows(prevRows => prevRows.filter(row => row.id !== matriculaId));
+        alert("Estudiante eliminado del grupo exitosamente");
+      }
+    } catch (error) {
+      console.error("Error al eliminar estudiante del grupo:", error);
+      alert("Error al eliminar el estudiante del grupo");
     }
-
-    setChecked(newChecked);
   };
 
-  const numberOfChecked = (items: readonly number[]) =>
-    intersection(checked, items).length;
+    // Función para actualizar el grupo
+  const handleUpdateGroup = async () => {
+    if (!grupoId) return;
 
-  const handleToggleAll = (items: readonly number[]) => () => {
-    if (numberOfChecked(items) === items.length) {
-      setChecked(not(checked, items));
-    } else {
-      setChecked(union(checked, items));
+    try {
+      const token = getToken();
+      
+      const updateData = {
+        nombre: nombreGrupo,
+        profesor: selectedDocente?.id || null,
+        monitor_academico: selectedMonitor?.id || null,
+      };
+
+      const response = await axios.patch(
+        `${API_BASE_URL}/grupo/grupo/${grupoId}/`,
+        updateData,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        alert("Grupo actualizado exitosamente");
+        // Actualizar localStorage con los nuevos datos
+        const updatedGroup = { ...JSON.parse(localStorage.getItem("grupoSeleccionado") || "{}"), ...updateData };
+        localStorage.setItem("grupoSeleccionado", JSON.stringify(updatedGroup));
+      }
+    } catch (error) {
+      console.error("Error al actualizar el grupo:", error);
+      alert("Error al actualizar el grupo");
     }
   };
 
-  const handleCheckedRight = () => {
-    setRight(right.concat(leftChecked));
-    setLeft(not(left, leftChecked));
-    setChecked(not(checked, leftChecked));
-  };
-
-  const handleCheckedLeft = () => {
-    setLeft(left.concat(rightChecked));
-    setRight(not(right, rightChecked));
-    setChecked(not(checked, rightChecked));
-  };
-
-  const getEstudianteById = (id: number): Matricula | undefined => {
-    return matriculas.find((est) => est.id_inscripcion === id);
-  };
 
   if (loading) {
     return (
@@ -405,57 +411,11 @@ export default function DetallarGrupo() {
     );
   }
 
-  // Función para actualizar matriculas con el ID del grupo
-  const updateStudentsGroup = async (
-    studentIds: readonly number[],
-    groupId: number,
-  ) => {
-    const token = getToken();
-    const updatePromises = studentIds.map(async (studentId) => {
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/matricula/mat/${studentId}/`,
-          {
-            method: "PATCH",
-            headers: {
-              Authorization: `Token ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              grupo: groupId,
-            }),
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            `Error updating student ${studentId}: ${response.status}`,
-          );
-        }
-
-        const updatedStudent = await response.json();
-        console.log(`Estudiante ${studentId} actualizado:`, updatedStudent);
-        return updatedStudent;
-      } catch (error) {
-        console.error(`Error updating student ${studentId}:`, error);
-        throw error;
-      }
-    });
-
-    try {
-      const results = await Promise.all(updatePromises);
-      console.log("Todos los matriculas actualizados exitosamente:", results);
-      return results;
-    } catch (error) {
-      console.error("Error updating some students:", error);
-      throw error;
-    }
-  };
-
+  
   return (
     <Box className="mx-auto mt-4 flex w-11/12 flex-col justify-between gap-4 rounded-2xl bg-white p-2 shadow-md">
       <h2 className="mb-4 text-center text-2xl font-bold">
-        Crear Grupos Manualmente
+        Grupo: {nombreGrupo}
       </h2>
 
       {/* Autocompletes para Docente y Monitor */}
@@ -564,8 +524,19 @@ export default function DetallarGrupo() {
         />
       </Box>
 
-      <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 text-center shadow-md">
+      {/* Botón para actualizar grupo */}
+      <Box sx={{ textAlign: "center", mb: 2 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleUpdateGroup}
+          className="rounded-2xl bg-primary text-white hover:bg-red-800"
+        >
+          Actualizar Información del Grupo
+        </Button>
+      </Box>
 
+      <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 text-center shadow-md">
         <Paper
           className="border-none shadow-none"
           sx={{ height: 800, width: "100%" }}
@@ -617,20 +588,8 @@ export default function DetallarGrupo() {
 
       <Box sx={{ mt: 3, textAlign: "center" }}>
         <Typography variant="body2" sx={{ mb: 2 }}>
-          Seleccionados: {checked.length} | Disponibles:{" "}
-          {filteredEstudiantes.length} | En el grupo: {right.length}
+          Estudiantes en el grupo: {rows.length}
         </Typography>
-
-        <Button
-          className="text-md mt-4 w-full rounded-2xl bg-primary font-semibold capitalize text-white hover:bg-red-800 sm:w-1/3"
-          variant="contained"
-          color="primary"
-          size="large"
-          //   onClick={handleCreateGroup}
-          disabled={right.length === 0}
-        >
-          Crear Grupo ({right.length} matriculas)
-        </Button>
       </Box>
     </Box>
   );

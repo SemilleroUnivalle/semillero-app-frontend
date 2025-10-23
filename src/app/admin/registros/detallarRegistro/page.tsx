@@ -267,73 +267,106 @@ export default function DetallarRegistro() {
   }, [editable, departamentoSeleccionado, departamentos]);
 
   // Función para guardar los cambios
-  const handleSave = async () => {
-    try {
-      const formDataToSend = new FormData();
+const handleSave = async () => {
+  try {
+    const formDataToSend = new FormData();
 
-      // Lista de campos que NO se deben enviar automáticamente
-      const camposExcluidos = [
-        "contrasena",
-        "id_estudiante",
-        "is_active",
-        "foto",
-        "documento_identidad",
-      ];
+    // Lista de campos que NO se deben enviar automáticamente
+    const camposExcluidos = [
+      "contrasena",
+      "id_estudiante", 
+      "is_active",
+      "foto",
+      "documento_identidad",
+      "acudiente" // Excluir acudiente del envío automático
+    ];
 
-      // Agrega los campos normales
-      for (const key in formData) {
-        if (camposExcluidos.includes(key)) continue;
-        // Usa keyof Estudiante para tipar correctamente
-        const typedKey = key as keyof typeof formData;
-        let value = formData[typedKey];
-        if (typeof value === "boolean") {
-          value = value ? "True" : "False";
-        }
-        formDataToSend.append(key, value as string | Blob);
+    // Agrega los campos normales del estudiante
+    for (const key in formData) {
+      if (camposExcluidos.includes(key)) continue;
+      
+      const typedKey = key as keyof typeof formData;
+      let value = formData[typedKey];
+      
+      if (typeof value === "boolean") {
+        value = value ? "True" : "False";
       }
-
-      // Solo agrega archivos si el usuario seleccionó uno nuevo
-      if (fotoPerfil) {
-        formDataToSend.append("foto", fotoPerfil);
+      
+      // Solo agregar si no es un objeto (como acudiente)
+      if (typeof value !== "object") {
+        formDataToSend.append(key, value as string);
       }
-      if (documentoIdentidad) {
-        formDataToSend.append("documento_identidad", documentoIdentidad);
-      }
-
-      // Token
-      const userString = localStorage.getItem("user");
-      let token = "";
-      if (userString) {
-        const user = JSON.parse(userString);
-        token = user.token;
-      }
-
-      // Debug
-      for (const pair of formDataToSend.entries()) {
-        console.log(`${pair[0]}:`, pair[1]);
-      }
-
-      const response = await axios.patch(
-        `${API_BASE_URL}/estudiante/est/${formData.id_estudiante}/`,
-        formDataToSend,
-        {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        },
-      );
-
-      if (response.status === 200) {
-        alert("Actualización exitosa");
-        setEditable(false);
-      } else {
-        alert("Error al actualizar");
-      }
-    } catch (error) {
-      console.error("Error de conexión:", error);
-      alert("Hubo un error al actualizar el estudiante.");
     }
-  };
+
+    // Agregar campos del acudiente con prefijo
+    for (const key in formDataAcudiente) {
+      const typedKey = key as keyof typeof formDataAcudiente;
+      const value = formDataAcudiente[typedKey];
+      
+      if (key !== "id_acudiente" && value !== undefined && value !== null) {
+        formDataToSend.append(`acudiente.${key}`, value.toString());
+      }
+    }
+
+    // Solo agrega archivos si el usuario seleccionó uno nuevo
+    if (fotoPerfil) {
+      console.log("Adjuntando foto de perfil:", fotoPerfil);
+      formDataToSend.append("foto", fotoPerfil);
+    }
+    
+    if (documentoIdentidad) {
+      formDataToSend.append("documento_identidad", documentoIdentidad);
+    }
+
+    // Token
+    const userString = localStorage.getItem("user");
+    let token = "";
+    if (userString) {
+      const user = JSON.parse(userString);
+      token = user.token;
+    }
+
+    // Debug - mostrar qué se está enviando
+    console.log("=== Datos que se envían ===");
+    for (const pair of formDataToSend.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
+
+    const response = await axios.patch(
+      `${API_BASE_URL}/estudiante/est/${formData.id_estudiante}/`,
+      formDataToSend,
+      {
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "multipart/form-data", // Asegurar el content-type correcto
+        },
+      },
+    );
+
+    if (response.status === 200) {
+      alert("Actualización exitosa");
+      setEditable(false);
+      
+      // Actualizar el estado local con la respuesta del servidor
+      setFormData(prevData => ({
+        ...prevData,
+        ...response.data,
+        // Mantener archivos existentes si no se enviaron nuevos
+        foto: fotoPerfil ? response.data.foto : prevData.foto,
+        documento_identidad: documentoIdentidad ? response.data.documento_identidad : prevData.documento_identidad
+      }));
+      
+      // Limpiar archivos seleccionados
+      setFotoPerfil(null);
+      setDocumentoIdentidad(null);
+    } else {
+      alert("Error al actualizar");
+    }
+  } catch (error) {
+    console.error("Error de conexión:", error);
+    alert("Hubo un error al actualizar el estudiante.");
+  }
+};
 
   // Función para eliminar un inscrito
   const handleDelete = async (id: number) => {
