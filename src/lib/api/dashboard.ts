@@ -1,13 +1,30 @@
 import client from "./client";
 
+// Interfaz para el desglose de género dentro de un módulo
+export interface ModuleGenderBreakdown {
+  [gender: string]: number; // Por ejemplo: { "Femenino": 60, "Masculino": 40, "Otro": 5 }
+}
+
+// Interfaz para la data cruzada de inscripciones por módulo y género
+export interface ModuleGenderEnrollment {
+  moduleName: string;
+  genderBreakdown: ModuleGenderBreakdown;
+}
+
 export interface DashboardData {
   totalEnrollments: number
+  totalRegister: number
   activeModules: number
+  totalProfessors: number 
+  totalMonitors: number
+  inscritosMatriculados: number
+  inscritosNoMatriculados: number
   enrollmentsByModule: Array<{
     name: string
     enrollments: number
     area: string
   }>
+  enrollmentsByModuleAndGender: ModuleGenderEnrollment[]
   enrollmentsByEstamento: Array<{
     estamento: string
     count: number
@@ -31,7 +48,7 @@ export interface DashboardData {
 }
 
 export async function fetchDashboardData(): Promise<DashboardData> {
-  const res = await client.get("/matricula/mat/dashboard/"); // ajusta la ruta si tu endpoint es diferente
+  const res = await client.get("/matricula/mat/dashboard/");
   return res.data as DashboardData;
 }
 

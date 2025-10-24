@@ -12,11 +12,14 @@ import {
 } from "@mui/icons-material"
 import { StatsCard } from "./stats-card"
 import { EnrollmentChart } from "./enrollment-chart"
+import { ModuleGenderChart } from "./module-gender-chart"
 import { ModuleDistribution } from "./module-distribution"
 import { EstamentoSegmentation } from "./estamento-segmentation"
 import { RecentEnrollments } from "./recent-enrollments"
 import { DemographicsOverview } from "./demographics-overview"
+import { MapWidget } from "./map-widget"
 import { fetchDashboardData, type DashboardData } from "@/lib/api/dashboard"
+import Link from 'next/link'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -124,32 +127,73 @@ export function AdminDashboard() {
         </Container>
       </Paper>
 
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Container maxWidth="xl" sx={{ py: 1 }}>
         {/* Key Stats */}
-        <Grid container spacing={4} sx={{ mb: 3 }}>
+        <Grid container spacing={1} sx={{ mb: 2 }}>
           <Grid item xs={12} sm={6} lg={4}>
+            <Link href="/admin/registros/verRegistros" legacyBehavior>
+            <a style={{ display: 'block', textDecoration: 'none' }} aria-label="Ver inscritos">
+            <StatsCard
+              title="Total Inscritos"
+              value={data.totalRegister.toLocaleString()}
+              icon={PeopleIcon}
+              trend={data.inscritosNoMatriculados.toLocaleString()}
+              trendLabel="% no matriculados"
+            />
+            </a>
+            </Link>
+          </Grid>
+          <Grid item xs={12} sm={6} lg={4}>
+            <Link href="/admin/matriculas/verMatriculas" legacyBehavior>
+            <a style={{ display: 'block', textDecoration: 'none' }} aria-label="Ver matriculados">
             <StatsCard
               title="Total Matriculados"
               value={data.totalEnrollments.toLocaleString()}
               icon={PeopleIcon}
-              trend="+12.5%"
-              trendLabel="vs. mes anterior"
+              trend={data.inscritosMatriculados.toLocaleString()}
+              trendLabel="% de los inscritos se ha matriculado"
             />
+            </a>
+            </Link>
           </Grid>
+
           <Grid item xs={12} sm={6} lg={4}>
-            <StatsCard
-              title="Módulos Activos"
-              value={data.activeModules.toString()}
-              icon={MenuBookIcon}
-              description="En diferentes áreas"
-            />
+            <Link href="/admin/cursos/verCursos" legacyBehavior>
+              <a style={{ display: 'block', textDecoration: 'none' }} aria-label="Ver curso">
+                <StatsCard
+                  title="Módulos Activos"
+                  value={data.activeModules.toString()}
+                  icon={MenuBookIcon}
+                  description="En diferentes áreas"
+                />
+              </a>
+            </Link>
           </Grid>
+
           <Grid item xs={12} sm={6} lg={4}>
             <StatsCard
               title="Módulo Más Popular"
               value={mostPopularModule.name}
               icon={TrendingUpIcon}
               description={`${mostPopularModule.enrollments} estudiantes`}
+              compact
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} lg={4}>
+            <StatsCard
+              title="Profesores"
+              value={data.totalProfessors}
+              icon={PeopleIcon}
+              description="En diferentes modulos"
+              compact
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} lg={4}>
+            <StatsCard
+              title="Monitores Academicos"
+              value={data.totalMonitors}
+              icon={PeopleIcon}
+              description="En diferentes modulos"
               compact
             />
           </Grid>
@@ -183,6 +227,18 @@ export function AdminDashboard() {
             {/* Overview Tab */}
             <TabPanel value={tabValue} index={0}>
               <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0", mb: 3 }}>
+                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                      Inscripciones por Módulo y Género
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                      Distribución de estudiantes matriculados en cada módulo, segmentado por género.
+                    </Typography>
+                    {/* Llama al nuevo componente con la data cruzada del backend */}
+                    <ModuleGenderChart data={data?.enrollmentsByModuleAndGender ?? []} />
+                  </Paper>
+                </Grid>
                 <Grid item xs={12} lg={6}>
                   <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
                     <Typography variant="h6" fontWeight="bold" gutterBottom>
@@ -225,7 +281,7 @@ export function AdminDashboard() {
                       Demografía
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Distribución por género
+                      Distribución por género (estudiantes)
                     </Typography>
                     <DemographicsOverview genderData={data.genderDistribution ?? []} />
                   </Paper>
@@ -283,8 +339,15 @@ export function AdminDashboard() {
 
             {/* Students Tab */}
             <TabPanel value={tabValue} index={2}>
-              <Grid container spacing={3}>
-                <Grid item xs={12} lg={6}>
+              <Grid item xs={12} md={6} lg={6}>
+                  <Paper elevation={0} sx={{ p: 0, height: 500, border: "1px solid #d0d0d0" }}> 
+                    {/* La propiedad 'height: 500' es la clave para la altura */}
+                    <MapWidget /> 
+                  </Paper>
+                </Grid>
+
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6} lg={6}>
                   <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
                     <Typography variant="h6" fontWeight="bold" gutterBottom>
                       Inscripciones Recientes
@@ -341,7 +404,13 @@ export function AdminDashboard() {
                     </Box>
                   </Paper>
                 </Grid>
+
+            
+                
+
               </Grid>
+
+              
             </TabPanel>
           </Box>
         </Paper>
