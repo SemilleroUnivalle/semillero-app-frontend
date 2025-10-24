@@ -21,7 +21,7 @@ export function DemographicsOverview({ genderData }: DemographicsOverviewProps) 
         <Box display="flex" alignItems="center" gap={1} mb={2}>
           <PeopleIcon sx={{ fontSize: 20, color: "text.secondary" }} />
           <Typography variant="body2" fontWeight="500" color="text.secondary">
-            Distribución por Género
+            Distribución de Estudiantes por Género
           </Typography>
         </Box>
         <Box display="flex" flexDirection="column" gap={2}>

@@ -162,3 +162,10 @@ export interface Matricula {
   audit_documento_recibo_pago: AuditInterface | null;
   audit_certificado: AuditInterface | null;
 }
+
+export interface Grupo {
+  id: number;
+  nombre: string;
+  profesor: ProfesorInterface;
+  monitor_academico: ProfesorInterface;
+}

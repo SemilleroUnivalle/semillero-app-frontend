@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {Matricula} from "@/interfaces/interfaces"
+import { Matricula, Modulo } from "@/interfaces/interfaces";
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -37,8 +37,8 @@ export default function VerGrupos() {
       headerName: "Periodo",
       flex: 1,
     },
-     {
-      field: "estamento",
+    {
+      field: "categoria",
       headerName: "Categoría",
       flex: 1,
     },
@@ -48,9 +48,9 @@ export default function VerGrupos() {
       flex: 1,
     },
     { field: "nombre", headerName: "Nombre", flex: 1 },
-   
+
     {
-      field: "tipo",
+      field: "cantidad",
       headerName: "Cantidad estudiantes",
       flex: 1,
     },
@@ -109,14 +109,14 @@ export default function VerGrupos() {
                 const rowData = params.row;
 
                 localStorage.setItem(
-                  "matriculaSeleccionada",
+                  "grupoSeleccionado",
                   JSON.stringify(rowData),
                 ); // 👉 Guarda la fila completa como JSON
-                router.push("/admin/matriculas/detallarMatricula");
+                router.push("/admin/grupos/detallar-grupo");
               }}
             />
           </Tooltip>
-          <Tooltip title="Eliminar matricula" placement="top">
+          <Tooltip title="Eliminar grupo" placement="top">
             <TrashIcon
               className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
               onClick={() => handleDelete(params.row.id)}
@@ -130,44 +130,42 @@ export default function VerGrupos() {
   const paginationModel = { page: 0, pageSize: 50 };
 
   interface GruposRow {
-  id: number;
-  nombre: string;
-  matriculas: Matricula[];
-  email: string;
-  direccion: string;
-  periodo: string;
-  modulo: string;
-  estamento: string;
-  tipo: string;
-  estado: string;
-}
+    grupo_id: number;
+    nombre: string;
+    matriculas: Matricula[];
+    cantidad: number;
+    periodo: string;
+    modulo: string;
+    categoria: string;
+    estado: string;
+  }
 
   const [rows, setRows] = useState<GruposRow[]>([]);
   const [success, setSuccess] = useState(false);
 
   const [loading, setLoading] = useState(true);
 
-  // Función para eliminar una matricula
+  // Función para eliminar un grupo
   const handleDelete = async (id: number) => {
     const confirmDelete = window.confirm(
-      "¿Estás seguro de que deseas eliminar esta matrícula?",
+      "¿Estás seguro de que deseas eliminar este grupo?",
     );
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/matricula/mat/${id}/`, {
+      await axios.delete(`${API_BASE_URL}/grupo/grupo/${id}/`, {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
         },
       });
 
-      setRows((prevRows) => prevRows.filter((row) => row.id !== id));
+      setRows((prevRows) => prevRows.filter((row) => row.grupo_id !== id));
 
       setSuccess(true);
     } catch (error) {
-      console.error("Error al eliminar la matrícula:", error);
+      console.error("Error al eliminar el grupo:", error);
       alert(
-        "Hubo un error al eliminar la matrícula. Por favor, inténtalo de nuevo.",
+        "Hubo un error al eliminar el grupo. Por favor, inténtalo de nuevo.",
       );
     }
   };
@@ -182,36 +180,47 @@ export default function VerGrupos() {
           token = user.token;
         }
 
-        const response = await axios.get(`${API_BASE_URL}/matricula/mat/`, {
-          headers: {
-            Authorization: `Token ${token}`,
+        const response = await axios.get(
+          `${API_BASE_URL}/matricula/mat/matricula-grupo`,
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
           },
-        });
+        );
 
         if (response.status === 200) {
           // Formatea los datos para la tabla
-          const formateado = response.data.map((matricula: Matricula) => ({
-            id: matricula.id_inscripcion,
-            apellido: matricula.estudiante.apellido || "",
-            nombre: matricula.estudiante.nombre || "",
-            email: matricula.estudiante.email || "",
-            direccion: matricula.estudiante.direccion_residencia || "",
+          const formateado = response.data.map((grupo: GruposRow) => ({
+            id: grupo.grupo_id,
+            grupo_id: grupo.grupo_id,
+            nombre: grupo.nombre || "",
             periodo:
-              matricula.oferta_categoria &&
-              matricula.oferta_categoria.id_oferta_academica
-                ? matricula.oferta_categoria.id_oferta_academica.nombre
-                : "", // Cambiar cuando los datos no esten nulos
-            modulo: matricula.modulo.nombre_modulo || "",
-            estamento: matricula.estudiante.estamento || "",
-            tipo: matricula.tipo_vinculacion || "",
-            estado: matricula.estado, // true si es "Verificado", false en otro caso
+              grupo.matriculas && grupo.matriculas.length > 0
+                ? grupo.matriculas[0]?.oferta_categoria?.id_oferta_academica
+                    ?.nombre || ""
+                : "",
+            categoria:
+              grupo.matriculas && grupo.matriculas.length > 0
+                ? grupo.matriculas[0]?.modulo?.id_categoria?.nombre || ""
+                : "",
+            modulo:
+              grupo.matriculas && grupo.matriculas.length > 0
+                ? grupo.matriculas[0]?.modulo?.nombre_modulo || ""
+                : "",
+            cantidad: grupo.cantidad || 0,
+            estado:
+              grupo.matriculas && grupo.matriculas.length > 0
+                ? grupo.matriculas[0]?.modulo?.estado
+                  ? "Activo"
+                  : "Inactivo"
+                : "Sin estado",
           }));
 
           console.log("Datos formateados:", formateado); // Verifica los datos formateados
 
           setRows(formateado);
         }
-
 
         setLoading(false);
       } catch (error) {
@@ -227,10 +236,9 @@ export default function VerGrupos() {
 
   const [selectedPeriodos, setSelectedPeriodos] = React.useState<string[]>([]);
   const [selectedModulos, setSelectedModulos] = React.useState<string[]>([]);
-  const [selectedEstamento, setSelectedEstamento] = React.useState<string[]>(
+  const [selectedCategorias, setSelectedCategoria] = React.useState<string[]>(
     [],
   );
-  const [selectedTipo, setSelectedTipo] = React.useState<string[]>([]);
   const [selectedEstado, setSelectedEstado] = React.useState<string[]>([]);
 
   const handleChangePeriodos = (event: SelectChangeEvent<string[]>) => {
@@ -246,18 +254,11 @@ export default function VerGrupos() {
     } = event;
     setSelectedModulos(typeof value === "string" ? value.split(",") : value);
   };
-  const handleChangeEstamento = (event: SelectChangeEvent<string[]>) => {
+  const handleChangeCategoria = (event: SelectChangeEvent<string[]>) => {
     const {
       target: { value },
     } = event;
-    setSelectedEstamento(typeof value === "string" ? value.split(",") : value);
-  };
-
-  const handleChangeTipo = (event: SelectChangeEvent<string[]>) => {
-    const {
-      target: { value },
-    } = event;
-    setSelectedTipo(typeof value === "string" ? value.split(",") : value);
+    setSelectedCategoria(typeof value === "string" ? value.split(",") : value);
   };
 
   const handleChangeEstado = (event: SelectChangeEvent<string[]>) => {
@@ -267,65 +268,35 @@ export default function VerGrupos() {
     setSelectedEstado(typeof value === "string" ? value.split(",") : value);
   };
 
-  const handleExportExcel = async () => {
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL}/estudiante/est/export-excel/`,
-        {
-          responseType: "blob", // Importante para archivos
-          headers: {
-            Authorization: `Token ${localStorage.getItem("token")}`,
-          },
-        },
-      );
-      // Crear un enlace para descargar el archivo
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "Inscripciones.xlsx"); // Nombre del archivo
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (error) {
-      alert("No se pudo exportar el archivo.");
-      console.error(error);
-    }
-  };
-
   const filteredRows = React.useMemo(() => {
     if (rows.length === 0) return rows;
     return rows.filter((row) => {
       const periodoMatch =
-        selectedPeriodos.length === 0 || selectedPeriodos.includes(row.periodo);
+        selectedPeriodos.length === 0 ||
+        selectedPeriodos.includes(row.periodo || "");
 
       const moduloMatch =
-        selectedModulos.length === 0 || selectedModulos.includes(row.modulo);
+        selectedModulos.length === 0 ||
+        selectedModulos.includes(row.modulo || "");
 
-      const estamentoMatch =
-        selectedEstamento.length === 0 ||
-        selectedEstamento.includes(row.estamento);
+      const categoriaMatch =
+        selectedCategorias.length === 0 ||
+        selectedCategorias.includes(row.categoria || "");
 
-      const tipoMatch =
-        selectedTipo.length === 0 || selectedTipo.includes(row.tipo);
-
-      const estadoAsString = row.estado ? "Activo" : "Inactivo";
-      const estadoMatch =
-        selectedEstado.length === 0 || selectedEstado.includes(estadoAsString);
+      // const estadoAsString = row.estado ? "Activo" : "Inactivo";
+      // const estadoMatch =
+      //   selectedEstado.length === 0 || selectedEstado.includes(estadoAsString);
 
       return (
-        periodoMatch &&
-        moduloMatch &&
-        estamentoMatch &&
-        tipoMatch &&
-        estadoMatch
+        periodoMatch && moduloMatch && categoriaMatch
+        // && estadoMatch
       );
     });
   }, [
     rows,
     selectedPeriodos,
     selectedModulos,
-    selectedEstamento,
-    selectedTipo,
+    selectedCategorias,
     selectedEstado,
   ]);
 
@@ -378,14 +349,18 @@ export default function VerGrupos() {
             id="filtro-categorias"
             label="filtro-categorias"
             multiple
-            value={selectedEstamento}
-            onChange={handleChangeEstamento}
+            value={selectedCategorias}
+            onChange={handleChangeCategoria}
             renderValue={(selected) => selected.join(", ")}
           >
-            {[...new Set(rows.map((row) => row.estamento))].map((estamento) => (
-              <MenuItem key={estamento} value={estamento}>
-                <Checkbox checked={selectedEstamento.indexOf(estamento) > -1} />
-                <ListItemText primary={estamento} />
+            {[
+              ...new Set(rows.map((row) => row.categoria)),
+            ].map((categoria) => (
+              <MenuItem key={categoria} value={categoria}>
+                <Checkbox
+                  checked={selectedCategorias.indexOf(categoria) > -1}
+                />
+                <ListItemText primary={categoria} />
               </MenuItem>
             ))}
           </Select>
@@ -401,16 +376,16 @@ export default function VerGrupos() {
             onChange={handleChangeModulos}
             renderValue={(selected) => selected.join(", ")}
           >
-            {[...new Set(rows.map((row) => row.modulo))].map((modulo) => (
-              <MenuItem key={modulo} value={modulo}>
-                <Checkbox checked={selectedModulos.indexOf(modulo) > -1} />
-                <ListItemText primary={modulo} />
-              </MenuItem>
-            ))}
+            {[...new Set(rows.map((row) => row.modulo))].map(
+              (modulo) => (
+                <MenuItem key={modulo} value={modulo}>
+                  <Checkbox checked={selectedModulos.indexOf(modulo) > -1} />
+                  <ListItemText primary={modulo} />
+                </MenuItem>
+              ),
+            )}
           </Select>
         </FormControl>
-
-    
 
         {/* Filtro por Estado */}
         <FormControl className="inputs-textfield w-full sm:w-1/6">
@@ -424,7 +399,11 @@ export default function VerGrupos() {
             onChange={handleChangeEstado}
             renderValue={(selected) => selected.join(", ")}
           >
-            {[...new Set(rows.map((row) => row.estado))].map((estado) => (
+            {[
+              ...new Set(
+                rows.map((row) => (row.estado ? "Activo" : "Inactivo")),
+              ),
+            ].map((estado) => (
               <MenuItem key={estado} value={estado}>
                 <Checkbox checked={selectedEstado.indexOf(estado) > -1} />
                 <ListItemText primary={estado} />
@@ -435,7 +414,6 @@ export default function VerGrupos() {
       </div>
 
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 text-center shadow-md">
-  
         <Paper
           className="border-none shadow-none"
           sx={{ height: 800, width: "100%" }}
