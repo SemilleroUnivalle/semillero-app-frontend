@@ -126,8 +126,13 @@ export default function CrearGruposAutomatico() {
         }
 
         const data: Matricula[] = await response.json();
-        setMatriculas(data);
-        setFilteredMatriculas(data);
+
+        const estudiantesSinGrupo = data.filter(
+          (matricula: Matricula) => matricula.grupo === null,
+        );
+
+        setMatriculas(estudiantesSinGrupo);
+        setFilteredMatriculas(estudiantesSinGrupo);
         setLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido");

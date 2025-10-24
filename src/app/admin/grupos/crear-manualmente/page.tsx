@@ -114,9 +114,13 @@ export default function CrearGruposManualmente() {
 
         const data: Matricula[] = await response.json();
 
-        setMatriculas(data);
+        const estudiantesSinGrupo = data.filter(
+          (matricula: Matricula) => matricula.grupo === null,
+        );
+
+        setMatriculas(estudiantesSinGrupo);
         // Inicialmente todos los matriculas están disponibles (izquierda)
-        const allIds = data.map((est) => est.id_inscripcion);
+        const allIds = estudiantesSinGrupo.map((est) => est.id_inscripcion);
         setLeft(allIds);
         setFilteredEstudiantes(allIds);
         setLoading(false);
@@ -535,7 +539,9 @@ Detalles:
 
   return (
     <Box className="mx-auto mt-4 flex w-11/12 flex-col justify-between gap-4 rounded-2xl bg-white p-2 shadow-md">
-      <h2 className="mb-4 text-center text-2xl font-bold">Crear Grupos Manualmente</h2>
+      <h2 className="mb-4 text-center text-2xl font-bold">
+        Crear Grupos Manualmente
+      </h2>
 
       {/* Autocompletes para Docente y Monitor */}
       <Box className="flex flex-wrap justify-around text-gray-600">

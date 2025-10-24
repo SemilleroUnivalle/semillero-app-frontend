@@ -62,7 +62,8 @@ const adminLinks = [
 // Links para profesor
 const profesorLinks = [
   { name: "Perfil", href: "/docente/perfil", icon: UsersIcon },
-  { name: "Cursos", href: "/docente/cursos", icon: BookOpenIcon },
+  { name: "Asistencia", href: "/docente/asistencia", icon: BookOpenIcon },
+  { name: "Visualizador", href: "/docente/visualizador", icon: TagIcon },
   { name: "Calificación", href: "/docente/calificacion", icon: TagIcon },
 ];
 

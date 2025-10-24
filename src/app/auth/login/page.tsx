@@ -67,7 +67,10 @@ export default function Login() {
           router.push("/admin/inicio"); // Página de admin
         } else if (data.tipo_usuario === "profesor"){
           router.push("/docente/inicio");
-        } else {
+        } else if (data.tipo_usuario === "monitor"){
+          router.push("/monitor/inicio");
+        } 
+        else {
           router.push("/estudiante/inicio"); // Página principal del estudiante
         }
 

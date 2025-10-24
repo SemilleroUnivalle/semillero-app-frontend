@@ -215,7 +215,8 @@ export default function VerGrupos() {
                   ? "Activo"
                   : "Inactivo"
                 : "Sin estado",
-          }));
+              
+          })).filter((grupo: GruposRow) => grupo.grupo_id !== null); // Filtra los grupos con nombre nulo
 
           console.log("Datos formateados:", formateado); // Verifica los datos formateados
 
