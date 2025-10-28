@@ -271,9 +271,8 @@ export default function VerRegistros() {
       const gradoMatch =
         selectedGrado.length === 0 || selectedGrado.includes(row.grado);
 
-      const estadoAsString = row.estado ? "Verificado" : "No verificado";
       const estadoMatch =
-        selectedEstado.length === 0 || selectedEstado.includes(estadoAsString);
+        selectedEstado.length === 0 || selectedEstado.includes(row.estado);
 
       return estamentoMatch && gradoMatch && estadoMatch;
     });
