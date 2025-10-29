@@ -94,12 +94,6 @@ export default function AsistenciaDocente() {
     { field: "apellido", headerName: "Apellidos", flex: 1 },
     { field: "nombre", headerName: "Nombres", flex: 1 },
     { field: "numero_documento", headerName: "Documento", flex: 0.8 },
-    { field: "colegio", headerName: "Colegio", flex: 1 },
-    {
-      field: "tipo_vinculacion",
-      headerName: "Tipo",
-      flex: 0.6,
-    },
     {
       field: "asistio",
       headerName: "Asistencia",

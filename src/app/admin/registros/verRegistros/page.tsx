@@ -17,6 +17,7 @@ import {
   Snackbar,
   Alert,
   Chip,
+  TextField,
 } from "@mui/material";
 
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
@@ -36,6 +37,7 @@ export default function VerRegistros() {
     { field: "id", headerName: "ID", flex: 0.5 },
     { field: "apellido", headerName: "Apellidos", flex: 1 },
     { field: "nombre", headerName: "Nombres", flex: 1 },
+    { field: "numero_documento", headerName: "Número de Documento", flex: 1 },
     { field: "email", headerName: "Correo Electrónico", flex: 1 },
     {
       field: "estamento",
@@ -124,6 +126,7 @@ export default function VerRegistros() {
 
   interface EstudianteRow {
     id: number;
+    numero_documento: string;
     apellido: string;
     nombre: string;
     email: string;
@@ -137,8 +140,8 @@ export default function VerRegistros() {
 
   const [rows, setRows] = useState<EstudianteRow[]>([]);
   const [success, setSuccess] = useState(false);
-
   const [loading, setLoading] = useState(true);
+  const [searchText, setSearchText] = useState("");
 
   // Función para eliminar un inscrito
   const handleDelete = async (id: number) => {
@@ -185,6 +188,7 @@ export default function VerRegistros() {
           // Formatea los datos para la tabla
           const formateado = response.data.map((student: Estudiante) => ({
             id: student.id_estudiante,
+            numero_documento: student.numero_documento || "",
             apellido: student.apellido || "",
             nombre: student.nombre || "",
             email: student.email || "",
@@ -274,9 +278,17 @@ export default function VerRegistros() {
       const estadoMatch =
         selectedEstado.length === 0 || selectedEstado.includes(row.estado);
 
-      return estamentoMatch && gradoMatch && estadoMatch;
+        // Filtro de búsqueda por texto
+      const searchMatch =
+        searchText === "" ||
+        row.nombre.toLowerCase().includes(searchText.toLowerCase()) ||
+        row.apellido.toLowerCase().includes(searchText.toLowerCase()) ||
+        row.email.toLowerCase().includes(searchText.toLowerCase()) ||
+        row.numero_documento.toLowerCase().includes(searchText.toLowerCase());
+
+      return estamentoMatch && gradoMatch && estadoMatch && searchMatch;
     });
-  }, [rows, selectedEstamento, selectedGrado, selectedEstado]);
+  }, [rows, selectedEstamento, selectedGrado, selectedEstado, searchText]);
 
   if (loading!) {
     return <div>Loading...</div>;
@@ -298,6 +310,15 @@ export default function VerRegistros() {
         </Alert>
       </Snackbar>
       <div className="mx-auto mt-4 flex w-11/12 justify-around rounded-2xl bg-white p-2 shadow-md">
+        <TextField
+          label="Buscar por nombre, apellido o correo"
+          variant="outlined"
+          fullWidth
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          placeholder="Escribe para buscar..."
+          className="inputs-textfield w-full sm:w-1/6"
+        />
         {/* Filtro por Estamento */}
         <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
           <InputLabel id="filtro-estamento">Estamentos</InputLabel>
@@ -359,7 +380,11 @@ export default function VerRegistros() {
               </MenuItem>
             ))}
           </Select>
+          
         </FormControl>
+
+        
+
       </div>
 
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 text-center shadow-md">
