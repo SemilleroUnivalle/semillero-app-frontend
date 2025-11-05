@@ -37,17 +37,11 @@ import { API_BASE_URL } from "../../../../config";
 import { useRouter } from "next/navigation";
 
 interface AsistenciaRegistro {
-  id: number;
+  id_asistencia: number;
   id_inscripcion: number;
   fecha_asistencia: string;
   estado_asistencia: string;
   comentarios: string;
-  estudiante_nombre: string;
-  estudiante_apellido: string;
-  estudiante_documento: string;
-  estudiante_colegio: string;
-  grupo_nombre: string;
-  tipo_vinculacion: string;
 }
 
 interface AsistenciaRow {
@@ -164,16 +158,16 @@ const fetchAsistenciasPorFecha = async (fecha: string) => {
 
       const asistenciasFormateadas: AsistenciaRow[] = asistenciasFiltradas.map(
         (asistencia: AsistenciaRegistro) => ({
-          id: asistencia.id,
-          grupo_nombre: asistencia.grupo_nombre || "Sin grupo",
-          apellido: asistencia.estudiante_apellido || "",
-          nombre: asistencia.estudiante_nombre || "",
-          numero_documento: asistencia.estudiante_documento || "",
-          colegio: asistencia.estudiante_colegio || "",
-          tipo_vinculacion: asistencia.tipo_vinculacion || "",
+          id: asistencia.id_asistencia,
           estado_asistencia: asistencia.estado_asistencia,
           comentarios: asistencia.comentarios || "",
           fecha_asistencia: asistencia.fecha_asistencia,
+          grupo_nombre: "Grupo Ejemplo",
+          apellido: "Apellido Ejemplo",
+          nombre: "Nombre Ejemplo",
+          numero_documento: "12345678",
+          colegio: "Colegio Ejemplo",
+          tipo_vinculacion: "Particular",
         })
       );
 

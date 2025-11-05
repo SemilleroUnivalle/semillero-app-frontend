@@ -123,7 +123,7 @@ export default function NavLinks() {
     <div className="sticky top-0 h-screen w-1/5 bg-white p-4">
       <Image
         className="m-4"
-        src="/logoGrisSemillero.png"
+        src="/logoSemillero.png"
         alt="Logo Semillero"
         width={250}
         height={85}

@@ -14,6 +14,10 @@ import {
   ListItemText,
   Tooltip,
   Snackbar,
+  Avatar,
+  Grid,
+  CardHeader,
+  Divider,
   Alert,
   Chip,
   Typography,
@@ -31,6 +35,8 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
+import BadgeIcon from "@mui/icons-material/Badge";
+import SchoolIcon from "@mui/icons-material/School";
 
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -88,6 +94,11 @@ interface AsistenciaData {
 
 export default function AsistenciaDocente() {
   const router = useRouter();
+  const getAvatarColor = (asistio: boolean | null) => {
+    if (asistio === true) return "#4caf50"; // Verde
+    if (asistio === false) return "#f44336"; // Rojo
+    return "#9e9e9e"; // Gris
+  };
 
   const columns: GridColDef[] = [
     { field: "grupo_nombre", headerName: "Grupo", flex: 0.8 },
@@ -103,7 +114,7 @@ export default function AsistenciaDocente() {
       renderCell: (params) => (
         <Box sx={{ display: "flex", justifyItems: "center", gap: 1 }}>
           <Button
-          className="rounded-xl"
+            className="rounded-xl"
             size="small"
             variant={params.value === true ? "contained" : "outlined"}
             color="success"
@@ -113,8 +124,7 @@ export default function AsistenciaDocente() {
             Sí
           </Button>
           <Button
-          className="rounded-xl"
-
+            className="rounded-xl"
             size="small"
             variant={params.value === false ? "contained" : "outlined"}
             color="error"
@@ -132,7 +142,7 @@ export default function AsistenciaDocente() {
       flex: 1.2,
       renderCell: (params) => (
         <TextField
-        className="inputs-textfield"
+          className="inputs-textfield"
           size="small"
           variant="outlined"
           placeholder="Observaciones..."
@@ -296,66 +306,67 @@ export default function AsistenciaDocente() {
     );
   };
 
-// Función para guardar asistencia
-const handleGuardarAsistencia = async () => {
-  const estudiantesConAsistencia = filteredRows.filter(
-    (row) => row.asistio !== null,
-  );
-
-  if (estudiantesConAsistencia.length === 0) {
-    alert("Debe marcar la asistencia de al menos un estudiante");
-    return;
-  }
-
-  setSaving(true);
-  try {
-    const token = getToken();
-
-    // Formatear los datos según el nuevo formato del endpoint
-    const asistenciaData: AsistenciaData[] = estudiantesConAsistencia.map(
-      (row) => ({
-        id_inscripcion: row.id,
-        fecha_asistencia: fechaAsistencia,
-        estado_asistencia: row.asistio ? "Asistio" : "No Asistio",
-        comentarios: row.observaciones || "",
-      }),
+  // Función para guardar asistencia
+  const handleGuardarAsistencia = async () => {
+    const estudiantesConAsistencia = filteredRows.filter(
+      (row) => row.asistio !== null,
     );
 
-    console.log("Datos a enviar:", asistenciaData); // Para debugging
+    if (estudiantesConAsistencia.length === 0) {
+      alert("Debe marcar la asistencia de al menos un estudiante");
+      return;
+    }
 
-    const response = await axios.post(
-      `${API_BASE_URL}/asistencia/asis/`,
-      asistenciaData, // Enviar directamente el array
-      {
-        headers: {
-          Authorization: `Token ${token}`,
-          "Content-Type": "application/json",
+    setSaving(true);
+    try {
+      const token = getToken();
+
+      // Formatear los datos según el nuevo formato del endpoint
+      const asistenciaData: AsistenciaData[] = estudiantesConAsistencia.map(
+        (row) => ({
+          id_inscripcion: row.id,
+          fecha_asistencia: fechaAsistencia,
+          estado_asistencia: row.asistio ? "Asistio" : "No Asistio",
+          comentarios: row.observaciones || "",
+        }),
+      );
+
+      console.log("Datos a enviar:", asistenciaData); // Para debugging
+
+      const response = await axios.post(
+        `${API_BASE_URL}/asistencia/asis/`,
+        asistenciaData, // Enviar directamente el array
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
         },
-      },
-    );
+      );
 
-    if (response.status === 201 || response.status === 200) {
-      setSuccess(true);
-      // Limpiar formulario después de guardar
-      handleLimpiarAsistencia();
-      setShowConfirmDialog(false);
+      if (response.status === 201 || response.status === 200) {
+        setSuccess(true);
+        // Limpiar formulario después de guardar
+        handleLimpiarAsistencia();
+        setShowConfirmDialog(false);
+      }
+    } catch (error) {
+      console.error("Error al guardar asistencia:", error);
+
+      // Mostrar error más específico
+      if (axios.isAxiosError(error)) {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Error al guardar la asistencia";
+        alert(errorMessage);
+      } else {
+        alert("Error al guardar la asistencia");
+      }
+    } finally {
+      setSaving(false);
     }
-  } catch (error) {
-    console.error("Error al guardar asistencia:", error);
-    
-    // Mostrar error más específico
-    if (axios.isAxiosError(error)) {
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error || 
-                          "Error al guardar la asistencia";
-      alert(errorMessage);
-    } else {
-      alert("Error al guardar la asistencia");
-    }
-  } finally {
-    setSaving(false);
-  }
-};
+  };
 
   // Filtrar filas
   const filteredRows = React.useMemo(() => {
@@ -423,7 +434,7 @@ const handleGuardarAsistencia = async () => {
 
       {/* Header con control de fecha */}
       <Box className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-4 shadow-md">
-        <h1 className="text-center mb-4">Control de Asistencia</h1>
+        <h1 className="mb-4 text-center">Control de Asistencia</h1>
 
         <Box className="inputs-textfield mb-4 flex justify-center">
           <TextField
@@ -508,7 +519,6 @@ const handleGuardarAsistencia = async () => {
           <Button
             variant="outlined"
             className="rounded-xl"
-
             color="error"
             onClick={handleMarcarTodosAusentes}
             size="small"
@@ -518,7 +528,6 @@ const handleGuardarAsistencia = async () => {
           <Button
             variant="outlined"
             className="rounded-xl"
-
             onClick={handleLimpiarAsistencia}
             size="small"
           >
@@ -545,48 +554,6 @@ const handleGuardarAsistencia = async () => {
                 <ListItemText primary={grupo} />
               </MenuItem>
             ))}
-          </Select>
-        </FormControl>
-
-        <FormControl className="inputs-textfield w-full sm:w-1/4">
-          <InputLabel id="filtro-colegios">Colegios</InputLabel>
-          <Select
-            labelId="filtro-colegios"
-            multiple
-            value={selectedColegios}
-            onChange={handleChangeColegios}
-            renderValue={(selected) => selected.join(", ")}
-            label="Colegios"
-          >
-            {[...new Set(rows.map((row) => row.colegio))].map((colegio) => (
-              <MenuItem key={colegio} value={colegio}>
-                <Checkbox checked={selectedColegios.indexOf(colegio) > -1} />
-                <ListItemText primary={colegio} />
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <FormControl className="inputs-textfield w-full sm:w-1/4">
-          <InputLabel id="filtro-tipo-vinculacion">Tipo Vinculación</InputLabel>
-          <Select
-            labelId="filtro-tipo-vinculacion"
-            multiple
-            value={selectedTipoVinculacion}
-            onChange={handleChangeTipoVinculacion}
-            renderValue={(selected) => selected.join(", ")}
-            label="Tipo Vinculación"
-          >
-            {[...new Set(rows.map((row) => row.tipo_vinculacion))].map(
-              (tipo) => (
-                <MenuItem key={tipo} value={tipo}>
-                  <Checkbox
-                    checked={selectedTipoVinculacion.indexOf(tipo) > -1}
-                  />
-                  <ListItemText primary={tipo} />
-                </MenuItem>
-              ),
-            )}
           </Select>
         </FormControl>
       </div>
@@ -638,7 +605,7 @@ const handleGuardarAsistencia = async () => {
         {/* Botón para guardar asistencia */}
         <Box className="mt-4">
           <Button
-          className="rounded-2xl"
+            className="rounded-2xl"
             variant="contained"
             size="large"
             startIcon={<SaveIcon />}
@@ -656,6 +623,143 @@ const handleGuardarAsistencia = async () => {
               : `Guardar Asistencia (${estudiantesConAsistencia.length})`}
           </Button>
         </Box>
+      </div>
+
+      {/* Cards de estudiantes */}
+      <div className="mx-auto mt-4 w-11/12">
+        <Typography variant="body2" className="mb-4 text-center text-gray-600">
+          Mostrando {filteredRows.length} estudiantes | Marcados:{" "}
+          {estudiantesConAsistencia.length} | Presentes:{" "}
+          {estudiantesPresentes.length} | Ausentes: {estudiantesAusentes.length}
+        </Typography>
+
+        <Grid className="container" spacing={2}>
+          {filteredRows.map((estudiante) => (
+            <Grid key={estudiante.id}>
+              <Card
+                variant="outlined"
+                sx={{
+                  borderColor:
+                    estudiante.asistio === true
+                      ? "#4caf50"
+                      : estudiante.asistio === false
+                        ? "#f44336"
+                        : "#e0e0e0",
+                  borderWidth: estudiante.asistio !== null ? 2 : 1,
+                  backgroundColor:
+                    estudiante.asistio === true
+                      ? "#e8f5e8"
+                      : estudiante.asistio === false
+                        ? "#ffeaea"
+                        : "white",
+                  height: "100%",
+                }}
+              >
+                <CardContent className="p-3">
+                  {/* Header del estudiante */}
+                  <Box className="mb-3 flex flex-row items-center gap-2">
+                    <Avatar
+                      sx={{
+                        width: 45,
+                        height: 45,
+                        bgcolor: getAvatarColor(estudiante.asistio),
+                        fontSize: "1rem",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {estudiante.nombre.charAt(0)}
+                      {estudiante.apellido.charAt(0)}
+                    </Avatar>
+                    <Box className="flex-1">
+                      <Typography
+                        variant="subtitle2"
+                        fontWeight="bold"
+                        className="line-clamp-2"
+                        sx={{ fontSize: "0.9rem" }}
+                      >
+                        {estudiante.nombre} {estudiante.apellido}
+                      </Typography>
+                      <Box className="flex items-center gap-1">
+                        <BadgeIcon
+                          sx={{ fontSize: 14, color: "text.secondary" }}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          {estudiante.numero_documento}
+                        </Typography>
+                      </Box>
+                      {/* Información del grupo */}
+                      <Box className="flex items-center gap-1">
+                        <GroupIcon
+                          sx={{ fontSize: 14, color: "text.secondary" }}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          {estudiante.grupo_nombre}
+                        </Typography>
+                      </Box>
+                    </Box>
+                     {/* Información adicional */}
+
+                  {/* Botones de asistencia */}
+                  <Box className="mb-3 flex gap-1">
+                    <Button
+                      size="small"
+                      variant={
+                        estudiante.asistio === true ? "contained" : "outlined"
+                      }
+                      color="success"
+                      onClick={() =>
+                        handleAsistenciaChange(estudiante.id, true)
+                      }
+                      startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
+                      className="flex-1 rounded-xl"
+                      sx={{ fontSize: "0.7rem", py: 0.5 }}
+                    >
+                      Presente
+                    </Button>
+                    <Button
+                      size="small"
+                      variant={
+                        estudiante.asistio === false ? "contained" : "outlined"
+                      }
+                      color="error"
+                      onClick={() =>
+                        handleAsistenciaChange(estudiante.id, false)
+                      }
+                      startIcon={<CancelIcon sx={{ fontSize: 16 }} />}
+                      className="flex-1 rounded-xl"
+                      sx={{ fontSize: "0.7rem", py: 0.5 }}
+                    >
+                      Ausente
+                    </Button>
+                  </Box>
+
+                  {/* Campo de observaciones */}
+                  <TextField
+                    size="small"
+                    variant="outlined"
+                    placeholder="Observaciones..."
+                    value={estudiante.observaciones || ""}
+                    onChange={(e) =>
+                      handleObservacionesChange(estudiante.id, e.target.value)
+                    }
+                    multiline
+                    maxRows={2}
+                    fullWidth
+                    className="inputs-textfield"
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        fontSize: "0.75rem",
+                      },
+                    }}
+                  />
+                  </Box>
+
+                 
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
       </div>
 
       {/* Dialog de confirmación */}

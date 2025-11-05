@@ -5,7 +5,8 @@ import MusicNoteIcon from "@mui/icons-material/MusicNote"; // Usado como TikTok
 
 export default function Footer() {
   return (
-    <footer className="mt-16 flex w-full flex-col items-center justify-center bg-primary p-4 text-white">
+    <footer className="mt-16 flex w-full flex-col items-center justify-center p-4 text-white bg-cover bg-center bg-no-repeat "
+    style={{ backgroundImage: "url('/footer.jpg')" }}>
       <div className="flex w-full flex-row items-center justify-around">
         <div>
           <Image
