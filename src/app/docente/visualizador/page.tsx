@@ -205,31 +205,7 @@ const fetchAsistenciasPorFecha = async (fecha: string) => {
     setSelectedEstados(typeof value === "string" ? value.split(",") : value);
   };
 
-  // Función para exportar a Excel
-  const handleExportExcel = async () => {
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL}/asistencia/exportar-excel/?fecha=${fechaSeleccionada}`,
-        {
-          responseType: "blob",
-          headers: {
-            Authorization: `Token ${getToken()}`,
-          },
-        }
-      );
-      
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `Asistencia_${fechaSeleccionada}.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (error) {
-      alert("No se pudo exportar el archivo.");
-      console.error(error);
-    }
-  };
+
 
   // Filtrar filas
   const filteredRows = React.useMemo(() => {
@@ -407,14 +383,7 @@ const fetchAsistenciasPorFecha = async (fecha: string) => {
             Mostrando {filteredRows.length} de {totalEstudiantes} registros para {fechaSeleccionada}
           </Typography>
           
-          <Button
-            variant="outlined"
-            startIcon={<FileDownloadIcon />}
-            onClick={handleExportExcel}
-            disabled={filteredRows.length === 0}
-          >
-            Exportar Excel
-          </Button>
+
         </Box>
         
         {loading ? (

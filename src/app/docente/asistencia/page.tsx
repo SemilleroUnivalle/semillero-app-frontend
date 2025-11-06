@@ -4,7 +4,6 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import {
   Button,
-  Paper,
   Select,
   MenuItem,
   InputLabel,
@@ -12,42 +11,32 @@ import {
   SelectChangeEvent,
   Checkbox,
   ListItemText,
-  Tooltip,
   Snackbar,
   Avatar,
   Grid,
-  CardHeader,
   Divider,
   Alert,
-  Chip,
   Typography,
   Box,
   Card,
   CardContent,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   TextField,
-  Switch,
-  FormControlLabel,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
 } from "@mui/material";
 import BadgeIcon from "@mui/icons-material/Badge";
-import SchoolIcon from "@mui/icons-material/School";
 
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import SaveIcon from "@mui/icons-material/Save";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GroupIcon from "@mui/icons-material/Group";
 import PersonIcon from "@mui/icons-material/Person";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 
 import axios from "axios";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { GridColDef } from "@mui/x-data-grid";
 import { API_BASE_URL } from "../../../../config";
 import { useRouter } from "next/navigation";
 
@@ -450,9 +439,9 @@ export default function AsistenciaDocente() {
         </Box>
 
         <Box className="mb-4 flex flex-wrap justify-around gap-4">
-          <Card className="min-w-48">
-            <CardContent className="text-center">
-              <PersonIcon className="mb-2 text-blue-500" fontSize="large" />
+          <Card className="flex flex-row w-full items-center justify-center sm:w-48">
+            <CardContent className="flex flex-row w-full items-center justify-around sm:flex-col sm:text-center">
+              <PersonIcon className="text-blue-500" fontSize="large" />
               <Typography variant="h4" className="font-bold text-blue-600">
                 {totalEstudiantes}
               </Typography>
@@ -462,10 +451,10 @@ export default function AsistenciaDocente() {
             </CardContent>
           </Card>
 
-          <Card className="min-w-48">
-            <CardContent className="text-center">
+          <Card className="flex flex-row w-full items-center justify-center sm:w-48">
+            <CardContent className="flex flex-row w-full items-center justify-around sm:flex-col sm:text-center">
               <CheckCircleIcon
-                className="mb-2 text-green-500"
+                className=" text-green-500"
                 fontSize="large"
               />
               <Typography variant="h4" className="font-bold text-green-600">
@@ -477,9 +466,9 @@ export default function AsistenciaDocente() {
             </CardContent>
           </Card>
 
-          <Card className="min-w-48">
-            <CardContent className="text-center">
-              <CancelIcon className="mb-2 text-red-500" fontSize="large" />
+          <Card className="flex flex-row w-full items-center justify-center sm:w-48">
+            <CardContent className="flex flex-row w-full items-center justify-around sm:flex-col sm:text-center">
+              <CancelIcon className=" text-red-500" fontSize="large" />
               <Typography variant="h4" className="font-bold text-red-600">
                 {estudiantesAusentes.length}
               </Typography>
@@ -489,10 +478,10 @@ export default function AsistenciaDocente() {
             </CardContent>
           </Card>
 
-          <Card className="min-w-48">
-            <CardContent className="text-center">
+          <Card className="flex flex-row w-full items-center justify-center sm:w-48">
+            <CardContent className="flex flex-row w-full items-center justify-around sm:flex-col sm:text-center">
               <CalendarTodayIcon
-                className="mb-2 text-orange-500"
+                className=" text-orange-500"
                 fontSize="large"
               />
               <Typography variant="h4" className="font-bold text-orange-600">
@@ -560,47 +549,153 @@ export default function AsistenciaDocente() {
 
       {/* Tabla de asistencia */}
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-4 text-center shadow-md">
-        <Typography variant="body2" className="mb-2 text-gray-600">
-          Mostrando {filteredRows.length} estudiantes | Marcados:{" "}
-          {estudiantesConAsistencia.length} | Presentes:{" "}
-          {estudiantesPresentes.length} | Ausentes: {estudiantesAusentes.length}
-        </Typography>
+        {/* Cards de estudiantes */}
+        <div className="mx-auto mt-4 w-11/12">
+          <Typography
+            variant="body2"
+            className="mb-4 text-center text-gray-600"
+          >
+            Mostrando {filteredRows.length} estudiantes | Marcados:{" "}
+            {estudiantesConAsistencia.length} | Presentes:{" "}
+            {estudiantesPresentes.length} | Ausentes:{" "}
+            {estudiantesAusentes.length}
+          </Typography>
 
-        <Paper
-          className="border-none shadow-none"
-          sx={{ height: 600, width: "100%" }}
-        >
-          <DataGrid
-            rows={filteredRows}
-            columns={columns}
-            initialState={{
-              pagination: { paginationModel },
-              sorting: {
-                sortModel: [{ field: "grupo_nombre", sort: "asc" }],
-              },
-            }}
-            pageSizeOptions={[25, 50, 75, 100]}
-            sx={{
-              border: 0,
-              "& .MuiDataGrid-columnHeaderTitle": {
-                fontWeight: "bold",
-                color: "#575757",
-                fontSize: "1rem",
-              },
-              "& .MuiDataGrid-columnHeader": {
-                backgroundColor: "#e8e8e8",
-              },
-            }}
-            localeText={{
-              noRowsLabel: "No hay estudiantes para tomar asistencia",
-              columnMenuSortAsc: "Ordenar ascendente",
-              columnMenuSortDesc: "Ordenar descendente",
-              columnMenuFilter: "Filtrar",
-              columnMenuHideColumn: "Ocultar columna",
-              columnMenuShowColumns: "Mostrar columnas",
-            }}
-          />
-        </Paper>
+          <Grid className="container" spacing={2}>
+            {filteredRows.map((estudiante) => (
+              <Grid key={estudiante.id}>
+                <Card
+                  variant="outlined"
+                  sx={{
+                    borderColor:
+                      estudiante.asistio === true
+                        ? "#4caf50"
+                        : estudiante.asistio === false
+                          ? "#f44336"
+                          : "white",
+                    borderWidth: estudiante.asistio !== null ? 2 : 1,
+                    backgroundColor:
+                      estudiante.asistio === true
+                        ? "#e8f5e8"
+                        : estudiante.asistio === false
+                          ? "#ffeaea"
+                          : "white",
+                    height: "100%",
+                  }}
+                >
+                  <CardContent className="flex flex-col justify-between p-3 sm:flex-row">
+                    {/* Header del estudiante */}
+                    <Box className="mb-3 flex flex-row gap-2">
+                      <Avatar
+                        sx={{
+                          width: 45,
+                          height: 45,
+                          bgcolor: getAvatarColor(estudiante.asistio),
+                          fontSize: "1rem",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {estudiante.nombre.charAt(0)}
+                        {estudiante.apellido.charAt(0)}
+                      </Avatar>
+                      <Box className="">
+                        <Typography
+                          variant="subtitle2"
+                          fontWeight="bold"
+                          className="line-clamp-2"
+                          sx={{ fontSize: "0.9rem" }}
+                        >
+                          {estudiante.nombre} {estudiante.apellido}
+                        </Typography>
+                        <Box className="flex items-center gap-1">
+                          <BadgeIcon
+                            sx={{ fontSize: 14, color: "text.secondary" }}
+                          />
+                          <Typography variant="caption" color="text.secondary">
+                            {estudiante.numero_documento}
+                          </Typography>
+                        </Box>
+                        {/* Información del grupo */}
+                        <Box className="flex items-center gap-1">
+                          <GroupIcon
+                            sx={{ fontSize: 14, color: "text.secondary" }}
+                          />
+                          <Typography variant="caption" color="text.secondary">
+                            {estudiante.grupo_nombre}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+
+                    {/* Botones de asistencia - FUERA del header */}
+                    <Box className="flex flex-col">
+                      <Box className="mb-3 flex gap-1">
+                        <Button
+                          size="small"
+                          variant={
+                            estudiante.asistio === true
+                              ? "contained"
+                              : "outlined"
+                          }
+                          color="success"
+                          onClick={() =>
+                            handleAsistenciaChange(estudiante.id, true)
+                          }
+                          startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
+                          className="flex-1 rounded-xl"
+                          sx={{ fontSize: "0.7rem", py: 0.5 }}
+                        >
+                          Presente
+                        </Button>
+                        <Button
+                          size="small"
+                          variant={
+                            estudiante.asistio === false
+                              ? "contained"
+                              : "outlined"
+                          }
+                          color="error"
+                          onClick={() =>
+                            handleAsistenciaChange(estudiante.id, false)
+                          }
+                          startIcon={<CancelIcon sx={{ fontSize: 16 }} />}
+                          className="flex-1 rounded-xl"
+                          sx={{ fontSize: "0.7rem", py: 0.5 }}
+                        >
+                          Ausente
+                        </Button>
+                      </Box>
+
+                      {/* Campo de observaciones */}
+                      <TextField
+                        size="small"
+                        variant="outlined"
+                        placeholder="Observaciones..."
+                        value={estudiante.observaciones || ""}
+                        onChange={(e) =>
+                          handleObservacionesChange(
+                            estudiante.id,
+                            e.target.value,
+                          )
+                        }
+                        multiline
+                        maxRows={2}
+                        fullWidth
+                        className="inputs-textfield"
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            fontSize: "0.75rem",
+                          },
+                        }}
+                      />
+                    </Box>
+                  </CardContent>
+                </Card>
+                <Divider></Divider>
+              </Grid>
+            ))}
+          </Grid>
+        </div>
 
         {/* Botón para guardar asistencia */}
         <Box className="mt-4">
@@ -623,143 +718,6 @@ export default function AsistenciaDocente() {
               : `Guardar Asistencia (${estudiantesConAsistencia.length})`}
           </Button>
         </Box>
-      </div>
-
-      {/* Cards de estudiantes */}
-      <div className="mx-auto mt-4 w-11/12">
-        <Typography variant="body2" className="mb-4 text-center text-gray-600">
-          Mostrando {filteredRows.length} estudiantes | Marcados:{" "}
-          {estudiantesConAsistencia.length} | Presentes:{" "}
-          {estudiantesPresentes.length} | Ausentes: {estudiantesAusentes.length}
-        </Typography>
-
-        <Grid className="container" spacing={2}>
-          {filteredRows.map((estudiante) => (
-            <Grid key={estudiante.id}>
-              <Card
-                variant="outlined"
-                sx={{
-                  borderColor:
-                    estudiante.asistio === true
-                      ? "#4caf50"
-                      : estudiante.asistio === false
-                        ? "#f44336"
-                        : "#e0e0e0",
-                  borderWidth: estudiante.asistio !== null ? 2 : 1,
-                  backgroundColor:
-                    estudiante.asistio === true
-                      ? "#e8f5e8"
-                      : estudiante.asistio === false
-                        ? "#ffeaea"
-                        : "white",
-                  height: "100%",
-                }}
-              >
-                <CardContent className="p-3">
-                  {/* Header del estudiante */}
-                  <Box className="mb-3 flex flex-row items-center gap-2">
-                    <Avatar
-                      sx={{
-                        width: 45,
-                        height: 45,
-                        bgcolor: getAvatarColor(estudiante.asistio),
-                        fontSize: "1rem",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {estudiante.nombre.charAt(0)}
-                      {estudiante.apellido.charAt(0)}
-                    </Avatar>
-                    <Box className="flex-1">
-                      <Typography
-                        variant="subtitle2"
-                        fontWeight="bold"
-                        className="line-clamp-2"
-                        sx={{ fontSize: "0.9rem" }}
-                      >
-                        {estudiante.nombre} {estudiante.apellido}
-                      </Typography>
-                      <Box className="flex items-center gap-1">
-                        <BadgeIcon
-                          sx={{ fontSize: 14, color: "text.secondary" }}
-                        />
-                        <Typography variant="caption" color="text.secondary">
-                          {estudiante.numero_documento}
-                        </Typography>
-                      </Box>
-                      {/* Información del grupo */}
-                      <Box className="flex items-center gap-1">
-                        <GroupIcon
-                          sx={{ fontSize: 14, color: "text.secondary" }}
-                        />
-                        <Typography variant="caption" color="text.secondary">
-                          {estudiante.grupo_nombre}
-                        </Typography>
-                      </Box>
-                    </Box>
-                     {/* Información adicional */}
-
-                  {/* Botones de asistencia */}
-                  <Box className="mb-3 flex gap-1">
-                    <Button
-                      size="small"
-                      variant={
-                        estudiante.asistio === true ? "contained" : "outlined"
-                      }
-                      color="success"
-                      onClick={() =>
-                        handleAsistenciaChange(estudiante.id, true)
-                      }
-                      startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
-                      className="flex-1 rounded-xl"
-                      sx={{ fontSize: "0.7rem", py: 0.5 }}
-                    >
-                      Presente
-                    </Button>
-                    <Button
-                      size="small"
-                      variant={
-                        estudiante.asistio === false ? "contained" : "outlined"
-                      }
-                      color="error"
-                      onClick={() =>
-                        handleAsistenciaChange(estudiante.id, false)
-                      }
-                      startIcon={<CancelIcon sx={{ fontSize: 16 }} />}
-                      className="flex-1 rounded-xl"
-                      sx={{ fontSize: "0.7rem", py: 0.5 }}
-                    >
-                      Ausente
-                    </Button>
-                  </Box>
-
-                  {/* Campo de observaciones */}
-                  <TextField
-                    size="small"
-                    variant="outlined"
-                    placeholder="Observaciones..."
-                    value={estudiante.observaciones || ""}
-                    onChange={(e) =>
-                      handleObservacionesChange(estudiante.id, e.target.value)
-                    }
-                    multiline
-                    maxRows={2}
-                    fullWidth
-                    className="inputs-textfield"
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        fontSize: "0.75rem",
-                      },
-                    }}
-                  />
-                  </Box>
-
-                 
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
       </div>
 
       {/* Dialog de confirmación */}

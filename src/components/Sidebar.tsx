@@ -10,6 +10,10 @@ import {
 } from "@heroicons/react/24/outline";
 import GroupWorkOutlinedIcon from "@mui/icons-material/GroupWorkOutlined";
 import AssignmentIndOutlinedIcon from "@mui/icons-material/AssignmentIndOutlined";
+import InventoryOutlinedIcon from '@mui/icons-material/InventoryOutlined';
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
+import ContentPasteSearchOutlinedIcon from '@mui/icons-material/ContentPasteSearchOutlined';
+import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined';
 import LocalLibraryOutlinedIcon from "@mui/icons-material/LocalLibraryOutlined";
 
 import Image from "next/image";
@@ -62,8 +66,8 @@ const adminLinks = [
 // Links para profesor
 const profesorLinks = [
   { name: "Perfil", href: "/docente/perfil", icon: UsersIcon },
-  { name: "Asistencia", href: "/docente/asistencia", icon: BookOpenIcon },
-  { name: "Visualizador", href: "/docente/visualizador", icon: TagIcon },
+  { name: "Asistencia", href: "/docente/asistencia", icon: InventoryOutlinedIcon },
+  { name: "Visualizador", href: "/docente/visualizador", icon: ContentPasteSearchOutlinedIcon },
   { name: "Calificación", href: "/docente/calificacion", icon: TagIcon },
 ];
 
