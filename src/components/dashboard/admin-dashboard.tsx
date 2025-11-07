@@ -183,11 +183,12 @@ export function AdminDashboard() {
               icon={MenuBookIcon}
               description="En diferentes áreas"
             />
+
           </a>
         </Link>
     </Grid>
-          </Grid>
-          <Grid item xs={12} sm={6} lg={4}>
+
+                    <Grid item xs={12} sm={6} lg={4}>
             <StatsCard
               title="Profesores"
               value={data.totalProfessors}
@@ -214,7 +215,8 @@ export function AdminDashboard() {
               compact
             />
           </Grid>
-        </Grid>
+        
+
 
     {/* Cuarto Card - 2/12 en lg */}
     <Grid item xs={6} sm={4} lg={2}>
@@ -227,27 +229,7 @@ export function AdminDashboard() {
         />
     </Grid>
 
-    {/* Quinto Card - 2/12 en lg */}
-    <Grid item xs={6} sm={4} lg={2}>
-        <StatsCard
-            title="Profesores"
-            value={data.totalProfessors}
-            icon={PeopleIcon}
-            description="En diferentes modulos"
-            compact
-        />
-    </Grid>
-
-    {/* Sexto Card - 2/12 en lg */}
-    <Grid item xs={6} sm={4} lg={2}>
-        <StatsCard
-            title="Monitores Academicos"
-            value={data.totalMonitors}
-            icon={PeopleIcon}
-            description="En diferentes modulos"
-            compact
-        />
-    </Grid>
+    
 </Grid>
         {/* Main Content Tabs */}
         <Paper elevation={0} sx={{ border: "1px solid #d0d0d0" }}>
