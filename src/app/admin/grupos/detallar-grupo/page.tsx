@@ -17,6 +17,11 @@ import {
   Checkbox,
   ListItemText,
   Tooltip,
+  Card,
+  CardHeader,
+  List,
+  ListItemButton,
+  ListItemIcon,
   Snackbar,
   Alert,
   Chip,
@@ -77,8 +82,8 @@ export default function DetallarGrupo() {
       flex: 1,
     },
     {
-      field: "grado",
-      headerName: "Grado",
+      field: "tipo_vinculacion",
+      headerName: "Tipo de Vinculación",
       flex: 0.5,
     },
     {
@@ -136,10 +141,10 @@ export default function DetallarGrupo() {
                 const rowData = params.row;
 
                 localStorage.setItem(
-                  "inscritoSeleccionado",
+                  "matriculaSeleccionada",
                   JSON.stringify(rowData),
                 ); // 👉 Guarda la fila completa como JSON
-                router.push("/admin/registros/detallarRegistro/");
+                router.push("/admin/matriculas/detallarMatricula/");
               }}
             />
           </Tooltip>
@@ -189,6 +194,25 @@ export default function DetallarGrupo() {
 
   // Estado para el nombre del grupo
   const [nombreGrupo, setNombreGrupo] = useState("");
+  const [profesorId, setProfesorId] = useState<number | null>(null);
+  const [monitorId, setMonitorId] = useState<number | null>(null);
+
+  // Nuevos estados para agregar estudiantes
+  const [showAddStudents, setShowAddStudents] = useState(false);
+  const [availableStudents, setAvailableStudents] = useState<Matricula[]>([]);
+  const [checked, setChecked] = useState<readonly number[]>([]);
+  const [selectedStudents, setSelectedStudents] = useState<readonly number[]>(
+    [],
+  );
+  const [loadingStudents, setLoadingStudents] = useState(false);
+
+  // Estados para filtros
+  const [selectedPeriodos, setSelectedPeriodos] = useState<string[]>([]);
+  const [selectedCategorias, setSelectedCategorias] = useState<string[]>([]);
+  const [selectedModulos, setSelectedModulos] = useState<string[]>([]);
+  const [filteredAvailableStudents, setFilteredAvailableStudents] = useState<
+    readonly number[]
+  >([]);
 
   // Función para obtener token
   const getToken = () => {
@@ -200,12 +224,12 @@ export default function DetallarGrupo() {
     return "";
   };
 
-    // Cargar datos del grupo y matrículas
+  // Cargar datos del grupo y matrículas
   useEffect(() => {
     const fetchGrupoData = async () => {
       try {
         const token = getToken();
-        
+
         // Obtener datos del grupo seleccionado desde localStorage
         const grupoSeleccionado = localStorage.getItem("grupoSeleccionado");
         if (!grupoSeleccionado) {
@@ -214,9 +238,34 @@ export default function DetallarGrupo() {
           return;
         }
 
-        const grupo = JSON.parse(grupoSeleccionado);
-        setNombreGrupo(grupo.nombre || "");
-        setGrupoId(grupo.id);
+        const { grupo_id, id } = JSON.parse(grupoSeleccionado);
+        const grupoId = grupo_id || id;
+
+        if (!grupoId) {
+          setError("ID del grupo no válido");
+          setLoading(false);
+          return;
+        }
+
+        // Fetch datos actualizados del grupo desde el servidor
+        const grupoResponse = await axios.get(
+          `${API_BASE_URL}/grupo/grupo/${grupoId}/`,
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          },
+        );
+
+        if (grupoResponse.status === 200) {
+          const grupoData = grupoResponse.data;
+
+          // Establecer datos del grupo
+          setNombreGrupo(grupoData.nombre || "");
+          setProfesorId(grupoData.profesor || null);
+          setMonitorId(grupoData.monitor_academico || null);
+          setGrupoId(grupoData.id);
+        }
 
         // Fetch matrículas
         const response = await axios.get(`${API_BASE_URL}/matricula/mat/`, {
@@ -228,21 +277,23 @@ export default function DetallarGrupo() {
         if (response.status === 200) {
           // Filtrar solo las matrículas que pertenecen a este grupo
           const matriculasDelGrupo = response.data.filter(
-            (matricula: Matricula) => matricula.grupo === grupo.id
+            (matricula: Matricula) => matricula.grupo === grupoId,
           );
 
           // Formatear los datos para la tabla
-          const formateado: MatriculaRow[] = matriculasDelGrupo.map((matricula: Matricula) => ({
-            id: matricula.id_inscripcion,
-            apellido: matricula.estudiante?.apellido || "",
-            nombre: matricula.estudiante?.nombre || "",
-            email: matricula.estudiante?.email || "",
-            estamento: matricula.estudiante?.estamento || "",
-            grado: matricula.estudiante?.grado || "",
-            estado: matricula.estado || "",
-            tipo_vinculacion: matricula.tipo_vinculacion || "",
-            colegio: matricula.estudiante?.colegio || "",
-          }));
+          const formateado: MatriculaRow[] = matriculasDelGrupo.map(
+            (matricula: Matricula) => ({
+              id: matricula.id_inscripcion,
+              apellido: matricula.estudiante?.apellido || "",
+              nombre: matricula.estudiante?.nombre || "",
+              email: matricula.estudiante?.email || "",
+              estamento: matricula.estudiante?.estamento || "",
+              grado: matricula.estudiante?.grado || "",
+              estado: matricula.estado || "",
+              tipo_vinculacion: matricula.tipo_vinculacion || "",
+              colegio: matricula.estudiante?.colegio || "",
+            }),
+          );
 
           setRows(formateado);
         }
@@ -257,6 +308,190 @@ export default function DetallarGrupo() {
 
     fetchGrupoData();
   }, []);
+
+  // Función para cargar estudiantes disponibles
+  const fetchAvailableStudents = async () => {
+    setLoadingStudents(true);
+    try {
+      const token = getToken();
+
+      const response = await axios.get(`${API_BASE_URL}/matricula/mat/`, {
+        headers: {
+          Authorization: `Token ${token}`,
+        },
+      });
+
+      if (response.status === 200) {
+        // Filtrar solo estudiantes sin grupo asignado
+        const estudiantesSinGrupo = response.data.filter(
+          (matricula: Matricula) => matricula.grupo === null,
+        );
+
+        setAvailableStudents(estudiantesSinGrupo);
+        const allIds = estudiantesSinGrupo.map(
+          (est: Matricula) => est.id_inscripcion,
+        );
+        setFilteredAvailableStudents(allIds);
+      }
+    } catch (error) {
+      console.error("Error al cargar estudiantes disponibles:", error);
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
+
+  // Función para mostrar/ocultar la sección de agregar estudiantes
+  const handleToggleAddStudents = async () => {
+    if (!showAddStudents) {
+      await fetchAvailableStudents();
+    } else {
+      // Limpiar estados al cerrar
+      setSelectedPeriodos([]);
+      setSelectedCategorias([]);
+      setSelectedModulos([]);
+      setChecked([]);
+      setSelectedStudents([]);
+    }
+    setShowAddStudents(!showAddStudents);
+  };
+
+  // Efecto para aplicar filtros a estudiantes disponibles
+  useEffect(() => {
+    if (!showAddStudents) return;
+
+    let filtered = availableStudents.filter((matricula) => {
+      const matchPeriodo =
+        selectedPeriodos.length === 0 ||
+        selectedPeriodos.includes(
+          matricula.oferta_categoria?.id_oferta_academica?.nombre || "",
+        );
+      const matchCategoria =
+        selectedCategorias.length === 0 ||
+        selectedCategorias.includes(
+          matricula.modulo?.id_categoria?.nombre || "",
+        );
+      const matchModulo =
+        selectedModulos.length === 0 ||
+        selectedModulos.includes(matricula.modulo?.nombre_modulo || "");
+
+      return matchPeriodo && matchCategoria && matchModulo;
+    });
+
+    setFilteredAvailableStudents(filtered.map((est) => est.id_inscripcion));
+  }, [
+    selectedPeriodos,
+    selectedCategorias,
+    selectedModulos,
+    availableStudents,
+    showAddStudents,
+  ]);
+
+  // Handlers para filtros
+  const handleChangePeriodos = (
+    event: SelectChangeEvent<typeof selectedPeriodos>,
+  ) => {
+    const value = event.target.value;
+    setSelectedPeriodos(typeof value === "string" ? value.split(",") : value);
+  };
+
+  const handleChangeCategorias = (
+    event: SelectChangeEvent<typeof selectedCategorias>,
+  ) => {
+    const value = event.target.value;
+    setSelectedCategorias(typeof value === "string" ? value.split(",") : value);
+  };
+
+  const handleChangeModulos = (
+    event: SelectChangeEvent<typeof selectedModulos>,
+  ) => {
+    const value = event.target.value;
+    setSelectedModulos(typeof value === "string" ? value.split(",") : value);
+  };
+
+  // Función para manejar selección de estudiantes
+  const handleToggleStudent = (value: number) => () => {
+    const currentIndex = checked.indexOf(value);
+    const newChecked = [...checked];
+
+    if (currentIndex === -1) {
+      newChecked.push(value);
+    } else {
+      newChecked.splice(currentIndex, 1);
+    }
+
+    setChecked(newChecked);
+  };
+
+  // Función para agregar estudiantes seleccionados al grupo
+  const handleAddSelectedStudents = async () => {
+    if (checked.length === 0) {
+      alert("Debe seleccionar al menos un estudiante");
+      return;
+    }
+
+    const confirmAdd = window.confirm(
+      `¿Estás seguro de que deseas agregar ${checked.length} estudiante(s) al grupo?`,
+    );
+
+    if (!confirmAdd) return;
+
+    try {
+      const token = getToken();
+
+      // Actualizar cada matrícula seleccionada con el ID del grupo
+      const updatePromises = checked.map(async (matriculaId) => {
+        const response = await axios.patch(
+          `${API_BASE_URL}/matricula/mat/${matriculaId}/`,
+          { grupo: grupoId },
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+        return response.data;
+      });
+
+      await Promise.all(updatePromises);
+
+      // Actualizar la tabla principal con los nuevos estudiantes
+      const newStudents = availableStudents
+        .filter((student) => checked.includes(student.id_inscripcion))
+        .map((matricula: Matricula) => ({
+          id: matricula.id_inscripcion,
+          apellido: matricula.estudiante?.apellido || "",
+          nombre: matricula.estudiante?.nombre || "",
+          email: matricula.estudiante?.email || "",
+          estamento: matricula.estudiante?.estamento || "",
+          grado: matricula.estudiante?.grado || "",
+          estado: matricula.estado || "",
+          tipo_vinculacion: matricula.tipo_vinculacion || "",
+          colegio: matricula.estudiante?.colegio || "",
+        }));
+
+      setRows((prevRows) => [...prevRows, ...newStudents]);
+
+      // Limpiar y cerrar la sección de agregar estudiantes
+      setChecked([]);
+      setSelectedStudents([]);
+      setShowAddStudents(false);
+      setSelectedPeriodos([]);
+      setSelectedCategorias([]);
+      setSelectedModulos([]);
+
+      alert(
+        `${newStudents.length} estudiante(s) agregado(s) al grupo exitosamente`,
+      );
+    } catch (error) {
+      console.error("Error al agregar estudiantes al grupo:", error);
+      alert("Error al agregar estudiantes al grupo");
+    }
+  };
+
+  const getEstudianteById = (id: number): Matricula | undefined => {
+    return availableStudents.find((est) => est.id_inscripcion === id);
+  };
 
   // Fetch docentes
   useEffect(() => {
@@ -318,19 +553,37 @@ export default function DetallarGrupo() {
     fetchMonitores();
   }, []);
 
+  // UseEffect para establecer docente seleccionado cuando los datos estén listos
+  useEffect(() => {
+    if (docentes.length > 0 && profesorId) {
+      const docenteEncontrado = docentes.find((d) => d.id === profesorId);
+      if (docenteEncontrado) {
+        setSelectedDocente(docenteEncontrado);
+      }
+    }
+  }, [docentes, profesorId]);
 
+  // UseEffect para establecer monitor seleccionado cuando los datos estén listos
+  useEffect(() => {
+    if (monitores.length > 0 && monitorId) {
+      const monitorEncontrado = monitores.find((m) => m.id === monitorId);
+      if (monitorEncontrado) {
+        setSelectedMonitor(monitorEncontrado);
+      }
+    }
+  }, [monitores, monitorId]);
 
   // Función para eliminar estudiante del grupo
   const handleRemoveFromGroup = async (matriculaId: number) => {
     const confirmDelete = window.confirm(
-      "¿Estás seguro de que deseas eliminar este estudiante del grupo?"
+      "¿Estás seguro de que deseas eliminar este estudiante del grupo?",
     );
-    
+
     if (!confirmDelete) return;
 
     try {
       const token = getToken();
-      
+
       const response = await axios.patch(
         `${API_BASE_URL}/matricula/mat/${matriculaId}/`,
         { grupo: null },
@@ -339,12 +592,12 @@ export default function DetallarGrupo() {
             Authorization: `Token ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (response.status === 200) {
         // Actualizar la tabla removiendo la fila
-        setRows(prevRows => prevRows.filter(row => row.id !== matriculaId));
+        setRows((prevRows) => prevRows.filter((row) => row.id !== matriculaId));
         alert("Estudiante eliminado del grupo exitosamente");
       }
     } catch (error) {
@@ -353,13 +606,13 @@ export default function DetallarGrupo() {
     }
   };
 
-    // Función para actualizar el grupo
+  // Función para actualizar el grupo
   const handleUpdateGroup = async () => {
     if (!grupoId) return;
 
     try {
       const token = getToken();
-      
+
       const updateData = {
         nombre: nombreGrupo,
         profesor: selectedDocente?.id || null,
@@ -374,13 +627,16 @@ export default function DetallarGrupo() {
             Authorization: `Token ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (response.status === 200) {
         alert("Grupo actualizado exitosamente");
         // Actualizar localStorage con los nuevos datos
-        const updatedGroup = { ...JSON.parse(localStorage.getItem("grupoSeleccionado") || "{}"), ...updateData };
+        const updatedGroup = {
+          ...JSON.parse(localStorage.getItem("grupoSeleccionado") || "{}"),
+          ...updateData,
+        };
         localStorage.setItem("grupoSeleccionado", JSON.stringify(updatedGroup));
       }
     } catch (error) {
@@ -388,7 +644,6 @@ export default function DetallarGrupo() {
       alert("Error al actualizar el grupo");
     }
   };
-
 
   if (loading) {
     return (
@@ -411,10 +666,9 @@ export default function DetallarGrupo() {
     );
   }
 
-  
   return (
     <Box className="mx-auto mt-4 flex w-11/12 flex-col justify-between gap-4 rounded-2xl bg-white p-2 shadow-md">
-      <h2 className="mb-4 text-center text-2xl font-bold">
+      <h2 className="my-4 text-center text-2xl font-bold">
         Grupo: {nombreGrupo}
       </h2>
 
@@ -524,22 +778,257 @@ export default function DetallarGrupo() {
         />
       </Box>
 
-      {/* Botón para actualizar grupo */}
-      <Box sx={{ textAlign: "center", mb: 2 }}>
+      {/* Botones de acción */}
+      <Box sx={{ display: "flex", justifyContent: "center", gap: 2, my: 2 }}>
         <Button
-          variant="contained"
-          color="primary"
+          variant="outlined"
+          sx={{ color: "#c40e1a", borderColor: "#c40e1a" }}
           onClick={handleUpdateGroup}
-          className="rounded-2xl bg-primary text-white hover:bg-red-800"
+          className="rounded-2xl text-primary hover:bg-red-800 hover:text-white"
         >
           Actualizar Información del Grupo
         </Button>
+
+        <Button
+          variant="outlined"
+          sx={{ color: "#c40e1a", borderColor: "#c40e1a" }}
+          onClick={handleToggleAddStudents}
+          className="rounded-2xl text-primary hover:bg-red-800 hover:text-white"
+        >
+          {showAddStudents ? "Cancelar" : "Agregar Estudiante"}
+        </Button>
       </Box>
+
+      {/* Sección para agregar estudiantes */}
+      {showAddStudents && (
+        <Box className="mt-4 rounded-2xl border-2 border-dashed border-gray-300 p-4 text-gray-600">
+          <Typography variant="h6" className="mb-4 text-center font-bold">
+            Agregar Estudiantes al Grupo
+          </Typography>
+
+          {/* Filtros */}
+          <Typography variant="subtitle1" className="mb-2 font-semibold">
+            Filtros de búsqueda:
+          </Typography>
+
+          <Box className="mb-4 flex flex-wrap justify-around gap-4 text-gray-600">
+            {/* Filtro por Periodos */}
+            <FormControl className="inputs-textfield flex w-full flex-col sm:w-1/4">
+              <InputLabel>Periodos</InputLabel>
+              <Select
+                multiple
+                value={selectedPeriodos}
+                onChange={handleChangePeriodos}
+                renderValue={(selected) => selected.join(", ")}
+                label="Periodos"
+              >
+                {[
+                  ...new Set(
+                    availableStudents
+                      .filter(
+                        (est) =>
+                          est?.oferta_categoria?.id_oferta_academica?.nombre,
+                      )
+                      .map(
+                        (est) =>
+                          est.oferta_categoria.id_oferta_academica.nombre,
+                      ),
+                  ),
+                ]
+                  .sort()
+                  .map((periodo) => (
+                    <MenuItem key={periodo} value={periodo}>
+                      <Checkbox
+                        checked={selectedPeriodos.indexOf(periodo) > -1}
+                      />
+                      <ListItemText primary={periodo} />
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
+
+            {/* Filtro por Categorías */}
+            <FormControl className="inputs-textfield flex w-full flex-col sm:w-1/4">
+              <InputLabel>Categorías</InputLabel>
+              <Select
+                multiple
+                value={selectedCategorias}
+                onChange={handleChangeCategorias}
+                renderValue={(selected) => selected.join(", ")}
+                label="Categorías"
+              >
+                {[
+                  ...new Set(
+                    availableStudents.map(
+                      (est) => est.modulo.id_categoria.nombre,
+                    ),
+                  ),
+                ]
+                  .sort()
+                  .map((categoria) => (
+                    <MenuItem key={categoria} value={categoria}>
+                      <Checkbox
+                        checked={selectedCategorias.indexOf(categoria) > -1}
+                      />
+                      <ListItemText primary={categoria} />
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
+
+            {/* Filtro por Módulos */}
+            <FormControl className="inputs-textfield flex w-full flex-col sm:w-1/4">
+              <InputLabel>Módulos</InputLabel>
+              <Select
+                multiple
+                value={selectedModulos}
+                onChange={handleChangeModulos}
+                renderValue={(selected) => selected.join(", ")}
+                label="Módulos"
+              >
+                {[
+                  ...new Set(
+                    availableStudents.map((est) => est.modulo.nombre_modulo),
+                  ),
+                ]
+                  .sort()
+                  .map((modulo) => (
+                    <MenuItem key={modulo} value={modulo}>
+                      <Checkbox
+                        checked={selectedModulos.indexOf(modulo) > -1}
+                      />
+                      <ListItemText primary={modulo} />
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
+          </Box>
+
+          {/* Lista de estudiantes disponibles */}
+          {loadingStudents ? (
+            <Box sx={{ textAlign: "center", py: 4 }}>
+              <CircularProgress />
+              <Typography variant="body2" sx={{ mt: 2 }}>
+                Cargando estudiantes disponibles...
+              </Typography>
+            </Box>
+          ) : (
+            <Card sx={{ width: 2 / 3, textAlign: "center", margin: "0 auto" }}>
+              <CardHeader
+                sx={{
+                  px: 2,
+                  py: 1,
+                  bgcolor: "#e8e8e8",
+                  color: "#575757",
+                  fontSize: "0.5rem",
+                }}
+                title="Estudiantes Disponibles"
+                subheader={`${checked.length}/${filteredAvailableStudents.length} seleccionados`}
+                titleTypographyProps={{
+                  fontSize: "1rem", // Tamaño más pequeño para el título
+                  fontWeight: "600",
+                }}
+              />
+              <Divider />
+              <List
+                sx={{
+                  width: "100%",
+                  height: 300,
+                  bgcolor: "background.paper",
+                  color: "text.primary",
+                  overflow: "auto",
+                }}
+                dense
+                component="div"
+                role="list"
+              >
+                {filteredAvailableStudents.map((id: number) => {
+                  const estudiante = getEstudianteById(id);
+                  const labelId = `transfer-list-item-${id}-label`;
+
+                  if (!estudiante) return null;
+
+                  return (
+                    <ListItemButton
+                      key={id}
+                      role="listitem"
+                      onClick={handleToggleStudent(id)}
+                    >
+                      <ListItemIcon>
+                        <Checkbox
+                          checked={checked.includes(id)}
+                          tabIndex={-1}
+                          disableRipple
+                          inputProps={{
+                            "aria-labelledby": labelId,
+                          }}
+                        />
+                      </ListItemIcon>
+                      <ListItemText
+                        id={labelId}
+                        primary={`${estudiante.estudiante.nombre} ${estudiante.estudiante.apellido}`}
+                        secondary={
+                          <React.Fragment>
+                            <Typography
+                              component="span"
+                              variant="body2"
+                              color="text.primary"
+                            >
+                              Doc: {estudiante.estudiante.numero_documento}
+                            </Typography>
+                            <br />
+                            {`${estudiante.estudiante.grado}° - ${estudiante.estudiante.colegio}`}
+                            <br />
+                            <Typography
+                              component="span"
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {estudiante.modulo.nombre_modulo} •{" "}
+                              {estudiante.estudiante.estamento}
+                            </Typography>
+                          </React.Fragment>
+                        }
+                        primaryTypographyProps={{
+                          fontSize: "0.95rem",
+                          fontWeight: "600",
+                        }}
+                      />
+                    </ListItemButton>
+                  );
+                })}
+                {filteredAvailableStudents.length === 0 && (
+                  <ListItemText
+                    primary="No hay estudiantes disponibles con los filtros seleccionados"
+                    sx={{ textAlign: "center", py: 4 }}
+                  />
+                )}
+              </List>
+            </Card>
+          )}
+
+          {/* Botones de acción para agregar estudiantes */}
+          <Box sx={{ mt: 3, textAlign: "center" }}>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Seleccionados: {checked.length} estudiantes
+            </Typography>
+            <Button
+              variant="outlined"
+              sx={{ color: "#c40e1a", borderColor: "#c40e1a" }}
+              className="rounded-2xl text-primary hover:bg-red-800 hover:text-white"
+              onClick={handleAddSelectedStudents}
+              disabled={checked.length === 0}
+            >
+              Agregar Estudiantes Seleccionados ({checked.length})
+            </Button>
+          </Box>
+        </Box>
+      )}
 
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 text-center shadow-md">
         <Paper
           className="border-none shadow-none"
-          sx={{ height: 800, width: "100%" }}
+          sx={{ height: 500, width: "100%" }}
         >
           <DataGrid
             rows={rows}
