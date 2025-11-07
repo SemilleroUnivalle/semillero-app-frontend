@@ -207,6 +207,15 @@ export function AdminDashboard() {
               compact
             />
           </Grid>
+          <Grid item xs={12} sm={6} lg={4}>
+            <StatsCard
+              title="Grupos Activos"
+              value="9"
+              icon={PeopleIcon}
+              description="En diferentes modulos"
+              compact
+            />
+          </Grid>
         </Grid>
 
         {/* Main Content Tabs */}
