@@ -69,17 +69,17 @@ function SingleGenderBarChart({ title, series, categories, color, totalCount }: 
             },
         },
         dataLabels: {
-            enabled: true, // Mostrar el valor de cada barra
+            enabled: true, 
             formatter: (val) => val.toString(),
             style: {
-                colors: ['#333']
+                colors: ['white']
             }
         },
         colors: [color],
         xaxis: {
             categories: categories,
             title: {
-                text: 'Inscripciones',
+                text: 'Matriculados',
             },
             labels: {
                 style: {
@@ -89,6 +89,9 @@ function SingleGenderBarChart({ title, series, categories, color, totalCount }: 
             },
         },
         yaxis: {
+            title: {
+                text: 'Módulos',
+            },
             labels: {
                 style: {
                     fontSize: "12px",
@@ -152,7 +155,7 @@ export function ModuleGenderChart({ data }: ModuleGenderChartProps) {
       {/* Gráfico para Mujeres */}
       <Grid item xs={12} lg={6}>
           <SingleGenderBarChart
-              title="Femenino por Módulo"
+              title="Femenino"
               series={femeninoData.series}
               categories={femeninoData.categories}
               color={GENDER_COLORS.Femenino}
@@ -163,7 +166,7 @@ export function ModuleGenderChart({ data }: ModuleGenderChartProps) {
       {/* Gráfico para Hombres */}
       <Grid item xs={12} lg={6}>
           <SingleGenderBarChart
-              title="Masculino por Módulo"
+              title="Masculino"
               series={masculinoData.series}
               categories={masculinoData.categories}
               color={GENDER_COLORS.Masculino}

@@ -17,9 +17,19 @@ import { ModuleDistribution } from "./module-distribution"
 import { EstamentoSegmentation } from "./estamento-segmentation"
 import { RecentEnrollments } from "./recent-enrollments"
 import { DemographicsOverview } from "./demographics-overview"
-import { MapWidget } from "./map-widget"
 import { fetchDashboardData, type DashboardData } from "@/lib/api/dashboard"
 import Link from 'next/link'
+import dynamic from 'next/dynamic';
+
+const COLOMBIA_GEOJSON_URL = '/colombia.json';
+
+//import para cargar el componente solo en el cliente
+const ColombiaMapWithNoSSR = dynamic(
+  () => import('./ColombiaMap'),
+  { 
+    ssr: false
+  } 
+);
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -218,19 +228,19 @@ export function AdminDashboard() {
               },
             }}
           >
-            <Tab label="Resumen General" />
+            <Tab label="Información de Matriculados" />
+            <Tab label="Información geográfica estudiantes" />
             <Tab label="Módulos" />
-            <Tab label="Estudiantes" />
           </Tabs>
 
           <Box sx={{ p: 3 }}>
             {/* Overview Tab */}
             <TabPanel value={tabValue} index={0}>
               <Grid container spacing={3}>
-                <Grid item xs={12}>
+                <Grid item xs={12} lg={6}>
                   <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0", mb: 3 }}>
                     <Typography variant="h6" fontWeight="bold" gutterBottom>
-                      Inscripciones por Módulo y Género
+                      Matriculas totales por Módulo y Género
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                       Distribución de estudiantes matriculados en cada módulo, segmentado por género.
@@ -245,7 +255,7 @@ export function AdminDashboard() {
                       Matriculados por Módulo
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Top 6 módulos con mayor inscripción
+                      
                     </Typography>
                     <EnrollmentChart data={data.enrollmentsByModule ?? []} />
                   </Paper>
@@ -274,7 +284,23 @@ export function AdminDashboard() {
                     <ModuleDistribution data={data.enrollmentsByGrade ?? []} />
                   </Paper>
                 </Grid>
+              </Grid>
+            </TabPanel>
 
+            {/* Students Tab */}
+            <TabPanel value={tabValue} index={1}>
+              <Grid 
+                container 
+                spacing={2} 
+                justifyContent="center"
+              >
+                <Grid item xs={12} lg={12}>
+                  <ColombiaMapWithNoSSR geojsonDataUrl={COLOMBIA_GEOJSON_URL} />
+                </Grid>
+                
+              </Grid>
+
+              <Grid container spacing={2}>
                 <Grid item xs={12} lg={4}>
                   <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
                     <Typography variant="h6" fontWeight="bold" gutterBottom>
@@ -284,78 +310,6 @@ export function AdminDashboard() {
                       Distribución por género (estudiantes)
                     </Typography>
                     <DemographicsOverview genderData={data.genderDistribution ?? []} />
-                  </Paper>
-                </Grid>
-              </Grid>
-            </TabPanel>
-
-            {/* Modules Tab */}
-            <TabPanel value={tabValue} index={1}>
-              <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  Análisis de Módulos
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Rendimiento y popularidad de cada módulo
-                </Typography>
-                <Box display="flex" flexDirection="column" gap={2}>
-                  {(data.enrollmentsByModule ?? []).map((module, index) => (
-                    <Paper
-                      key={index}
-                      elevation={0}
-                      sx={{
-                        p: 2,
-                        border: "1px solid #d0d0d0",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        transition: "background-color 0.2s",
-                        "&:hover": {
-                          bgcolor: "#f5f5f5",
-                        },
-                      }}
-                    >
-                      <Box flex={1}>
-                        <Typography variant="subtitle1" fontWeight="600">
-                          {module.name}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {module.area}
-                        </Typography>
-                      </Box>
-                      <Box textAlign="right">
-                        <Typography variant="h5" fontWeight="bold" color="#c20e1a">
-                          {module.enrollments}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          estudiantes
-                        </Typography>
-                      </Box>
-                    </Paper>
-                  ))}
-                </Box>
-              </Paper>
-            </TabPanel>
-
-            {/* Students Tab */}
-            <TabPanel value={tabValue} index={2}>
-              <Grid item xs={12} md={6} lg={6}>
-                  <Paper elevation={0} sx={{ p: 0, height: 500, border: "1px solid #d0d0d0" }}> 
-                    {/* La propiedad 'height: 500' es la clave para la altura */}
-                    <MapWidget /> 
-                  </Paper>
-                </Grid>
-
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={6} lg={6}>
-                  <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
-                    <Typography variant="h6" fontWeight="bold" gutterBottom>
-                      Inscripciones Recientes
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Últimas matriculaciones registradas
-                    </Typography>
-                    <RecentEnrollments data={data.recentEnrollments ?? []} />
                   </Paper>
                 </Grid>
 
@@ -404,13 +358,54 @@ export function AdminDashboard() {
                     </Box>
                   </Paper>
                 </Grid>
-
-            
-                
-
               </Grid>
-
-              
+            </TabPanel>
+            {/* Modules Tab */}
+            <TabPanel value={tabValue} index={2}>
+              <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  Análisis de Módulos
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Rendimiento y popularidad de cada módulo
+                </Typography>
+                <Box display="flex" flexDirection="column" gap={2}>
+                  {(data.enrollmentsByModule ?? []).map((module, index) => (
+                    <Paper
+                      key={index}
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        border: "1px solid #d0d0d0",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        transition: "background-color 0.2s",
+                        "&:hover": {
+                          bgcolor: "#f5f5f5",
+                        },
+                      }}
+                    >
+                      <Box flex={1}>
+                        <Typography variant="subtitle1" fontWeight="600">
+                          {module.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {module.area}
+                        </Typography>
+                      </Box>
+                      <Box textAlign="right">
+                        <Typography variant="h5" fontWeight="bold" color="#c20e1a">
+                          {module.enrollments}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          estudiantes
+                        </Typography>
+                      </Box>
+                    </Paper>
+                  ))}
+                </Box>
+              </Paper>
             </TabPanel>
           </Box>
         </Paper>

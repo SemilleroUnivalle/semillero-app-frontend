@@ -35,10 +35,15 @@ export function EnrollmentChart({ data }: EnrollmentChartProps) {
       bar: {
         borderRadius: 8,
         columnWidth: "60%",
+        horizontal:true
       },
     },
     dataLabels: {
-      enabled: false,
+      enabled: true, 
+            formatter: (val) => val.toString(),
+            style: {
+                colors: ['white']
+            }
     },
     colors: ["#c20e1a"],
     xaxis: {
@@ -51,8 +56,14 @@ export function EnrollmentChart({ data }: EnrollmentChartProps) {
           colors: "#6b7280",
         },
       },
+      title: {
+                text: 'Matriculados',
+            },
     },
     yaxis: {
+      title: {
+                text: 'Módulos',
+            },
       labels: {
         style: {
           fontSize: "12px",

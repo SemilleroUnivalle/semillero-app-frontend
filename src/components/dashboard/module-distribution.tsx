@@ -32,29 +32,29 @@ export function ModuleDistribution({ data }: ModuleDistributionProps) {
       bar: {
         borderRadius: 8,
         columnWidth: "50%",
+        horizontal:true
       },
     },
     dataLabels: {
-      enabled: false,
+      enabled: true,
     },
     colors: ["#c20e1a"],
     xaxis: {
       categories: data.map((item) => item.grade),
       title: {
-        text: "Grado",
-        style: {
-          fontSize: "12px",
-          color: "#6b7280",
-        },
+        text: "Cantidad",
+        
       },
       labels: {
-        style: {
-          fontSize: "12px",
-          colors: "#6b7280",
-        },
+        
       },
     },
     yaxis: {
+      title: {
+        text: "Grado",
+        
+      },
+
       labels: {
         style: {
           fontSize: "12px",
