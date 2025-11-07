@@ -186,6 +186,35 @@ export function AdminDashboard() {
           </a>
         </Link>
     </Grid>
+          </Grid>
+          <Grid item xs={12} sm={6} lg={4}>
+            <StatsCard
+              title="Profesores"
+              value={data.totalProfessors}
+              icon={PeopleIcon}
+              description="En diferentes modulos"
+              compact
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} lg={4}>
+            <StatsCard
+              title="Monitores Academicos"
+              value={data.totalMonitors}
+              icon={PeopleIcon}
+              description="En diferentes modulos"
+              compact
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} lg={4}>
+            <StatsCard
+              title="Grupos Activos"
+              value="9"
+              icon={PeopleIcon}
+              description="En diferentes modulos"
+              compact
+            />
+          </Grid>
+        </Grid>
 
     {/* Cuarto Card - 2/12 en lg */}
     <Grid item xs={6} sm={4} lg={2}>

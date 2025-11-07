@@ -33,6 +33,7 @@ export function EnrollmentChart({ data }: EnrollmentChartProps) {
     },
     plotOptions: {
       bar: {
+        horizontal: true,
         borderRadius: 8,
         columnWidth: "60%",
         horizontal:true

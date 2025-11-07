@@ -35,10 +35,11 @@ import axios from "axios";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { API_BASE_URL } from "../../../../config";
 import { useRouter } from "next/navigation";
+import { Matricula } from "@/interfaces/interfaces";
 
 interface AsistenciaRegistro {
   id_asistencia: number;
-  id_inscripcion: number;
+  id_inscripcion: Matricula;
   fecha_asistencia: string;
   estado_asistencia: string;
   comentarios: string;
@@ -162,12 +163,12 @@ const fetchAsistenciasPorFecha = async (fecha: string) => {
           estado_asistencia: asistencia.estado_asistencia,
           comentarios: asistencia.comentarios || "",
           fecha_asistencia: asistencia.fecha_asistencia,
-          grupo_nombre: "Grupo Ejemplo",
-          apellido: "Apellido Ejemplo",
-          nombre: "Nombre Ejemplo",
-          numero_documento: "12345678",
-          colegio: "Colegio Ejemplo",
-          tipo_vinculacion: "Particular",
+          grupo_nombre: asistencia.id_inscripcion.grupo,
+          apellido: asistencia.id_inscripcion.id_estudiante.apellido,
+          nombre: asistencia.id_inscripcion.id_estudiante.nombre,
+          numero_documento: asistencia.id_inscripcion.id_estudiante.numero_documento,
+          colegio: asistencia.id_inscripcion.id_estudiante.colegio,
+          tipo_vinculacion: asistencia.id_inscripcion.tipo_vinculacion,
         })
       );
 

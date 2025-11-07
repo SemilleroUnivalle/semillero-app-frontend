@@ -6,15 +6,16 @@ import {
   HomeIcon,
   BookOpenIcon,
   CogIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 import GroupWorkOutlinedIcon from "@mui/icons-material/GroupWorkOutlined";
 import AssignmentIndOutlinedIcon from "@mui/icons-material/AssignmentIndOutlined";
-import InventoryOutlinedIcon from '@mui/icons-material/InventoryOutlined';
-import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
-import ContentPasteSearchOutlinedIcon from '@mui/icons-material/ContentPasteSearchOutlined';
-import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined';
+import InventoryOutlinedIcon from "@mui/icons-material/InventoryOutlined";
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
+import ContentPasteSearchOutlinedIcon from "@mui/icons-material/ContentPasteSearchOutlined";
+import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
 import LocalLibraryOutlinedIcon from "@mui/icons-material/LocalLibraryOutlined";
+import AnalyticsOutlinedIcon from "@mui/icons-material/AnalyticsOutlined";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -59,6 +60,17 @@ const adminLinks = [
       { name: "Grupos", href: "/admin/grupos/ver-grupos", icon: UsersIcon },
     ],
   },
+  {
+    name: "Asistencias",
+    href: "/admin/asistencias/ver-asistencias",
+    icon: InventoryOutlinedIcon,
+  },
+
+  {
+    name: "Estadisticas",
+    href: "/admin/estadisticas",
+    icon: AnalyticsOutlinedIcon,
+  },
 
   { name: "Ajustes", href: "/admin/ajustes/ajustes", icon: CogIcon },
 ];
@@ -66,8 +78,16 @@ const adminLinks = [
 // Links para profesor
 const profesorLinks = [
   { name: "Perfil", href: "/docente/perfil", icon: UsersIcon },
-  { name: "Asistencia", href: "/docente/asistencia", icon: InventoryOutlinedIcon },
-  { name: "Visualizador", href: "/docente/visualizador", icon: ContentPasteSearchOutlinedIcon },
+  {
+    name: "Asistencia",
+    href: "/docente/asistencia",
+    icon: InventoryOutlinedIcon,
+  },
+  {
+    name: "Visualizador",
+    href: "/docente/visualizador",
+    icon: ContentPasteSearchOutlinedIcon,
+  },
   { name: "Calificación", href: "/docente/calificacion", icon: TagIcon },
 ];
 

@@ -423,7 +423,12 @@ export default function AsistenciaDocente() {
 
       {/* Header con control de fecha */}
       <Box className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-4 shadow-md">
-        <h1 className="mb-4 text-center">Control de Asistencia</h1>
+        <Typography
+          variant="h5"
+          className="mb-4 text-center font-bold text-primary"
+        >
+          Control de Asistencias
+        </Typography>
 
         <Box className="inputs-textfield mb-4 flex justify-center">
           <TextField
@@ -439,8 +444,8 @@ export default function AsistenciaDocente() {
         </Box>
 
         <Box className="mb-4 flex flex-wrap justify-around gap-4">
-          <Card className="flex flex-row w-full items-center justify-center sm:w-48">
-            <CardContent className="flex flex-row w-full items-center justify-around sm:flex-col sm:text-center">
+          <Card className="flex w-full flex-row items-center justify-center sm:w-48">
+            <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
               <PersonIcon className="text-blue-500" fontSize="large" />
               <Typography variant="h4" className="font-bold text-blue-600">
                 {totalEstudiantes}
@@ -451,12 +456,9 @@ export default function AsistenciaDocente() {
             </CardContent>
           </Card>
 
-          <Card className="flex flex-row w-full items-center justify-center sm:w-48">
-            <CardContent className="flex flex-row w-full items-center justify-around sm:flex-col sm:text-center">
-              <CheckCircleIcon
-                className=" text-green-500"
-                fontSize="large"
-              />
+          <Card className="flex w-full flex-row items-center justify-center sm:w-48">
+            <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
+              <CheckCircleIcon className="text-green-500" fontSize="large" />
               <Typography variant="h4" className="font-bold text-green-600">
                 {estudiantesPresentes.length}
               </Typography>
@@ -466,9 +468,9 @@ export default function AsistenciaDocente() {
             </CardContent>
           </Card>
 
-          <Card className="flex flex-row w-full items-center justify-center sm:w-48">
-            <CardContent className="flex flex-row w-full items-center justify-around sm:flex-col sm:text-center">
-              <CancelIcon className=" text-red-500" fontSize="large" />
+          <Card className="flex w-full flex-row items-center justify-center sm:w-48">
+            <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
+              <CancelIcon className="text-red-500" fontSize="large" />
               <Typography variant="h4" className="font-bold text-red-600">
                 {estudiantesAusentes.length}
               </Typography>
@@ -478,12 +480,9 @@ export default function AsistenciaDocente() {
             </CardContent>
           </Card>
 
-          <Card className="flex flex-row w-full items-center justify-center sm:w-48">
-            <CardContent className="flex flex-row w-full items-center justify-around sm:flex-col sm:text-center">
-              <CalendarTodayIcon
-                className=" text-orange-500"
-                fontSize="large"
-              />
+          <Card className="flex w-full flex-row items-center justify-center sm:w-48">
+            <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
+              <CalendarTodayIcon className="text-orange-500" fontSize="large" />
               <Typography variant="h4" className="font-bold text-orange-600">
                 {estudiantesConAsistencia.length}
               </Typography>
