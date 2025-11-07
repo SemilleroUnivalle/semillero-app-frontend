@@ -17,6 +17,9 @@ import { ModuleDistribution } from "./module-distribution"
 import { EstamentoSegmentation } from "./estamento-segmentation"
 import { RecentEnrollments } from "./recent-enrollments"
 import { DemographicsOverview } from "./demographics-overview"
+import { EstratoSocioeconomicoDistributionInterno } from './estrato_socioeconomico';
+import { VinculacionDistributionInterno } from './tipodevinculacion';
+import { MunicipioDistributionInterno } from './DistribucionMunicipios';
 import { fetchDashboardData, type DashboardData } from "@/lib/api/dashboard"
 import Link from 'next/link'
 import dynamic from 'next/dynamic';
@@ -140,75 +143,83 @@ export function AdminDashboard() {
       <Container maxWidth="xl" sx={{ py: 1 }}>
         {/* Key Stats */}
         <Grid container spacing={1} sx={{ mb: 2 }}>
-          <Grid item xs={12} sm={6} lg={4}>
-            <Link href="/admin/registros/verRegistros" legacyBehavior>
-            <a style={{ display: 'block', textDecoration: 'none' }} aria-label="Ver inscritos">
-            <StatsCard
-              title="Total Inscritos"
-              value={data.totalRegister.toLocaleString()}
-              icon={PeopleIcon}
-              trend={data.inscritosNoMatriculados.toLocaleString()}
-              trendLabel="% no matriculados"
-            />
-            </a>
-            </Link>
-          </Grid>
-          <Grid item xs={12} sm={6} lg={4}>
-            <Link href="/admin/matriculas/verMatriculas" legacyBehavior>
-            <a style={{ display: 'block', textDecoration: 'none' }} aria-label="Ver matriculados">
-            <StatsCard
-              title="Total Matriculados"
-              value={data.totalEnrollments.toLocaleString()}
-              icon={PeopleIcon}
-              trend={data.inscritosMatriculados.toLocaleString()}
-              trendLabel="% de los inscritos se ha matriculado"
-            />
-            </a>
-            </Link>
-          </Grid>
+    {/* Primer Card - 2/12 en lg */}
+    <Grid item xs={6} sm={4} lg={2}>
+        <Link href="/admin/registros/verRegistros" legacyBehavior>
+        <a style={{ display: 'block', textDecoration: 'none' }} aria-label="Ver inscritos">
+        <StatsCard
+            title="Total Inscritos"
+            value={data.totalRegister.toLocaleString()}
+            icon={PeopleIcon}
+            trend={data.inscritosNoMatriculados.toLocaleString()}
+            trendLabel="% no matriculados"
+        />
+        </a>
+        </Link>
+    </Grid>
 
-          <Grid item xs={12} sm={6} lg={4}>
-            <Link href="/admin/cursos/verCursos" legacyBehavior>
-              <a style={{ display: 'block', textDecoration: 'none' }} aria-label="Ver curso">
-                <StatsCard
-                  title="Módulos Activos"
-                  value={data.activeModules.toString()}
-                  icon={MenuBookIcon}
-                  description="En diferentes áreas"
-                />
-              </a>
-            </Link>
-          </Grid>
+    {/* Segundo Card - 2/12 en lg */}
+    <Grid item xs={6} sm={4} lg={2}>
+        <Link href="/admin/matriculas/verMatriculas" legacyBehavior>
+        <a style={{ display: 'block', textDecoration: 'none' }} aria-label="Ver matriculados">
+        <StatsCard
+            title="Total Matriculados"
+            value={data.totalEnrollments.toLocaleString()}
+            icon={PeopleIcon}
+            trend={data.inscritosMatriculados.toLocaleString()}
+            trendLabel="% de los inscritos se ha matriculado"
+        />
+        </a>
+        </Link>
+    </Grid>
 
-          <Grid item xs={12} sm={6} lg={4}>
+    {/* Tercer Card - 2/12 en lg */}
+    <Grid item xs={6} sm={4} lg={2}>
+        <Link href="/admin/cursos/verCursos" legacyBehavior>
+          <a style={{ display: 'block', textDecoration: 'none' }} aria-label="Ver curso">
             <StatsCard
-              title="Módulo Más Popular"
-              value={mostPopularModule.name}
-              icon={TrendingUpIcon}
-              description={`${mostPopularModule.enrollments} estudiantes`}
-              compact
+              title="Módulos Activos"
+              value={data.activeModules.toString()}
+              icon={MenuBookIcon}
+              description="En diferentes áreas"
             />
-          </Grid>
-          <Grid item xs={12} sm={6} lg={4}>
-            <StatsCard
-              title="Profesores"
-              value={data.totalProfessors}
-              icon={PeopleIcon}
-              description="En diferentes modulos"
-              compact
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} lg={4}>
-            <StatsCard
-              title="Monitores Academicos"
-              value={data.totalMonitors}
-              icon={PeopleIcon}
-              description="En diferentes modulos"
-              compact
-            />
-          </Grid>
-        </Grid>
+          </a>
+        </Link>
+    </Grid>
 
+    {/* Cuarto Card - 2/12 en lg */}
+    <Grid item xs={6} sm={4} lg={2}>
+        <StatsCard
+            title="Módulo Más Popular"
+            value={mostPopularModule.name}
+            icon={TrendingUpIcon}
+            description={`${mostPopularModule.enrollments} estudiantes`}
+            compact
+        />
+    </Grid>
+
+    {/* Quinto Card - 2/12 en lg */}
+    <Grid item xs={6} sm={4} lg={2}>
+        <StatsCard
+            title="Profesores"
+            value={data.totalProfessors}
+            icon={PeopleIcon}
+            description="En diferentes modulos"
+            compact
+        />
+    </Grid>
+
+    {/* Sexto Card - 2/12 en lg */}
+    <Grid item xs={6} sm={4} lg={2}>
+        <StatsCard
+            title="Monitores Academicos"
+            value={data.totalMonitors}
+            icon={PeopleIcon}
+            description="En diferentes modulos"
+            compact
+        />
+    </Grid>
+</Grid>
         {/* Main Content Tabs */}
         <Paper elevation={0} sx={{ border: "1px solid #d0d0d0" }}>
           <Tabs
@@ -229,6 +240,7 @@ export function AdminDashboard() {
             }}
           >
             <Tab label="Información de Matriculados" />
+            <Tab label="Información de Inscritos no Matriculados" />
             <Tab label="Información geográfica estudiantes" />
             <Tab label="Módulos" />
           </Tabs>
@@ -267,7 +279,7 @@ export function AdminDashboard() {
                       Segmentación por Estamento
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Distribución público vs. privado
+                      Estudiantes matriculados por estamento del colegio
                     </Typography>
                     <EstamentoSegmentation data={data.enrollmentsByEstamento ?? []} />
                   </Paper>
@@ -284,11 +296,48 @@ export function AdminDashboard() {
                     <ModuleDistribution data={data.enrollmentsByGrade ?? []} />
                   </Paper>
                 </Grid>
+                <Grid item xs={12} lg={6}>
+        <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>
+                Distribución por Estrato Socioeconómico
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Estudiantes matriculados por estrato Socioeconómico.
+            </Typography>
+            {/* 🛑 Aquí se usa el nuevo componente. 
+                 Nota que no necesita props, ya que los datos están integrados. */}
+            <EstratoSocioeconomicoDistributionInterno /> 
+        </Paper>
+    </Grid>
+    <Grid item xs={12} lg={6}>
+        <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>
+                Distribución por Tipo de Vinculación
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Base: 170 estudiantes. Datos simulados.
+            </Typography>
+            {/* 🛑 Aquí se usa el nuevo componente de Vinculación */}
+            <VinculacionDistributionInterno /> 
+        </Paper>
+    </Grid>
+    <Grid item xs={12} lg={6}>
+        {/* ¡Nueva Gráfica! Municipios */}
+        <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>
+                Procedencia por Municipio
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Base: 170 estudiantes (Mayoría Valle del Cauca).
+            </Typography>
+            <MunicipioDistributionInterno />
+        </Paper>
+    </Grid>
               </Grid>
             </TabPanel>
 
             {/* Students Tab */}
-            <TabPanel value={tabValue} index={1}>
+            <TabPanel value={tabValue} index={2}>
               <Grid 
                 container 
                 spacing={2} 
@@ -361,7 +410,7 @@ export function AdminDashboard() {
               </Grid>
             </TabPanel>
             {/* Modules Tab */}
-            <TabPanel value={tabValue} index={2}>
+            <TabPanel value={tabValue} index={3}>
               <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
                   Análisis de Módulos

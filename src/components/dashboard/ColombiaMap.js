@@ -6,13 +6,13 @@ const generateCityData = () => {
     // Coordenadas aproximadas para municipios de Valle del Cauca (ejemplo)
     return [
         { name: "Cali", count: 50, lat: 3.4516, lon: -76.5320, description: "Capital del Valle del Cauca, importante centro económico y cultural." },
-        { name: "Tuluá", count: 20, lat: 4.0833, lon: -76.1956, description: "Conocida como 'Corazón del Valle', es un centro agrícola." },
-        { name: "Palmira", count: 20, lat: 3.5385, lon: -76.2974, description: "La capital agrícola de Colombia, famosa por la caña de azúcar." },
-        { name: "Jamundí", count: 30, lat: 3.2505, lon: -76.5414, description: "Cercana a Cali, en crecimiento y conocida por su gastronomía." },
-        { name: "Buga", count: 15, lat: 3.9037, lon: -76.2996, description: "Hogar de la Basílica del Señor de los Milagros, un destino religioso." },
-        { name: "Cartago", count: 10, lat: 4.7001, lon: -75.9135, description: "Famosa por sus bordados y como punto de conexión vial." },
-        { name: "Buenaventura", count: 25, lat: 3.8741, lon: -77.0272, description: "Principal puerto marítimo de Colombia en el Pacífico." },
-        { name: "Yumbo", count: 18, lat: 3.5501, lon: -76.4952, description: "Un importante centro industrial del Valle del Cauca." },
+        { name: "Tuluá", count: 10, lat: 4.0833, lon: -76.1956, description: "Conocida como 'Corazón del Valle', es un centro agrícola." },
+        { name: "Palmira", count: 8, lat: 3.5385, lon: -76.2974, description: "La capital agrícola de Colombia, famosa por la caña de azúcar." },
+        { name: "Jamundí", count: 22, lat: 3.2505, lon: -76.5414, description: "Cercana a Cali, en crecimiento y conocida por su gastronomía." },
+        { name: "Buga", count: 2, lat: 3.9037, lon: -76.2996, description: "Hogar de la Basílica del Señor de los Milagros, un destino religioso." },
+        { name: "Cartago", count: 2, lat: 4.7001, lon: -75.9135, description: "Famosa por sus bordados y como punto de conexión vial." },
+        { name: "Buenaventura", count: 2, lat: 3.8741, lon: -77.0272, description: "Principal puerto marítimo de Colombia en el Pacífico." },
+        { name: "Yumbo", count: 4, lat: 3.5501, lon: -76.4952, description: "Un importante centro industrial del Valle del Cauca." },
     ];
 };
 // -----------------------------------------------------------------------
