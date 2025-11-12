@@ -12,8 +12,6 @@ import {
   SelectChangeEvent,
   Checkbox,
   ListItemText,
-  Snackbar,
-  Alert,
   Chip,
   Typography,
   Box,
@@ -26,33 +24,25 @@ import {
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import SearchIcon from "@mui/icons-material/Search";
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import PersonIcon from "@mui/icons-material/Person";
 import GroupIcon from "@mui/icons-material/Group";
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
+import Tooltip from "@mui/material/Tooltip";
 
 import axios from "axios";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { API_BASE_URL } from "../../../../config";
 import { useRouter } from "next/navigation";
-import { Matricula } from "@/interfaces/interfaces";
+import { Matricula, Asistencia} from "@/interfaces/interfaces";
 
-interface AsistenciaRegistro {
-  id_asistencia: number;
-  id_inscripcion: Matricula;
-  fecha_asistencia: string;
-  estado_asistencia: string;
-  comentarios: string;
-}
 
 interface AsistenciaRow {
   id: number;
   grupo_nombre: string;
   apellido: string;
   nombre: string;
-  numero_documento: string;
-  colegio: string;
-  tipo_vinculacion: string;
+  sesion: string;
   estado_asistencia: string;
   comentarios: string;
   fecha_asistencia: string;
@@ -66,21 +56,7 @@ export default function VisualizadorAsistencia() {
     { field: "grupo_nombre", headerName: "Grupo", flex: 0.8 },
     { field: "apellido", headerName: "Apellidos", flex: 1 },
     { field: "nombre", headerName: "Nombres", flex: 1 },
-    { field: "numero_documento", headerName: "Documento", flex: 0.8 },
-    { field: "colegio", headerName: "Colegio", flex: 1 },
-    {
-      field: "tipo_vinculacion",
-      headerName: "Tipo",
-      flex: 0.6,
-      renderCell: (params) => (
-        <Chip
-          label={params.value}
-          color={params.value === "Particular" ? "primary" : "secondary"}
-          variant="outlined"
-          size="small"
-        />
-      ),
-    },
+    { field: "sesion", headerName: "Sesión", flex: 0.8 },
     {
       field: "estado_asistencia",
       headerName: "Estado",
@@ -107,6 +83,39 @@ export default function VisualizadorAsistencia() {
         </Typography>
       ),
     },
+    {
+          field: "editar",
+          headerName: "Acciones",
+          sortable: false,
+          filterable: false,
+          flex: 1,
+          align: "center",
+          headerAlign: "center",
+          renderCell: (params) => (
+            <div className="flex h-full w-full flex-row items-center justify-around">
+              <Tooltip title="Ver detalles" placement="top">
+                <VisibilityOutlinedIcon
+                  className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+                  onClick={() => {
+                    const rowData = params.row;
+    
+                    localStorage.setItem(
+                      "matriculaSeleccionada",
+                      JSON.stringify(rowData),
+                    ); // 👉 Guarda la fila completa como JSON
+                    router.push("/admin/matriculas/detallarMatricula");
+                  }}
+                />
+              </Tooltip>
+              <Tooltip title="Eliminar matricula" placement="top">
+                <TrashIcon
+                  className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
+                  onClick={() => handleDelete(params.row.id)}
+                />
+              </Tooltip>
+            </div>
+          ),
+        },
   ];
 
   const paginationModel = { page: 0, pageSize: 50 };
@@ -121,7 +130,7 @@ export default function VisualizadorAsistencia() {
     new Date().toISOString().split("T")[0]
   );
   const [selectedGrupos, setSelectedGrupos] = useState<string[]>([]);
-  const [selectedColegios, setSelectedColegios] = useState<string[]>([]);
+  const [selectedSesiones, setSelectedSesiones] = useState<string[]>([]);
   const [selectedEstados, setSelectedEstados] = useState<string[]>([]);
 
   // Función para obtener token
@@ -154,21 +163,19 @@ const fetchAsistenciasPorFecha = async (fecha: string) => {
     if (response.status === 200) {
       // Filtrar por fecha y formatear los datos para la tabla
       const asistenciasFiltradas = response.data.filter(
-        (asistencia: AsistenciaRegistro) => asistencia.fecha_asistencia === fecha
+        (asistencia: Asistencia) => asistencia.fecha_asistencia === fecha
       );
 
       const asistenciasFormateadas: AsistenciaRow[] = asistenciasFiltradas.map(
-        (asistencia: AsistenciaRegistro) => ({
+        (asistencia: Asistencia) => ({
           id: asistencia.id_asistencia,
           estado_asistencia: asistencia.estado_asistencia,
           comentarios: asistencia.comentarios || "",
           fecha_asistencia: asistencia.fecha_asistencia,
+          sesion: asistencia.sesion,
           grupo_nombre: asistencia.id_inscripcion.grupo,
           apellido: asistencia.id_inscripcion.id_estudiante.apellido,
           nombre: asistencia.id_inscripcion.id_estudiante.nombre,
-          numero_documento: asistencia.id_inscripcion.id_estudiante.numero_documento,
-          colegio: asistencia.id_inscripcion.id_estudiante.colegio,
-          tipo_vinculacion: asistencia.id_inscripcion.tipo_vinculacion,
         })
       );
 
@@ -196,9 +203,9 @@ const fetchAsistenciasPorFecha = async (fecha: string) => {
     setSelectedGrupos(typeof value === "string" ? value.split(",") : value);
   };
 
-  const handleChangeColegios = (event: SelectChangeEvent<string[]>) => {
+  const handleChangeSesiones = (event: SelectChangeEvent<string[]>) => {
     const { target: { value } } = event;
-    setSelectedColegios(typeof value === "string" ? value.split(",") : value);
+    setSelectedSesiones(typeof value === "string" ? value.split(",") : value);
   };
 
   const handleChangeEstados = (event: SelectChangeEvent<string[]>) => {
@@ -216,20 +223,20 @@ const fetchAsistenciasPorFecha = async (fecha: string) => {
       const grupoMatch =
         selectedGrupos.length === 0 || selectedGrupos.includes(row.grupo_nombre);
       
-      const colegioMatch =
-        selectedColegios.length === 0 || selectedColegios.includes(row.colegio);
+      const sesionMatch =
+        selectedSesiones.length === 0 || selectedSesiones.includes(row.sesion);
       
       const estadoMatch =
         selectedEstados.length === 0 || selectedEstados.includes(row.estado_asistencia);
 
-      return grupoMatch && colegioMatch && estadoMatch;
+      return grupoMatch && sesionMatch && estadoMatch;
     });
-  }, [rows, selectedGrupos, selectedColegios, selectedEstados]);
+  }, [rows, selectedGrupos, selectedSesiones, selectedEstados]);
 
   // Calcular estadísticas
   const totalEstudiantes = filteredRows.length;
-  const estudiantesPresentes = filteredRows.filter(row => row.estado_asistencia === "Asistio").length;
-  const estudiantesAusentes = filteredRows.filter(row => row.estado_asistencia === "No Asistio").length;
+  const estudiantesPresentes = filteredRows.filter(row => row.estado_asistencia === "Presente").length;
+  const estudiantesAusentes = filteredRows.filter(row => row.estado_asistencia === "Ausente").length;
   const gruposUnicos = [...new Set(filteredRows.map(row => row.grupo_nombre))].length;
 
   return (
@@ -339,19 +346,19 @@ const fetchAsistenciasPorFecha = async (fecha: string) => {
         </FormControl>
 
         <FormControl className="inputs-textfield w-full sm:w-1/4">
-          <InputLabel id="filtro-colegios">Colegios</InputLabel>
+          <InputLabel id="filtro-sesion">Sesión</InputLabel>
           <Select
-            labelId="filtro-colegios"
+            labelId="filtro-sesion"
             multiple
-            value={selectedColegios}
-            onChange={handleChangeColegios}
+            value={selectedSesiones}
+            onChange={handleChangeSesiones}
             renderValue={(selected) => selected.join(", ")}
-            label="Colegios"
+            label="Sesión"
           >
-            {[...new Set(rows.map((row) => row.colegio))].map((colegio) => (
-              <MenuItem key={colegio} value={colegio}>
-                <Checkbox checked={selectedColegios.indexOf(colegio) > -1} />
-                <ListItemText primary={colegio} />
+            {[...new Set(rows.map((row) => row.sesion))].map((sesion) => (
+              <MenuItem key={sesion} value={sesion}>
+                <Checkbox checked={selectedSesiones.indexOf(sesion) > -1} />
+                <ListItemText primary={sesion} />
               </MenuItem>
             ))}
           </Select>

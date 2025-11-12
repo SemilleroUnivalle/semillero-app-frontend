@@ -147,7 +147,7 @@ export interface OfertaCategoria {
 export interface Matricula {
   id_inscripcion: number;
   modulo: Modulo;
-  id_estudiante: Estudiante;
+  estudiante: Estudiante;
   oferta_categoria: OfertaCategoria;
   estado: string;
   grupo: string;
@@ -168,4 +168,13 @@ export interface Grupo {
   nombre: string;
   profesor: ProfesorInterface;
   monitor_academico: ProfesorInterface;
+}
+
+export interface Asistencia {
+  id_asistencia: number;
+  id_inscripcion: number;
+  fecha_asistencia: string;
+  estado_asistencia: string;
+  comentarios: string;
+  sesion: string;
 }

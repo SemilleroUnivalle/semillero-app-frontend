@@ -40,6 +40,8 @@ import { GridColDef } from "@mui/x-data-grid";
 import { API_BASE_URL } from "../../../../config";
 import { useRouter } from "next/navigation";
 
+import { Asistencia } from "@/interfaces/interfaces";
+
 interface Estudiante {
   id_inscripcion: number;
   id_estudiante: number;
@@ -74,13 +76,6 @@ interface EstudianteRow {
   observaciones: string;
 }
 
-interface AsistenciaData {
-  id_inscripcion: number;
-  fecha_asistencia: string;
-  estado_asistencia: string;
-  comentarios: string;
-}
-
 export default function AsistenciaDocente() {
   const router = useRouter();
   const getAvatarColor = (asistio: boolean | null) => {
@@ -89,68 +84,7 @@ export default function AsistenciaDocente() {
     return "#9e9e9e"; // Gris
   };
 
-  const columns: GridColDef[] = [
-    { field: "grupo_nombre", headerName: "Grupo", flex: 0.8 },
-    { field: "apellido", headerName: "Apellidos", flex: 1 },
-    { field: "nombre", headerName: "Nombres", flex: 1 },
-    { field: "numero_documento", headerName: "Documento", flex: 0.8 },
-    {
-      field: "asistio",
-      headerName: "Asistencia",
-      flex: 0.8,
-      align: "center",
-      headerAlign: "center",
-      renderCell: (params) => (
-        <Box sx={{ display: "flex", justifyItems: "center", gap: 1 }}>
-          <Button
-            className="rounded-xl"
-            size="small"
-            variant={params.value === true ? "contained" : "outlined"}
-            color="success"
-            onClick={() => handleAsistenciaChange(params.row.id, true)}
-            startIcon={<CheckCircleIcon />}
-          >
-            Sí
-          </Button>
-          <Button
-            className="rounded-xl"
-            size="small"
-            variant={params.value === false ? "contained" : "outlined"}
-            color="error"
-            onClick={() => handleAsistenciaChange(params.row.id, false)}
-            startIcon={<CancelIcon />}
-          >
-            No
-          </Button>
-        </Box>
-      ),
-    },
-    {
-      field: "observaciones",
-      headerName: "Observaciones",
-      flex: 1.2,
-      renderCell: (params) => (
-        <TextField
-          className="inputs-textfield"
-          size="small"
-          variant="outlined"
-          placeholder="Observaciones..."
-          value={params.value || ""}
-          onChange={(e) =>
-            handleObservacionesChange(params.row.id, e.target.value)
-          }
-          multiline
-          maxRows={2}
-          sx={{ width: "100%" }}
-        />
-      ),
-    },
-  ];
-
-  const paginationModel = { page: 0, pageSize: 50 };
-
   // Estados
-  const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [rows, setRows] = useState<EstudianteRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState(false);
@@ -159,15 +93,12 @@ export default function AsistenciaDocente() {
 
   // Estados para filtros
   const [selectedGrupos, setSelectedGrupos] = useState<string[]>([]);
-  const [selectedColegios, setSelectedColegios] = useState<string[]>([]);
-  const [selectedTipoVinculacion, setSelectedTipoVinculacion] = useState<
-    string[]
-  >([]);
 
   // Estados para asistencia
   const [fechaAsistencia, setFechaAsistencia] = useState(
     new Date().toISOString().split("T")[0],
   );
+  const [sesionSeleccionada, setSesionSeleccionada] = useState("");
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   // Función para obtener token
@@ -196,7 +127,6 @@ export default function AsistenciaDocente() {
         );
 
         if (response.status === 200) {
-          setGrupos(response.data);
 
           // Formatear todos los estudiantes en una sola tabla
           const todosLosEstudiantes: EstudianteRow[] = [];
@@ -239,22 +169,6 @@ export default function AsistenciaDocente() {
       target: { value },
     } = event;
     setSelectedGrupos(typeof value === "string" ? value.split(",") : value);
-  };
-
-  const handleChangeColegios = (event: SelectChangeEvent<string[]>) => {
-    const {
-      target: { value },
-    } = event;
-    setSelectedColegios(typeof value === "string" ? value.split(",") : value);
-  };
-
-  const handleChangeTipoVinculacion = (event: SelectChangeEvent<string[]>) => {
-    const {
-      target: { value },
-    } = event;
-    setSelectedTipoVinculacion(
-      typeof value === "string" ? value.split(",") : value,
-    );
   };
 
   // Handler para cambio de asistencia
@@ -311,12 +225,13 @@ export default function AsistenciaDocente() {
       const token = getToken();
 
       // Formatear los datos según el nuevo formato del endpoint
-      const asistenciaData: AsistenciaData[] = estudiantesConAsistencia.map(
+      const asistenciaData: Asistencia[] = estudiantesConAsistencia.map(
         (row) => ({
           id_inscripcion: row.id,
           fecha_asistencia: fechaAsistencia,
-          estado_asistencia: row.asistio ? "Asistio" : "No Asistio",
+          estado_asistencia: row.asistio ? "Presente" : "Ausente",
           comentarios: row.observaciones || "",
+          sesion: sesionSeleccionada,
         }),
       );
 
@@ -365,17 +280,9 @@ export default function AsistenciaDocente() {
       const grupoMatch =
         selectedGrupos.length === 0 ||
         selectedGrupos.includes(row.grupo_nombre);
-
-      const colegioMatch =
-        selectedColegios.length === 0 || selectedColegios.includes(row.colegio);
-
-      const tipoVinculacionMatch =
-        selectedTipoVinculacion.length === 0 ||
-        selectedTipoVinculacion.includes(row.tipo_vinculacion);
-
-      return grupoMatch && colegioMatch && tipoVinculacionMatch;
+      return grupoMatch;
     });
-  }, [rows, selectedGrupos, selectedColegios, selectedTipoVinculacion]);
+  }, [rows, selectedGrupos]);
 
   // Calcular estadísticas de asistencia
   const estudiantesConAsistencia = filteredRows.filter(
@@ -430,8 +337,9 @@ export default function AsistenciaDocente() {
           Control de Asistencias
         </Typography>
 
-        <Box className="inputs-textfield mb-4 flex justify-center">
+        <Box className="flex justify-around mb-2">
           <TextField
+          className="inputs-textfield flex w-full flex-col sm:w-1/4"
             label="Fecha de Asistencia"
             type="date"
             value={fechaAsistencia}
@@ -439,8 +347,19 @@ export default function AsistenciaDocente() {
             InputLabelProps={{
               shrink: true,
             }}
-            sx={{ minWidth: 200 }}
           />
+          <FormControl className="inputs-textfield flex w-full flex-col sm:w-1/4">
+            <InputLabel id="sesion-label">Sesión</InputLabel>
+            <Select
+              labelId="sesion-label"
+              value={sesionSeleccionada}
+              onChange={(e) => setSesionSeleccionada(e.target.value)}
+              label="Sesión"
+            >
+              <MenuItem value="1">Uno</MenuItem>
+              <MenuItem value="2">Dos</MenuItem>
+            </Select>
+          </FormControl>
         </Box>
 
         <Box className="mb-4 flex flex-wrap justify-around gap-4">
