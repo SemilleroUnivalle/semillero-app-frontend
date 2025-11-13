@@ -18,6 +18,9 @@ import {
   Card,
   CardContent,
   TextField,
+  Divider,
+  Avatar,
+  Grid,
   CircularProgress,
 } from "@mui/material";
 
@@ -110,7 +113,7 @@ export default function VisualizadorAsistencia() {
               <Tooltip title="Eliminar matricula" placement="top">
                 <TrashIcon
                   className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
-                  onClick={() => handleDelete(params.row.id)}
+                  // onClick={() => handleDelete(params.row.id)}
                 />
               </Tooltip>
             </div>
@@ -441,6 +444,150 @@ const fetchAsistenciasPorFecha = async (fecha: string) => {
           </Paper>
         )}
       </div>
+
+{/* Tabla de asistencia */}
+      <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-4 text-center shadow-md">
+        {/* Cards de estudiantes */}
+        <div className="mx-auto mt-4 w-11/12">
+          
+
+          <Grid className="container" spacing={2}>
+            {filteredRows.map((estudiante) => (
+              <Grid key={estudiante.id}>
+                <Card
+                  variant="outlined"
+                  sx={{
+                    borderColor:
+                      estudiante.estado_asistencia === "Presente"
+                        ? "#4caf50"
+                        : estudiante.estado_asistencia === "Ausente"
+                          ? "#f44336"
+                          : "white",
+                    borderWidth: estudiante.estado_asistencia !== null ? 2 : 1,
+                    backgroundColor:
+                      estudiante.estado_asistencia === "Presente"
+                        ? "#e8f5e8"
+                        : estudiante.estado_asistencia === "Ausente"
+                          ? "#ffeaea"
+                          : "white",
+                    height: "100%",
+                  }}
+                >
+                  <CardContent className="flex flex-col justify-between p-3 sm:flex-row">
+                    {/* Header del estudiante */}
+                    <Box className="mb-3 flex flex-row gap-2">
+                      <Avatar
+                        sx={{
+                          width: 45,
+                          height: 45,
+                          bgcolor: getAvatarColor(estudiante.estado_asistencia),
+                          fontSize: "1rem",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {estudiante.nombre.charAt(0)}
+                        {estudiante.apellido.charAt(0)}
+                      </Avatar>
+                      <Box className="">
+                        <Typography
+                          variant="subtitle2"
+                          fontWeight="bold"
+                          className="line-clamp-2"
+                          sx={{ fontSize: "0.9rem" }}
+                        >
+                          {estudiante.nombre} {estudiante.apellido}
+                        </Typography>
+                        <Box className="flex items-center gap-1">
+                          <BadgeIcon
+                            sx={{ fontSize: 14, color: "text.secondary" }}
+                          />
+                          <Typography variant="caption" color="text.secondary">
+                            {estudiante.numero_documento}
+                          </Typography>
+                        </Box>
+                        {/* Información del grupo */}
+                        <Box className="flex items-center gap-1">
+                          <GroupIcon
+                            sx={{ fontSize: 14, color: "text.secondary" }}
+                          />
+                          <Typography variant="caption" color="text.secondary">
+                            {estudiante.grupo_nombre}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+
+                    {/* Botones de asistencia - FUERA del header */}
+                    <Box className="flex flex-col">
+                      <Box className="mb-3 flex gap-1">
+                        <Button
+                          size="small"
+                          variant={
+                            estudiante.estado_asistencia === "Presente"
+                              ? "contained"
+                              : "outlined"
+                          }
+                          color="success"
+                          onClick={() =>
+                            handleAsistenciaChange(estudiante.id, true)
+                          }
+                          startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
+                          className="flex-1 rounded-xl"
+                          sx={{ fontSize: "0.7rem", py: 0.5 }}
+                        >
+                          Presente
+                        </Button>
+                        <Button
+                          size="small"
+                          variant={
+                            estudiante.estado_asistencia === "Ausente"
+                              ? "contained"
+                              : "outlined"
+                          }
+                          color="error"
+                          onClick={() =>
+                            handleAsistenciaChange(estudiante.id, false)
+                          }
+                          startIcon={<CancelIcon sx={{ fontSize: 16 }} />}
+                          className="flex-1 rounded-xl"
+                          sx={{ fontSize: "0.7rem", py: 0.5 }}
+                        >
+                          Ausente
+                        </Button>
+                      </Box>
+
+                      {/* Campo de observaciones */}
+                      <TextField
+                        size="small"
+                        variant="outlined"
+                        placeholder="Observaciones..."
+                        value={estudiante.observaciones || ""}
+                        onChange={(e) =>
+                          handleObservacionesChange(
+                            estudiante.id,
+                            e.target.value,
+                          )
+                        }
+                        multiline
+                        maxRows={2}
+                        fullWidth
+                        className="inputs-textfield"
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            fontSize: "0.75rem",
+                          },
+                        }}
+                      />
+                    </Box>
+                  </CardContent>
+                </Card>
+                <Divider></Divider>
+              </Grid>
+            ))}
+          </Grid>
+        </div>
+      </div>
+
     </div>
   );
 }

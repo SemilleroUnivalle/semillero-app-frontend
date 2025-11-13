@@ -19,6 +19,7 @@ import {
   Alert,
   Button,
   SelectChangeEvent,
+  Tooltip,
 } from "@mui/material";
 import {
   Analytics as AnalyticsIcon,
@@ -30,14 +31,17 @@ import {
   FileDownload as FileDownloadIcon,
   CheckCircleOutline as CheckCircleIcon,
   CancelOutlined as CancelIcon,
+  VisibilityOutlined as VisibilityOutlinedIcon,
   Cancel,
 } from "@mui/icons-material";
+import { TrashIcon } from "@heroicons/react/24/outline";
+import { useRouter } from "next/navigation";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import dynamic from "next/dynamic";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 import type ApexCharts from "apexcharts";
-import { Matricula } from "@/interfaces/interfaces";
+import { Matricula, Modulo } from "@/interfaces/interfaces";
 
 // Carga dinámica de ApexCharts para evitar problemas de SSR
 const ReactApexCharts = dynamic(() => import("react-apexcharts"), {
@@ -78,13 +82,9 @@ interface PeriodoAcademico {
   estado: boolean;
 }
 
-interface Modulo {
-  id_modulo: number;
-  nombre_modulo: string;
-  estado: boolean;
-}
-
 export default function VerAsistencias() {
+  const router = useRouter();
+
   // Estados principales
   const [asistencias, setAsistencias] = useState<AsistenciaRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,6 +108,7 @@ export default function VerAsistencias() {
 
   // Columnas de la DataGrid
   const columns: GridColDef[] = [
+    { field: "id", headerName: "ID", flex: 0.5 },
     { field: "fecha_asistencia", headerName: "Fecha", flex: 0.8 },
     { field: "periodo_nombre", headerName: "Período", flex: 1 },
     { field: "modulo_nombre", headerName: "Módulo", flex: 1 },
@@ -128,6 +129,39 @@ export default function VerAsistencias() {
       ),
     },
     { field: "comentarios", headerName: "Comentarios", flex: 1.5 },
+    {
+      field: "editar",
+      headerName: "Acciones",
+      sortable: false,
+      filterable: false,
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+        <div className="flex h-full w-full flex-row items-center justify-around">
+          <Tooltip title="Ver detalles" placement="top">
+            <VisibilityOutlinedIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
+              onClick={() => {
+                const rowData = params.row;
+
+                localStorage.setItem(
+                  "asistenciaSeleccionada",
+                  JSON.stringify(rowData),
+                ); // 👉 Guarda la fila completa como JSON
+                router.push("/admin/asistencias/detallar-asistencia/");
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="Eliminar inscripcion" placement="top">
+            <TrashIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
+              onClick={() => handleDelete(params.row) }
+            />
+          </Tooltip>
+        </div>
+      ),
+    },
   ];
 
   // Función para obtener token
@@ -214,6 +248,45 @@ export default function VerAsistencias() {
     } catch (error) {
       console.error("Error al cargar módulos:", error);
     }
+  };
+
+  const handleDelete = async (row: AsistenciaRow) => {
+    try {
+      const token = getToken();
+
+      const response = await axios.delete(
+        `${API_BASE_URL}/asistencia/asis/${row.id}/`,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 204 || response.status === 200) {
+        setAsistencias(prevAsistencias => 
+          prevAsistencias.filter(asistencia => asistencia.id !== row.id)
+        );
+
+        alert('Registro de asistencia eliminado exitosamente');
+      }
+
+    } catch (error: any) {
+      console.error('Error al eliminar el registro:', error);
+      
+      if (error.response?.status === 404) {
+        alert('El registro ya no existe o fue eliminado previamente');
+        setAsistencias(prevAsistencias => 
+          prevAsistencias.filter(asistencia => asistencia.id !== row.id)
+        );
+      } else if (error.response?.status === 403) {
+        alert('No tienes permisos para eliminar este registro');
+      } else if (error.response?.status === 400) {
+        alert('No se puede eliminar este registro debido a restricciones de integridad');
+      } else {
+        alert('Error al eliminar el registro. Por favor, inténtalo de nuevo.');
+      }
+    } 
   };
 
   // Filtrar datos
@@ -568,7 +641,7 @@ export default function VerAsistencias() {
               onChange={handleModuloChange}
               label="Módulo"
             >
-              <MenuItem value="todos">Todos los módulos</MenuItem>
+              <MenuItem key="todos" value="todos">Todos los módulos</MenuItem>
               {modulos.map((modulo) => (
                 <MenuItem key={modulo.id_modulo} value={modulo.nombre_modulo}>
                   {modulo.nombre_modulo}
@@ -584,9 +657,9 @@ export default function VerAsistencias() {
               onChange={handleEstadoChange}
               label="Estado de Asistencia"
             >
-              <MenuItem value="todos">Todos los estados</MenuItem>
-              <MenuItem value="Asistio">Presente</MenuItem>
-              <MenuItem value="No Asistio">Ausente</MenuItem>
+              <MenuItem key="todos" value="todos">Todos los estados</MenuItem>
+              <MenuItem key="Presente" value="Presente">Presente</MenuItem>
+              <MenuItem key="Ausente" value="Ausente">Ausente</MenuItem>
             </Select>
           </FormControl>
 
