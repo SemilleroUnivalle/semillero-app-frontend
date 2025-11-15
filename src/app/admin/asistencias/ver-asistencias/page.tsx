@@ -32,7 +32,7 @@ import {
   CheckCircleOutline as CheckCircleIcon,
   CancelOutlined as CancelIcon,
   VisibilityOutlined as VisibilityOutlinedIcon,
-  Cancel,
+  EditOutlined as EditOutlinedIcon,
 } from "@mui/icons-material";
 import { TrashIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
@@ -41,27 +41,17 @@ import dynamic from "next/dynamic";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 import type ApexCharts from "apexcharts";
-import { Matricula, Modulo } from "@/interfaces/interfaces";
+import {
+  Matricula,
+  Modulo,
+  AsistenciaResponse,
+  OfertaAcademica,
+} from "@/interfaces/interfaces";
 
 // Carga dinámica de ApexCharts para evitar problemas de SSR
 const ReactApexCharts = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
-
-// Interfaces
-interface Asistencia {
-  id_asistencia: number;
-  fecha_asistencia: string;
-  estado_asistencia: string;
-  comentarios: string;
-  id_inscripcion: Matricula;
-  // Datos expandidos que vendrán del backend
-  estudiante_nombre?: string;
-  estudiante_apellido?: string;
-  modulo_nombre?: string;
-  grupo_nombre?: string;
-  periodo_nombre?: string;
-}
 
 interface AsistenciaRow {
   id: number;
@@ -73,13 +63,7 @@ interface AsistenciaRow {
   modulo_nombre: string;
   grupo_nombre: string;
   periodo_nombre: string;
-}
-
-interface PeriodoAcademico {
-  id: number;
-  nombre: string;
-  fecha_inicio: string;
-  estado: boolean;
+  sesion: string;
 }
 
 export default function VerAsistencias() {
@@ -93,7 +77,7 @@ export default function VerAsistencias() {
 
   // Estados para filtros
   const [periodosAcademicos, setPeriodosAcademicos] = useState<
-    PeriodoAcademico[]
+    OfertaAcademica[]
   >([]);
   const [modulos, setModulos] = useState<Modulo[]>([]);
   const [selectedPeriodo, setSelectedPeriodo] = useState<string>("todos");
@@ -115,6 +99,7 @@ export default function VerAsistencias() {
     { field: "grupo_nombre", headerName: "Grupo", flex: 0.8 },
     { field: "estudiante_apellido", headerName: "Apellidos", flex: 1 },
     { field: "estudiante_nombre", headerName: "Nombres", flex: 1 },
+    { field: "sesion", headerName: "Sesión", flex: 0.8 },
     {
       field: "estado_asistencia",
       headerName: "Estado",
@@ -122,7 +107,7 @@ export default function VerAsistencias() {
       renderCell: (params) => (
         <Chip
           label={params.value}
-          color={params.value === "Asistio" ? "success" : "error"}
+          color={params.value === "Presente" ? "success" : "error"}
           variant="outlined"
           size="small"
         />
@@ -139,24 +124,16 @@ export default function VerAsistencias() {
       headerAlign: "center",
       renderCell: (params) => (
         <div className="flex h-full w-full flex-row items-center justify-around">
-          <Tooltip title="Ver detalles" placement="top">
-            <VisibilityOutlinedIcon
-              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
-              onClick={() => {
-                const rowData = params.row;
-
-                localStorage.setItem(
-                  "asistenciaSeleccionada",
-                  JSON.stringify(rowData),
-                ); // 👉 Guarda la fila completa como JSON
-                router.push("/admin/asistencias/detallar-asistencia/");
-              }}
+          <Tooltip title="Editar asistencia" placement="top">
+            <EditOutlinedIcon
+              className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
+              onClick={() => handleEdit(params.row)}
             />
           </Tooltip>
           <Tooltip title="Eliminar inscripcion" placement="top">
             <TrashIcon
               className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary"
-              onClick={() => handleDelete(params.row) }
+              onClick={() => handleDelete(params.row)}
             />
           </Tooltip>
         </div>
@@ -192,7 +169,7 @@ export default function VerAsistencias() {
       // Aquí deberías expandir los datos con información de inscripción
       // Por ahora simulo datos expandidos
       const asistenciasFormateadas: AsistenciaRow[] = response.data.map(
-        (asistencia: Asistencia) => ({
+        (asistencia: AsistenciaResponse) => ({
           id: asistencia.id_asistencia,
           fecha_asistencia: asistencia.fecha_asistencia,
           estado_asistencia: asistencia.estado_asistencia,
@@ -200,10 +177,13 @@ export default function VerAsistencias() {
           estudiante_nombre:
             asistencia.id_inscripcion.id_estudiante.nombre ||
             `Estudiante ${asistencia.id_inscripcion}`,
-          estudiante_apellido: asistencia.id_inscripcion.id_estudiante.apellido || "Apellido",
-          modulo_nombre: asistencia.id_inscripcion.modulo|| "Módulo",
-          grupo_nombre: asistencia.id_inscripcion.grupo|| "Grupo",
-          periodo_nombre: asistencia.id_inscripcion.oferta_categoria || "Período",
+          estudiante_apellido:
+            asistencia.id_inscripcion.id_estudiante.apellido || "Apellido",
+          modulo_nombre:
+            asistencia.id_inscripcion.modulo.nombre_modulo || "Módulo",
+          grupo_nombre: asistencia.id_inscripcion.grupo_view.nombre || "Grupo",
+          periodo_nombre: asistencia.id_inscripcion.periodo.nombre || "Período",
+          sesion: asistencia.sesion || "General",
         }),
       );
 
@@ -260,33 +240,95 @@ export default function VerAsistencias() {
           headers: {
             Authorization: `Token ${token}`,
           },
-        }
+        },
       );
 
       if (response.status === 204 || response.status === 200) {
-        setAsistencias(prevAsistencias => 
-          prevAsistencias.filter(asistencia => asistencia.id !== row.id)
+        setAsistencias((prevAsistencias) =>
+          prevAsistencias.filter((asistencia) => asistencia.id !== row.id),
         );
 
-        alert('Registro de asistencia eliminado exitosamente');
+        alert("Registro de asistencia eliminado exitosamente");
       }
-
     } catch (error: any) {
-      console.error('Error al eliminar el registro:', error);
-      
+      console.error("Error al eliminar el registro:", error);
+
       if (error.response?.status === 404) {
-        alert('El registro ya no existe o fue eliminado previamente');
-        setAsistencias(prevAsistencias => 
-          prevAsistencias.filter(asistencia => asistencia.id !== row.id)
+        alert("El registro ya no existe o fue eliminado previamente");
+        setAsistencias((prevAsistencias) =>
+          prevAsistencias.filter((asistencia) => asistencia.id !== row.id),
         );
       } else if (error.response?.status === 403) {
-        alert('No tienes permisos para eliminar este registro');
+        alert("No tienes permisos para eliminar este registro");
       } else if (error.response?.status === 400) {
-        alert('No se puede eliminar este registro debido a restricciones de integridad');
+        alert(
+          "No se puede eliminar este registro debido a restricciones de integridad",
+        );
       } else {
-        alert('Error al eliminar el registro. Por favor, inténtalo de nuevo.');
+        alert("Error al eliminar el registro. Por favor, inténtalo de nuevo.");
       }
-    } 
+    }
+  };
+
+  // Agregar estos estados al inicio del componente, después de los estados existentes (línea ~95)
+  const [modoEdicion, setModoEdicion] = useState(false);
+  const [asistenciaEditando, setAsistenciaEditando] =
+    useState<AsistenciaRow | null>(null);
+
+  // Agregar esta función para manejar la edición (después de handleDelete, línea ~285)
+  const handleEdit = (row: AsistenciaRow) => {
+    setAsistenciaEditando(row);
+    setModoEdicion(true);
+  };
+
+  // Agregar función para guardar cambios
+  const handleSaveEdit = async () => {
+    if (!asistenciaEditando) return;
+
+    try {
+      const token = getToken();
+
+      const payload = {
+        fecha_asistencia: asistenciaEditando.fecha_asistencia,
+        estado_asistencia: asistenciaEditando.estado_asistencia,
+        comentarios: asistenciaEditando.comentarios,
+        sesion: asistenciaEditando.sesion || "",
+      };
+
+      const response = await axios.patch(
+        `${API_BASE_URL}/asistencia/asis/${asistenciaEditando.id}/`,
+        payload,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        },
+      );
+
+      if (response.status === 200) {
+        // Actualizar la lista local
+        setAsistencias((prevAsistencias) =>
+          prevAsistencias.map((a) =>
+            a.id === asistenciaEditando.id ? { ...asistenciaEditando } : a,
+          ),
+        );
+
+        alert("Asistencia actualizada exitosamente");
+        setModoEdicion(false);
+        setAsistenciaEditando(null);
+      }
+    } catch (error: any) {
+      console.error("Error al actualizar:", error);
+      alert(
+        "Error al actualizar la asistencia. Por favor, inténtalo de nuevo.",
+      );
+    }
+  };
+
+  // Agregar función para cancelar edición
+  const handleCancelEdit = () => {
+    setModoEdicion(false);
+    setAsistenciaEditando(null);
   };
 
   // Filtrar datos
@@ -377,60 +419,96 @@ export default function VerAsistencias() {
     const pieChartSeries = Object.values(asistenciasPorEstado);
 
     // Datos para gráfica de barras - Asistencias por módulo
-    const asistenciasPorModulo = filteredAsistencias.reduce(
-      (acc, asistencia) => {
-        const modulo = asistencia.modulo_nombre;
-        acc[modulo] = (acc[modulo] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
+    // Datos para gráfica de barras - Asistencias por módulo
+const asistenciasPorModulo = filteredAsistencias.reduce(
+  (acc, asistencia) => {
+    const modulo = asistencia.modulo_nombre;
+    if (!acc[modulo]) {
+      acc[modulo] = { presente: 0, ausente: 0 };
+    }
+    if (asistencia.estado_asistencia === "Presente") {
+      acc[modulo].presente += 1;
+    } else {
+      acc[modulo].ausente += 1;
+    }
+    return acc;
+  },
+  {} as Record<string, { presente: number; ausente: number }>,
+);
 
-    const moduloEntries = Object.entries(asistenciasPorModulo)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 10);
+const moduloEntries = Object.entries(asistenciasPorModulo)
+  .sort(([, a], [, b]) => (b.presente + b.ausente) - (a.presente + a.ausente))
+  .slice(0, 10);
 
-    const barChartModulosOptions: ApexCharts.ApexOptions = {
-      chart: {
-        type: "bar",
-        toolbar: {
-          show: false,
-        },
-      },
-      xaxis: {
-        categories: moduloEntries.map(([modulo]) => modulo),
-        labels: {
-          style: {
-            fontSize: "12px",
-          },
-          rotate: -45,
-        },
-      },
-      yaxis: {
-        title: {
-          text: "Número de Asistencias",
-        },
-      },
-      colors: ["#C20E1A"],
+const barChartModulosOptions: ApexCharts.ApexOptions = {
+  chart: {
+    type: "bar",
+    stacked: true,
+    stackType: "normal",
+    toolbar: {
+      show: false,
+    },
+  },
+  plotOptions: {
+    bar: {
+      horizontal: false,
+      columnWidth: '70%',
       dataLabels: {
-        enabled: false,
-      },
-      tooltip: {
-        y: {
-          formatter: (value) => `${value} asistencias`,
+        total: {
+          enabled: true,
+          style: {
+            fontSize: '10px',
+            fontWeight: 600,
+          },
         },
       },
-      grid: {
-        borderColor: "#f0f0f0",
+    },
+  },
+  xaxis: {
+    categories: moduloEntries.map(([modulo]) => modulo),
+    labels: {
+      style: {
+        fontSize: "12px",
       },
-    };
+      rotate: -45,
+    },
+  },
+  yaxis: {
+    title: {
+      text: "Número de Asistencias",
+    },
+  },
+  colors: ["#4caf50", "#C20E1A"], // Verde para presentes, Rojo para ausentes
+  dataLabels: {
+    enabled: false,
+  },
+  legend: {
+    position: "top",
+    horizontalAlign: "left",
+  },
+  tooltip: {
+    y: {
+      formatter: (value: number) => `${value} estudiantes`,
+    },
+  },
+  grid: {
+    borderColor: "#f0f0f0",
+  },
+  fill: {
+    opacity: 1,
+  },
+};
 
-    const barChartModulosSeries = [
-      {
-        name: "Asistencias",
-        data: moduloEntries.map(([, count]) => count),
-      },
-    ];
+const barChartModulosSeries = [
+  {
+    name: "Presentes",
+    data: moduloEntries.map(([, counts]) => counts.presente),
+  },
+  {
+    name: "Ausentes",
+    data: moduloEntries.map(([, counts]) => counts.ausente),
+  },
+];
 
     // Datos para gráfica de barras apiladas - Asistencias por fecha
     const asistenciasPorFecha = filteredAsistencias.reduce(
@@ -439,7 +517,7 @@ export default function VerAsistencias() {
         if (!acc[fecha]) {
           acc[fecha] = { presente: 0, ausente: 0 };
         }
-        if (asistencia.estado_asistencia === "Asistio") {
+        if (asistencia.estado_asistencia === "Presente") {
           acc[fecha].presente += 1;
         } else {
           acc[fecha].ausente += 1;
@@ -449,22 +527,42 @@ export default function VerAsistencias() {
       {} as Record<string, { presente: number; ausente: number }>,
     );
 
-    const fechaEntries = Object.entries(asistenciasPorFecha)
-      .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
-      .slice(-15); // Últimas 15 fechas
+    const fechaEntries = Object.entries(asistenciasPorFecha).sort(([a], [b]) =>
+      a.localeCompare(b),
+    );
 
     const barChartFechaOptions: ApexCharts.ApexOptions = {
       chart: {
         type: "bar",
         stacked: true,
+        stackType: "normal", // 👈 Esto hace que las barras se sumen verticalmente
         toolbar: {
-          show: false,
+          show: true, // 👈 Activar toolbar para opciones de zoom/descarga
+        },
+      },
+      plotOptions: {
+        bar: {
+          horizontal: false, // 👈 Barras verticales
+          columnWidth: "70%", // 👈 Ancho de las barras
+          dataLabels: {
+            total: {
+              enabled: true, // 👈 Mostrar total en la parte superior
+              style: {
+                fontSize: "10px",
+                fontWeight: 600,
+              },
+            },
+          },
         },
       },
       xaxis: {
-        categories: fechaEntries.map(([fecha]) =>
-          new Date(fecha).toLocaleDateString("es-ES"),
-        ),
+        categories: fechaEntries.map(([fecha]) => {
+          if (fecha && fecha.includes("-")) {
+            const [year, month, day] = fecha.split("-");
+            return `${day}/${month}`;
+          }
+          return fecha;
+        }),
         labels: {
           style: {
             fontSize: "11px",
@@ -477,9 +575,9 @@ export default function VerAsistencias() {
           text: "Cantidad de Estudiantes",
         },
       },
-      colors: ["#4caf50", "#C20E1A"],
+      colors: ["#4caf50", "#C20E1A"], // Verde para presentes, Rojo para ausentes
       dataLabels: {
-        enabled: false,
+        enabled: false, // 👈 Desactivar labels dentro de las barras (o true si quieres verlos)
       },
       legend: {
         position: "top",
@@ -487,11 +585,14 @@ export default function VerAsistencias() {
       },
       tooltip: {
         y: {
-          formatter: (value) => `${value} estudiantes`,
+          formatter: (value: number) => `${value} estudiantes`,
         },
       },
       grid: {
         borderColor: "#f0f0f0",
+      },
+      fill: {
+        opacity: 1,
       },
     };
 
@@ -523,7 +624,7 @@ export default function VerAsistencias() {
   const stats = useMemo(() => {
     const totalAsistencias = filteredAsistencias.length;
     const presentes = filteredAsistencias.filter(
-      (a) => a.estado_asistencia === "Asistio",
+      (a) => a.estado_asistencia === "Presente",
     ).length;
     const ausentes = totalAsistencias - presentes;
     const porcentajeAsistencia =
@@ -627,7 +728,10 @@ export default function VerAsistencias() {
                 Todos los períodos
               </MenuItem>
               {periodosAcademicos.map((periodo) => (
-                <MenuItem key={periodo.id} value={periodo.nombre}>
+                <MenuItem
+                  key={periodo.id_oferta_academica}
+                  value={periodo.nombre}
+                >
                   {periodo.nombre}
                 </MenuItem>
               ))}
@@ -641,7 +745,9 @@ export default function VerAsistencias() {
               onChange={handleModuloChange}
               label="Módulo"
             >
-              <MenuItem key="todos" value="todos">Todos los módulos</MenuItem>
+              <MenuItem key="todos" value="todos">
+                Todos los módulos
+              </MenuItem>
               {modulos.map((modulo) => (
                 <MenuItem key={modulo.id_modulo} value={modulo.nombre_modulo}>
                   {modulo.nombre_modulo}
@@ -657,9 +763,15 @@ export default function VerAsistencias() {
               onChange={handleEstadoChange}
               label="Estado de Asistencia"
             >
-              <MenuItem key="todos" value="todos">Todos los estados</MenuItem>
-              <MenuItem key="Presente" value="Presente">Presente</MenuItem>
-              <MenuItem key="Ausente" value="Ausente">Ausente</MenuItem>
+              <MenuItem key="todos" value="todos">
+                Todos los estados
+              </MenuItem>
+              <MenuItem key="Presente" value="Presente">
+                Presente
+              </MenuItem>
+              <MenuItem key="Ausente" value="Ausente">
+                Ausente
+              </MenuItem>
             </Select>
           </FormControl>
 
@@ -809,6 +921,7 @@ export default function VerAsistencias() {
       <Box className="my-4 grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Gráfica de pastel - Estado de asistencia */}
         <Paper
+          key="grafica-pastel"
           className="rounded-2xl"
           elevation={0}
           sx={{ p: 3, border: "1px solid #d0d0d0" }}
@@ -828,6 +941,7 @@ export default function VerAsistencias() {
 
         {/* Gráfica de barras - Asistencias por módulo */}
         <Paper
+          key="grafica-modulos"
           className="rounded-2xl"
           elevation={0}
           sx={{ p: 3, border: "1px solid #d0d0d0" }}
@@ -847,6 +961,7 @@ export default function VerAsistencias() {
 
         {/* Gráfica de barras apiladas - Asistencias por fecha */}
         <Paper
+          key="grafica-fechas"
           className="rounded-2xl"
           elevation={0}
           sx={{ p: 3, border: "1px solid #d0d0d0" }}
@@ -865,38 +980,183 @@ export default function VerAsistencias() {
         </Paper>
       </Box>
 
-      {/* Tabla de datos */}
-      <Paper elevation={0} sx={{ border: "1px solid #d0d0d0" }}>
-        <Box p={3}>
-          <Typography variant="h6" fontWeight="bold" gutterBottom>
-            Registro Detallado de Asistencias
-          </Typography>
-          <Typography variant="body2" color="text.secondary" mb={2}>
-            Mostrando {filteredAsistencias.length} de {asistencias.length}{" "}
-            registros
-          </Typography>
-        </Box>
+      {/* Formulario de Edición o Tabla de datos */}
+      {modoEdicion && asistenciaEditando ? (
+        <Paper elevation={0} sx={{ border: "1px solid #d0d0d0", p: 4 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={3}
+          >
+            <Typography variant="h6" fontWeight="bold">
+              Editar Asistencia
+            </Typography>
+            <Button
+              variant="outlined"
+              onClick={handleCancelEdit}
+              sx={{
+                borderColor: "#c20e1a",
+                color: "#c20e1a",
+                "&:hover": {
+                  borderColor: "#c20e1a",
+                  backgroundColor: "#c20e1a10",
+                },
+              }}
+            >
+              Volver a la tabla
+            </Button>
+          </Box>
 
-        <DataGrid
-          rows={filteredAsistencias}
-          columns={columns}
-          initialState={{
-            pagination: { paginationModel: { page: 0, pageSize: 25 } },
-          }}
-          pageSizeOptions={[25, 50, 100]}
-          disableRowSelectionOnClick
-          sx={{
-            border: "none",
-            "& .MuiDataGrid-cell": {
-              borderColor: "#f0f0f0",
-            },
-            "& .MuiDataGrid-columnHeaders": {
-              backgroundColor: "#f8f9fa",
-              borderColor: "#f0f0f0",
-            },
-          }}
-        />
-      </Paper>
+          <Box className="inputs-textfield grid grid-cols-1 gap-4 md:grid-cols-2">
+            {/* Información del estudiante (solo lectura) */}
+            <TextField
+              fullWidth
+              label="Estudiante"
+              value={`${asistenciaEditando.estudiante_nombre} ${asistenciaEditando.estudiante_apellido}`}
+              disabled
+            />
+
+            <TextField
+              fullWidth
+              label="Módulo"
+              value={asistenciaEditando.modulo_nombre}
+              disabled
+            />
+
+            <TextField
+              fullWidth
+              label="Grupo"
+              value={asistenciaEditando.grupo_nombre}
+              disabled
+            />
+
+            <TextField
+              fullWidth
+              label="Período"
+              value={asistenciaEditando.periodo_nombre}
+              disabled
+            />
+
+            {/* Campos editables */}
+            <TextField
+              fullWidth
+              label="Fecha de Asistencia"
+              type="date"
+              value={asistenciaEditando.fecha_asistencia}
+              onChange={(e) =>
+                setAsistenciaEditando({
+                  ...asistenciaEditando,
+                  fecha_asistencia: e.target.value,
+                })
+              }
+              InputLabelProps={{ shrink: true }}
+            />
+
+            <FormControl fullWidth>
+              <InputLabel>Estado de Asistencia</InputLabel>
+              <Select
+                value={asistenciaEditando.estado_asistencia}
+                onChange={(e) =>
+                  setAsistenciaEditando({
+                    ...asistenciaEditando,
+                    estado_asistencia: e.target.value,
+                  })
+                }
+                label="Estado de Asistencia"
+              >
+                <MenuItem value="Presente">Presente</MenuItem>
+                <MenuItem value="Ausente">Ausente</MenuItem>
+                <MenuItem value="Excusado">Excusado</MenuItem>
+              </Select>
+            </FormControl>
+
+            <TextField
+              fullWidth
+              label="Sesión"
+              value={asistenciaEditando.sesion || ""}
+              onChange={(e) =>
+                setAsistenciaEditando({
+                  ...asistenciaEditando,
+                  sesion: e.target.value,
+                })
+              }
+            />
+
+            <TextField
+              fullWidth
+              label="Comentarios"
+              multiline
+              rows={3}
+              value={asistenciaEditando.comentarios}
+              onChange={(e) =>
+                setAsistenciaEditando({
+                  ...asistenciaEditando,
+                  comentarios: e.target.value,
+                })
+              }
+              className="md:col-span-2"
+            />
+          </Box>
+
+          <Box display="flex" justifyContent="flex-end" gap={2} mt={4}>
+            <Button
+              variant="outlined"
+              onClick={handleCancelEdit}
+              sx={{
+                borderColor: "#666",
+                color: "#666",
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleSaveEdit}
+              sx={{
+                backgroundColor: "#c20e1a",
+                "&:hover": {
+                  backgroundColor: "#a00e17",
+                },
+              }}
+            >
+              Guardar Cambios
+            </Button>
+          </Box>
+        </Paper>
+      ) : (
+        <Paper elevation={0} sx={{ border: "1px solid #d0d0d0" }}>
+          <Box p={3}>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>
+              Registro Detallado de Asistencias
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              Mostrando {filteredAsistencias.length} de {asistencias.length}{" "}
+              registros
+            </Typography>
+          </Box>
+
+          <DataGrid
+            rows={filteredAsistencias}
+            columns={columns}
+            initialState={{
+              pagination: { paginationModel: { page: 0, pageSize: 25 } },
+            }}
+            pageSizeOptions={[25, 50, 100]}
+            disableRowSelectionOnClick
+            sx={{
+              border: "none",
+              "& .MuiDataGrid-cell": {
+                borderColor: "#f0f0f0",
+              },
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "#f8f9fa",
+                borderColor: "#f0f0f0",
+              },
+            }}
+          />
+        </Paper>
+      )}
     </div>
   );
 }

@@ -170,11 +170,39 @@ export interface Grupo {
   monitor_academico: ProfesorInterface;
 }
 
-export interface Asistencia {
+
+
+// Estudiante mínimo incluido dentro de la inscripción
+export interface EstudianteRef {
+  id_estudiante: number;
+  nombre: string;
+  apellido: string;
+  numero_documento: string;
+  email: string;
+  colegio: string;
+}
+
+// Referencia a la inscripción usada en la asistencia
+export interface InscripcionRef {
+  id_estudiante: EstudianteRef;
+  grupo_view:Grupo;
+  modulo: Modulo;
+  periodo: OfertaAcademica;
+}
+
+export interface AsistenciaResponse {
   id_asistencia: number;
-  id_inscripcion: number;
+  id_inscripcion: InscripcionRef;
   fecha_asistencia: string;
   estado_asistencia: string;
   comentarios: string;
   sesion: string;
+}
+
+export interface AsistenciaSent {
+  id_inscripcion: number;
+  fecha_asistencia: string;
+  estado_asistencia: string;
+  comentarios: string;
+  sesion?: string;
 }

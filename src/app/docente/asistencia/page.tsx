@@ -227,7 +227,7 @@ export default function AsistenciaDocente() {
       // Formatear los datos según el nuevo formato del endpoint
       const asistenciaData: Asistencia[] = estudiantesConAsistencia.map(
         (row) => ({
-          id_inscripcion: row.id,
+          id_inscripcion_id: row.id,
           fecha_asistencia: fechaAsistencia,
           estado_asistencia: row.asistio ? "Presente" : "Ausente",
           comentarios: row.observaciones || "",

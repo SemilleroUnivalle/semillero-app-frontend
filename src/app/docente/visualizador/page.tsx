@@ -37,7 +37,7 @@ import axios from "axios";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { API_BASE_URL } from "../../../../config";
 import { useRouter } from "next/navigation";
-import { Matricula, Asistencia} from "@/interfaces/interfaces";
+import { Matricula, AsistenciaResponse} from "@/interfaces/interfaces";
 
 
 interface AsistenciaRow {
@@ -166,17 +166,17 @@ const fetchAsistenciasPorFecha = async (fecha: string) => {
     if (response.status === 200) {
       // Filtrar por fecha y formatear los datos para la tabla
       const asistenciasFiltradas = response.data.filter(
-        (asistencia: Asistencia) => asistencia.fecha_asistencia === fecha
+        (asistencia: AsistenciaResponse) => asistencia.fecha_asistencia === fecha
       );
 
       const asistenciasFormateadas: AsistenciaRow[] = asistenciasFiltradas.map(
-        (asistencia: Asistencia) => ({
+        (asistencia: AsistenciaResponse) => ({
           id: asistencia.id_asistencia,
           estado_asistencia: asistencia.estado_asistencia,
           comentarios: asistencia.comentarios || "",
           fecha_asistencia: asistencia.fecha_asistencia,
           sesion: asistencia.sesion,
-          grupo_nombre: asistencia.id_inscripcion.grupo,
+          grupo_nombre: asistencia.id_inscripcion.grupo_view.nombre,
           apellido: asistencia.id_inscripcion.id_estudiante.apellido,
           nombre: asistencia.id_inscripcion.id_estudiante.nombre,
         })
@@ -480,7 +480,6 @@ const fetchAsistenciasPorFecha = async (fecha: string) => {
                         sx={{
                           width: 45,
                           height: 45,
-                          bgcolor: getAvatarColor(estudiante.estado_asistencia),
                           fontSize: "1rem",
                           fontWeight: "bold",
                         }}
@@ -498,11 +497,11 @@ const fetchAsistenciasPorFecha = async (fecha: string) => {
                           {estudiante.nombre} {estudiante.apellido}
                         </Typography>
                         <Box className="flex items-center gap-1">
-                          <BadgeIcon
+                          {/* <BadgeIcon
                             sx={{ fontSize: 14, color: "text.secondary" }}
-                          />
+                          /> */}
                           <Typography variant="caption" color="text.secondary">
-                            {estudiante.numero_documento}
+                            {estudiante.id}
                           </Typography>
                         </Box>
                         {/* Información del grupo */}
@@ -528,9 +527,9 @@ const fetchAsistenciasPorFecha = async (fecha: string) => {
                               : "outlined"
                           }
                           color="success"
-                          onClick={() =>
-                            handleAsistenciaChange(estudiante.id, true)
-                          }
+                          // onClick={() =>
+                          //   // handleAsistenciaChange(estudiante.id, true)
+                          // }
                           startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
                           className="flex-1 rounded-xl"
                           sx={{ fontSize: "0.7rem", py: 0.5 }}
@@ -545,9 +544,9 @@ const fetchAsistenciasPorFecha = async (fecha: string) => {
                               : "outlined"
                           }
                           color="error"
-                          onClick={() =>
-                            handleAsistenciaChange(estudiante.id, false)
-                          }
+                          // onClick={() =>
+                          //   // handleAsistenciaChange(estudiante.id, false)
+                          // }
                           startIcon={<CancelIcon sx={{ fontSize: 16 }} />}
                           className="flex-1 rounded-xl"
                           sx={{ fontSize: "0.7rem", py: 0.5 }}
@@ -561,13 +560,13 @@ const fetchAsistenciasPorFecha = async (fecha: string) => {
                         size="small"
                         variant="outlined"
                         placeholder="Observaciones..."
-                        value={estudiante.observaciones || ""}
-                        onChange={(e) =>
-                          handleObservacionesChange(
-                            estudiante.id,
-                            e.target.value,
-                          )
-                        }
+                        value={estudiante.comentarios || ""}
+                        // onChange={(e) =>
+                        //   // handleObservacionesChange(
+                        //   //   estudiante.id,
+                        //   //   e.target.value,
+                        //   // )
+                        // }
                         multiline
                         maxRows={2}
                         fullWidth
