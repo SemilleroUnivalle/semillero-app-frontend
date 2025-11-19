@@ -312,7 +312,7 @@ export default function AsistenciaDocente() {
   }
 
   return (
-    <div>
+    <div className="mx-auto w-11/12">
       <Snackbar
         open={success}
         autoHideDuration={4000}
@@ -327,8 +327,8 @@ export default function AsistenciaDocente() {
         </Alert>
       </Snackbar>
 
-      {/* Header con control de fecha */}
-      <Box className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-4 shadow-md">
+      {/* Header con control de fecha y sesión */}
+      <Box className="mx-auto mt-4 rounded-2xl bg-white p-4 shadow-md">
         <Typography
           variant="h5"
           className="mb-4 text-center font-bold text-primary"
@@ -336,7 +336,8 @@ export default function AsistenciaDocente() {
           Control de Asistencias
         </Typography>
 
-        <Box className="mb-2 flex justify-around">
+        <Box className="mb-2 flex flex-col gap-3 justify-around sm:flex-row">
+          {/* Inputs para fecha, sesión y grupos */}
           <TextField
             className="inputs-textfield flex w-full flex-col sm:w-1/4"
             label="Fecha de Asistencia"
@@ -359,10 +360,35 @@ export default function AsistenciaDocente() {
               <MenuItem value="2">Dos</MenuItem>
             </Select>
           </FormControl>
+
+          <FormControl className="inputs-textfield w-full sm:w-1/4">
+            <InputLabel id="filtro-grupos">Grupos</InputLabel>
+            <Select
+              labelId="filtro-grupos"
+              multiple
+              value={selectedGrupos}
+              onChange={handleChangeGrupos}
+              renderValue={(selected) => selected.join(", ")}
+              label="Grupos"
+            >
+              {[...new Set(rows.map((row) => row.grupo_nombre))].map(
+                (grupo) => (
+                  <MenuItem key={grupo} value={grupo}>
+                    <Checkbox checked={selectedGrupos.indexOf(grupo) > -1} />
+                    <ListItemText primary={grupo} />
+                  </MenuItem>
+                ),
+              )}
+            </Select>
+          </FormControl>
         </Box>
 
-        <Box className="mb-4 flex flex-wrap justify-around gap-4">
-          <Card className="flex w-full flex-row items-center justify-center sm:w-48">
+      </Box>
+
+      {/* Indicadores generales */}
+      <Box className="my-4 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+         
+          <Card className="rounded-2xl">
             <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
               <PersonIcon className="text-blue-500" fontSize="large" />
               <Typography variant="h4" className="font-bold text-blue-600">
@@ -374,7 +400,7 @@ export default function AsistenciaDocente() {
             </CardContent>
           </Card>
 
-          <Card className="flex w-full flex-row items-center justify-center sm:w-48">
+          <Card className="rounded-2xl">
             <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
               <CheckCircleIcon className="text-green-500" fontSize="large" />
               <Typography variant="h4" className="font-bold text-green-600">
@@ -386,7 +412,7 @@ export default function AsistenciaDocente() {
             </CardContent>
           </Card>
 
-          <Card className="flex w-full flex-row items-center justify-center sm:w-48">
+          <Card className="rounded-2xl">
             <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
               <CancelIcon className="text-red-500" fontSize="large" />
               <Typography variant="h4" className="font-bold text-red-600">
@@ -398,7 +424,7 @@ export default function AsistenciaDocente() {
             </CardContent>
           </Card>
 
-          <Card className="flex w-full flex-row items-center justify-center sm:w-48">
+          <Card className="rounded-2xl">
             <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
               <CalendarTodayIcon className="text-orange-500" fontSize="large" />
               <Typography variant="h4" className="font-bold text-orange-600">
@@ -409,9 +435,24 @@ export default function AsistenciaDocente() {
               </Typography>
             </CardContent>
           </Card>
-        </Box>
+       
+      </Box>
 
-        {/* Botones de acción rápida */}
+      {/* Tabla de asistencia */}
+      <div className="mx-auto mt-4 rounded-2xl bg-white p-4 text-center shadow-md">
+        {/* Cards de estudiantes */}
+        <div className="mx-auto mt-4 w-11/12">
+          <Typography
+            variant="body2"
+            className="mb-4 text-center text-gray-600"
+          >
+            Mostrando {filteredRows.length} estudiantes | Marcados:{" "}
+            {estudiantesConAsistencia.length} | Presentes:{" "}
+            {estudiantesPresentes.length} | Ausentes:{" "}
+            {estudiantesAusentes.length}
+          </Typography>
+
+ {/* Botones de acción rápida */}
         <Box className="mb-4 flex flex-wrap justify-center gap-2">
           <Button
             variant="outlined"
@@ -440,45 +481,8 @@ export default function AsistenciaDocente() {
             Limpiar Todo
           </Button>
         </Box>
-      </Box>
 
-      {/* Filtros */}
-      <div className="mx-auto mt-4 flex w-11/12 justify-around rounded-2xl bg-white p-2 shadow-md">
-        <FormControl className="inputs-textfield w-full sm:w-1/4">
-          <InputLabel id="filtro-grupos">Grupos</InputLabel>
-          <Select
-            labelId="filtro-grupos"
-            multiple
-            value={selectedGrupos}
-            onChange={handleChangeGrupos}
-            renderValue={(selected) => selected.join(", ")}
-            label="Grupos"
-          >
-            {[...new Set(rows.map((row) => row.grupo_nombre))].map((grupo) => (
-              <MenuItem key={grupo} value={grupo}>
-                <Checkbox checked={selectedGrupos.indexOf(grupo) > -1} />
-                <ListItemText primary={grupo} />
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </div>
-
-      {/* Tabla de asistencia */}
-      <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-4 text-center shadow-md">
-        {/* Cards de estudiantes */}
-        <div className="mx-auto mt-4 w-11/12">
-          <Typography
-            variant="body2"
-            className="mb-4 text-center text-gray-600"
-          >
-            Mostrando {filteredRows.length} estudiantes | Marcados:{" "}
-            {estudiantesConAsistencia.length} | Presentes:{" "}
-            {estudiantesPresentes.length} | Ausentes:{" "}
-            {estudiantesAusentes.length}
-          </Typography>
-
-          <Grid container spacing={2} className="mt-4">
+          <Grid container spacing={2} className="mt-4 lg:hidden">
             {filteredRows.map((estudiante) => (
               <Grid key={estudiante.id}>
                 <Card
@@ -607,147 +611,137 @@ export default function AsistenciaDocente() {
             ))}
           </Grid>
 
-         
+          {/* Lista vertical de estudiantes - diseño horizontal */}
+          <div className="hidden flex-col gap-4 lg:flex">
+            {filteredRows.map((estudiante) => (
+              <Card
+                key={estudiante.id}
+                variant="outlined"
+                sx={{
+                  borderColor:
+                    estudiante.asistio === true
+                      ? "#4caf50"
+                      : estudiante.asistio === false
+                        ? "#f44336"
+                        : "white",
+                  borderWidth: estudiante.asistio !== null ? 2 : 1,
+                  backgroundColor:
+                    estudiante.asistio === true
+                      ? "#f1f8f4"
+                      : estudiante.asistio === false
+                        ? "#fef1f1"
+                        : "white",
+                }}
+              >
+                <CardContent className="flex flex-row items-center justify-around">
+                  {/* Sección izquierda: Avatar + Info */}
+                  <Box className="flex w-full items-center justify-around gap-3">
+                    <Avatar
+                      sx={{
+                        width: 50,
+                        height: 50,
+                        bgcolor: getAvatarColor(estudiante.asistio),
+                        fontSize: "1.1rem",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {estudiante.nombre.charAt(0)}
+                      {estudiante.apellido.charAt(0)}
+                    </Avatar>
 
-          <div className="mx-auto mt-4 w-11/12">
-            <Typography
-              variant="body2"
-              className="mb-4 text-center text-gray-600"
-            >
-              Mostrando {filteredRows.length} estudiantes | Marcados:{" "}
-              {estudiantesConAsistencia.length} | Presentes:{" "}
-              {estudiantesPresentes.length} | Ausentes:{" "}
-              {estudiantesAusentes.length}
-            </Typography>
+                    <Typography variant="body1" fontWeight="600">
+                      {estudiante.nombre} {estudiante.apellido}
+                    </Typography>
 
-            {/* Lista vertical de estudiantes - diseño horizontal */}
-            <div className="flex flex-col">
-              {filteredRows.map((estudiante) => (
-                <Card
-                  key={estudiante.id}
-                  variant="outlined"
-                  sx={{
-                    borderColor:
-                      estudiante.asistio === true
-                        ? "#4caf50"
-                        : estudiante.asistio === false
-                          ? "#f44336"
-                          : "white",
-                    borderWidth: estudiante.asistio !== null ? 2 : 1,
-                    backgroundColor:
-                      estudiante.asistio === true
-                        ? "#f1f8f4"
-                        : estudiante.asistio === false
-                          ? "#fef1f1"
-                          : "white",
-                  }}
-                >
-                  <CardContent className="flex flex-row justify-around items-center">
-                    {/* Sección izquierda: Avatar + Info */}
-                    <Box className="flex w-full items-center gap-3 justify-around">
-                      <Avatar
-                        sx={{
-                          width: 50,
-                          height: 50,
-                          bgcolor: getAvatarColor(estudiante.asistio),
-                          fontSize: "1.1rem",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {estudiante.nombre.charAt(0)}
-                        {estudiante.apellido.charAt(0)}
-                      </Avatar>
-
-                      <Typography variant="body1" fontWeight="600">
-                        {estudiante.nombre} {estudiante.apellido}
+                    <Box className="flex items-center gap-1">
+                      <BadgeIcon sx={{ fontSize: 16, color: "#666" }} />
+                      <Typography color="text.secondary">
+                        {estudiante.numero_documento}
                       </Typography>
-
-                      <Box className="flex items-center gap-1">
-                        <BadgeIcon sx={{ fontSize: 16, color: "#666" }} />
-                        <Typography color="text.secondary">
-                          {estudiante.numero_documento}
-                        </Typography>
-                      </Box>
-
-                      <Box className="flex items-center gap-1">
-                        <GroupIcon sx={{ fontSize: 16, color: "#666" }} />
-                        <Typography color="text.secondary">
-                          {estudiante.grupo_nombre}
-                        </Typography>
-                      </Box>
-
-                      {/* Sección derecha: Botones de acción */}
-                      <Box className="flex flex-col gap-2 sm:min-w-[280px]">
-                        <Box className="flex gap-2">
-                          <Button
-                            size="medium"
-                            variant={
-                              estudiante.asistio === true
-                                ? "contained"
-                                : "outlined"
-                            }
-                            color="success"
-                            onClick={() =>
-                              handleAsistenciaChange(estudiante.id, true)
-                            }
-                            className="flex-1 rounded-lg"
-                            sx={{
-                              textTransform: "none",
-                              fontWeight: 500,
-                            }}
-                          >
-                            Presente
-                          </Button>
-                          <Button
-                            size="medium"
-                            variant={
-                              estudiante.asistio === false
-                                ? "contained"
-                                : "outlined"
-                            }
-                            color="error"
-                            onClick={() =>
-                              handleAsistenciaChange(estudiante.id, false)
-                            }
-                            className="flex-1 rounded-lg"
-                            sx={{
-                              fontSize: "0.875rem",
-                              textTransform: "none",
-                              fontWeight: 500,
-                            }}
-                          >
-                            Ausente
-                          </Button>
-                        </Box>
-
-                        {/* Campo de observaciones (opcional, colapsable) */}
-                        {estudiante.asistio !== null && (
-                          <TextField
-                            size="small"
-                            variant="outlined"
-                            placeholder="Agregar observación..."
-                            value={estudiante.observaciones || ""}
-                            onChange={(e) =>
-                              handleObservacionesChange(
-                                estudiante.id,
-                                e.target.value,
-                              )
-                            }
-                            fullWidth
-                            sx={{
-                              "& .MuiOutlinedInput-root": {
-                                fontSize: "0.875rem",
-                                borderRadius: "8px",
-                              },
-                            }}
-                          />
-                        )}
-                      </Box>
                     </Box>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+
+                    <Box className="flex items-center gap-1">
+                      <GroupIcon sx={{ fontSize: 16, color: "#666" }} />
+                      <Typography color="text.secondary">
+                        {estudiante.grupo_nombre}
+                      </Typography>
+                    </Box>
+
+                    {/* Sección derecha: Botones de acción */}
+                    <Box className="flex flex-col gap-2 sm:min-w-[280px]">
+                      <Box className="flex gap-2">
+                        <Button
+                          size="medium"
+                          variant={
+                            estudiante.asistio === true
+                              ? "contained"
+                              : "outlined"
+                          }
+                          color="success"
+                          startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
+                          onClick={() =>
+                            handleAsistenciaChange(estudiante.id, true)
+                          }
+                          className="flex-1 rounded-xl"
+                          sx={{
+                            textTransform: "none",
+                            fontWeight: 500,
+                          }}
+                        >
+                          Presente
+                        </Button>
+                        <Button
+                          size="medium"
+                          variant={
+                            estudiante.asistio === false
+                              ? "contained"
+                              : "outlined"
+                          }
+                          color="error"
+                          startIcon={<CancelIcon sx={{ fontSize: 16 }} />}
+                          onClick={() =>
+                            handleAsistenciaChange(estudiante.id, false)
+                          }
+                          className="flex-1 rounded-xl"
+                          sx={{
+                            fontSize: "0.875rem",
+                            textTransform: "none",
+                            fontWeight: 500,
+                          }}
+                        >
+                          Ausente
+                        </Button>
+                      </Box>
+
+                      {/* Campo de observaciones (opcional, colapsable) */}
+                      {estudiante.asistio !== null && (
+                        <TextField
+                          size="small"
+                          variant="outlined"
+                          placeholder="Agregar observación..."
+                          value={estudiante.observaciones || ""}
+                          onChange={(e) =>
+                            handleObservacionesChange(
+                              estudiante.id,
+                              e.target.value,
+                            )
+                          }
+                          className="rounded-xl"
+                          fullWidth
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "0.875rem",
+                              borderRadius: "12px",
+                            },
+                          }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+                </CardContent>
+                <Divider></Divider>
+              </Card>
+            ))}
           </div>
         </div>
 

@@ -388,7 +388,7 @@ export default function VerAsistencias() {
         type: "pie",
       },
       labels: Object.keys(asistenciasPorEstado),
-      colors: ["#4caf50", "#C20E1A"], // Verde para "Asistio", Rojo para "No Asistio"
+      colors: ["#C20E1A", "#4caf50"], // Verde para "Asistio", Rojo para "No Asistio"
       legend: {
         position: "bottom",
       },
@@ -419,96 +419,95 @@ export default function VerAsistencias() {
     const pieChartSeries = Object.values(asistenciasPorEstado);
 
     // Datos para gráfica de barras - Asistencias por módulo
-    // Datos para gráfica de barras - Asistencias por módulo
-const asistenciasPorModulo = filteredAsistencias.reduce(
-  (acc, asistencia) => {
-    const modulo = asistencia.modulo_nombre;
-    if (!acc[modulo]) {
-      acc[modulo] = { presente: 0, ausente: 0 };
-    }
-    if (asistencia.estado_asistencia === "Presente") {
-      acc[modulo].presente += 1;
-    } else {
-      acc[modulo].ausente += 1;
-    }
-    return acc;
-  },
-  {} as Record<string, { presente: number; ausente: number }>,
-);
+    const asistenciasPorModulo = filteredAsistencias.reduce(
+      (acc, asistencia) => {
+        const modulo = asistencia.modulo_nombre;
+        if (!acc[modulo]) {
+          acc[modulo] = { presente: 0, ausente: 0 };
+        }
+        if (asistencia.estado_asistencia === "Presente") {
+          acc[modulo].presente += 1;
+        } else {
+          acc[modulo].ausente += 1;
+        }
+        return acc;
+      },
+      {} as Record<string, { presente: number; ausente: number }>,
+    );
 
-const moduloEntries = Object.entries(asistenciasPorModulo)
-  .sort(([, a], [, b]) => (b.presente + b.ausente) - (a.presente + a.ausente))
-  .slice(0, 10);
+    const moduloEntries = Object.entries(asistenciasPorModulo)
+      .sort(([, a], [, b]) => b.presente + b.ausente - (a.presente + a.ausente))
+      .slice(0, 10);
 
-const barChartModulosOptions: ApexCharts.ApexOptions = {
-  chart: {
-    type: "bar",
-    stacked: true,
-    stackType: "normal",
-    toolbar: {
-      show: false,
-    },
-  },
-  plotOptions: {
-    bar: {
-      horizontal: false,
-      columnWidth: '70%',
-      dataLabels: {
-        total: {
-          enabled: true,
-          style: {
-            fontSize: '10px',
-            fontWeight: 600,
+    const barChartModulosOptions: ApexCharts.ApexOptions = {
+      chart: {
+        type: "bar",
+        stacked: true,
+        stackType: "normal",
+        toolbar: {
+          show: false,
+        },
+      },
+      plotOptions: {
+        bar: {
+          horizontal: false,
+          columnWidth: "70%",
+          dataLabels: {
+            total: {
+              enabled: true,
+              style: {
+                fontSize: "10px",
+                fontWeight: 600,
+              },
+            },
           },
         },
       },
-    },
-  },
-  xaxis: {
-    categories: moduloEntries.map(([modulo]) => modulo),
-    labels: {
-      style: {
-        fontSize: "12px",
+      xaxis: {
+        categories: moduloEntries.map(([modulo]) => modulo),
+        labels: {
+          style: {
+            fontSize: "12px",
+          },
+          rotate: -45,
+        },
       },
-      rotate: -45,
-    },
-  },
-  yaxis: {
-    title: {
-      text: "Número de Asistencias",
-    },
-  },
-  colors: ["#4caf50", "#C20E1A"], // Verde para presentes, Rojo para ausentes
-  dataLabels: {
-    enabled: false,
-  },
-  legend: {
-    position: "top",
-    horizontalAlign: "left",
-  },
-  tooltip: {
-    y: {
-      formatter: (value: number) => `${value} estudiantes`,
-    },
-  },
-  grid: {
-    borderColor: "#f0f0f0",
-  },
-  fill: {
-    opacity: 1,
-  },
-};
+      yaxis: {
+        title: {
+          text: "Número de Asistencias",
+        },
+      },
+      colors: ["#4caf50", "#C20E1A"], // Verde para presentes, Rojo para ausentes
+      dataLabels: {
+        enabled: false,
+      },
+      legend: {
+        position: "top",
+        horizontalAlign: "left",
+      },
+      tooltip: {
+        y: {
+          formatter: (value: number) => `${value} estudiantes`,
+        },
+      },
+      grid: {
+        borderColor: "#f0f0f0",
+      },
+      fill: {
+        opacity: 1,
+      },
+    };
 
-const barChartModulosSeries = [
-  {
-    name: "Presentes",
-    data: moduloEntries.map(([, counts]) => counts.presente),
-  },
-  {
-    name: "Ausentes",
-    data: moduloEntries.map(([, counts]) => counts.ausente),
-  },
-];
+    const barChartModulosSeries = [
+      {
+        name: "Presentes",
+        data: moduloEntries.map(([, counts]) => counts.presente),
+      },
+      {
+        name: "Ausentes",
+        data: moduloEntries.map(([, counts]) => counts.ausente),
+      },
+    ];
 
     // Datos para gráfica de barras apiladas - Asistencias por fecha
     const asistenciasPorFecha = filteredAsistencias.reduce(
@@ -717,6 +716,7 @@ const barChartModulosSeries = [
         </Box>
 
         <Box className="flex flex-wrap justify-between gap-2">
+          {/* Periodo Academico */}
           <FormControl className="inputs-textfield w-full sm:w-1/6">
             <InputLabel>Período Académico</InputLabel>
             <Select
@@ -738,6 +738,7 @@ const barChartModulosSeries = [
             </Select>
           </FormControl>
 
+          {/* Módulo */}
           <FormControl className="inputs-textfield w-full sm:w-1/6">
             <InputLabel>Módulo</InputLabel>
             <Select
@@ -756,6 +757,7 @@ const barChartModulosSeries = [
             </Select>
           </FormControl>
 
+          {/* Estado de Asistencia */}
           <FormControl className="inputs-textfield w-full sm:w-1/6">
             <InputLabel>Estado de Asistencia</InputLabel>
             <Select
@@ -863,7 +865,7 @@ const barChartModulosSeries = [
         )}
       </div>
 
-      {/* Estadísticas generales */}
+      {/* Indicadores generales */}
       <Box className="my-4 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
         <Card className="rounded-2xl">
           <CardContent sx={{ textAlign: "center" }}>
@@ -884,7 +886,7 @@ const barChartModulosSeries = [
               {stats.presentes}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Presentes
+              Asistencias
             </Typography>
           </CardContent>
         </Card>
@@ -899,7 +901,7 @@ const barChartModulosSeries = [
               {stats.ausentes}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Ausentes
+              Inasistencias
             </Typography>
           </CardContent>
         </Card>
