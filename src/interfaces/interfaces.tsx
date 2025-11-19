@@ -200,7 +200,7 @@ export interface AsistenciaResponse {
 }
 
 export interface AsistenciaSent {
-  id_inscripcion: number;
+  id_inscripcion_id: number;
   fecha_asistencia: string;
   estado_asistencia: string;
   comentarios: string;

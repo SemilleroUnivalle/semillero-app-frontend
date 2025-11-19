@@ -40,7 +40,7 @@ import { GridColDef } from "@mui/x-data-grid";
 import { API_BASE_URL } from "../../../../config";
 import { useRouter } from "next/navigation";
 
-import { Asistencia } from "@/interfaces/interfaces";
+import { AsistenciaSent } from "@/interfaces/interfaces";
 
 interface Estudiante {
   id_inscripcion: number;
@@ -127,7 +127,6 @@ export default function AsistenciaDocente() {
         );
 
         if (response.status === 200) {
-
           // Formatear todos los estudiantes en una sola tabla
           const todosLosEstudiantes: EstudianteRow[] = [];
 
@@ -225,7 +224,7 @@ export default function AsistenciaDocente() {
       const token = getToken();
 
       // Formatear los datos según el nuevo formato del endpoint
-      const asistenciaData: Asistencia[] = estudiantesConAsistencia.map(
+      const asistenciaData: AsistenciaSent[] = estudiantesConAsistencia.map(
         (row) => ({
           id_inscripcion_id: row.id,
           fecha_asistencia: fechaAsistencia,
@@ -337,9 +336,9 @@ export default function AsistenciaDocente() {
           Control de Asistencias
         </Typography>
 
-        <Box className="flex justify-around mb-2">
+        <Box className="mb-2 flex justify-around">
           <TextField
-          className="inputs-textfield flex w-full flex-col sm:w-1/4"
+            className="inputs-textfield flex w-full flex-col sm:w-1/4"
             label="Fecha de Asistencia"
             type="date"
             value={fechaAsistencia}
@@ -479,7 +478,7 @@ export default function AsistenciaDocente() {
             {estudiantesAusentes.length}
           </Typography>
 
-          <Grid className="container" spacing={2}>
+          <Grid container spacing={2} className="mt-4">
             {filteredRows.map((estudiante) => (
               <Grid key={estudiante.id}>
                 <Card
@@ -501,7 +500,7 @@ export default function AsistenciaDocente() {
                     height: "100%",
                   }}
                 >
-                  <CardContent className="flex flex-col justify-between p-3 sm:flex-row">
+                  <CardContent className="flex flex-col justify-between p-3">
                     {/* Header del estudiante */}
                     <Box className="mb-3 flex flex-row gap-2">
                       <Avatar
@@ -516,13 +515,8 @@ export default function AsistenciaDocente() {
                         {estudiante.nombre.charAt(0)}
                         {estudiante.apellido.charAt(0)}
                       </Avatar>
-                      <Box className="">
-                        <Typography
-                          variant="subtitle2"
-                          fontWeight="bold"
-                          className="line-clamp-2"
-                          sx={{ fontSize: "0.9rem" }}
-                        >
+                      <Box className="flex-1">
+                        <Typography fontWeight="bold" className="line-clamp-2">
                           {estudiante.nombre} {estudiante.apellido}
                         </Typography>
                         <Box className="flex items-center gap-1">
@@ -545,9 +539,9 @@ export default function AsistenciaDocente() {
                       </Box>
                     </Box>
 
-                    {/* Botones de asistencia - FUERA del header */}
-                    <Box className="flex flex-col">
-                      <Box className="mb-3 flex gap-1">
+                    {/* Botones de asistencia */}
+                    <Box className="flex flex-col gap-2">
+                      <Box className="flex gap-1">
                         <Button
                           size="small"
                           variant={
@@ -609,10 +603,152 @@ export default function AsistenciaDocente() {
                     </Box>
                   </CardContent>
                 </Card>
-                <Divider></Divider>
               </Grid>
             ))}
           </Grid>
+
+         
+
+          <div className="mx-auto mt-4 w-11/12">
+            <Typography
+              variant="body2"
+              className="mb-4 text-center text-gray-600"
+            >
+              Mostrando {filteredRows.length} estudiantes | Marcados:{" "}
+              {estudiantesConAsistencia.length} | Presentes:{" "}
+              {estudiantesPresentes.length} | Ausentes:{" "}
+              {estudiantesAusentes.length}
+            </Typography>
+
+            {/* Lista vertical de estudiantes - diseño horizontal */}
+            <div className="flex flex-col">
+              {filteredRows.map((estudiante) => (
+                <Card
+                  key={estudiante.id}
+                  variant="outlined"
+                  sx={{
+                    borderColor:
+                      estudiante.asistio === true
+                        ? "#4caf50"
+                        : estudiante.asistio === false
+                          ? "#f44336"
+                          : "white",
+                    borderWidth: estudiante.asistio !== null ? 2 : 1,
+                    backgroundColor:
+                      estudiante.asistio === true
+                        ? "#f1f8f4"
+                        : estudiante.asistio === false
+                          ? "#fef1f1"
+                          : "white",
+                  }}
+                >
+                  <CardContent className="flex flex-row justify-around items-center">
+                    {/* Sección izquierda: Avatar + Info */}
+                    <Box className="flex w-full items-center gap-3 justify-around">
+                      <Avatar
+                        sx={{
+                          width: 50,
+                          height: 50,
+                          bgcolor: getAvatarColor(estudiante.asistio),
+                          fontSize: "1.1rem",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {estudiante.nombre.charAt(0)}
+                        {estudiante.apellido.charAt(0)}
+                      </Avatar>
+
+                      <Typography variant="body1" fontWeight="600">
+                        {estudiante.nombre} {estudiante.apellido}
+                      </Typography>
+
+                      <Box className="flex items-center gap-1">
+                        <BadgeIcon sx={{ fontSize: 16, color: "#666" }} />
+                        <Typography color="text.secondary">
+                          {estudiante.numero_documento}
+                        </Typography>
+                      </Box>
+
+                      <Box className="flex items-center gap-1">
+                        <GroupIcon sx={{ fontSize: 16, color: "#666" }} />
+                        <Typography color="text.secondary">
+                          {estudiante.grupo_nombre}
+                        </Typography>
+                      </Box>
+
+                      {/* Sección derecha: Botones de acción */}
+                      <Box className="flex flex-col gap-2 sm:min-w-[280px]">
+                        <Box className="flex gap-2">
+                          <Button
+                            size="medium"
+                            variant={
+                              estudiante.asistio === true
+                                ? "contained"
+                                : "outlined"
+                            }
+                            color="success"
+                            onClick={() =>
+                              handleAsistenciaChange(estudiante.id, true)
+                            }
+                            className="flex-1 rounded-lg"
+                            sx={{
+                              textTransform: "none",
+                              fontWeight: 500,
+                            }}
+                          >
+                            Presente
+                          </Button>
+                          <Button
+                            size="medium"
+                            variant={
+                              estudiante.asistio === false
+                                ? "contained"
+                                : "outlined"
+                            }
+                            color="error"
+                            onClick={() =>
+                              handleAsistenciaChange(estudiante.id, false)
+                            }
+                            className="flex-1 rounded-lg"
+                            sx={{
+                              fontSize: "0.875rem",
+                              textTransform: "none",
+                              fontWeight: 500,
+                            }}
+                          >
+                            Ausente
+                          </Button>
+                        </Box>
+
+                        {/* Campo de observaciones (opcional, colapsable) */}
+                        {estudiante.asistio !== null && (
+                          <TextField
+                            size="small"
+                            variant="outlined"
+                            placeholder="Agregar observación..."
+                            value={estudiante.observaciones || ""}
+                            onChange={(e) =>
+                              handleObservacionesChange(
+                                estudiante.id,
+                                e.target.value,
+                              )
+                            }
+                            fullWidth
+                            sx={{
+                              "& .MuiOutlinedInput-root": {
+                                fontSize: "0.875rem",
+                                borderRadius: "8px",
+                              },
+                            }}
+                          />
+                        )}
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Botón para guardar asistencia */}
