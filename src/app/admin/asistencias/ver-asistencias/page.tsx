@@ -83,6 +83,7 @@ export default function VerAsistencias() {
   const [selectedPeriodo, setSelectedPeriodo] = useState<string>("todos");
   const [selectedModulo, setSelectedModulo] = useState<string>("todos");
   const [selectedEstado, setSelectedEstado] = useState<string>("todos");
+  const [selectedSesion, setSelectedSesion] = useState<string>("todos");
   const [fechaInicio, setFechaInicio] = useState<string>("");
   const [fechaFin, setFechaFin] = useState<string>("");
 
@@ -343,6 +344,8 @@ export default function VerAsistencias() {
       const estadoMatch =
         selectedEstado === "todos" ||
         asistencia.estado_asistencia === selectedEstado;
+      const sesionMatch =
+        selectedSesion === "todos" || asistencia.sesion === selectedSesion;
 
       let fechaMatch = true;
       if (fechaInicio && fechaFin) {
@@ -360,13 +363,16 @@ export default function VerAsistencias() {
         fechaMatch = fechaAsistencia <= fin;
       }
 
-      return periodoMatch && moduloMatch && estadoMatch && fechaMatch;
+      return (
+        periodoMatch && moduloMatch && estadoMatch && fechaMatch && sesionMatch
+      );
     });
   }, [
     asistencias,
     selectedPeriodo,
     selectedModulo,
     selectedEstado,
+    selectedSesion,
     fechaInicio,
     fechaFin,
   ]);
@@ -606,6 +612,96 @@ export default function VerAsistencias() {
       },
     ];
 
+    // Datos para gráfica de barras apiladas - Asistencias por sesión
+    const asistenciasPorSesion = filteredAsistencias.reduce(
+      (acc, asistencia) => {
+        const sesion = asistencia.sesion || "Sin sesión";
+        if (!acc[sesion]) {
+          acc[sesion] = { presente: 0, ausente: 0 };
+        }
+        if (asistencia.estado_asistencia === "Presente") {
+          acc[sesion].presente += 1;
+        } else {
+          acc[sesion].ausente += 1;
+        }
+        return acc;
+      },
+      {} as Record<string, { presente: number; ausente: number }>,
+    );
+
+    const sesionEntries = Object.entries(asistenciasPorSesion).sort(
+      ([a], [b]) => a.localeCompare(b),
+    );
+
+    const barChartSesionOptions: ApexCharts.ApexOptions = {
+      chart: {
+        type: "bar",
+        stacked: true,
+        stackType: "normal",
+        toolbar: {
+          show: true,
+        },
+      },
+      plotOptions: {
+        bar: {
+          horizontal: false,
+          columnWidth: "60%",
+          dataLabels: {
+            total: {
+              enabled: true,
+              style: {
+                fontSize: "12px",
+                fontWeight: 600,
+              },
+            },
+          },
+        },
+      },
+      xaxis: {
+        categories: sesionEntries.map(([sesion]) => `Sesión ${sesion}`),
+        labels: {
+          style: {
+            fontSize: "12px",
+          },
+        },
+      },
+      yaxis: {
+        title: {
+          text: "Número de Estudiantes",
+        },
+      },
+      colors: ["#4caf50", "#C20E1A"],
+      dataLabels: {
+        enabled: false,
+      },
+      legend: {
+        position: "top",
+        horizontalAlign: "left",
+      },
+      tooltip: {
+        y: {
+          formatter: (value: number) => `${value} estudiantes`,
+        },
+      },
+      grid: {
+        borderColor: "#f0f0f0",
+      },
+      fill: {
+        opacity: 1,
+      },
+    };
+
+    const barChartSesionSeries = [
+      {
+        name: "Presentes",
+        data: sesionEntries.map(([, counts]) => counts.presente),
+      },
+      {
+        name: "Ausentes",
+        data: sesionEntries.map(([, counts]) => counts.ausente),
+      },
+    ];
+
     return {
       pieChart: { options: pieChartOptions, series: pieChartSeries },
       barChartModulos: {
@@ -615,6 +711,10 @@ export default function VerAsistencias() {
       barChartFecha: {
         options: barChartFechaOptions,
         series: barChartFechaSeries,
+      },
+      barChartSesion: {
+        options: barChartSesionOptions,
+        series: barChartSesionSeries,
       },
     };
   }, [filteredAsistencias]);
@@ -650,10 +750,15 @@ export default function VerAsistencias() {
     setSelectedEstado(event.target.value);
   };
 
+  const handleSesionChange = (event: SelectChangeEvent<string>) => {
+    setSelectedSesion(event.target.value);
+  };
+
   const handleLimpiarFiltros = () => {
     setSelectedPeriodo("todos");
     setSelectedModulo("todos");
     setSelectedEstado("todos");
+    setSelectedSesion("todos");
     setFechaInicio("");
     setFechaFin("");
   };
@@ -754,6 +859,26 @@ export default function VerAsistencias() {
                   {modulo.nombre_modulo}
                 </MenuItem>
               ))}
+            </Select>
+          </FormControl>
+
+          {/* Sesión */}
+          <FormControl className="inputs-textfield w-full sm:w-1/6">
+            <InputLabel>Sesión</InputLabel>
+            <Select
+              value={selectedSesion}
+              onChange={handleSesionChange}
+              label="Sesión"
+            >
+              <MenuItem key="todos" value="todos">
+                Todos las sesiones
+              </MenuItem>
+              <MenuItem key="Sesion 1" value="1">
+                Sesión 1
+              </MenuItem>
+              <MenuItem key="Sesion 2" value="2">
+                Sesión 2
+              </MenuItem>
             </Select>
           </FormControl>
 
@@ -924,9 +1049,8 @@ export default function VerAsistencias() {
         {/* Gráfica de pastel - Estado de asistencia */}
         <Paper
           key="grafica-pastel"
-          className="rounded-2xl"
+          className="rounded-2xl p-3 shadow-md"
           elevation={0}
-          sx={{ p: 3, border: "1px solid #d0d0d0" }}
         >
           <Typography variant="h6" fontWeight="bold" gutterBottom>
             Distribución por Estado
@@ -944,9 +1068,8 @@ export default function VerAsistencias() {
         {/* Gráfica de barras - Asistencias por módulo */}
         <Paper
           key="grafica-modulos"
-          className="rounded-2xl"
+          className="rounded-2xl p-3 shadow-md"
           elevation={0}
-          sx={{ p: 3, border: "1px solid #d0d0d0" }}
         >
           <Typography variant="h6" fontWeight="bold" gutterBottom>
             Asistencias por Módulo
@@ -964,9 +1087,8 @@ export default function VerAsistencias() {
         {/* Gráfica de barras apiladas - Asistencias por fecha */}
         <Paper
           key="grafica-fechas"
-          className="rounded-2xl"
+          className="rounded-2xl p-3 shadow-md"
           elevation={0}
-          sx={{ p: 3, border: "1px solid #d0d0d0" }}
         >
           <Typography variant="h6" fontWeight="bold" gutterBottom>
             Asistencias por Fecha
@@ -975,6 +1097,25 @@ export default function VerAsistencias() {
             <ReactApexCharts
               options={chartConfigs.barChartFecha.options}
               series={chartConfigs.barChartFecha.series}
+              type="bar"
+              height={400}
+            />
+          )}
+        </Paper>
+
+        {/* Gráfica de barras apiladas - Asistencias por sesión */}
+        <Paper
+          key="grafica-sesiones"
+          className="rounded-2xl p-3 shadow-md"
+          elevation={0}
+        >
+          <Typography variant="h6" fontWeight="bold" gutterBottom>
+            Asistencias por Sesión
+          </Typography>
+          {isClient && (
+            <ReactApexCharts
+              options={chartConfigs.barChartSesion.options}
+              series={chartConfigs.barChartSesion.series}
               type="bar"
               height={400}
             />
@@ -1127,7 +1268,10 @@ export default function VerAsistencias() {
           </Box>
         </Paper>
       ) : (
-        <Paper elevation={0} sx={{ border: "1px solid #d0d0d0" }}>
+        <Paper
+          elevation={0}
+          className="rounded-2xl shadow-md"
+        >
           <Box p={3}>
             <Typography variant="h6" fontWeight="bold" gutterBottom>
               Registro Detallado de Asistencias
@@ -1146,14 +1290,17 @@ export default function VerAsistencias() {
             }}
             pageSizeOptions={[25, 50, 100]}
             disableRowSelectionOnClick
+            className="mx-6"
             sx={{
-              border: "none",
-              "& .MuiDataGrid-cell": {
-                borderColor: "#f0f0f0",
+              border: 0,
+              "& .MuiDataGrid-columnHeaderTitle": {
+                fontWeight: "bold",
+                color: "#575757",
+                fontSize: "1rem",
               },
-              "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: "#f8f9fa",
-                borderColor: "#f0f0f0",
+
+              "& .MuiDataGrid-columnHeader": {
+                backgroundColor: "#e8e8e8",
               },
             }}
           />
