@@ -17,9 +17,7 @@ import {
   Chip,
   Alert,
   LinearProgress,
-  SvgIcon,
 } from "@mui/material";
-import Image from "next/image";
 import { useState } from "react";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";

@@ -36,7 +36,6 @@ import PersonIcon from "@mui/icons-material/Person";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 
 import axios from "axios";
-import { GridColDef } from "@mui/x-data-grid";
 import { API_BASE_URL } from "../../../../config";
 import { useRouter } from "next/navigation";
 
@@ -336,7 +335,7 @@ export default function AsistenciaDocente() {
           Control de Asistencias
         </Typography>
 
-        <Box className="mb-2 flex flex-col gap-3 justify-around sm:flex-row">
+        <Box className="mb-2 flex flex-col justify-around gap-3 sm:flex-row">
           {/* Inputs para fecha, sesión y grupos */}
           <TextField
             className="inputs-textfield flex w-full flex-col sm:w-1/4"
@@ -382,60 +381,57 @@ export default function AsistenciaDocente() {
             </Select>
           </FormControl>
         </Box>
-
       </Box>
 
       {/* Indicadores generales */}
       <Box className="my-4 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-         
-          <Card className="rounded-2xl">
-            <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
-              <PersonIcon className="text-blue-500" fontSize="large" />
-              <Typography variant="h4" className="font-bold text-blue-600">
-                {totalEstudiantes}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Estudiantes
-              </Typography>
-            </CardContent>
-          </Card>
+        <Card className="rounded-2xl">
+          <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
+            <PersonIcon className="text-blue-500" fontSize="large" />
+            <Typography variant="h4" className="font-bold text-blue-600">
+              {totalEstudiantes}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Total Estudiantes
+            </Typography>
+          </CardContent>
+        </Card>
 
-          <Card className="rounded-2xl">
-            <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
-              <CheckCircleIcon className="text-green-500" fontSize="large" />
-              <Typography variant="h4" className="font-bold text-green-600">
-                {estudiantesPresentes.length}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Presentes
-              </Typography>
-            </CardContent>
-          </Card>
+        <Card className="rounded-2xl">
+          <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
+            <CheckCircleIcon className="text-green-500" fontSize="large" />
+            <Typography variant="h4" className="font-bold text-green-600">
+              {estudiantesPresentes.length}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Presentes
+            </Typography>
+          </CardContent>
+        </Card>
 
-          <Card className="rounded-2xl">
-            <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
-              <CancelIcon className="text-red-500" fontSize="large" />
-              <Typography variant="h4" className="font-bold text-red-600">
-                {estudiantesAusentes.length}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Ausentes
-              </Typography>
-            </CardContent>
-          </Card>
+        <Card className="rounded-2xl">
+          <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
+            <CancelIcon className="text-red-500" fontSize="large" />
+            <Typography variant="h4" className="font-bold text-red-600">
+              {estudiantesAusentes.length}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Ausentes
+            </Typography>
+          </CardContent>
+        </Card>
 
-          <Card className="rounded-2xl">
-            <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
-              <CalendarTodayIcon className="text-orange-500" fontSize="large" />
-              <Typography variant="h4" className="font-bold text-orange-600">
-                {estudiantesConAsistencia.length}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Marcados
-              </Typography>
-            </CardContent>
-          </Card>
-       
+        <Card className="rounded-2xl">
+          <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
+            <CalendarTodayIcon className="text-orange-500" fontSize="large" />
+            <Typography variant="h4" className="font-bold text-orange-600">
+              {estudiantesConAsistencia.length}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Marcados
+            </Typography>
+          </CardContent>
+        </Card>
       </Box>
 
       {/* Tabla de asistencia */}
@@ -452,35 +448,35 @@ export default function AsistenciaDocente() {
             {estudiantesAusentes.length}
           </Typography>
 
- {/* Botones de acción rápida */}
-        <Box className="mb-4 flex flex-wrap justify-center gap-2">
-          <Button
-            variant="outlined"
-            className="rounded-xl"
-            color="success"
-            onClick={handleMarcarTodosPresentes}
-            size="small"
-          >
-            Marcar Todos Presentes
-          </Button>
-          <Button
-            variant="outlined"
-            className="rounded-xl"
-            color="error"
-            onClick={handleMarcarTodosAusentes}
-            size="small"
-          >
-            Marcar Todos Ausentes
-          </Button>
-          <Button
-            variant="outlined"
-            className="rounded-xl"
-            onClick={handleLimpiarAsistencia}
-            size="small"
-          >
-            Limpiar Todo
-          </Button>
-        </Box>
+          {/* Botones de acción rápida */}
+          <Box className="mb-4 flex flex-wrap justify-center gap-2">
+            <Button
+              variant="outlined"
+              className="rounded-xl"
+              color="success"
+              onClick={handleMarcarTodosPresentes}
+              size="small"
+            >
+              Marcar Todos Presentes
+            </Button>
+            <Button
+              variant="outlined"
+              className="rounded-xl"
+              color="error"
+              onClick={handleMarcarTodosAusentes}
+              size="small"
+            >
+              Marcar Todos Ausentes
+            </Button>
+            <Button
+              variant="outlined"
+              className="rounded-xl"
+              onClick={handleLimpiarAsistencia}
+              size="small"
+            >
+              Limpiar Todo
+            </Button>
+          </Box>
 
           <Grid container spacing={2} className="mt-4 lg:hidden">
             {filteredRows.map((estudiante) => (
