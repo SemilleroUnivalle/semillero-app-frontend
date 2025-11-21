@@ -11,7 +11,7 @@ import {
 import GroupWorkOutlinedIcon from "@mui/icons-material/GroupWorkOutlined";
 import AssignmentIndOutlinedIcon from "@mui/icons-material/AssignmentIndOutlined";
 import InventoryOutlinedIcon from "@mui/icons-material/InventoryOutlined";
-import PsychologyAltOutlinedIcon from '@mui/icons-material/PsychologyAltOutlined';
+import PsychologyAltOutlinedIcon from "@mui/icons-material/PsychologyAltOutlined";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import ContentPasteSearchOutlinedIcon from "@mui/icons-material/ContentPasteSearchOutlined";
 import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
@@ -48,17 +48,18 @@ const adminLinks = [
     href: "/admin/funcionarios/visualizar-funcionarios",
     icon: GroupWorkOutlinedIcon,
   },
+  { name: "Cursos", href: "/admin/cursos/verCursos", icon: BookOpenIcon },
   {
     name: "Programación Académica",
     icon: LocalLibraryOutlinedIcon,
     children: [
-      { name: "Cursos", href: "/admin/cursos/verCursos", icon: BookOpenIcon },
       {
         name: "Oferta Académica",
         href: "/admin/oferta/verOfertas",
         icon: TagIcon,
       },
-      { name: "Grupos", href: "/admin/grupos/ver-grupos", icon: UsersIcon },
+      { name: "Programación de Cursos", href: "/admin/programacion/cursos", icon: BookOpenIcon },
+      { name: "Programación de Grupos", href: "/admin/grupos/ver-grupos", icon: UsersIcon },
     ],
   },
   {
