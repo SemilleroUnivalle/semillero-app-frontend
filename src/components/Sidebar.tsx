@@ -11,6 +11,7 @@ import {
 import GroupWorkOutlinedIcon from "@mui/icons-material/GroupWorkOutlined";
 import AssignmentIndOutlinedIcon from "@mui/icons-material/AssignmentIndOutlined";
 import InventoryOutlinedIcon from "@mui/icons-material/InventoryOutlined";
+import PsychologyAltOutlinedIcon from '@mui/icons-material/PsychologyAltOutlined';
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import ContentPasteSearchOutlinedIcon from "@mui/icons-material/ContentPasteSearchOutlined";
 import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
@@ -64,6 +65,12 @@ const adminLinks = [
     name: "Asistencias",
     href: "/admin/asistencias/ver-asistencias",
     icon: InventoryOutlinedIcon,
+  },
+
+  {
+    name: "Pruebas Diagnósticas",
+    href: "/admin/pruebas-diagnosticas/ver-pruebas",
+    icon: PsychologyAltOutlinedIcon,
   },
 
   {

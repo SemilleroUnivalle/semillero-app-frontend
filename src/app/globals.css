@@ -127,6 +127,23 @@ body {
   border-color: darkred !important; /* Borde más oscuro al pasar el mouse */
 }
 
+.buttons-primary {
+ border-color: #c20e1a;
+ color: #c20e1a;
+  border-radius: 1rem;
+}
+
+.buttons-primary:hover {
+  background-color: #c20e1a25;
+  color: #c20e1a;
+}
+
+.buttons-principal {
+ background-color: #c20e1a;
+ color: white;
+  border-radius: 1rem;
+}
+
 
 
 

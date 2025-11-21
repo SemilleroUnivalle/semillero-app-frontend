@@ -232,6 +232,11 @@ export default function VerAsistencias() {
   };
 
   const handleDelete = async (row: AsistenciaRow) => {
+    const confirmDelete = window.confirm(
+      "¿Estás seguro de que deseas eliminar esta asistencia?",
+    );
+    if (!confirmDelete) return;
+
     try {
       const token = getToken();
 
@@ -1268,10 +1273,7 @@ export default function VerAsistencias() {
           </Box>
         </Paper>
       ) : (
-        <Paper
-          elevation={0}
-          className="rounded-2xl shadow-md"
-        >
+        <Paper elevation={0} className="rounded-2xl shadow-md">
           <Box p={3}>
             <Typography variant="h6" fontWeight="bold" gutterBottom>
               Registro Detallado de Asistencias

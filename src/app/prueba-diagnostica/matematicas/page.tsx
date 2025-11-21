@@ -23,6 +23,8 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import "katex/dist/katex.min.css";
+import { BlockMath, InlineMath } from "react-katex";
 
 const Cursos = [
   {
@@ -35,10 +37,10 @@ const Cursos = [
           "Si un buzo desciende 12 metros bajo el nivel del mar y luego asciende 7 metros, ¿cuál es su posición final respecto al nivel del mar?",
         imagen: null,
         opciones: {
-          A: "-19 metros",
-          B: "-5 metros",
-          C: "5 metros",
-          D: "19 metros",
+          A: <InlineMath math="-3" />,
+          B: <InlineMath math="-\frac{1}{2}" />,
+          C: "0",
+          D: <InlineMath math="\frac{1}{4}" />,
         },
         respuesta_correcta: "B",
       },
@@ -182,10 +184,10 @@ const Cursos = [
           "Un edificio proyecta una sombra de 20 m cuando el ángulo de elevación del sol es 45°. ¿Cuál es la altura del edificio?",
         imagen: null,
         opciones: {
-          A: "10 m",
-          B: "20 m",
-          C: "√2 m",
-          D: "40 m",
+          A: <InlineMath math="-3" />,
+          B: <InlineMath math="-\frac{1}{2}" />,
+          C: "0",
+          D: <InlineMath math="\frac{1}{4}" />,
         },
         respuesta_correcta: "B",
       },
@@ -751,9 +753,11 @@ export default function Page() {
                     Has obtenido un resultado excelente en la prueba
                     diagnóstica. Tu nivel de desempeño indica que dominas los
                     contenidos de este curso, por lo que estás listo para
-                    continuar avanzando. <br /><br />Te recomendamos tomar la prueba del
-                    siguiente curso para seguir con tu proceso de aprendizaje y
-                    potenciar aún más tus habilidades. ¡Sigue así!
+                    continuar avanzando. <br />
+                    <br />
+                    Te recomendamos tomar la prueba del siguiente curso para
+                    seguir con tu proceso de aprendizaje y potenciar aún más tus
+                    habilidades. ¡Sigue así!
                   </Typography>
                 </Box>
               ) : respuestasCorrectas / preguntas.length >= 0.5 ? (

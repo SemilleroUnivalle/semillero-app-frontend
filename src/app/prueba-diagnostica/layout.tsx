@@ -3,6 +3,8 @@ import "../globals.css";
 import Footer from "@/components/Footer";
 import { StyledEngineProvider } from "@mui/material/styles";
 import Link from "next/link";
+import "katex/dist/katex.min.css"
+
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
