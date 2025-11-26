@@ -16,8 +16,12 @@ import React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
+import { useRouter } from "next/navigation";
 
 export default function CrearOferta() {
+
+  const Router = useRouter();
+
   interface Modulo {
     id_modulo: number;
     nombre_modulo: string;
@@ -261,6 +265,9 @@ export default function CrearOferta() {
         e.currentTarget.reset();
       }
       setSelectedCursosPorCategoria({});
+
+      Router.push("/admin/oferta/verOfertas");
+      
     } catch (error) {
       console.error("Error al enviar los datos:", error);
       setError("Hubo un problema al enviar los datos. Inténtalo de nuevo.");

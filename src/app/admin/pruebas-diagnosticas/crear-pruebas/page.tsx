@@ -219,7 +219,7 @@ export default function CrearPruebas() {
 
       <Button
         variant="outlined"
-        className="mx-auto mt-4 w-full rounded-xl border-primary text-primary hover:border-primary hover:bg-primary/10 sm:w-1/4"
+        className="buttons-primary mx-auto mt-4 w-fullsm:w-1/4"
         onClick={agregarPregunta}
       >
         Agregar pregunta

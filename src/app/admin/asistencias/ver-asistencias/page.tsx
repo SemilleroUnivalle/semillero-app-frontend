@@ -399,7 +399,7 @@ export default function VerAsistencias() {
         type: "pie",
       },
       labels: Object.keys(asistenciasPorEstado),
-      colors: ["#C20E1A", "#4caf50"], // Verde para "Asistio", Rojo para "No Asistio"
+      colors: ["#4caf50", "#C20E1A"], // Verde para "Asistio", Rojo para "No Asistio"
       legend: {
         position: "bottom",
       },
@@ -1058,7 +1058,7 @@ export default function VerAsistencias() {
           elevation={0}
         >
           <Typography variant="h6" fontWeight="bold" gutterBottom>
-            Distribución por Estado
+            Asistencias por Estado
           </Typography>
           {isClient && (
             <ReactApexCharts

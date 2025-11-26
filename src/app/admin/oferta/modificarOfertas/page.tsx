@@ -10,6 +10,10 @@ import {
   Checkbox,
   Alert,
   Snackbar,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 
 import React from "react";
@@ -17,39 +21,14 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 
+import {
+  OfertaAcademica,
+  Modulo,
+  OfertaCategoria,
+  Categoria,
+} from "@/interfaces/interfaces";
+
 export default function ModificarOferta() {
-  interface Oferta {
-    id_oferta_academica: {
-      id_oferta_academica: number;
-      nombre: string;
-      fecha_inicio: string;
-    };
-    id_categoria: {
-      nombre: string;
-    };
-    modulo: { id_modulo: number }[];
-    precio_publico: string;
-    precio_privado: string;
-    precio_univalle: string;
-    fecha_finalizacion: string;
-    id_oferta_categoria: number;
-  }
-
-  interface Modulo {
-    id_modulo: number;
-    nombre_modulo: string;
-    descripcion_modulo: string;
-    id_area: string;
-    nombre_area: string;
-    id_categoria: Categoria;
-  }
-
-  interface Categoria {
-    id_categoria: number;
-    nombre: string;
-    fecha_inicio: string;
-    estado: boolean;
-  }
   // Estado para los módulos seleccionados por categoría
   const [selectedCursosPorCategoria, setSelectedCursosPorCategoria] = useState<
     Record<string, number[]>
@@ -69,11 +48,12 @@ export default function ModificarOferta() {
   const [success, setSuccess] = useState(false);
 
   // Estado para la oferta seleccionada
-  const [oferta, setOferta] = useState<Oferta | null>(null);
+  const [oferta, setOferta] = useState<OfertaCategoria | null>(null);
 
   // Estado para el nombre y fecha de inicio de la oferta
   const [nombreOferta, setNombreOferta] = useState("");
   const [fechaInicio, setFechaInicio] = useState("");
+  const [estadoOferta, setEstadoOferta] = useState("");
 
   // Estado para los precios y fechas de finalización por categoría
   const [preciosPorCategoria, setPreciosPorCategoria] = useState<
@@ -85,11 +65,14 @@ export default function ModificarOferta() {
   useEffect(() => {
     const storedOferta = localStorage.getItem("ofertaSeleccionada");
     if (storedOferta) {
-      const ofertas: Oferta[] = JSON.parse(storedOferta);
+      const ofertas: OfertaCategoria[] = JSON.parse(storedOferta);
 
       // Precargar nombre y fecha de inicio de la oferta académica (toma la primera)
       setNombreOferta(ofertas[0]?.id_oferta_academica?.nombre || "");
       setFechaInicio(ofertas[0]?.id_oferta_academica?.fecha_inicio || "");
+      setEstadoOferta(
+        ofertas[0]?.id_oferta_academica?.estado.toString() || "true",
+      );
 
       // Precargar módulos seleccionados, precios y fechas por cada categoría
       const cursosPorCategoria: Record<string, number[]> = {};
@@ -154,9 +137,14 @@ export default function ModificarOferta() {
               id_modulo: mod.id_modulo,
               nombre_modulo: mod.nombre_modulo,
               descripcion_modulo: mod.descripcion_modulo,
+              intensidad_horaria: mod.intensidad_horaria,
+              dirigido_a: mod.dirigido_a,
+              incluye: mod.incluye,
+              imagen_modulo: mod.imagen_modulo,
+              estado: mod.estado,
               id_area: mod.id_area,
-              nombre_area: mod.nombre_area,
               id_categoria: mod.id_categoria,
+              id_oferta_categoria: mod.id_oferta_categoria,
             }));
           },
         );
@@ -193,7 +181,9 @@ export default function ModificarOferta() {
     e.preventDefault(); // Evita el comportamiento por defecto del formulario
 
     const storedOferta = localStorage.getItem("ofertaSeleccionada");
-    const ofertas: Oferta[] = storedOferta ? JSON.parse(storedOferta) : [];
+    const ofertas: OfertaCategoria[] = storedOferta
+      ? JSON.parse(storedOferta)
+      : [];
 
     if (!oferta) {
       setError("No se ha seleccionado ninguna oferta para modificar.");
@@ -232,6 +222,7 @@ export default function ModificarOferta() {
         {
           nombre: nombreOferta,
           fecha_inicio: fechaInicio,
+          estado: estadoOferta,
         },
         {
           headers: {
@@ -364,8 +355,6 @@ export default function ModificarOferta() {
       }
 
       setSuccess(true);
-
-    
     } catch (error) {
       console.error("Error al enviar los datos --:", error);
       setError("Hubo un problema al enviar los datos. Inténtalo de nuevo.");
@@ -409,10 +398,10 @@ export default function ModificarOferta() {
         <h2 className="mb-2 text-center text-xl font-bold">Modificar oferta</h2>
 
         <form onSubmit={handleSubmit} className="w-full space-y-4 px-4">
-          <div className="mx-auto flex w-full flex-col items-center justify-between gap-4 sm:w-4/5 sm:flex-row">
+          <div className="inputs-textfield mx-auto flex w-full flex-col items-center justify-between gap-4 sm:w-4/5 sm:flex-row">
             {/* Campo nombre de la oferta */}
             <TextField
-              className="inputs-textfield flex w-full sm:w-1/3"
+              className="flex w-full sm:w-1/3"
               label="Nombre de la oferta"
               name="nombre_oferta"
               variant="outlined"
@@ -424,7 +413,7 @@ export default function ModificarOferta() {
             />
             {/* Campo fecha de inicio de la oferta */}
             <TextField
-              className="inputs-textfield flex w-full sm:w-1/3"
+              className="flex w-full sm:w-1/3"
               label="Fecha de inicio"
               name="fecha_inicio"
               variant="outlined"
@@ -435,6 +424,20 @@ export default function ModificarOferta() {
               onChange={(e) => setFechaInicio(e.target.value)}
               required
             />
+            {/* Campo cambio de estado de la oferta */}
+            <FormControl className="flex w-full sm:w-1/3">
+              <InputLabel>Estado</InputLabel>
+              <Select
+                label="Estado"
+                name="estado_oferta"
+                value={estadoOferta}
+                onChange={(e) => setEstadoOferta(e.target.value)}
+                required
+              >
+                <MenuItem value="true">Activo</MenuItem>
+                <MenuItem value="false">Inactivo</MenuItem>
+              </Select>
+            </FormControl>
           </div>
 
           <h2 className="text-xl font-semibold">Categorías</h2>

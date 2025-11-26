@@ -58,7 +58,7 @@ const adminLinks = [
         href: "/admin/oferta/verOfertas",
         icon: TagIcon,
       },
-      { name: "Programación de Cursos", href: "/admin/programacion/cursos", icon: BookOpenIcon },
+      { name: "Programación de Cursos", href: "/admin/cursos-programados", icon: BookOpenIcon },
       { name: "Programación de Grupos", href: "/admin/grupos/ver-grupos", icon: UsersIcon },
     ],
   },
