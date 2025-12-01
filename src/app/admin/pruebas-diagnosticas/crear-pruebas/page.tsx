@@ -9,39 +9,48 @@ import {
   Card,
   CardContent,
   Divider,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import { useState } from "react";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
+
+interface Opcion {
+  id: string;
+  texto: string;
+}
 
 interface Pregunta {
   id: number;
+  tipo: "multiple" | "verdadero-falso";
   enunciado: string;
   imagen: string | null;
-  opciones: {
-    A: string;
-    B: string;
-    C: string;
-    D: string;
-  };
+  opciones: Opcion[];
   respuestaCorrecta: string;
 }
 
 export default function CrearPruebas() {
   const [modulo, setModulo] = useState("");
   const [preguntas, setPreguntas] = useState<Pregunta[]>([]);
+  const [menuAbierto, setMenuAbierto] = useState<number | null>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const agregarPregunta = () => {
     const nuevaPregunta: Pregunta = {
       id: Date.now(),
+      tipo: "multiple",
       enunciado: "",
       imagen: null,
-      opciones: {
-        A: "",
-        B: "",
-        C: "",
-        D: "",
-      },
+      opciones: [
+        { id: "A", texto: "" },
+        { id: "B", texto: "" },
+        { id: "C", texto: "" },
+        { id: "D", texto: "" },
+      ],
       respuestaCorrecta: "A",
     };
     setPreguntas([...preguntas, nuevaPregunta]);
@@ -58,14 +67,19 @@ export default function CrearPruebas() {
   };
 
   const actualizarOpcion = (
-    id: number,
-    opcion: keyof Pregunta["opciones"],
+    preguntaId: number,
+    opcionId: string,
     valor: string,
   ) => {
     setPreguntas(
       preguntas.map((p) =>
-        p.id === id
-          ? { ...p, opciones: { ...p.opciones, [opcion]: valor } }
+        p.id === preguntaId
+          ? {
+            ...p,
+            opciones: p.opciones.map((op) =>
+              op.id === opcionId ? { ...op, texto: valor } : op,
+            ),
+          }
           : p,
       ),
     );
@@ -83,6 +97,95 @@ export default function CrearPruebas() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleMenuClick = (
+    event: React.MouseEvent<HTMLButtonElement>,
+    preguntaId: number,
+  ) => {
+    setAnchorEl(event.currentTarget);
+    setMenuAbierto(preguntaId);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setMenuAbierto(null);
+  };
+
+  const handleTipoPreguntaSelect = (
+    preguntaId: number,
+    tipo: "multiple" | "verdadero-falso",
+  ) => {
+    setPreguntas(
+      preguntas.map((p) => {
+        if (p.id === preguntaId) {
+          // Resetear opciones según el tipo
+          if (tipo === "verdadero-falso") {
+            return {
+              ...p,
+              tipo,
+              opciones: [
+                { id: "A", texto: "Verdadero" },
+                { id: "B", texto: "Falso" },
+              ],
+              respuestaCorrecta: "A",
+            };
+          } else {
+            return {
+              ...p,
+              tipo,
+              opciones: [
+                { id: "A", texto: "" },
+                { id: "B", texto: "" },
+                { id: "C", texto: "" },
+                { id: "D", texto: "" },
+              ],
+              respuestaCorrecta: "A",
+            };
+          }
+        }
+        return p;
+      }),
+    );
+    handleMenuClose();
+  };
+
+  const agregarOpcion = (preguntaId: number) => {
+    setPreguntas(
+      preguntas.map((p) => {
+        if (p.id === preguntaId && p.tipo === "multiple") {
+          const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+          const siguienteLetra = letras[p.opciones.length];
+          if (siguienteLetra) {
+            return {
+              ...p,
+              opciones: [...p.opciones, { id: siguienteLetra, texto: "" }],
+            };
+          }
+        }
+        return p;
+      }),
+    );
+  };
+
+  const eliminarOpcion = (preguntaId: number, opcionId: string) => {
+    setPreguntas(
+      preguntas.map((p) => {
+        if (p.id === preguntaId && p.tipo === "multiple" && p.opciones.length > 2) {
+          const nuevasOpciones = p.opciones.filter((op) => op.id !== opcionId);
+          return {
+            ...p,
+            opciones: nuevasOpciones,
+            // Si la respuesta correcta era la opción eliminada, cambiar a la primera
+            respuestaCorrecta:
+              p.respuestaCorrecta === opcionId
+                ? nuevasOpciones[0].id
+                : p.respuestaCorrecta,
+          };
+        }
+        return p;
+      }),
+    );
   };
 
   return (
@@ -116,12 +219,44 @@ export default function CrearPruebas() {
                 <Typography variant="h6" className="text-primary">
                   Pregunta {index + 1}
                 </Typography>
-                <IconButton
-                  onClick={() => eliminarPregunta(pregunta.id)}
-                  className="text-secondary hover:text-primary"
-                >
-                  <DeleteOutlineOutlinedIcon />
-                </IconButton>
+                <Box className="flex items-center gap-2">
+                  <Button
+                    variant="outlined"
+                    onClick={(e) => handleMenuClick(e, pregunta.id)}
+                    endIcon={<ArrowDropDownIcon />}
+                    className="buttons-primary"
+                  >
+                    {pregunta.tipo === "multiple"
+                      ? "Opción múltiple"
+                      : "Verdadero/Falso"}
+                  </Button>
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={menuAbierto === pregunta.id}
+                    onClose={handleMenuClose}
+                  >
+                    <MenuItem
+                      onClick={() =>
+                        handleTipoPreguntaSelect(pregunta.id, "multiple")
+                      }
+                    >
+                      Opción múltiple
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() =>
+                        handleTipoPreguntaSelect(pregunta.id, "verdadero-falso")
+                      }
+                    >
+                      Verdadero/Falso
+                    </MenuItem>
+                  </Menu>
+                  <IconButton
+                    onClick={() => eliminarPregunta(pregunta.id)}
+                    className="text-secondary hover:text-primary"
+                  >
+                    <DeleteOutlineOutlinedIcon />
+                  </IconButton>
+                </Box>
               </Box>
 
               {/* Enunciado */}
@@ -166,26 +301,68 @@ export default function CrearPruebas() {
               </Box>
 
               {/* Opciones */}
-              <Typography
-                variant="subtitle1"
-                className="mt-4 font-bold text-secondary"
-              >
-                Opciones de respuesta
-              </Typography>
-              <Box className="grid gap-2 md:grid-cols-2">
-                {(["A", "B", "C", "D"] as const).map((letra) => (
-                  <TextField
-                    key={letra}
-                    label={`Opción ${letra}`}
-                    fullWidth
-                    margin="normal"
-                    value={pregunta.opciones[letra]}
-                    onChange={(e) =>
-                      actualizarOpcion(pregunta.id, letra, e.target.value)
-                    }
-                    placeholder="Puedes usar LaTeX: x^2 + y^2"
-                  />
-                ))}
+              <Box className="mt-4">
+                <Box className="flex items-center justify-between">
+                  <Typography
+                    variant="subtitle1"
+                    className="font-bold text-secondary"
+                  >
+                    Opciones de respuesta
+                  </Typography>
+                  {pregunta.tipo === "multiple" && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<AddOutlinedIcon />}
+                      onClick={() => agregarOpcion(pregunta.id)}
+                      className="buttons-primary"
+                      disabled={pregunta.opciones.length >= 26}
+                    >
+                      Agregar opción
+                    </Button>
+                  )}
+                </Box>
+                <Box className="mt-2 flex flex-col gap-2">
+                  {pregunta.opciones.map((opcion, idx) => (
+                    <Box
+                      key={opcion.id}
+                      className="flex items-center gap-2"
+                    >
+                      <TextField
+                        label={
+                          pregunta.tipo === "verdadero-falso"
+                            ? opcion.id === "A"
+                              ? "Verdadero"
+                              : "Falso"
+                            : `Opción ${opcion.id}`
+                        }
+                        fullWidth
+                        margin="normal"
+                        value={opcion.texto}
+                        onChange={(e) =>
+                          actualizarOpcion(
+                            pregunta.id,
+                            opcion.id,
+                            e.target.value,
+                          )
+                        }
+                        placeholder="Puedes usar LaTeX: x^2 + y^2"
+                      />
+                      {pregunta.tipo === "multiple" &&
+                        pregunta.opciones.length > 2 && (
+                          <IconButton
+                            onClick={() =>
+                              eliminarOpcion(pregunta.id, opcion.id)
+                            }
+                            className="text-secondary hover:text-red-500"
+                            size="small"
+                          >
+                            <RemoveCircleOutlineIcon />
+                          </IconButton>
+                        )}
+                    </Box>
+                  ))}
+                </Box>
               </Box>
 
               {/* Respuesta correcta */}
@@ -206,10 +383,15 @@ export default function CrearPruebas() {
                   native: true,
                 }}
               >
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <option value="D">D</option>
+                {pregunta.opciones.map((opcion) => (
+                  <option key={opcion.id} value={opcion.id}>
+                    {pregunta.tipo === "verdadero-falso"
+                      ? opcion.id === "A"
+                        ? "Verdadero"
+                        : "Falso"
+                      : opcion.id}
+                  </option>
+                ))}
               </TextField>
             </CardContent>
             <Divider />
