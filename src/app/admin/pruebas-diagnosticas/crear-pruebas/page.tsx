@@ -11,17 +11,26 @@ import {
   Divider,
   Menu,
   MenuItem,
+  Snackbar,
+  Alert,
 } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
+import axios from "axios";
+import { API_BASE_URL } from "../../../../../config";
 
 interface Opcion {
   id: string;
   texto: string;
+}
+
+interface Modulo {
+  id_modulo: number;
+  nombre_modulo: string;
 }
 
 interface Pregunta {
@@ -31,13 +40,56 @@ interface Pregunta {
   imagen: string | null;
   opciones: Opcion[];
   respuestaCorrecta: string;
+  puntaje: number;
+  explicacion: string;
 }
 
 export default function CrearPruebas() {
+  // Campos de la prueba diagnóstica
+  const [descripcion, setDescripcion] = useState("");
+  const [tiempoLimite, setTiempoLimite] = useState("60");
+  const [puntajeMinimo, setPuntajeMinimo] = useState("60.00");
+
   const [modulo, setModulo] = useState("");
+  const [modulos, setModulos] = useState<Modulo[]>([]);
+  const [cargandoModulos, setCargandoModulos] = useState(false);
   const [preguntas, setPreguntas] = useState<Pregunta[]>([]);
   const [menuAbierto, setMenuAbierto] = useState<number | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [guardando, setGuardando] = useState(false);
+  const [mensaje, setMensaje] = useState<{
+    tipo: "success" | "error";
+    texto: string;
+  } | null>(null);
+
+  // Cargar módulos desde el endpoint
+  useEffect(() => {
+    const cargarModulos = async () => {
+      setCargandoModulos(true);
+      try {
+        // Reemplaza esta URL con tu endpoint real
+        const response = await fetch(`${API_BASE_URL}/modulo/mod/por-categoria-id-nombre/`, {
+          headers: {
+            Authorization: `Token ${localStorage.getItem("token")}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Error al cargar los módulos");
+        }
+
+        const data = await response.json();
+        setModulos(data);
+      } catch (error) {
+        console.error("Error cargando módulos:", error);
+        // Aquí podrías mostrar un mensaje de error al usuario
+      } finally {
+        setCargandoModulos(false);
+      }
+    };
+
+    cargarModulos();
+  }, []);
 
   const agregarPregunta = () => {
     const nuevaPregunta: Pregunta = {
@@ -52,6 +104,8 @@ export default function CrearPruebas() {
         { id: "D", texto: "" },
       ],
       respuestaCorrecta: "A",
+      puntaje: 1.0,
+      explicacion: "",
     };
     setPreguntas([...preguntas, nuevaPregunta]);
   };
@@ -60,7 +114,7 @@ export default function CrearPruebas() {
     setPreguntas(preguntas.filter((p) => p.id !== id));
   };
 
-  const actualizarPregunta = (id: number, campo: string, valor: string) => {
+  const actualizarPregunta = (id: number, campo: string, valor: string | number) => {
     setPreguntas(
       preguntas.map((p) => (p.id === id ? { ...p, [campo]: valor } : p)),
     );
@@ -188,19 +242,245 @@ export default function CrearPruebas() {
     );
   };
 
+  const guardarPruebaDiagnostica = async () => {
+    // Validaciones
+    if (!modulo) {
+      setMensaje({
+        tipo: "error",
+        texto: "Por favor selecciona un módulo",
+      });
+      return;
+    }
+
+    if (preguntas.length === 0) {
+      setMensaje({
+        tipo: "error",
+        texto: "Debes agregar al menos una pregunta",
+      });
+      return;
+    }
+
+    // Validar que todas las preguntas tengan enunciado
+    const preguntasSinEnunciado = preguntas.filter((p) => !p.enunciado.trim());
+    if (preguntasSinEnunciado.length > 0) {
+      setMensaje({
+        tipo: "error",
+        texto: "Todas las preguntas deben tener un enunciado",
+      });
+      return;
+    }
+
+    // Validar que todas las opciones tengan texto (excepto verdadero/falso)
+    for (const pregunta of preguntas) {
+      if (pregunta.tipo === "multiple") {
+        const opcionesSinTexto = pregunta.opciones.filter(
+          (op) => !op.texto.trim(),
+        );
+        if (opcionesSinTexto.length > 0) {
+          setMensaje({
+            tipo: "error",
+            texto: "Todas las opciones de respuesta deben tener texto",
+          });
+          return;
+        }
+      }
+    }
+
+    setGuardando(true);
+
+    try {
+      // 1. Crear la Prueba Diagnóstica
+      const moduloSeleccionado = modulos.find(m => m.id_modulo === parseInt(modulo));
+      const nombrePrueba = moduloSeleccionado ? moduloSeleccionado.nombre_modulo : "Prueba Diagnóstica";
+
+      const datosPrueba = {
+        nombre_prueba: nombrePrueba,
+        descripcion: descripcion || null,
+        id_modulo: parseInt(modulo),
+        tiempo_limite: parseInt(tiempoLimite),
+        puntaje_minimo: parseFloat(puntajeMinimo),
+        estado: true,
+      };
+
+      // Usamos el endpoint corregido por el usuario
+      const responsePrueba = await axios.post(
+        `${API_BASE_URL}/prueba_diagnostica/pruebas/`,
+        datosPrueba,
+        {
+          headers: {
+            Authorization: `Token ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const idPrueba = responsePrueba.data.id_prueba;
+
+      if (!idPrueba) {
+        throw new Error("No se recibió el ID de la prueba creada");
+      }
+
+      // 2. Iterar y crear cada Pregunta
+      for (const pregunta of preguntas) {
+        const datosPregunta = {
+          id_prueba: idPrueba,
+          texto_pregunta: pregunta.enunciado,
+          tipo_pregunta: pregunta.tipo === "multiple" ? "multiple" : "verdadero_falso",
+          puntaje: pregunta.puntaje,
+          explicacion: pregunta.explicacion,
+          imagen: pregunta.imagen || null,
+        };
+
+        // Asumimos el endpoint para preguntas basado en la convención
+        const responsePregunta = await axios.post(
+          `${API_BASE_URL}/prueba_diagnostica/preguntas/`,
+          datosPregunta,
+          {
+            headers: {
+              Authorization: `Token ${localStorage.getItem("token")}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        const idPregunta = responsePregunta.data.id_pregunta;
+
+        if (!idPregunta) {
+          // Si falla la creación de la pregunta, continuamos con la siguiente o lanzamos error
+          console.error("No se recibió ID para la pregunta", pregunta);
+          continue;
+        }
+
+        // 3. Iterar y crear las Respuestas para esta pregunta
+        for (const opcion of pregunta.opciones) {
+          const datosRespuesta = {
+            id_pregunta: idPregunta,
+            texto_respuesta: opcion.texto,
+            es_correcta: opcion.id === pregunta.respuestaCorrecta,
+          };
+
+          // Asumimos el endpoint para respuestas
+          await axios.post(
+            `${API_BASE_URL}/prueba_diagnostica/respuestas/`,
+            datosRespuesta,
+            {
+              headers: {
+                Authorization: `Token ${localStorage.getItem("token")}`,
+                "Content-Type": "application/json",
+              },
+            },
+          );
+        }
+      }
+
+      console.log("Prueba completa creada exitosamente");
+
+      setMensaje({
+        tipo: "success",
+        texto: "Prueba diagnóstica creada exitosamente",
+      });
+
+      // Limpiar el formulario después de guardar
+      setDescripcion("");
+      setTiempoLimite("60");
+      setPuntajeMinimo("60.00");
+      setModulo("");
+      setPreguntas([]);
+    } catch (error) {
+      console.error("Error al crear la prueba:", error);
+
+      let mensajeError = "Hubo un error al crear la prueba. Por favor, inténtalo de nuevo.";
+
+      if (axios.isAxiosError(error) && error.response) {
+        mensajeError = error.response.data?.message || error.response.data?.error || JSON.stringify(error.response.data) || mensajeError;
+      }
+
+      setMensaje({
+        tipo: "error",
+        texto: mensajeError,
+      });
+    } finally {
+      setGuardando(false);
+    }
+  };
+
   return (
     <Box className="inputs-textfield mx-auto flex w-11/12 flex-col rounded-2xl bg-white p-4">
       <Typography variant="h6" className="text-center font-bold text-primary">
         Crear Pruebas Diagnósticas
       </Typography>
-      <TextField
-        className="mx-auto w-full sm:w-1/4"
-        label="Módulo"
-        fullWidth
-        margin="normal"
-        value={modulo}
-        onChange={(e) => setModulo(e.target.value)}
-      />
+
+      {/* Información de la Prueba */}
+      <Box className="mt-4">
+        <Typography variant="h6" className="mb-2 font-bold text-secondary">
+          Información de la Prueba
+        </Typography>
+
+        <Box className="flex flex-col gap-6 md:flex-row">
+          {/* Columna 2: Configuración */}
+          <Box className="flex-1 flex flex-col">
+            <TextField
+              select
+              label="Módulo"
+              fullWidth
+              margin="normal"
+              value={modulo}
+              onChange={(e) => setModulo(e.target.value)}
+              disabled={cargandoModulos}
+              helperText={cargandoModulos ? "Cargando módulos..." : ""}
+              SelectProps={{
+                native: true,
+              }}
+            >
+              <option value="">Selecciona un módulo</option>
+              {modulos.map((mod) => (
+                <option key={mod.id_modulo} value={mod.id_modulo}>
+                  {mod.nombre_modulo}
+                </option>
+              ))}
+            </TextField>
+
+            <Box className="flex gap-4">
+              <TextField
+                label="Tiempo Límite (min)"
+                type="number"
+                margin="normal"
+                value={tiempoLimite}
+                onChange={(e) => setTiempoLimite(e.target.value)}
+                inputProps={{ min: 1 }}
+                className="flex-1"
+              />
+
+              <TextField
+                label="Puntaje Mínimo (%)"
+                type="number"
+                margin="normal"
+                value={puntajeMinimo}
+                onChange={(e) => setPuntajeMinimo(e.target.value)}
+                inputProps={{ min: 0, max: 100, step: 0.01 }}
+                className="flex-1"
+              />
+            </Box>
+          </Box>
+          {/* Columna 1: Descripción */}
+          <Box className="flex-1">
+            <TextField
+              label="Descripción (opcional)"
+              fullWidth
+              margin="normal"
+              multiline
+              rows={4}
+              value={descripcion}
+              onChange={(e) => setDescripcion(e.target.value)}
+              placeholder="Describe el objetivo y contenido de esta prueba"
+              sx={{
+                height: '100%',
+                '& .MuiInputBase-root': { height: '100%', alignItems: 'flex-start' }
+              }}
+            />
+          </Box>
+        </Box>
+      </Box>
 
       <Typography variant="h6" className="mt-4 font-bold text-secondary">
         Preguntas
@@ -272,6 +552,31 @@ export default function CrearPruebas() {
                 }
                 placeholder="Escribe el enunciado. Puedes usar LaTeX: \frac{a}{b}"
               />
+
+              <Box className="flex gap-4">
+                <TextField
+                  label="Puntaje"
+                  type="number"
+                  margin="normal"
+                  value={pregunta.puntaje}
+                  onChange={(e) =>
+                    actualizarPregunta(pregunta.id, "puntaje", parseFloat(e.target.value))
+                  }
+                  inputProps={{ min: 0, step: 0.1 }}
+                  className="w-32"
+                />
+                <TextField
+                  label="Explicación (Opcional)"
+                  fullWidth
+                  margin="normal"
+                  multiline
+                  value={pregunta.explicacion}
+                  onChange={(e) =>
+                    actualizarPregunta(pregunta.id, "explicacion", e.target.value)
+                  }
+                  placeholder="Explicación de la respuesta correcta"
+                />
+              </Box>
 
               {/* Imagen */}
               <Box className="mt-4">
@@ -413,12 +718,29 @@ export default function CrearPruebas() {
           <Button
             variant="contained"
             className="buttons-principal"
-            onClick={() => console.log({ modulo, preguntas })}
+            onClick={guardarPruebaDiagnostica}
+            disabled={guardando}
           >
-            Guardar Prueba Diagnóstica
+            {guardando ? "Guardando..." : "Guardar Prueba Diagnóstica"}
           </Button>
         </Box>
       )}
+
+      {/* Snackbar para mensajes */}
+      <Snackbar
+        open={mensaje !== null}
+        autoHideDuration={6000}
+        onClose={() => setMensaje(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setMensaje(null)}
+          severity={mensaje?.tipo || "info"}
+          sx={{ width: "100%" }}
+        >
+          {mensaje?.texto}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
