@@ -14,14 +14,37 @@ import {
     Snackbar,
     Alert,
     CircularProgress,
+    Tooltip,
 } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import SearchIcon from "@mui/icons-material/Search";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import CloseIcon from "@mui/icons-material/Close";
+import ShuffleIcon from "@mui/icons-material/Shuffle";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import AddIcon from "@mui/icons-material/Add";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Checkbox,
+    Paper,
+    Chip,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+} from "@mui/material";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../../../config";
 
@@ -38,7 +61,8 @@ interface Modulo {
 
 interface Pregunta {
     id: number;
-    id_pregunta?: number; // Para preguntas existentes
+    id_pregunta?: number; // Para preguntas existentes en BD
+    id_banco?: number; // Para preguntas traídas del banco
     tipo: "multiple" | "verdadero-falso";
     enunciado: string;
     imagen: string | null;
@@ -46,6 +70,20 @@ interface Pregunta {
     respuestaCorrecta: string;
     puntaje: number;
     explicacion: string;
+}
+
+interface PreguntaBanco {
+    id_pregunta: number;
+    texto_pregunta: string;
+    tipo_pregunta: "multiple" | "verdadero_falso";
+    puntaje: string;
+    id_modulo?: {
+        id_modulo: number;
+        nombre_modulo: string;
+    } | null;
+    explicacion?: string;
+    imagen?: string | null;
+    respuestas?: any[];
 }
 
 export default function EditarPruebas() {
@@ -69,6 +107,31 @@ export default function EditarPruebas() {
         tipo: "success" | "error";
         texto: string;
     } | null>(null);
+
+    // Estados para el Banco de Preguntas
+    const [modalBancoAbierto, setModalBancoAbierto] = useState(false);
+    const [preguntasBanco, setPreguntasBanco] = useState<PreguntaBanco[]>([]);
+    const [cargandoBanco, setCargandoBanco] = useState(false);
+    const [seleccionadasBanco, setSeleccionadasBanco] = useState<number[]>([]);
+
+    // Filtros para el Banco
+    const [filtroBancoTexto, setFiltroBancoTexto] = useState("");
+    const [filtroBancoModulo, setFiltroBancoModulo] = useState("todos");
+    const [filtroBancoTipo, setFiltroBancoTipo] = useState("todos");
+
+    // Estado para ver detalle de pregunta del banco
+    const [modalDetalleAbierto, setModalDetalleAbierto] = useState(false);
+    const [preguntaDetalle, setPreguntaDetalle] = useState<PreguntaBanco | null>(null);
+    const [cargandoDetalle, setCargandoDetalle] = useState(false);
+
+    // Estados para Aleatorias
+    const [modalAleatorioAbierto, setModalAleatorioAbierto] = useState(false);
+    const [configAleatoria, setConfigAleatoria] = useState({
+        modulo: "todos",
+        tipo: "todos",
+        cantidad: 1
+    });
+    const [disponiblesAleatorias, setDisponiblesAleatorias] = useState(0);
 
     // Cargar módulos
     useEffect(() => {
@@ -201,6 +264,7 @@ export default function EditarPruebas() {
             explicacion: "",
         };
         setPreguntas([...preguntas, nuevaPregunta]);
+        scrollToBottom();
     };
 
     const eliminarPregunta = (id: number) => {
@@ -341,6 +405,195 @@ export default function EditarPruebas() {
         );
     };
 
+    // Referencia para el scroll
+    const bottomRef = useRef<HTMLDivElement>(null);
+
+    const scrollToBottom = () => {
+        setTimeout(() => {
+            bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+    };
+
+    // Funciones del Banco de Preguntas
+    const cargarPreguntasBanco = async () => {
+        scrollToBottom();
+        setModalBancoAbierto(true);
+        setCargandoBanco(true);
+        try {
+            const response = await axios.get(
+                `${API_BASE_URL}/prueba_diagnostica/preguntas/banco/`,
+                {
+                    headers: { Authorization: `Token ${localStorage.getItem("token")}` },
+                }
+            );
+            setPreguntasBanco(response.data);
+        } catch (error) {
+            console.error("Error cargando banco:", error);
+            setMensaje({ tipo: "error", texto: "Error al cargar el banco de preguntas" });
+        } finally {
+            setCargandoBanco(false);
+        }
+    };
+
+    const handleToggleSeleccionBanco = (id: number) => {
+        setSeleccionadasBanco((prev) =>
+            prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
+        );
+    };
+
+    const verDetallePregunta = async (id: number) => {
+        setModalDetalleAbierto(true);
+        setCargandoDetalle(true);
+        try {
+            const response = await axios.get(
+                `${API_BASE_URL}/prueba_diagnostica/preguntas/${id}/`,
+                {
+                    headers: { Authorization: `Token ${localStorage.getItem("token")}` },
+                }
+            );
+            setPreguntaDetalle(response.data);
+        } catch (error) {
+            console.error("Error al cargar detalle de pregunta:", error);
+            setMensaje({ tipo: "error", texto: "Error al cargar el detalle de la pregunta" });
+            setModalDetalleAbierto(false);
+        } finally {
+            setCargandoDetalle(false);
+        }
+    };
+
+    const handleAgregarSeleccionadas = async () => {
+        const nuevasPreguntas: Pregunta[] = [];
+
+        for (const id of seleccionadasBanco) {
+            try {
+                const response = await axios.get(
+                    `${API_BASE_URL}/prueba_diagnostica/preguntas/${id}/`,
+                    {
+                        headers: { Authorization: `Token ${localStorage.getItem("token")}` },
+                    }
+                );
+                const pBanco = response.data;
+
+                const nuevaP: Pregunta = {
+                    id: Date.now() + Math.random(),
+                    id_banco: pBanco.id_pregunta,
+                    tipo: pBanco.tipo_pregunta === "multiple" ? "multiple" : "verdadero-falso",
+                    enunciado: pBanco.texto_pregunta,
+                    imagen: pBanco.imagen,
+                    puntaje: parseFloat(pBanco.puntaje),
+                    explicacion: pBanco.explicacion || "",
+                    respuestaCorrecta: "A",
+                    opciones: [],
+                };
+
+                if (pBanco.respuestas && Array.isArray(pBanco.respuestas)) {
+                    nuevaP.opciones = pBanco.respuestas.map((r: any, idx: number) => {
+                        const letra = String.fromCharCode(65 + idx);
+                        if (r.es_correcta) nuevaP.respuestaCorrecta = letra;
+                        return {
+                            id: letra,
+                            texto: r.texto_respuesta,
+                            id_respuesta: r.id_respuesta
+                        };
+                    });
+                }
+
+                nuevasPreguntas.push(nuevaP);
+            } catch (error) {
+                console.error(`Error cargando detalle de pregunta ${id}`, error);
+            }
+        }
+
+        setPreguntas([...preguntas, ...nuevasPreguntas]);
+        setSeleccionadasBanco([]);
+        setModalBancoAbierto(false);
+        setMensaje({ tipo: "success", texto: `${nuevasPreguntas.length} preguntas agregadas del banco` });
+        scrollToBottom();
+    };
+
+    // Lógica para Aleatorias
+    useEffect(() => {
+        if (modalAleatorioAbierto) {
+            const idsExistentes = preguntas.map(p => p.id_banco).filter(Boolean);
+
+            const disponibles = preguntasBanco.filter(p => {
+                if (idsExistentes.includes(p.id_pregunta)) return false;
+                if (configAleatoria.modulo !== "todos" && p.id_modulo?.nombre_modulo !== configAleatoria.modulo) return false;
+                if (configAleatoria.tipo !== "todos" && p.tipo_pregunta !== configAleatoria.tipo) return false;
+                return true;
+            });
+
+            setDisponiblesAleatorias(disponibles.length);
+
+            if (configAleatoria.cantidad > disponibles.length && disponibles.length > 0) {
+                setConfigAleatoria(prev => ({ ...prev, cantidad: disponibles.length }));
+            }
+        }
+    }, [configAleatoria.modulo, configAleatoria.tipo, modalAleatorioAbierto, preguntas, preguntasBanco]);
+
+    const handleAgregarAleatorias = async () => {
+        const idsExistentes = preguntas.map(p => p.id_banco).filter(Boolean);
+
+        const candidatos = preguntasBanco.filter(p => {
+            if (idsExistentes.includes(p.id_pregunta)) return false;
+            if (configAleatoria.modulo !== "todos" && p.id_modulo?.nombre_modulo !== configAleatoria.modulo) return false;
+            if (configAleatoria.tipo !== "todos" && p.tipo_pregunta !== configAleatoria.tipo) return false;
+            return true;
+        });
+
+        const seleccionados = [];
+        const copiaCandidatos = [...candidatos];
+        const cantidad = Math.min(configAleatoria.cantidad, copiaCandidatos.length);
+
+        for (let i = 0; i < cantidad; i++) {
+            const randomIndex = Math.floor(Math.random() * copiaCandidatos.length);
+            seleccionados.push(copiaCandidatos[randomIndex]);
+            copiaCandidatos.splice(randomIndex, 1);
+        }
+
+        const nuevasPreguntas: Pregunta[] = [];
+        setCargandoBanco(true);
+
+        for (const p of seleccionados) {
+            try {
+                const response = await axios.get(
+                    `${API_BASE_URL}/prueba_diagnostica/preguntas/${p.id_pregunta}/`,
+                    { headers: { Authorization: `Token ${localStorage.getItem("token")}` } }
+                );
+                const pBanco = response.data;
+
+                const nuevaP: Pregunta = {
+                    id: Date.now() + Math.random(),
+                    id_banco: pBanco.id_pregunta,
+                    tipo: pBanco.tipo_pregunta === "multiple" ? "multiple" : "verdadero-falso",
+                    enunciado: pBanco.texto_pregunta,
+                    imagen: pBanco.imagen,
+                    puntaje: parseFloat(pBanco.puntaje),
+                    explicacion: pBanco.explicacion || "",
+                    respuestaCorrecta: "A",
+                    opciones: [],
+                };
+
+                if (pBanco.respuestas && Array.isArray(pBanco.respuestas)) {
+                    nuevaP.opciones = pBanco.respuestas.map((r: any, idx: number) => {
+                        const letra = String.fromCharCode(65 + idx);
+                        if (r.es_correcta) nuevaP.respuestaCorrecta = letra;
+                        return { id: letra, texto: r.texto_respuesta, id_respuesta: r.id_respuesta };
+                    });
+                }
+                nuevasPreguntas.push(nuevaP);
+            } catch (error) {
+                console.error("Error cargando detalle aleatorio", error);
+            }
+        }
+
+        setPreguntas([...preguntas, ...nuevasPreguntas]);
+        setModalAleatorioAbierto(false);
+        setCargandoBanco(false);
+        setMensaje({ tipo: "success", texto: `${nuevasPreguntas.length} preguntas aleatorias agregadas` });
+        scrollToBottom();
+    };
+
     const actualizarPruebaDiagnostica = async () => {
         // Validaciones
         if (!modulo) {
@@ -432,47 +685,44 @@ export default function EditarPruebas() {
                 }
             }
 
-            // 3. Crear todas las preguntas nuevamente
+            // 3. Crear o Asignar preguntas
             for (const pregunta of preguntas) {
-                const datosPregunta = {
-                    id_prueba: parseInt(idPrueba),
-                    texto_pregunta: pregunta.enunciado,
-                    tipo_pregunta:
-                        pregunta.tipo === "multiple" ? "multiple" : "verdadero_falso",
-                    puntaje: pregunta.puntaje,
-                    explicacion: pregunta.explicacion,
-                    imagen: pregunta.imagen || null,
-                };
-
-                const responsePregunta = await axios.post(
-                    `${API_BASE_URL}/prueba_diagnostica/preguntas/`,
-                    datosPregunta,
-                    {
-                        headers: {
-                            Authorization: `Token ${localStorage.getItem("token")}`,
-                            "Content-Type": "application/json",
-                        },
+                // Si la pregunta viene del banco, la asignamos
+                if (pregunta.id_banco) {
+                    try {
+                        await axios.post(
+                            `${API_BASE_URL}/prueba_diagnostica/preguntas/asignar-a-prueba/`,
+                            {
+                                id_pregunta: pregunta.id_banco,
+                                id_prueba: parseInt(idPrueba),
+                            },
+                            {
+                                headers: {
+                                    Authorization: `Token ${localStorage.getItem("token")}`,
+                                    "Content-Type": "application/json",
+                                },
+                            }
+                        );
+                    } catch (error) {
+                        console.error("Error asignando pregunta del banco:", error);
+                        // Si falla la asignación, podríamos intentar crearla como nueva o simplemente loguear el error
+                        // Por ahora continuamos
                     }
-                );
-
-                const idPreguntaNueva = responsePregunta.data.id_pregunta;
-
-                if (!idPreguntaNueva) {
-                    console.error("No se recibió ID para la pregunta", pregunta);
-                    continue;
-                }
-
-                // Crear las respuestas
-                for (const opcion of pregunta.opciones) {
-                    const datosRespuesta = {
-                        id_pregunta: idPreguntaNueva,
-                        texto_respuesta: opcion.texto,
-                        es_correcta: opcion.id === pregunta.respuestaCorrecta,
+                } else {
+                    // Si es una pregunta nueva (o editada manualmente que perdió su vínculo), la creamos
+                    const datosPregunta = {
+                        id_prueba: parseInt(idPrueba),
+                        texto_pregunta: pregunta.enunciado,
+                        tipo_pregunta:
+                            pregunta.tipo === "multiple" ? "multiple" : "verdadero_falso",
+                        puntaje: pregunta.puntaje,
+                        explicacion: pregunta.explicacion,
+                        imagen: pregunta.imagen || null,
                     };
 
-                    await axios.post(
-                        `${API_BASE_URL}/prueba_diagnostica/respuestas/`,
-                        datosRespuesta,
+                    const responsePregunta = await axios.post(
+                        `${API_BASE_URL}/prueba_diagnostica/preguntas/`,
+                        datosPregunta,
                         {
                             headers: {
                                 Authorization: `Token ${localStorage.getItem("token")}`,
@@ -480,6 +730,33 @@ export default function EditarPruebas() {
                             },
                         }
                     );
+
+                    const idPreguntaNueva = responsePregunta.data.id_pregunta;
+
+                    if (!idPreguntaNueva) {
+                        console.error("No se recibió ID para la pregunta", pregunta);
+                        continue;
+                    }
+
+                    // Crear las respuestas
+                    for (const opcion of pregunta.opciones) {
+                        const datosRespuesta = {
+                            id_pregunta: idPreguntaNueva,
+                            texto_respuesta: opcion.texto,
+                            es_correcta: opcion.id === pregunta.respuestaCorrecta,
+                        };
+
+                        await axios.post(
+                            `${API_BASE_URL}/prueba_diagnostica/respuestas/`,
+                            datosRespuesta,
+                            {
+                                headers: {
+                                    Authorization: `Token ${localStorage.getItem("token")}`,
+                                    "Content-Type": "application/json",
+                                },
+                            }
+                        );
+                    }
                 }
             }
 
@@ -629,7 +906,7 @@ export default function EditarPruebas() {
                                         className="buttons-primary"
                                     >
                                         {pregunta.tipo === "multiple"
-                                            ? "Opción múltiple"
+                                            ? "Opción múltiple respuesta única"
                                             : "Verdadero/Falso"}
                                     </Button>
                                     <Menu
@@ -642,7 +919,7 @@ export default function EditarPruebas() {
                                                 handleTipoPreguntaSelect(pregunta.id, "multiple")
                                             }
                                         >
-                                            Opción múltiple
+                                            Opción múltiple respuesta única
                                         </MenuItem>
                                         <MenuItem
                                             onClick={() =>
@@ -779,6 +1056,46 @@ export default function EditarPruebas() {
                                                     )
                                                 }
                                                 placeholder="Puedes usar LaTeX: x^2 + y^2"
+                                                InputProps={{
+                                                    endAdornment: (
+                                                        <Tooltip
+                                                            title={opcion.id === pregunta.respuestaCorrecta
+                                                                ? "Respuesta correcta"
+                                                                : "Marcar como respuesta correcta"}
+                                                            arrow
+                                                            placement="top"
+                                                        >
+                                                            <IconButton
+                                                                onClick={() =>
+                                                                    actualizarPregunta(
+                                                                        pregunta.id,
+                                                                        "respuestaCorrecta",
+                                                                        opcion.id
+                                                                    )
+                                                                }
+                                                                size="small"
+                                                                sx={{
+                                                                    padding: 0.5,
+                                                                    '&:hover': {
+                                                                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <CheckCircleIcon
+                                                                    sx={{
+                                                                        color: opcion.id === pregunta.respuestaCorrecta ? '#4caf50' : '#e0e0e0',
+                                                                        fontSize: 28,
+                                                                        transition: 'color 0.2s ease',
+                                                                        cursor: 'pointer',
+                                                                        '&:hover': {
+                                                                            color: opcion.id === pregunta.respuestaCorrecta ? '#45a049' : '#bdbdbd',
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    ),
+                                                }}
                                             />
                                             {pregunta.tipo === "multiple" &&
                                                 pregunta.opciones.length > 2 && (
@@ -797,53 +1114,68 @@ export default function EditarPruebas() {
                                 </Box>
                             </Box>
 
-                            {/* Respuesta correcta */}
-                            <TextField
-                                select
-                                label="Respuesta correcta"
-                                fullWidth
-                                margin="normal"
-                                value={pregunta.respuestaCorrecta}
-                                onChange={(e) =>
-                                    actualizarPregunta(
-                                        pregunta.id,
-                                        "respuestaCorrecta",
-                                        e.target.value
-                                    )
-                                }
-                                SelectProps={{
-                                    native: true,
-                                }}
-                            >
-                                {pregunta.opciones.map((opcion) => (
-                                    <option key={opcion.id} value={opcion.id}>
-                                        {pregunta.tipo === "verdadero-falso"
-                                            ? opcion.id === "A"
-                                                ? "Verdadero"
-                                                : "Falso"
-                                            : opcion.id}
-                                    </option>
-                                ))}
-                            </TextField>
+
                         </CardContent>
                         <Divider />
                     </Card>
                 ))}
             </Box>
 
-            <Button
-                variant="outlined"
-                className="buttons-primary mx-auto mt-4 w-fullsm:w-1/4"
-                onClick={agregarPregunta}
-            >
-                Agregar pregunta
-            </Button>
+            {/* Referencia para scroll automático */}
+            <div ref={bottomRef} />
 
-            {/* Botón actualizar */}
-            {preguntas.length > 0 && (
-                <Box className="mt-6 flex justify-end gap-4">
+            {/* Espacio para evitar que el contenido quede oculto por la barra flotante */}
+            <Box className="h-4" />
+
+            {/* Barra de Acciones Flotante */}
+            <Paper
+                elevation={3}
+                className="sticky bottom-4 z-50 mx-auto mt-4 flex w-full flex-col items-center justify-between gap-4 rounded-xl border bg-white/95 p-4 backdrop-blur-sm sm:flex-row sm:px-8"
+                sx={{
+                    boxShadow: "0px -4px 20px rgba(0,0,0,0.1)",
+                }}
+            >
+                <Box className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                     <Button
                         variant="outlined"
+                        className="buttons-primary"
+                        onClick={agregarPregunta}
+                        startIcon={<AddIcon />}
+                    >
+                        Nueva pregunta
+                    </Button>
+                    <Button
+                        variant="contained"
+                        className="buttons-principal"
+                        onClick={cargarPreguntasBanco}
+                        startIcon={<SearchIcon />}
+                        sx={{
+                            background: "linear-gradient(to right, #c20e1a, #a00c15)",
+                        }}
+                    >
+                        Desde Banco
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="secondary"
+                        onClick={() => {
+                            cargarPreguntasBanco();
+                            setModalAleatorioAbierto(true);
+                        }}
+                        startIcon={<ShuffleIcon />}
+                        sx={{
+                            background: "linear-gradient(to right, #4a4a4a, #2c2c2c)",
+                            color: "white"
+                        }}
+                    >
+                        Aleatorias
+                    </Button>
+                </Box>
+
+                <Box className="flex w-full gap-2 sm:w-auto">
+                    <Button
+                        variant="outlined"
+                        color="inherit"
                         onClick={() => router.push("/admin/pruebas-diagnosticas/ver-pruebas")}
                         disabled={guardando}
                     >
@@ -851,14 +1183,397 @@ export default function EditarPruebas() {
                     </Button>
                     <Button
                         variant="contained"
-                        className="buttons-principal"
+                        className="buttons-principal w-full sm:w-auto"
                         onClick={actualizarPruebaDiagnostica}
-                        disabled={guardando}
+                        disabled={guardando || preguntas.length === 0}
+                        size="large"
+                        sx={{
+                            minWidth: "200px",
+                            boxShadow: "0px 4px 12px rgba(194, 14, 26, 0.4)",
+                        }}
                     >
-                        {guardando ? "Actualizando..." : "Actualizar Prueba Diagnóstica"}
+                        {guardando ? "Guardando..." : "Actualizar Prueba"}
                     </Button>
                 </Box>
-            )}
+            </Paper>
+
+            {/* Modal de Selección del Banco */}
+            <Dialog
+                open={modalBancoAbierto}
+                onClose={() => setModalBancoAbierto(false)}
+                maxWidth="lg"
+                fullWidth
+                PaperProps={{
+                    className: "rounded-2xl h-[90vh]"
+                }}
+            >
+                <DialogTitle className="bg-gray-50 p-4">
+                    <Box className="flex flex-col gap-4">
+                        <Typography variant="h6" className="font-bold text-primary text-center">
+                            Seleccionar Preguntas del Banco
+                        </Typography>
+
+                        {/* Filtros */}
+                        <Paper className="flex flex-col gap-4 p-4 sm:flex-row bg-white rounded-xl border shadow-sm">
+                            <TextField
+                                label="Buscar en enunciado"
+                                variant="outlined"
+                                size="small"
+                                fullWidth
+                                value={filtroBancoTexto}
+                                onChange={(e) => setFiltroBancoTexto(e.target.value)}
+                                InputProps={{
+                                    startAdornment: <SearchIcon color="action" className="mr-2" />,
+                                }}
+                                className="flex-[2]"
+                            />
+                            <TextField
+                                select
+                                label="Módulo"
+                                variant="outlined"
+                                size="small"
+                                fullWidth
+                                value={filtroBancoModulo}
+                                onChange={(e) => setFiltroBancoModulo(e.target.value)}
+                                className="flex-1"
+                                SelectProps={{ native: true }}
+                            >
+                                <option value="todos">Todos los módulos</option>
+                                {Array.from(new Set(preguntasBanco.map(p => p.id_modulo?.nombre_modulo).filter(Boolean))).sort().map(nombre => (
+                                    <option key={nombre} value={nombre}>{nombre}</option>
+                                ))}
+                            </TextField>
+                            <TextField
+                                select
+                                label="Tipo"
+                                variant="outlined"
+                                size="small"
+                                fullWidth
+                                value={filtroBancoTipo}
+                                onChange={(e) => setFiltroBancoTipo(e.target.value)}
+                                className="flex-1"
+                                SelectProps={{ native: true }}
+                            >
+                                <option value="todos">Todos los tipos</option>
+                                <option value="multiple">Múltiple</option>
+                                <option value="verdadero_falso">Verdadero/Falso</option>
+                            </TextField>
+                        </Paper>
+                    </Box>
+                </DialogTitle>
+
+                <DialogContent className="p-0">
+                    {cargandoBanco ? (
+                        <Box className="flex min-h-[200px] items-center justify-center">
+                            <CircularProgress />
+                        </Box>
+                    ) : (
+                        <TableContainer className="h-full">
+                            <Table stickyHeader size="small">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell padding="checkbox" className="bg-gray-100">
+                                            <Checkbox
+                                                indeterminate={
+                                                    seleccionadasBanco.length > 0 &&
+                                                    seleccionadasBanco.length < preguntasBanco.length
+                                                }
+                                                checked={
+                                                    preguntasBanco.length > 0 &&
+                                                    seleccionadasBanco.length === preguntasBanco.length
+                                                }
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSeleccionadasBanco(preguntasBanco.map((p) => p.id_pregunta));
+                                                    } else {
+                                                        setSeleccionadasBanco([]);
+                                                    }
+                                                }}
+                                            />
+                                        </TableCell>
+                                        <TableCell className="bg-gray-100 font-bold">Enunciado</TableCell>
+                                        <TableCell className="bg-gray-100 font-bold">Tipo</TableCell>
+                                        <TableCell className="bg-gray-100 font-bold">Módulo</TableCell>
+                                        <TableCell className="bg-gray-100 font-bold" align="center">Acciones</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {preguntasBanco
+                                        .filter(p => {
+                                            const matchTexto = p.texto_pregunta.toLowerCase().includes(filtroBancoTexto.toLowerCase());
+                                            const matchModulo = filtroBancoModulo === "todos" || p.id_modulo?.nombre_modulo === filtroBancoModulo;
+                                            const matchTipo = filtroBancoTipo === "todos" || p.tipo_pregunta === filtroBancoTipo;
+                                            return matchTexto && matchModulo && matchTipo;
+                                        })
+                                        .map((pregunta) => {
+                                            const isSelected = seleccionadasBanco.includes(pregunta.id_pregunta);
+                                            return (
+                                                <TableRow
+                                                    key={pregunta.id_pregunta}
+                                                    hover
+                                                    role="checkbox"
+                                                    aria-checked={isSelected}
+                                                    selected={isSelected}
+                                                >
+                                                    <TableCell padding="checkbox">
+                                                        <Checkbox
+                                                            checked={isSelected}
+                                                            onClick={() => handleToggleSeleccionBanco(pregunta.id_pregunta)}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell
+                                                        className="max-w-xs truncate cursor-pointer"
+                                                        onClick={() => handleToggleSeleccionBanco(pregunta.id_pregunta)}
+                                                    >
+                                                        {pregunta.texto_pregunta}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Chip
+                                                            label={pregunta.tipo_pregunta === "multiple" ? "Múltiple" : "V/F"}
+                                                            size="small"
+                                                            color={pregunta.tipo_pregunta === "multiple" ? "primary" : "secondary"}
+                                                            variant="outlined"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {pregunta.id_modulo?.nombre_modulo || "-"}
+                                                    </TableCell>
+                                                    <TableCell align="center">
+                                                        <IconButton
+                                                            color="primary"
+                                                            size="small"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                verDetallePregunta(pregunta.id_pregunta);
+                                                            }}
+                                                        >
+                                                            <VisibilityIcon />
+                                                        </IconButton>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                    {preguntasBanco.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={5} align="center" className="py-8 text-gray-500">
+                                                No hay preguntas disponibles en el banco.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    )}
+                </DialogContent>
+                <DialogActions className="p-4 bg-gray-50 border-t">
+                    <Button onClick={() => setModalBancoAbierto(false)} color="inherit">
+                        Cancelar
+                    </Button>
+                    <Button
+                        onClick={handleAgregarSeleccionadas}
+                        variant="contained"
+                        disabled={seleccionadasBanco.length === 0}
+                        sx={{
+                            background: "linear-gradient(to right, #c20e1a, #a00c15)",
+                        }}
+                    >
+                        Agregar ({seleccionadasBanco.length})
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Modal de Detalle de Pregunta */}
+            <Dialog
+                open={modalDetalleAbierto}
+                onClose={() => setModalDetalleAbierto(false)}
+                maxWidth="md"
+                fullWidth
+                PaperProps={{
+                    className: "rounded-2xl"
+                }}
+            >
+                <DialogTitle className="bg-gray-50 flex justify-between items-center">
+                    <Typography variant="h6" className="font-bold text-primary">
+                        Detalle de Pregunta
+                    </Typography>
+                    <IconButton onClick={() => setModalDetalleAbierto(false)} size="small">
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent className="mt-4">
+                    {cargandoDetalle ? (
+                        <Box className="flex min-h-[200px] items-center justify-center">
+                            <CircularProgress />
+                        </Box>
+                    ) : preguntaDetalle ? (
+                        <Box className="flex flex-col gap-4">
+                            <Box>
+                                <Typography variant="subtitle2" color="text.secondary">Enunciado</Typography>
+                                <Typography variant="body1" className="font-medium text-lg">
+                                    {preguntaDetalle.texto_pregunta}
+                                </Typography>
+                            </Box>
+
+                            {preguntaDetalle.imagen && (
+                                <Box>
+                                    <img
+                                        src={preguntaDetalle.imagen}
+                                        alt="Imagen pregunta"
+                                        className="max-h-64 rounded-lg border"
+                                    />
+                                </Box>
+                            )}
+
+                            <Box className="grid grid-cols-2 gap-4">
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary">Tipo</Typography>
+                                    <Chip
+                                        label={preguntaDetalle.tipo_pregunta === "multiple" ? "Opción Múltiple" : "Verdadero/Falso"}
+                                        color="primary"
+                                        variant="outlined"
+                                        size="small"
+                                    />
+                                </Box>
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary">Puntaje</Typography>
+                                    <Typography variant="body1">{preguntaDetalle.puntaje}</Typography>
+                                </Box>
+                            </Box>
+
+                            <Divider />
+
+                            <Box>
+                                <Typography variant="h6" className="mb-2 font-bold text-secondary">Respuestas</Typography>
+                                <Box className="flex flex-col gap-2">
+                                    {preguntaDetalle.respuestas?.map((resp: any) => (
+                                        <Box
+                                            key={resp.id_respuesta}
+                                            className={`p-3 rounded-lg border flex justify-between items-center ${resp.es_correcta ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"
+                                                }`}
+                                        >
+                                            <Typography>{resp.texto_respuesta}</Typography>
+                                            {resp.es_correcta && (
+                                                <Chip
+                                                    icon={<CheckCircleIcon />}
+                                                    label="Correcta"
+                                                    color="success"
+                                                    size="small"
+                                                    variant="outlined"
+                                                />
+                                            )}
+                                        </Box>
+                                    ))}
+                                </Box>
+                            </Box>
+
+                            {preguntaDetalle.explicacion && (
+                                <Box className="bg-blue-50 p-4 rounded-lg mt-2">
+                                    <Typography variant="subtitle2" className="font-bold text-blue-800">Explicación:</Typography>
+                                    <Typography variant="body2" className="text-blue-900">{preguntaDetalle.explicacion}</Typography>
+                                </Box>
+                            )}
+                        </Box>
+                    ) : (
+                        <Typography align="center" color="error">No se pudo cargar la información.</Typography>
+                    )}
+                </DialogContent>
+                <DialogActions className="p-4 bg-gray-50">
+                    <Button onClick={() => setModalDetalleAbierto(false)} variant="contained" color="primary">
+                        Cerrar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Modal de Configuración Aleatoria */}
+            <Dialog
+                open={modalAleatorioAbierto}
+                onClose={() => setModalAleatorioAbierto(false)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    className: "rounded-2xl"
+                }}
+            >
+                <DialogTitle className="bg-gray-50 text-center font-bold text-primary">
+                    Agregar Preguntas Aleatorias
+                </DialogTitle>
+                <DialogContent className="mt-4 flex flex-col gap-6">
+                    <Typography variant="body2" color="text.secondary" className="text-center">
+                        Configura los criterios para seleccionar preguntas al azar del banco.
+                        Solo se seleccionarán preguntas que no estén ya en la prueba.
+                    </Typography>
+
+                    <TextField
+                        select
+                        label="Módulo"
+                        fullWidth
+                        value={configAleatoria.modulo}
+                        onChange={(e) => setConfigAleatoria({ ...configAleatoria, modulo: e.target.value })}
+                        SelectProps={{ native: true }}
+                    >
+                        <option value="todos">Todos los módulos</option>
+                        {Array.from(new Set(preguntasBanco.map(p => p.id_modulo?.nombre_modulo).filter(Boolean))).sort().map(nombre => (
+                            <option key={nombre} value={nombre}>{nombre}</option>
+                        ))}
+                    </TextField>
+
+                    <TextField
+                        select
+                        label="Tipo de Pregunta"
+                        fullWidth
+                        value={configAleatoria.tipo}
+                        onChange={(e) => setConfigAleatoria({ ...configAleatoria, tipo: e.target.value })}
+                        SelectProps={{ native: true }}
+                    >
+                        <option value="todos">Todos los tipos</option>
+                        <option value="multiple">Múltiple</option>
+                        <option value="verdadero_falso">Verdadero/Falso</option>
+                    </TextField>
+
+                    <Box>
+                        <Typography gutterBottom>Cantidad de preguntas</Typography>
+                        <Box className="flex items-center gap-4">
+                            <TextField
+                                type="number"
+                                fullWidth
+                                value={configAleatoria.cantidad}
+                                onChange={(e) => {
+                                    const val = parseInt(e.target.value);
+                                    if (!isNaN(val) && val > 0) {
+                                        setConfigAleatoria({ ...configAleatoria, cantidad: val });
+                                    }
+                                }}
+                                inputProps={{ min: 1, max: disponiblesAleatorias }}
+                            />
+                            <Typography variant="body2" color="text.secondary" className="whitespace-nowrap">
+                                de {disponiblesAleatorias} disponibles
+                            </Typography>
+                        </Box>
+                    </Box>
+
+                    {disponiblesAleatorias === 0 && (
+                        <Alert severity="warning">
+                            No hay preguntas disponibles con estos criterios (o ya están todas agregadas).
+                        </Alert>
+                    )}
+                </DialogContent>
+                <DialogActions className="p-4 bg-gray-50">
+                    <Button onClick={() => setModalAleatorioAbierto(false)} color="inherit">
+                        Cancelar
+                    </Button>
+                    <Button
+                        onClick={handleAgregarAleatorias}
+                        variant="contained"
+                        startIcon={<AutoAwesomeIcon />}
+                        disabled={disponiblesAleatorias === 0 || configAleatoria.cantidad < 1}
+                        sx={{
+                            background: "linear-gradient(to right, #4a4a4a, #2c2c2c)",
+                        }}
+                    >
+                        Agregar {Math.min(configAleatoria.cantidad, disponiblesAleatorias)} Preguntas
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {/* Snackbar para mensajes */}
             <Snackbar
@@ -870,7 +1585,7 @@ export default function EditarPruebas() {
                 <Alert
                     onClose={() => setMensaje(null)}
                     severity={mensaje?.tipo || "info"}
-                    sx={{ width: "100%" }}
+                    sx={{ width: "100%", borderRadius: "8px" }}
                 >
                     {mensaje?.texto}
                 </Alert>

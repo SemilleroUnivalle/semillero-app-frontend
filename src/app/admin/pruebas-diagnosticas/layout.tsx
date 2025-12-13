@@ -17,7 +17,7 @@ export default function LayoutCursos({
 
   const basePath = "/admin/prueba-diagnostica/ver-pruebas";
   const breadcrumbNames: Record<string, string> = {
-    
+
     // Agrega más traducciones si lo deseas
   };
 
@@ -28,7 +28,7 @@ export default function LayoutCursos({
       const label =
         breadcrumbNames[segment] ||
         segment.charAt(0).toUpperCase() +
-          segment.slice(1).replace(/([A-Z])/g, " $1");
+        segment.slice(1).replace(/([A-Z])/g, " $1");
       return { href, label };
     }),
   ];
@@ -55,25 +55,32 @@ export default function LayoutCursos({
           )}
         </Breadcrumbs>
 
-        {/* Contenedor de botones para crear ofertas y cursos */}
-        <div className="mx-auto my-4 flex w-11/12 flex-wrap justify-around gap-2">
-          <Link href="/admin/pruebas-diagnosticas/ver-pruebas" className="w-full sm:w-1/4">
+        {/* Contenedor de botones principales */}
+        <div className="mx-auto my-4 flex w-11/12 flex-wrap justify-center gap-4">
+          <Link href="/admin/pruebas-diagnosticas/ver-pruebas" className="w-full sm:w-auto flex-1">
             <Button
-              className="w-full rounded-2xl bg-white p-4 capitalize text-secondary hover:bg-primary hover:text-white"
+              className="w-full rounded-2xl bg-white p-4 capitalize text-secondary hover:bg-primary hover:text-white shadow-md transition-all duration-300"
               variant="contained"
             >
-              Ver Pruebas Diagnosticas
+              Pruebas Diagnósticas
             </Button>
           </Link>
-          <Link href="/admin/pruebas-diagnosticas/crear-pruebas" className="w-full sm:w-1/4">
+          <Link href="/admin/pruebas-diagnosticas/banco-preguntas/ver" className="w-full sm:w-auto flex-1">
             <Button
-              className="w-full rounded-2xl bg-white p-4 capitalize text-secondary hover:bg-primary hover:text-white"
+              className="w-full rounded-2xl bg-white p-4 capitalize text-secondary hover:bg-primary hover:text-white shadow-md transition-all duration-300"
               variant="contained"
             >
-              Crear Pruebas Diagnosticas
+              Banco de Preguntas
             </Button>
           </Link>
-
+          <Link href="/admin/pruebas-diagnosticas/estadisticas" className="w-full sm:w-auto flex-1">
+            <Button
+              className="w-full rounded-2xl bg-white p-4 capitalize text-secondary hover:bg-primary hover:text-white shadow-md transition-all duration-300"
+              variant="contained"
+            >
+              Estadísticas
+            </Button>
+          </Link>
         </div>
         <div id="container" className="">
           {children}

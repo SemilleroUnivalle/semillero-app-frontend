@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   Chip,
   CircularProgress,
@@ -20,18 +18,31 @@ import {
   AccordionSummary,
   AccordionDetails,
   Snackbar,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Tooltip,
+  TextField,
+  MenuItem,
+  InputAdornment,
 } from "@mui/material";
 import {
   AccessTime,
   Assignment,
-  Category,
   CheckCircle,
   Close,
   ExpandMore,
-  School,
   Edit,
   Delete,
+  Add as AddIcon,
+  Visibility,
+  Search as SearchIcon,
 } from "@mui/icons-material";
+import Link from "next/link";
 import { API_BASE_URL } from "../../../../../config";
 
 // Interfaces basadas en la estructura del endpoint
@@ -108,6 +119,10 @@ export default function VerPruebas() {
     message: string;
     severity: "success" | "error" | "info";
   }>({ open: false, message: "", severity: "info" });
+
+  // Estados para filtros
+  const [filtroTexto, setFiltroTexto] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState("todos");
 
   // Cargar pruebas desde el endpoint
   useEffect(() => {
@@ -203,6 +218,22 @@ export default function VerPruebas() {
     window.location.href = `/admin/pruebas-diagnosticas/editar-pruebas/${pruebaSeleccionada.id_prueba}`;
   };
 
+  // Filtrar pruebas
+  const pruebasFiltradas = pruebas.filter((prueba) => {
+    const coincideTexto = prueba.nombre_prueba
+      .toLowerCase()
+      .includes(filtroTexto.toLowerCase());
+
+    let coincideEstado = true;
+    if (filtroEstado === "activa") {
+      coincideEstado = prueba.estado === true;
+    } else if (filtroEstado === "inactiva") {
+      coincideEstado = prueba.estado === false;
+    }
+
+    return coincideTexto && coincideEstado;
+  });
+
   if (cargando) {
     return (
       <Box className="flex min-h-[400px] items-center justify-center">
@@ -221,92 +252,169 @@ export default function VerPruebas() {
     );
   }
 
-  if (pruebas.length === 0) {
-    return (
-      <Box className="mx-auto w-11/12">
-        <Alert severity="info" className="rounded-2xl">
-          No hay pruebas diagnósticas disponibles en este momento.
-        </Alert>
-      </Box>
-    );
-  }
-
   return (
     <Box className="mx-auto w-11/12 pb-8">
-      <Box className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {pruebas.map((prueba) => (
-          <Card
-            key={prueba.id_prueba}
-            className="h-full cursor-pointer transition-all duration-300 hover:shadow-xl"
-            onClick={() => abrirDetalles(prueba)}
+      <Box className="mb-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
+        <Typography variant="h5" className="font-bold text-primary">
+          Pruebas Diagnósticas
+        </Typography>
+        <Link href="/admin/pruebas-diagnosticas/crear-pruebas">
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            className="buttons-principal rounded-xl"
             sx={{
-              borderRadius: "16px",
-              background: "linear-gradient(135deg, #c20e1a 0%, #a00c15 100%)",
-              color: "white",
+              background: "linear-gradient(to right, #c20e1a, #a00c15)",
+              '&:hover': {
+                background: "linear-gradient(to right, #a00c15, #800a11)",
+              }
             }}
           >
-            <CardContent className="flex h-full flex-col">
-              {/* Encabezado con área */}
-              <Box className="mb-3 flex items-center gap-2">
-                <School fontSize="small" />
-                <Typography variant="caption" className="font-semibold">
-                  {prueba.id_modulo.id_area.nombre_area}
-                </Typography>
-              </Box>
-
-              {/* Título de la prueba */}
-              <Typography
-                variant="h6"
-                className="mb-2 font-bold"
-                sx={{ minHeight: "64px" }}
-              >
-                {prueba.nombre_prueba}
-              </Typography>
-
-              {/* Módulo */}
-              <Typography variant="body2" className="mb-3 opacity-90">
-                Módulo: {prueba.id_modulo.nombre_modulo}
-              </Typography>
-
-              {/* Información clave */}
-              <Box className="mt-auto space-y-2">
-                <Box className="flex items-center justify-between">
-                  <Box className="flex items-center gap-1">
-                    <Assignment fontSize="small" />
-                    <Typography variant="body2">
-                      {prueba.total_preguntas} preguntas
-                    </Typography>
-                  </Box>
-                  <Chip
-                    label={prueba.estado ? "Activa" : "Inactiva"}
-                    size="small"
-                    sx={{
-                      backgroundColor: prueba.estado
-                        ? "rgba(76, 175, 80, 0.3)"
-                        : "rgba(244, 67, 54, 0.3)",
-                      color: "white",
-                    }}
-                  />
-                </Box>
-
-                <Box className="flex items-center gap-1">
-                  <AccessTime fontSize="small" />
-                  <Typography variant="body2">
-                    {prueba.tiempo_limite} minutos
-                  </Typography>
-                </Box>
-
-                <Box className="flex items-center gap-1">
-                  <CheckCircle fontSize="small" />
-                  <Typography variant="body2">
-                    Puntaje mínimo: {prueba.puntaje_minimo}%
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        ))}
+            Crear Nueva Prueba
+          </Button>
+        </Link>
       </Box>
+
+      {/* Barra de Filtros */}
+      <Paper className="mb-6 flex flex-col gap-4 rounded-xl p-4 shadow-sm sm:flex-row">
+        <TextField
+          label="Buscar por nombre"
+          variant="outlined"
+          size="small"
+          fullWidth
+          value={filtroTexto}
+          onChange={(e) => setFiltroTexto(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon color="action" />
+              </InputAdornment>
+            ),
+          }}
+          className="flex-1"
+        />
+        <TextField
+          select
+          label="Filtrar por Estado"
+          variant="outlined"
+          size="small"
+          fullWidth
+          value={filtroEstado}
+          onChange={(e) => setFiltroEstado(e.target.value)}
+          className="flex-1 sm:max-w-xs"
+        >
+          <MenuItem value="todos">Todos los estados</MenuItem>
+          <MenuItem value="activa">Activa</MenuItem>
+          <MenuItem value="inactiva">Inactiva</MenuItem>
+        </TextField>
+      </Paper>
+
+      {pruebasFiltradas.length === 0 ? (
+        <Alert severity="info" className="rounded-2xl">
+          {pruebas.length === 0
+            ? "No hay pruebas diagnósticas disponibles en este momento."
+            : "No se encontraron pruebas que coincidan con los filtros."}
+        </Alert>
+      ) : (
+        <TableContainer component={Paper} className="rounded-xl shadow-md">
+          <Table>
+            <TableHead className="bg-gray-50">
+              <TableRow>
+                <TableCell className="font-bold text-secondary">ID</TableCell>
+                <TableCell className="font-bold text-secondary">Nombre</TableCell>
+                <TableCell className="font-bold text-secondary">Módulo / Área</TableCell>
+                <TableCell className="font-bold text-secondary">Preguntas</TableCell>
+                <TableCell className="font-bold text-secondary">Tiempo</TableCell>
+                <TableCell className="font-bold text-secondary">Estado</TableCell>
+                <TableCell align="center" className="font-bold text-secondary">Acciones</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {pruebasFiltradas.map((prueba) => (
+                <TableRow
+                  key={prueba.id_prueba}
+                  hover
+                  className="cursor-pointer transition-colors hover:bg-gray-50"
+                  onClick={() => abrirDetalles(prueba)}
+                >
+                  <TableCell>{prueba.id_prueba}</TableCell>
+                  <TableCell className="font-medium text-primary">
+                    {prueba.nombre_prueba}
+                  </TableCell>
+                  <TableCell>
+                    <Box className="flex flex-col">
+                      <Typography variant="body2" className="font-semibold">
+                        {prueba.id_modulo.nombre_modulo}
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary">
+                        {prueba.id_modulo.id_area.nombre_area}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={prueba.total_preguntas}
+                      size="small"
+                      variant="outlined"
+                      color="primary"
+                    />
+                  </TableCell>
+                  <TableCell>{prueba.tiempo_limite} min</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={prueba.estado ? "Activa" : "Inactiva"}
+                      size="small"
+                      sx={{
+                        backgroundColor: prueba.estado
+                          ? "rgba(76, 175, 80, 0.1)"
+                          : "rgba(244, 67, 54, 0.1)",
+                        color: prueba.estado ? "green" : "red",
+                        fontWeight: "bold",
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell align="center">
+                    <Box className="flex justify-center gap-1" onClick={(e) => e.stopPropagation()}>
+                      <Tooltip title="Ver Detalle">
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={() => abrirDetalles(prueba)}
+                        >
+                          <Visibility className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Editar">
+                        <IconButton
+                          size="small"
+                          color="warning"
+                          onClick={() => {
+                            window.location.href = `/admin/pruebas-diagnosticas/editar-pruebas/${prueba.id_prueba}`;
+                          }}
+                        >
+                          <Edit className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Eliminar">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => {
+                            setPruebaSeleccionada(prueba);
+                            setConfirmacionEliminar(true);
+                          }}
+                        >
+                          <Delete className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       {/* Modal de detalles */}
       <Dialog
