@@ -15,7 +15,7 @@ export default function LayoutAdmin({
     <StyledEngineProvider injectFirst>
       <div className="flex flex-row">
         <Sidebar />
-        <div id="container" className="w-4/5 p-5">
+        <div id="container" className="w-full p-5">
           {children}
         </div>
       </div>
