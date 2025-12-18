@@ -120,7 +120,7 @@ export interface Modulo {
   incluye: string | null;
   imagen_modulo: string | null;
   estado: boolean;
-  id_area: number;
+  id_area: Area;
   id_oferta_categoria: number[];
 }
 
@@ -205,4 +205,39 @@ export interface AsistenciaSent {
   estado_asistencia: string;
   comentarios: string;
   sesion?: string;
+}
+
+// Pruebas Diagnosticas Interfaces
+
+export interface Respuesta {
+  id_respuesta: number;
+  texto_respuesta: string;
+  es_correcta: boolean;
+  fecha_creacion: string;
+}
+
+export interface Pregunta {
+  id_pregunta: number;
+  texto_pregunta: string;
+  tipo_pregunta: string;
+  puntaje: string;
+  imagen: string | null;
+  explicacion: string;
+  estado: boolean;
+  fecha_creacion: string;
+  respuestas: Respuesta[];
+}
+
+export interface PruebaDiagnostica {
+  id_prueba: number;
+  id_modulo: Modulo;
+  nombre_prueba: string;
+  descripcion: string;
+  tiempo_limite: number;
+  puntaje_minimo: string;
+  estado: boolean;
+  fecha_creacion: string;
+  fecha_modificacion: string;
+  preguntas: Pregunta[];
+  total_preguntas: number;
 }

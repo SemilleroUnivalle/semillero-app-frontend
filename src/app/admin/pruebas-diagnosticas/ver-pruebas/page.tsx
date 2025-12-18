@@ -31,8 +31,6 @@ import {
   InputAdornment,
 } from "@mui/material";
 import {
-  AccessTime,
-  Assignment,
   CheckCircle,
   Close,
   ExpandMore,
@@ -44,67 +42,14 @@ import {
 } from "@mui/icons-material";
 import Link from "next/link";
 import { API_BASE_URL } from "../../../../../config";
-
-// Interfaces basadas en la estructura del endpoint
-interface Area {
-  id_area: number;
-  nombre_area: string;
-  estado_area: boolean;
-  imagen_area: string;
-}
-
-interface Categoria {
-  id_categoria: number;
-  nombre: string;
-  estado: boolean;
-}
-
-interface Modulo {
-  id_modulo: number;
-  id_categoria: Categoria;
-  id_area: Area;
-  nombre_modulo: string;
-  descripcion_modulo: string;
-  intensidad_horaria: number;
-  dirigido_a: string;
-  incluye: string;
-  imagen_modulo: string;
-  estado: boolean;
-  id_oferta_categoria: number[];
-}
-
-interface Respuesta {
-  id_respuesta: number;
-  texto_respuesta: string;
-  es_correcta: boolean;
-  fecha_creacion: string;
-}
-
-interface Pregunta {
-  id_pregunta: number;
-  texto_pregunta: string;
-  tipo_pregunta: string;
-  puntaje: string;
-  imagen: string | null;
-  explicacion: string;
-  estado: boolean;
-  fecha_creacion: string;
-  respuestas: Respuesta[];
-}
-
-interface PruebaDiagnostica {
-  id_prueba: number;
-  id_modulo: Modulo;
-  nombre_prueba: string;
-  descripcion: string;
-  tiempo_limite: number;
-  puntaje_minimo: string;
-  estado: boolean;
-  fecha_creacion: string;
-  fecha_modificacion: string;
-  preguntas: Pregunta[];
-  total_preguntas: number;
-}
+import {
+  Area,
+  Categoria,
+  Modulo,
+  Respuesta,
+  Pregunta,
+  PruebaDiagnostica,
+} from "@/interfaces/interfaces";
 
 export default function VerPruebas() {
   const [pruebas, setPruebas] = useState<PruebaDiagnostica[]>([]);
@@ -136,11 +81,16 @@ export default function VerPruebas() {
             headers: {
               Authorization: `Token ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
 
         if (!response.ok) {
           throw new Error("Error al cargar las pruebas diagnósticas");
+        }
+
+        if (response.status === 204) {
+          setPruebas([]); // o el estado que corresponda
+          return;
         }
 
         const data = await response.json();
@@ -148,7 +98,7 @@ export default function VerPruebas() {
       } catch (error) {
         console.error("Error cargando pruebas:", error);
         setError(
-          "No se pudieron cargar las pruebas. Por favor, intenta nuevamente."
+          "No se pudieron cargar las pruebas. Por favor, intenta nuevamente.",
         );
       } finally {
         setCargando(false);
@@ -187,7 +137,7 @@ export default function VerPruebas() {
           headers: {
             Authorization: `Token ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -195,7 +145,9 @@ export default function VerPruebas() {
       }
 
       // Actualizar la lista de pruebas
-      setPruebas(pruebas.filter((p) => p.id_prueba !== pruebaSeleccionada.id_prueba));
+      setPruebas(
+        pruebas.filter((p) => p.id_prueba !== pruebaSeleccionada.id_prueba),
+      );
       setSnackbar({
         open: true,
         message: "Prueba eliminada exitosamente",
@@ -265,9 +217,9 @@ export default function VerPruebas() {
             className="buttons-principal rounded-xl"
             sx={{
               background: "linear-gradient(to right, #c20e1a, #a00c15)",
-              '&:hover': {
+              "&:hover": {
                 background: "linear-gradient(to right, #a00c15, #800a11)",
-              }
+              },
             }}
           >
             Crear Nueva Prueba
@@ -276,7 +228,7 @@ export default function VerPruebas() {
       </Box>
 
       {/* Barra de Filtros */}
-      <Paper className="mb-6 flex flex-col gap-4 rounded-xl p-4 shadow-sm sm:flex-row">
+      <Paper className="inputs-textfield mb-6 flex flex-col gap-4 rounded-xl p-4 shadow-sm sm:flex-row">
         <TextField
           label="Buscar por nombre"
           variant="outlined"
@@ -321,12 +273,24 @@ export default function VerPruebas() {
             <TableHead className="bg-gray-50">
               <TableRow>
                 <TableCell className="font-bold text-secondary">ID</TableCell>
-                <TableCell className="font-bold text-secondary">Nombre</TableCell>
-                <TableCell className="font-bold text-secondary">Módulo / Área</TableCell>
-                <TableCell className="font-bold text-secondary">Preguntas</TableCell>
-                <TableCell className="font-bold text-secondary">Tiempo</TableCell>
-                <TableCell className="font-bold text-secondary">Estado</TableCell>
-                <TableCell align="center" className="font-bold text-secondary">Acciones</TableCell>
+                <TableCell className="font-bold text-secondary">
+                  Nombre
+                </TableCell>
+                <TableCell className="font-bold text-secondary">
+                  Módulo / Área
+                </TableCell>
+                <TableCell className="font-bold text-secondary">
+                  Preguntas
+                </TableCell>
+                <TableCell className="font-bold text-secondary">
+                  Tiempo
+                </TableCell>
+                <TableCell className="font-bold text-secondary">
+                  Estado
+                </TableCell>
+                <TableCell align="center" className="font-bold text-secondary">
+                  Acciones
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -374,7 +338,10 @@ export default function VerPruebas() {
                     />
                   </TableCell>
                   <TableCell align="center">
-                    <Box className="flex justify-center gap-1" onClick={(e) => e.stopPropagation()}>
+                    <Box
+                      className="flex justify-center gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Tooltip title="Ver Detalle">
                         <IconButton
                           size="small"
@@ -428,7 +395,12 @@ export default function VerPruebas() {
       >
         {pruebaSeleccionada && (
           <>
-            <DialogTitle sx={{ background: "linear-gradient(to right, #c20e1a, #a00c15)", color: "white" }}>
+            <DialogTitle
+              sx={{
+                background: "linear-gradient(to right, #c20e1a, #a00c15)",
+                color: "white",
+              }}
+            >
               <Box className="flex items-start justify-between">
                 <Box>
                   <Typography variant="h5" className="font-bold">
@@ -461,35 +433,71 @@ export default function VerPruebas() {
 
               {/* Información general */}
               <Box className="mb-4 grid grid-cols-2 gap-2">
-                <Box sx={{ backgroundColor: "#fce8e9", borderRadius: "8px", padding: "12px" }}>
+                <Box
+                  sx={{
+                    backgroundColor: "#fce8e9",
+                    borderRadius: "8px",
+                    padding: "12px",
+                  }}
+                >
                   <Typography variant="caption" color="text.secondary">
                     Tiempo límite
                   </Typography>
-                  <Typography variant="h6" sx={{ fontWeight: "bold", color: "#c20e1a" }}>
+                  <Typography
+                    variant="h6"
+                    sx={{ fontWeight: "bold", color: "#c20e1a" }}
+                  >
                     {pruebaSeleccionada.tiempo_limite} min
                   </Typography>
                 </Box>
-                <Box sx={{ backgroundColor: "#f9d1d3", borderRadius: "8px", padding: "12px" }}>
+                <Box
+                  sx={{
+                    backgroundColor: "#f9d1d3",
+                    borderRadius: "8px",
+                    padding: "12px",
+                  }}
+                >
                   <Typography variant="caption" color="text.secondary">
                     Puntaje mínimo
                   </Typography>
-                  <Typography variant="h6" sx={{ fontWeight: "bold", color: "#c20e1a" }}>
+                  <Typography
+                    variant="h6"
+                    sx={{ fontWeight: "bold", color: "#c20e1a" }}
+                  >
                     {pruebaSeleccionada.puntaje_minimo}%
                   </Typography>
                 </Box>
-                <Box sx={{ backgroundColor: "#f5babe", borderRadius: "8px", padding: "12px" }}>
+                <Box
+                  sx={{
+                    backgroundColor: "#f5babe",
+                    borderRadius: "8px",
+                    padding: "12px",
+                  }}
+                >
                   <Typography variant="caption" color="text.secondary">
                     Total preguntas
                   </Typography>
-                  <Typography variant="h6" sx={{ fontWeight: "bold", color: "#a00c15" }}>
+                  <Typography
+                    variant="h6"
+                    sx={{ fontWeight: "bold", color: "#a00c15" }}
+                  >
                     {pruebaSeleccionada.total_preguntas}
                   </Typography>
                 </Box>
-                <Box sx={{ backgroundColor: "#f2a3a8", borderRadius: "8px", padding: "12px" }}>
+                <Box
+                  sx={{
+                    backgroundColor: "#f2a3a8",
+                    borderRadius: "8px",
+                    padding: "12px",
+                  }}
+                >
                   <Typography variant="caption" color="text.secondary">
                     Estado
                   </Typography>
-                  <Typography variant="h6" sx={{ fontWeight: "bold", color: "#a00c15" }}>
+                  <Typography
+                    variant="h6"
+                    sx={{ fontWeight: "bold", color: "#a00c15" }}
+                  >
                     {pruebaSeleccionada.estado ? "Activa" : "Inactiva"}
                   </Typography>
                 </Box>
@@ -552,10 +560,11 @@ export default function VerPruebas() {
                           {pregunta.respuestas.map((respuesta) => (
                             <Box
                               key={respuesta.id_respuesta}
-                              className={`rounded-lg border-2 p-2 ${respuesta.es_correcta
-                                ? "border-green-500 bg-green-50"
-                                : "border-gray-300 bg-gray-50"
-                                }`}
+                              className={`rounded-lg border-2 p-2 ${
+                                respuesta.es_correcta
+                                  ? "border-green-500 bg-green-50"
+                                  : "border-gray-300 bg-gray-50"
+                              }`}
                             >
                               <Box className="flex items-center justify-between">
                                 <Typography variant="body2">
@@ -573,7 +582,14 @@ export default function VerPruebas() {
                         </Box>
 
                         {pregunta.explicacion && (
-                          <Box sx={{ marginTop: "12px", borderRadius: "8px", backgroundColor: "#fce8e9", padding: "12px" }}>
+                          <Box
+                            sx={{
+                              marginTop: "12px",
+                              borderRadius: "8px",
+                              backgroundColor: "#fce8e9",
+                              padding: "12px",
+                            }}
+                          >
                             <Typography
                               variant="caption"
                               className="font-semibold"
@@ -618,10 +634,10 @@ export default function VerPruebas() {
                       borderRadius: "8px",
                       borderColor: "#c20e1a",
                       color: "#c20e1a",
-                      '&:hover': {
+                      "&:hover": {
                         borderColor: "#a00c15",
                         backgroundColor: "#fce8e9",
-                      }
+                      },
                     }}
                   >
                     Editar
@@ -634,10 +650,10 @@ export default function VerPruebas() {
                       borderRadius: "8px",
                       borderColor: "#c20e1a",
                       color: "#c20e1a",
-                      '&:hover': {
+                      "&:hover": {
                         borderColor: "#a00c15",
                         backgroundColor: "#fce8e9",
-                      }
+                      },
                     }}
                   >
                     Eliminar
@@ -649,9 +665,9 @@ export default function VerPruebas() {
                   sx={{
                     borderRadius: "8px",
                     background: "linear-gradient(to right, #c20e1a, #a00c15)",
-                    '&:hover': {
+                    "&:hover": {
                       background: "linear-gradient(to right, #a00c15, #800a11)",
-                    }
+                    },
                   }}
                 >
                   Cerrar
@@ -670,7 +686,12 @@ export default function VerPruebas() {
           sx: { borderRadius: "16px" },
         }}
       >
-        <DialogTitle sx={{ background: "linear-gradient(to right, #c20e1a, #a00c15)", color: "white" }}>
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(to right, #c20e1a, #a00c15)",
+            color: "white",
+          }}
+        >
           Confirmar eliminación
         </DialogTitle>
         <DialogContent className="mt-4">
@@ -700,9 +721,9 @@ export default function VerPruebas() {
             sx={{
               borderRadius: "8px",
               background: "linear-gradient(to right, #c20e1a, #a00c15)",
-              '&:hover': {
+              "&:hover": {
                 background: "linear-gradient(to right, #a00c15, #800a11)",
-              }
+              },
             }}
           >
             Eliminar
