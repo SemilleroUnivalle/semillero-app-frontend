@@ -17,7 +17,6 @@ import {
   CardContent,
   TextField,
   Divider,
-  Avatar,
   Paper,
   Alert,
   Grid,
@@ -31,7 +30,6 @@ import PersonIcon from "@mui/icons-material/Person";
 import GroupIcon from "@mui/icons-material/Group";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
-import Tooltip from "@mui/material/Tooltip";
 
 import axios from "axios";
 import { API_BASE_URL } from "../../../../config";
@@ -40,9 +38,9 @@ import { AsistenciaResponse } from "@/interfaces/interfaces";
 export default function VisualizadorAsistencia() {
   // Estados
   const [rows, setRows] = useState<AsistenciaResponse[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [editMode, setEditMode] = useState(false);
+  // const [loading, setLoading] = useState(false);
+  // const [error, setError] = useState<string | null>(null);
+  // const [editMode, setEditMode] = useState(false);
   const [success, setSuccess] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [asistenciaEditando, setAsistenciaEditando] =
@@ -85,11 +83,11 @@ export default function VisualizadorAsistencia() {
           setRows(todosLasAsistencias);
         }
 
-        setLoading(false);
+        // setLoading(false);
       } catch (error) {
         console.error("Error al obtener las asistencias:", error);
-        setError("Error al cargar los datos");
-        setLoading(false);
+        // setError("Error al cargar los datos");
+        // setLoading(false);
       }
     };
 
@@ -177,11 +175,11 @@ export default function VisualizadorAsistencia() {
           setSuccess(true);
         }
 
-        setLoading(false);
+        // setLoading(false);
       } catch (error) {
         console.error("Error al eliminar la asistencia:", error);
-        setError("Error al eliminar la asistencia");
-        setLoading(false);
+        // setError("Error al eliminar la asistencia");
+        // setLoading(false);
       }
     };
 

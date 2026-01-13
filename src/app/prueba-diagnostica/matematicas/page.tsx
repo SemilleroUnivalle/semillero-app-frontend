@@ -24,7 +24,7 @@ import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import "katex/dist/katex.min.css";
-import { BlockMath, InlineMath } from "react-katex";
+import { InlineMath } from "react-katex";
 
 const Cursos = [
   {
@@ -426,18 +426,7 @@ const Cursos = [
   },
 ];
 
-interface Pregunta {
-  id: number;
-  pregunta: string;
-  imagen: string | null;
-  opciones: {
-    A: string;
-    B: string;
-    C: string;
-    D: string;
-  };
-  respuesta_correcta: string;
-}
+
 
 interface RespuestaUsuario {
   preguntaId: number;

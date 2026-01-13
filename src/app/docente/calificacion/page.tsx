@@ -10,9 +10,6 @@ import {
   FormControl,
   SelectChangeEvent,
   Snackbar,
-  Avatar,
-  Grid,
-  Divider,
   Box,
   Alert,
   Typography,
@@ -34,12 +31,10 @@ import {
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import GroupIcon from "@mui/icons-material/Group";
-import PersonIcon from "@mui/icons-material/Person";
 import EditIcon from "@mui/icons-material/Edit";
 
 import axios from "axios";
 import { API_BASE_URL } from "../../../../config";
-import { useRouter } from "next/navigation";
 
 interface Estudiante {
   id_inscripcion: number;
@@ -224,7 +219,6 @@ const CalificacionDialog: React.FC<CalificacionDialogProps> = ({
 };
 
 export default function CalificacionDocente() {
-  const router = useRouter();
 
   // Estados
   const [rows, setRows] = useState<CalificacionRow[]>([]);
@@ -333,8 +327,6 @@ export default function CalificacionDocente() {
 
     setSaving(true);
     try {
-      const token = getToken();
-
       // Actualizar la fila localmente
       setRows((prevRows) =>
         prevRows.map((row) =>

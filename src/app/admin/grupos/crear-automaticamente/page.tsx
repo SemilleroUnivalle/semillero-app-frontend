@@ -4,9 +4,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
-import CardHeader from "@mui/material/CardHeader";
 import Button from "@mui/material/Button";
-import Divider from "@mui/material/Divider";
 import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import FormControl from "@mui/material/FormControl";
@@ -50,8 +48,8 @@ export default function CrearGruposAutomatico() {
   // Estados para docentes y monitores
   const [docentes, setDocentes] = useState<Docente[]>([]);
   const [monitores, setMonitores] = useState<Monitor[]>([]);
-  const [loadingDocentes, setLoadingDocentes] = useState(false);
-  const [loadingMonitores, setLoadingMonitores] = useState(false);
+  // const [loadingDocentes, setLoadingDocentes] = useState(false);
+  // const [loadingMonitores, setLoadingMonitores] = useState(false);
 
   // Estados para eleccion de profesor y monitor
   const [selectedMonitoresPorGrupo, setSelectedMonitoresPorGrupo] = useState<{
@@ -146,7 +144,7 @@ export default function CrearGruposAutomatico() {
   // Fetch docentes
   useEffect(() => {
     const fetchDocentes = async () => {
-      setLoadingDocentes(true);
+      // setLoadingDocentes(true);
       try {
         const token = getToken();
         const response = await fetch(`${API_BASE_URL}/profesor/prof`, {
@@ -165,7 +163,7 @@ export default function CrearGruposAutomatico() {
       } catch (err) {
         console.error("Error fetching docentes:", err);
       } finally {
-        setLoadingDocentes(false);
+        // setLoadingDocentes(false);
       }
     };
 
@@ -175,7 +173,7 @@ export default function CrearGruposAutomatico() {
   // Fetch monitores
   useEffect(() => {
     const fetchMonitores = async () => {
-      setLoadingMonitores(true);
+      // setLoadingMonitores(true);
       try {
         const token = getToken();
         const response = await fetch(`${API_BASE_URL}/monitor_academico/mon`, {
@@ -194,7 +192,7 @@ export default function CrearGruposAutomatico() {
       } catch (err) {
         console.error("Error fetching monitores:", err);
       } finally {
-        setLoadingMonitores(false);
+        // setLoadingMonitores(false);
       }
     };
 
@@ -203,7 +201,7 @@ export default function CrearGruposAutomatico() {
 
   // Efecto para aplicar filtros
   useEffect(() => {
-    let filtered = matriculas.filter((matricula) => {
+    const filtered = matriculas.filter((matricula) => {
       const matchPeriodo =
         selectedPeriodos.length === 0 ||
         selectedPeriodos.includes(
@@ -301,38 +299,38 @@ export default function CrearGruposAutomatico() {
   };
 
   // Función para dividir estudiantes en grupos
-  const dividirEnGrupos = (estudiantes: Matricula[]) => {
-    const estudiantesMezclados = shuffleArray(estudiantes);
-    const grupos: Matricula[][] = [];
+  // const dividirEnGrupos = (estudiantes: Matricula[]) => {
+  //   const estudiantesMezclados = shuffleArray(estudiantes);
+  //   const grupos: Matricula[][] = [];
 
-    if (tipoCreacion === "cantidad_grupos") {
-      // Dividir por cantidad de grupos
-      const estudiantesPorGrupoCalculado = Math.ceil(
-        estudiantesMezclados.length / cantidadGrupos,
-      );
+  //   if (tipoCreacion === "cantidad_grupos") {
+  //     // Dividir por cantidad de grupos
+  //     const estudiantesPorGrupoCalculado = Math.ceil(
+  //       estudiantesMezclados.length / cantidadGrupos,
+  //     );
 
-      for (let i = 0; i < cantidadGrupos; i++) {
-        const inicio = i * estudiantesPorGrupoCalculado;
-        const fin = inicio + estudiantesPorGrupoCalculado;
-        const grupo = estudiantesMezclados.slice(inicio, fin);
-        if (grupo.length > 0) {
-          grupos.push(grupo);
-        }
-      }
-    } else {
-      // Dividir por estudiantes por grupo
-      for (
-        let i = 0;
-        i < estudiantesMezclados.length;
-        i += estudiantesPorGrupo
-      ) {
-        const grupo = estudiantesMezclados.slice(i, i + estudiantesPorGrupo);
-        grupos.push(grupo);
-      }
-    }
+  //     for (let i = 0; i < cantidadGrupos; i++) {
+  //       const inicio = i * estudiantesPorGrupoCalculado;
+  //       const fin = inicio + estudiantesPorGrupoCalculado;
+  //       const grupo = estudiantesMezclados.slice(inicio, fin);
+  //       if (grupo.length > 0) {
+  //         grupos.push(grupo);
+  //       }
+  //     }
+  //   } else {
+  //     // Dividir por estudiantes por grupo
+  //     for (
+  //       let i = 0;
+  //       i < estudiantesMezclados.length;
+  //       i += estudiantesPorGrupo
+  //     ) {
+  //       const grupo = estudiantesMezclados.slice(i, i + estudiantesPorGrupo);
+  //       grupos.push(grupo);
+  //     }
+  //   }
 
-    return grupos;
-  };
+  //   return grupos;
+  // };
 
   // Función para crear grupos automáticamente
   const handleCreateAutomaticGroups = async () => {

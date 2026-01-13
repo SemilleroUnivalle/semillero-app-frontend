@@ -37,7 +37,6 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 
 import axios from "axios";
 import { API_BASE_URL } from "../../../../config";
-import { useRouter } from "next/navigation";
 
 import { AsistenciaSent } from "@/interfaces/interfaces";
 
@@ -76,7 +75,6 @@ interface EstudianteRow {
 }
 
 export default function AsistenciaDocente() {
-  const router = useRouter();
   const getAvatarColor = (asistio: boolean | null) => {
     if (asistio === true) return "#4caf50"; // Verde
     if (asistio === false) return "#f44336"; // Rojo

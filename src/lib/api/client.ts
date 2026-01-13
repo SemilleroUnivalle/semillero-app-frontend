@@ -41,6 +41,7 @@ client.interceptors.response.use(
       try {
         localStorage.removeItem("token");
       } catch (e) {
+        console.warn("No se pudo limpiar token en interceptor:", e);
         // ignore
       }
       // Redirigir al login (fuera de componentes Next.js usamos location)

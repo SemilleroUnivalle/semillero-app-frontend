@@ -1035,7 +1035,7 @@ export default function EditarPruebas() {
                                     )}
                                 </Box>
                                 <Box className="mt-2 flex flex-col gap-2">
-                                    {pregunta.opciones.map((opcion, idx) => (
+                                    {pregunta.opciones.map((opcion) => (
                                         <Box key={opcion.id} className="flex items-center gap-2">
                                             <TextField
                                                 label={

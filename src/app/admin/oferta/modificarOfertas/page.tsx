@@ -22,10 +22,8 @@ import axios from "axios";
 import { API_BASE_URL } from "../../../../../config";
 
 import {
-  OfertaAcademica,
   Modulo,
   OfertaCategoria,
-  Categoria,
 } from "@/interfaces/interfaces";
 
 export default function ModificarOferta() {

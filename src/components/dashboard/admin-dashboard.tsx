@@ -15,7 +15,6 @@ import { EnrollmentChart } from "./enrollment-chart"
 import { ModuleGenderChart } from "./module-gender-chart"
 import { ModuleDistribution } from "./module-distribution"
 import { EstamentoSegmentation } from "./estamento-segmentation"
-import { RecentEnrollments } from "./recent-enrollments"
 import { DemographicsOverview } from "./demographics-overview"
 import { EstratoSocioeconomicoDistributionInterno } from './estrato_socioeconomico';
 import { VinculacionDistributionInterno } from './tipodevinculacion';

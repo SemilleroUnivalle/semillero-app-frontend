@@ -43,11 +43,6 @@ import {
 import Link from "next/link";
 import { API_BASE_URL } from "../../../../../config";
 import {
-  Area,
-  Categoria,
-  Modulo,
-  Respuesta,
-  Pregunta,
   PruebaDiagnostica,
 } from "@/interfaces/interfaces";
 

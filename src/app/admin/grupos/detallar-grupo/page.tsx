@@ -22,8 +22,6 @@ import {
   List,
   ListItemButton,
   ListItemIcon,
-  Snackbar,
-  Alert,
   Chip,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
@@ -33,7 +31,7 @@ import Divider from "@mui/material/Divider";
 import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import { TextField, Autocomplete } from "@mui/material";
-import { Estudiante, Matricula } from "@/interfaces/interfaces";
+import { Matricula } from "@/interfaces/interfaces";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 
 import { API_BASE_URL } from "../../../../../config";
@@ -161,22 +159,14 @@ export default function DetallarGrupo() {
 
   const paginationModel = { page: 0, pageSize: 50 };
 
-  interface Grupo {
-    id: number;
-    nombre: string;
-    estudiantes: EstudianteRow[];
-    profesor?: number;
-    monitor_academico?: number;
-  }
+  // interface Grupo {
+  //   id: number;
+  //   nombre: string;
+  //   estudiantes: EstudianteRow[];
+  //   profesor?: number;
+  //   monitor_academico?: number;
+  // }
 
-  interface EstudianteRow {
-    id: number;
-    apellido: string;
-    nombre: string;
-    email: string;
-    tipo_vinculacion: string;
-    colegio: string;
-  }
 
   // Estados
   const [rows, setRows] = useState<MatriculaRow[]>([]);
@@ -201,9 +191,9 @@ export default function DetallarGrupo() {
   const [showAddStudents, setShowAddStudents] = useState(false);
   const [availableStudents, setAvailableStudents] = useState<Matricula[]>([]);
   const [checked, setChecked] = useState<readonly number[]>([]);
-  const [selectedStudents, setSelectedStudents] = useState<readonly number[]>(
-    [],
-  );
+  // const [selectedStudents, setSelectedStudents] = useState<readonly number[]>(
+  //   [],
+  // );
   const [loadingStudents, setLoadingStudents] = useState(false);
 
   // Estados para filtros
@@ -350,7 +340,7 @@ export default function DetallarGrupo() {
       setSelectedCategorias([]);
       setSelectedModulos([]);
       setChecked([]);
-      setSelectedStudents([]);
+      // setSelectedStudents([]);
     }
     setShowAddStudents(!showAddStudents);
   };
@@ -359,7 +349,7 @@ export default function DetallarGrupo() {
   useEffect(() => {
     if (!showAddStudents) return;
 
-    let filtered = availableStudents.filter((matricula) => {
+    const filtered = availableStudents.filter((matricula) => {
       const matchPeriodo =
         selectedPeriodos.length === 0 ||
         selectedPeriodos.includes(
@@ -474,7 +464,7 @@ export default function DetallarGrupo() {
 
       // Limpiar y cerrar la sección de agregar estudiantes
       setChecked([]);
-      setSelectedStudents([]);
+      // setSelectedStudents([]);
       setShowAddStudents(false);
       setSelectedPeriodos([]);
       setSelectedCategorias([]);

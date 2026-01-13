@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Matricula, Modulo, OfertaCategoria } from "@/interfaces/interfaces";
 
 import { useEffect, useState } from "react";
 import {
@@ -17,16 +16,11 @@ import {
 
 } from "@mui/material";
 
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import { TrashIcon } from "@heroicons/react/24/outline";
-
 import axios from "axios";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { API_BASE_URL } from "../../../../config";
-import { useRouter } from "next/navigation";
 
 export default function CursosProgramados() {
-  const router = useRouter();
 
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", flex: 0.5 },
@@ -81,7 +75,6 @@ export default function CursosProgramados() {
   }
 
   const [rows, setRows] = useState<CursosRow[]>([]);
-  const [success, setSuccess] = useState(false);
 
   const [loading, setLoading] = useState(true);
 
@@ -110,7 +103,7 @@ export default function CursosProgramados() {
 
           response.data.forEach((oferta: any) => {
             // Iterar sobre cada módulo dentro de la oferta
-            oferta.modulo.forEach((modulo: any, index: number) => {
+            oferta.modulo.forEach((modulo: any) => {
               formateado.push({
                 id: `${oferta.id_oferta_categoria}-${modulo.id_modulo}`,
 
@@ -146,7 +139,6 @@ export default function CursosProgramados() {
   const [selectedCategorias, setSelectedCategoria] = React.useState<string[]>(
     [],
   );
-  const [selectedEstado, setSelectedEstado] = React.useState<string[]>([]);
 
   const handleChangePeriodos = (event: SelectChangeEvent<string[]>) => {
     const {
@@ -168,12 +160,6 @@ export default function CursosProgramados() {
     setSelectedCategoria(typeof value === "string" ? value.split(",") : value);
   };
 
-  const handleChangeEstado = (event: SelectChangeEvent<string[]>) => {
-    const {
-      target: { value },
-    } = event;
-    setSelectedEstado(typeof value === "string" ? value.split(",") : value);
-  };
 
   const filteredRows = React.useMemo(() => {
     if (rows.length === 0) return rows;
@@ -204,7 +190,6 @@ export default function CursosProgramados() {
     selectedPeriodos,
     selectedModulos,
     selectedCategorias,
-    selectedEstado,
   ]);
 
   if (loading!) {

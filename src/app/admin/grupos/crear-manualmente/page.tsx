@@ -19,7 +19,7 @@ import InputLabel from "@mui/material/InputLabel";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import { TextField, Autocomplete } from "@mui/material";
-import { Estudiante, Matricula } from "@/interfaces/interfaces";
+import { Matricula } from "@/interfaces/interfaces";
 
 import { API_BASE_URL } from "../../../../../config";
 
@@ -83,7 +83,7 @@ export default function CrearGruposManualmente() {
   const [nombreGrupo, setNombreGrupo] = useState("");
 
   // Estado para la creación del grupo
-  const [creatingGroup, setCreatingGroup] = useState(false);
+  // const [creatingGroup, setCreatingGroup] = useState(false);
 
   // Función para obtener token
   const getToken = () => {
@@ -195,7 +195,7 @@ export default function CrearGruposManualmente() {
 
   // Efecto para aplicar filtros
   useEffect(() => {
-    let filtered = matriculas.filter((matricula) => {
+    const filtered = matriculas.filter((matricula) => {
       // Solo filtramos matriculas que están en la lista de disponibles (izquierda)
       if (!left.includes(matricula.id_inscripcion)) return false;
 
@@ -289,7 +289,7 @@ export default function CrearGruposManualmente() {
   const customList = (
     title: React.ReactNode,
     items: readonly number[],
-    showFilters = false,
+    // showFilters = false,
   ) => (
     <Card>
       <CardHeader
@@ -472,7 +472,7 @@ export default function CrearGruposManualmente() {
       return;
     }
 
-    setCreatingGroup(true);
+    // setCreatingGroup(true);
 
     try {
       const token = getToken();
@@ -533,7 +533,7 @@ Detalles:
         `Error al crear el grupo o asignar matriculas: ${err instanceof Error ? err.message : "Error desconocido"}`,
       );
     } finally {
-      setCreatingGroup(false);
+      // setCreatingGroup(false);
     }
   };
 
@@ -752,7 +752,7 @@ Detalles:
           flexWrap: "wrap",
         }}
       >
-        {customList("Estudiantes Disponibles", filteredEstudiantes, true)}
+        {customList("Estudiantes Disponibles", filteredEstudiantes)}
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 8 }}>
           <Button

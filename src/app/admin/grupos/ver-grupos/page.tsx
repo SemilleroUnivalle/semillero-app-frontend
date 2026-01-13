@@ -1,10 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Matricula, Modulo } from "@/interfaces/interfaces";
+import { Matricula } from "@/interfaces/interfaces";
 import { useEffect, useState } from "react";
 import {
-  Button,
   Paper,
   Select,
   MenuItem,
