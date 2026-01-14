@@ -17,16 +17,46 @@ import {
   Chip,
   Alert,
   LinearProgress,
+  CircularProgress,
 } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import "katex/dist/katex.min.css";
 import { InlineMath } from "react-katex";
+import axios from "axios";
+import { API_BASE_URL } from "../../../../config";
 
-const Cursos = [
+interface Respuesta {
+  id_respuesta: number;
+  texto_respuesta: string;
+  es_correcta: boolean;
+}
+
+interface Pregunta {
+  id_pregunta: number;
+  texto_pregunta: string;
+  imagen: string | null;
+  respuestas: Respuesta[];
+}
+
+interface PruebaDiagnostica {
+  id_prueba: number;
+  nombre_prueba: string;
+  descripcion: string;
+  tiempo_limite: number;
+  puntaje_minimo: string;
+  estado: boolean;
+  id_modulo: {
+    id_modulo: number;
+    nombre_modulo: string;
+  };
+  preguntas: Pregunta[];
+}
+
+const CursosStaticos = [
   {
     curso: "Enteros a los Racionales",
     imagen: "/prueba-diagnostica/geometria.svg",
@@ -436,19 +466,53 @@ interface RespuestaUsuario {
 
 export default function Page() {
   // Estados principales
-  const [cursoSeleccionado, setCursoSeleccionado] = useState<number | null>(
-    null,
-  );
+  const [pruebas, setPruebas] = useState<PruebaDiagnostica[]>([]);
+  const [loadingPruebas, setLoadingPruebas] = useState(true);
+  const [pruebaSeleccionada, setPruebaSeleccionada] = useState<PruebaDiagnostica | null>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [respuestas, setRespuestas] = useState<RespuestaUsuario[]>([]);
   const [respuestaActual, setRespuestaActual] = useState("");
   const [cuestionarioCompleto, setCuestionarioCompleto] = useState(false);
   const [mostrarResultados, setMostrarResultados] = useState(false);
 
-  // Obtener el curso actual y sus preguntas
-  const cursoActual =
-    cursoSeleccionado !== null ? Cursos[cursoSeleccionado] : null;
-  const preguntas = cursoActual?.preguntas || [];
+  // Función para obtener token
+  const getToken = () => {
+    const userString = localStorage.getItem("user");
+    if (userString) {
+      const user = JSON.parse(userString);
+      return user.token;
+    }
+    return "";
+  };
+
+  // Cargar pruebas diagnósticas disponibles
+  useEffect(() => {
+    const fetchPruebas = async () => {
+      try {
+        const token = getToken();
+        const response = await axios.get(
+          `${API_BASE_URL}/prueba-diagnostica/prueba/`,
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          }
+        );
+
+        if (response.status === 200) {
+          setPruebas(response.data);
+        }
+      } catch (error) {
+        console.error("Error al cargar las pruebas:", error);
+      } finally {
+        setLoadingPruebas(false);
+      }
+    };
+
+    fetchPruebas();
+  }, []);
+
+  const preguntas = pruebaSeleccionada?.preguntas || [];
   const preguntaActual = preguntas[activeStep];
 
   // Calcular progreso
@@ -456,9 +520,9 @@ export default function Page() {
     preguntas.length > 0 ? ((activeStep + 1) / preguntas.length) * 100 : 0;
   const respuestasCorrectas = respuestas.filter((r) => r.esCorrecta).length;
 
-  // Manejar selección de curso
-  const handleSeleccionarCurso = (index: number) => {
-    setCursoSeleccionado(index);
+  // Manejar selección de prueba
+  const handleSeleccionarPrueba = (prueba: PruebaDiagnostica) => {
+    setPruebaSeleccionada(prueba);
     setActiveStep(0);
     setRespuestas([]);
     setRespuestaActual("");
@@ -475,17 +539,21 @@ export default function Page() {
 
   // Avanzar a la siguiente pregunta
   const handleSiguiente = () => {
-    if (!respuestaActual) return;
+    if (!respuestaActual || !preguntaActual) return;
 
-    // Guardar respuesta
+    // Buscar la respuesta correcta
+    const respuestaSeleccionadaObj = preguntaActual.respuestas.find(
+      (r) => r.id_respuesta.toString() === respuestaActual
+    );
+
     const nuevaRespuesta: RespuestaUsuario = {
-      preguntaId: preguntaActual.id,
+      preguntaId: preguntaActual.id_pregunta,
       respuestaSeleccionada: respuestaActual,
-      esCorrecta: respuestaActual === preguntaActual.respuesta_correcta,
+      esCorrecta: respuestaSeleccionadaObj?.es_correcta || false,
     };
 
     const nuevasRespuestas = [
-      ...respuestas.filter((r) => r.preguntaId !== preguntaActual.id),
+      ...respuestas.filter((r) => r.preguntaId !== preguntaActual.id_pregunta),
       nuevaRespuesta,
     ];
     setRespuestas(nuevasRespuestas);
@@ -508,7 +576,7 @@ export default function Page() {
       setActiveStep(activeStep - 1);
       // Cargar respuesta anterior si existe
       const respuestaAnterior = respuestas.find(
-        (r) => r.preguntaId === preguntas[activeStep - 1].id,
+        (r) => r.preguntaId === preguntas[activeStep - 1].id_pregunta,
       );
       setRespuestaActual(respuestaAnterior?.respuestaSeleccionada || "");
     }
@@ -523,19 +591,31 @@ export default function Page() {
     setMostrarResultados(false);
   };
 
-  // Volver a la selección de cursos
-  const handleVolverCursos = () => {
-    setCursoSeleccionado(null);
+  // Volver a la selección de pruebas
+  const handleVolverPruebas = () => {
+    setPruebaSeleccionada(null);
     handleReiniciar();
   };
 
   // Obtener color del chip según la respuesta
-  const getChipColor = (opcion: string) => {
-    if (!cuestionarioCompleto) return "default";
-    if (opcion === preguntaActual.respuesta_correcta) return "success";
-    if (opcion === respuestaActual) return "error";
+  const getChipColor = (respuestaId: number) => {
+    if (!cuestionarioCompleto || !preguntaActual) return "default";
+    
+    const respuesta = preguntaActual.respuestas.find(r => r.id_respuesta === respuestaId);
+    if (!respuesta) return "default";
+    
+    if (respuesta.es_correcta) return "success";
+    if (respuestaActual === respuestaId.toString()) return "error";
     return "default";
   };
+
+  if (loadingPruebas) {
+    return (
+      <Box className="flex h-screen items-center justify-center">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box className="mx-auto mt-4 w-full rounded-2xl bg-white p-6 text-secondary shadow-md">
@@ -543,46 +623,64 @@ export default function Page() {
         variant="h4"
         className="mb-6 text-center font-bold text-primary"
       >
-        Prueba Diagnóstica de Matemáticas
+        Pruebas Diagnósticas Disponibles
       </Typography>
 
-      {/* Selección de Curso */}
-      {cursoSeleccionado === null && (
+      {/* Selección de Prueba */}
+      {pruebaSeleccionada === null && (
         <Box className="m-20">
           <Typography variant="h6" className="mb-4 text-center">
-            Selecciona un curso para comenzar:
+            Selecciona una prueba para comenzar:
           </Typography>
-          <Box className="grid gap-4 md:grid-cols-3">
-            {Cursos.map((curso, index) => (
-              <Card
-                key={curso.curso}
-                className="flex cursor-pointer justify-center rounded-2xl bg-gray-200 hover:bg-red-100 hover:shadow-lg"
-                onClick={() => handleSeleccionarCurso(index)}
-              >
-                <CardContent className="my-auto text-center text-secondary">
-                  <Typography variant="h6" className="font-bold">
-                    {curso.curso}
-                  </Typography>
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
+          {pruebas.length === 0 ? (
+            <Typography className="text-center text-gray-500">
+              No hay pruebas disponibles en este momento
+            </Typography>
+          ) : (
+            <Box className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {pruebas.filter(p => p.estado).map((prueba) => (
+                <Card
+                  key={prueba.id_prueba}
+                  className="flex cursor-pointer justify-center rounded-2xl bg-gray-200 hover:bg-red-100 hover:shadow-lg transition-all"
+                  onClick={() => handleSeleccionarPrueba(prueba)}
+                >
+                  <CardContent className="my-auto text-center text-secondary w-full">
+                    <Typography variant="h6" className="font-bold">
+                      {prueba.nombre_prueba}
+                    </Typography>
+                    <Typography variant="body2" className="text-gray-600 mt-2">
+                      {prueba.id_modulo.nombre_modulo}
+                    </Typography>
+                    <Typography variant="caption" className="text-gray-500 block mt-2">
+                      {prueba.preguntas?.length || 0} preguntas
+                    </Typography>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          )}
         </Box>
       )}
 
       {/* Cuestionario */}
-      {cursoSeleccionado !== null && !mostrarResultados && (
+      {pruebaSeleccionada !== null && !mostrarResultados && (
         <Box>
           {/* Header del cuestionario */}
           <Box className="mb-6">
             <Box className="mb-4 flex items-center justify-between">
-              <Typography variant="h6">{cursoActual?.curso}</Typography>
+              <Box>
+                <Typography variant="h6">{pruebaSeleccionada.nombre_prueba}</Typography>
+                <Typography variant="body2" color="textSecondary">
+                  {pruebaSeleccionada.id_modulo.nombre_modulo}
+                </Typography>
+              </Box>
               <Button
                 variant="outlined"
                 className="rounded-2xl border-primary text-primary hover:bg-primary/10"
                 size="medium"
+                onClick={handleVolverPruebas}
               >
-                Cambiar Curso
+                Cambiar Prueba
               </Button>
             </Box>
 
@@ -613,7 +711,7 @@ export default function Page() {
                   color: "#c20e1a",
                 },
                 "& .MuiStepLabel-root .Mui-completed": {
-                  color: "#c20e1a", // Verde para pasos completados
+                  color: "#c20e1a",
                 },
               }}
             >
@@ -621,7 +719,7 @@ export default function Page() {
                 <Step key={index} color="error">
                   <StepLabel color="error">
                     {respuestas.find(
-                      (r) => r.preguntaId === preguntas[index].id,
+                      (r) => r.preguntaId === preguntas[index].id_pregunta,
                     ) && (
                       <CheckCircleIcon
                         className="text-primary"
@@ -639,7 +737,7 @@ export default function Page() {
             <Card className="mb-6 shadow-none">
               <CardContent>
                 <Typography variant="h6" className="mb-4">
-                  {activeStep + 1}. {preguntaActual.pregunta}
+                  {activeStep + 1}. {preguntaActual.texto_pregunta}
                 </Typography>
 
                 {/* Imagen si existe */}
@@ -663,27 +761,25 @@ export default function Page() {
                     onChange={handleRespuestaChange}
                     color="error"
                   >
-                    {Object.entries(preguntaActual.opciones).map(
-                      ([letra, texto]) => (
-                        <FormControlLabel
-                          key={letra}
-                          value={letra}
-                          control={<Radio />}
-                          label={
-                            <Box className="flex items-center gap-2">
-                              <Chip
-                                label={letra}
-                                size="small"
-                                color={getChipColor(letra)}
-                                variant="outlined"
-                              />
-                              <Typography>{texto}</Typography>
-                            </Box>
-                          }
-                          className="mb-2 rounded border p-2 transition-colors hover:bg-gray-50"
-                        />
-                      ),
-                    )}
+                    {preguntaActual.respuestas.map((respuesta, index) => (
+                      <FormControlLabel
+                        key={respuesta.id_respuesta}
+                        value={respuesta.id_respuesta.toString()}
+                        control={<Radio />}
+                        label={
+                          <Box className="flex items-center gap-2">
+                            <Chip
+                              label={String.fromCharCode(65 + index)}
+                              size="small"
+                              color={getChipColor(respuesta.id_respuesta)}
+                              variant="outlined"
+                            />
+                            <Typography>{respuesta.texto_respuesta}</Typography>
+                          </Box>
+                        }
+                        className="mb-2 rounded border p-2 transition-colors hover:bg-gray-50"
+                      />
+                    ))}
                   </RadioGroup>
                 </FormControl>
               </CardContent>
@@ -725,7 +821,7 @@ export default function Page() {
           <Card className="mb-6 shadow-none">
             <CardContent className="text-center">
               <Typography variant="h6" className="mb-2">
-                Resultados de: {cursoActual?.curso}
+                Resultados de: {pruebaSeleccionada?.nombre_prueba}
               </Typography>
               <Typography variant="h4" className="mb-2 font-bold text-primary">
                 {respuestasCorrectas} / {preguntas.length}
@@ -783,11 +879,11 @@ export default function Page() {
               Repetir Cuestionario
             </Button>
             <Button
-              onClick={handleVolverCursos}
+              onClick={handleVolverPruebas}
               variant="contained"
               className="rounded-2xl bg-primary text-white hover:shadow-primary"
             >
-              Seleccionar Otro Curso
+              Seleccionar Otra Prueba
             </Button>
           </Box>
         </Box>

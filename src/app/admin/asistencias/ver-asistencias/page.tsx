@@ -5,7 +5,6 @@ import {
   Box,
   Container,
   Typography,
-  Grid,
   Paper,
   FormControl,
   InputLabel,
@@ -22,27 +21,21 @@ import {
   Tooltip,
 } from "@mui/material";
 import {
-  Analytics as AnalyticsIcon,
   FilterList as FilterListIcon,
   CalendarToday as CalendarIcon,
-  School as SchoolIcon,
-  TrendingUp as TrendingUpIcon,
   Assessment as AssessmentIcon,
-  FileDownload as FileDownloadIcon,
   CheckCircleOutline as CheckCircleIcon,
   CancelOutlined as CancelIcon,
-  VisibilityOutlined as VisibilityOutlinedIcon,
   EditOutlined as EditOutlinedIcon,
 } from "@mui/icons-material";
 import { TrashIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import dynamic from "next/dynamic";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { API_BASE_URL } from "../../../../../config";
 import type ApexCharts from "apexcharts";
 import {
-  Matricula,
   Modulo,
   AsistenciaResponse,
   OfertaAcademica,
@@ -67,7 +60,6 @@ interface AsistenciaRow {
 }
 
 export default function VerAsistencias() {
-  const router = useRouter();
 
   // Estados principales
   const [asistencias, setAsistencias] = useState<AsistenciaRow[]>([]);
@@ -256,17 +248,18 @@ export default function VerAsistencias() {
 
         alert("Registro de asistencia eliminado exitosamente");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as AxiosError;
       console.error("Error al eliminar el registro:", error);
 
-      if (error.response?.status === 404) {
+      if (err.response?.status === 404) {
         alert("El registro ya no existe o fue eliminado previamente");
         setAsistencias((prevAsistencias) =>
           prevAsistencias.filter((asistencia) => asistencia.id !== row.id),
         );
-      } else if (error.response?.status === 403) {
+      } else if (err.response?.status === 403) {
         alert("No tienes permisos para eliminar este registro");
-      } else if (error.response?.status === 400) {
+      } else if (err.response?.status === 400) {
         alert(
           "No se puede eliminar este registro debido a restricciones de integridad",
         );
@@ -323,7 +316,7 @@ export default function VerAsistencias() {
         setModoEdicion(false);
         setAsistenciaEditando(null);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error al actualizar:", error);
       alert(
         "Error al actualizar la asistencia. Por favor, inténtalo de nuevo.",
@@ -569,7 +562,7 @@ export default function VerAsistencias() {
         categories: fechaEntries.map(([fecha]) => {
           if (fecha && fecha.includes("-")) {
             const [year, month, day] = fecha.split("-");
-            return `${day}/${month}`;
+            return `${day}/${month}/${year}`;
           }
           return fecha;
         }),
@@ -768,17 +761,6 @@ export default function VerAsistencias() {
     setFechaFin("");
   };
 
-  const handleExportarDatos = async () => {
-    try {
-      const token = getToken();
-      // Aquí implementarías la llamada al endpoint de exportación
-      console.log("Exportando datos filtrados...", filteredAsistencias);
-      alert("Funcionalidad de exportación por implementar");
-    } catch (error) {
-      console.error("Error al exportar:", error);
-      alert("Error al exportar los datos");
-    }
-  };
 
   if (loading) {
     return (
