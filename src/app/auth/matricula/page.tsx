@@ -4,10 +4,7 @@ import { useState, useEffect } from "react";
 import { API_BASE_URL } from "../../../../config";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import {
-  Modulo,
-  OfertaCategoria,
-} from "@/interfaces/interfaces";
+import { Modulo, OfertaCategoria } from "@/interfaces/interfaces";
 import {
   InputLabel,
   Select,
@@ -20,6 +17,8 @@ import {
   Button,
   SelectChangeEvent,
   Switch,
+  Alert,
+  Snackbar,
 } from "@mui/material";
 
 export default function Matricula() {
@@ -41,6 +40,14 @@ export default function Matricula() {
 
   // Estado para términos
   const [terminos, setTerminos] = useState(false);
+
+  // Estado para alertas
+  const [alerta, setAlerta] = useState<{
+    tipo: "error" | "success";
+    mensaje: string;
+  } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   // Estado para las ofertas académicas activas
   const [ofertas, setOfertas] = useState<Record<string, OfertaCategoria[]>>({});
@@ -139,18 +146,52 @@ export default function Matricula() {
           "Content-Type": "multipart/form-data",
         },
       });
-      alert("Matrícula enviada correctamente.");
+      setSuccess(true);
       router.push("/auth/login"); // Redirige al login
     } catch (error) {
       console.error("Error al enviar la matrícula:", error);
-      alert("Hubo un error al enviar la matrícula.");
+      setError("Hubo un error al enviar la matrícula.");
     }
+  };
+
+  // Manejo del cierre del snackbar
+  const handleCloseSnackbar = () => {
+    setError(null);
+    setSuccess(false);
   };
 
   if (loading) return <div>Cargando ofertas...</div>;
 
   return (
     <div className="mx-auto my-4 w-full rounded-2xl bg-white p-5 text-center shadow-md">
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={success}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          Matrícula enviada correctamente.
+        </Alert>
+      </Snackbar>
+
       <h2 className="text-center font-semibold text-primary">
         Oferta Académica
       </h2>
@@ -245,10 +286,16 @@ export default function Matricula() {
               label="Particular"
             />
             <FormControlLabel
-              value="Relacion Univalle"
+              value="Relacion Univalle - Hijos de funcionarios"
               control={<Radio />}
               label="Relación Univalle"
             />
+            <FormControlLabel
+              value="Relacion Univalle - Hijos de egresados"
+              control={<Radio />}
+              label="Relación Univalle"
+            />
+
             <FormControlLabel
               value="Becado"
               control={<Radio />}

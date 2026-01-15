@@ -8,6 +8,8 @@ import {
   InputLabel,
   MenuItem,
   SelectChangeEvent,
+  OutlinedInput,
+  Chip,
 } from "@mui/material";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
@@ -37,7 +39,7 @@ export default function CrearCursos() {
     id_area: "",
     id_categoria: "",
     intensidad_horaria: "",
-    dirigido_a: "",
+    dirigido_a: [] as string[],
     incluye: "",
   });
 
@@ -93,6 +95,9 @@ export default function CrearCursos() {
         categoriaId = nuevaCategoriaResponse.data.id_categoria; // Actualiza la categoría con el ID de la nueva categoría creada
       }
 
+
+      const dirigidoAString = formData.dirigido_a.join(", ");
+
       // Crear el curso
       const cursoResponse = await axios.post(
         `${API_BASE_URL}/modulo/mod/`,
@@ -102,7 +107,7 @@ export default function CrearCursos() {
           id_categoria: categoriaId,
           descripcion_modulo: formData.descripcion_modulo,
           intensidad_horaria: formData.intensidad_horaria,
-          dirigido_a: formData.dirigido_a,
+          dirigido_a: dirigidoAString,
           incluye: formData.incluye,
         },
         {
@@ -121,7 +126,7 @@ export default function CrearCursos() {
         id_area: "",
         id_categoria: "",
         intensidad_horaria: "",
-        dirigido_a: "",
+        dirigido_a: [],
         incluye: "",
       }); // Cierra el modal
     } catch (error) {
@@ -187,6 +192,18 @@ export default function CrearCursos() {
     fetchAreas();
     fetchCategorias();
   }, []);
+
+   const handleDirigidoAChange = (event: SelectChangeEvent<string[]>) => {
+    const {
+      target: { value },
+    } = event;
+    setFormData((prev) => ({
+      ...prev,
+      dirigido_a: typeof value === "string" ? value.split(",") : value,
+    }));
+  };
+
+
 
   return (
     <div className="mx-auto mt-4 flex w-11/12 flex-col items-center justify-center rounded-2xl bg-white p-1 py-2 shadow-md">
@@ -358,6 +375,55 @@ export default function CrearCursos() {
             value={formData.dirigido_a}
             onChange={handleChange}
           />
+
+          <FormControl className="inputs-textfield w-full">
+            <InputLabel id="dirigido_a_label">Dirigido a</InputLabel>
+            <Select
+              labelId="dirigido_a_label"
+              id="dirigido_a"
+              name="dirigido_a"
+              multiple
+              value={formData.dirigido_a}
+              onChange={handleDirigidoAChange}
+              input={<OutlinedInput label="Dirigido a" />}
+              renderValue={(selected) => (
+                <div className="flex flex-wrap gap-2">
+                  {(selected as string[]).map((value) => (
+                    <Chip key={value} label={value} />
+                  ))}
+                </div>
+              )}
+              required
+            >
+                <MenuItem key={"1"} value={"1"}>
+                  1
+                </MenuItem>
+                <MenuItem key={"2"} value={"2"}>
+                  2
+                </MenuItem>
+                <MenuItem key={"3"} value={"3"}>
+                  3
+                </MenuItem>
+                <MenuItem key={"4"} value={"4"}>
+                  4
+                </MenuItem><MenuItem key={"5"} value={"5"}>
+                  5
+                </MenuItem><MenuItem key={"6"} value={"6"}>
+                  6
+                </MenuItem><MenuItem key={"7"} value={"7"}>
+                  7
+                </MenuItem><MenuItem key={"8"} value={"8"}>
+                  8
+                </MenuItem><MenuItem key={"9"} value={"9"}>
+                  9
+                </MenuItem><MenuItem key={"10"} value={"10"}>
+                  10
+                </MenuItem><MenuItem key={"11"} value={"11"}>
+                  11
+                </MenuItem>
+         
+            </Select>
+          </FormControl>
 
           {/* Campo Incluye*/}
           <TextField
