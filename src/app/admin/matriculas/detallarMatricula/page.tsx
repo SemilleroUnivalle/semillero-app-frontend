@@ -165,7 +165,10 @@ export default function DetallarMatricula() {
       intensidad_horaria: 0,
       dirigido_a: null,
       incluye: null,
-      id_area: 0,
+      id_area: {
+        id_area: "",
+        nombre_area:"",
+      },
       id_oferta_categoria: [],
       imagen_modulo: null,
       estado: false,
@@ -186,7 +189,10 @@ export default function DetallarMatricula() {
         incluye: null,
         imagen_modulo: null,
         estado: false,
-        id_area: 0,
+         id_area: {
+        id_area: "",
+        nombre_area:"",
+      },
         id_oferta_categoria: [],
       }],
       id_oferta_categoria: 0,

@@ -30,7 +30,7 @@ input {
   border-radius: 1rem;
   --tw-border-opacity: 1;
   border-color: rgb(209 213 219 / var(--tw-border-opacity, 1));
-  border-width: 1px;
+  /* border-width: 1px; */
 }
 
 body {
@@ -125,6 +125,23 @@ body {
 
 .inputs-textfield-readonly .MuiOutlinedInput-root.Mui-error:hover fieldset {
   border-color: darkred !important; /* Borde más oscuro al pasar el mouse */
+}
+
+.buttons-primary {
+ border-color: #c20e1a;
+ color: #c20e1a;
+  border-radius: 1rem;
+}
+
+.buttons-primary:hover {
+  background-color: #c20e1a25;
+  color: #c20e1a;
+}
+
+.buttons-principal {
+ background-color: #c20e1a;
+ color: white;
+  border-radius: 1rem;
 }
 
 

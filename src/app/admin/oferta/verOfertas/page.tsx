@@ -4,7 +4,7 @@ import * as React from "react";
 import { OfertaCategoria } from "@/interfaces/interfaces";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Paper, Alert, Snackbar, Tooltip } from "@mui/material";
+import { Paper, Alert, Snackbar, Tooltip, Chip } from "@mui/material";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { GridColDef, DataGrid } from "@mui/x-data-grid";
@@ -30,6 +30,34 @@ export default function Page() {
     { field: "id", headerName: "ID", flex: 1 },
     { field: "nombre", headerName: "Nombre", flex: 1 },
     { field: "fecha_inicio", headerName: "Fecha inicio", flex: 1 },
+    {
+      field: "estado",
+      headerName: "Estado",
+      flex: 0.5,
+      renderCell: (params) => {
+        if (params.value === true) {
+          return (
+            <Chip
+              label="Activo"
+              color="success"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        if (params.value === false) {
+          return (
+            <Chip
+              label="Inactivo"
+              color="error"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        return null;
+      },
+    },
     {
       field: "editar",
       headerName: "Acciones",
@@ -135,6 +163,7 @@ export default function Page() {
             id: primera.id_oferta_academica.id_oferta_academica,
             nombre: primera.id_oferta_academica.nombre,
             fecha_inicio: primera.id_oferta_academica.fecha_inicio,
+            estado: primera.id_oferta_academica.estado,
             _original: ofertas, // Guarda todas las ofertas_categoria asociadas
           };
         });

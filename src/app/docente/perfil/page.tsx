@@ -73,7 +73,10 @@ export default function DetallarRegistro() {
     incluye: null,
     imagen_modulo: null,
     estado: false,
-    id_area: 0,
+    id_area: {
+      id_area: "",
+      nombre_area: "",
+    },
     id_oferta_categoria: [],
   },
     colegio: "",
@@ -146,7 +149,7 @@ export default function DetallarRegistro() {
 
   // Obtener ciudades cuando cambia el departamento seleccionado en modo edición
   useEffect(() => {
-    const fetchCiudades = async () => {
+    const fetchCiudades = async () => { 
       if (!departamentoSeleccionado) return;
       setCargandoCiudades(true);
       try {

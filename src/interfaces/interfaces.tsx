@@ -99,6 +99,10 @@ export interface ProfesorInterface {
   estamento?: string;
 }
 
+export interface Area {
+    id_area: string;
+    nombre_area: string;
+  }
 
 export interface Categoria {
   id_categoria: number;
@@ -116,7 +120,7 @@ export interface Modulo {
   incluye: string | null;
   imagen_modulo: string | null;
   estado: boolean;
-  id_area: number;
+  id_area: Area;
   id_oferta_categoria: number[];
 }
 
@@ -157,4 +161,83 @@ export interface Matricula {
   verificacion_certificado: boolean | null;
   audit_documento_recibo_pago: AuditInterface | null;
   audit_certificado: AuditInterface | null;
+}
+
+export interface Grupo {
+  id: number;
+  nombre: string;
+  profesor: ProfesorInterface;
+  monitor_academico: ProfesorInterface;
+}
+
+
+
+// Estudiante mínimo incluido dentro de la inscripción
+export interface EstudianteRef {
+  id_estudiante: number;
+  nombre: string;
+  apellido: string;
+  numero_documento: string;
+  email: string;
+  colegio: string;
+}
+
+// Referencia a la inscripción usada en la asistencia
+export interface InscripcionRef {
+  id_estudiante: EstudianteRef;
+  grupo_view:Grupo;
+  modulo: Modulo;
+  periodo: OfertaAcademica;
+}
+
+export interface AsistenciaResponse {
+  id_asistencia: number;
+  id_inscripcion: InscripcionRef;
+  fecha_asistencia: string;
+  estado_asistencia: string;
+  comentarios: string;
+  sesion: string;
+}
+
+export interface AsistenciaSent {
+  id_inscripcion_id: number;
+  fecha_asistencia: string;
+  estado_asistencia: string;
+  comentarios: string;
+  sesion?: string;
+}
+
+// Pruebas Diagnosticas Interfaces
+
+export interface Respuesta {
+  id_respuesta: number;
+  texto_respuesta: string;
+  es_correcta: boolean;
+  fecha_creacion: string;
+}
+
+export interface Pregunta {
+  id_pregunta: number;
+  texto_pregunta: string;
+  tipo_pregunta: string;
+  puntaje: string;
+  imagen: string | null;
+  explicacion: string;
+  estado: boolean;
+  fecha_creacion: string;
+  respuestas: Respuesta[];
+}
+
+export interface PruebaDiagnostica {
+  id_prueba: number;
+  id_modulo: Modulo;
+  nombre_prueba: string;
+  descripcion: string;
+  tiempo_limite: number;
+  puntaje_minimo: string;
+  estado: boolean;
+  fecha_creacion: string;
+  fecha_modificacion: string;
+  preguntas: Pregunta[];
+  total_preguntas: number;
 }

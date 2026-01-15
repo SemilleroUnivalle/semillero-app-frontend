@@ -316,7 +316,7 @@ const monitoresAdmin =
 
       const tipoMatch =
         selectedTipo.length === 0 ||
-        selectedTipo.includes(row.area_desempeño);
+        selectedTipo.includes(row.tipo);
 
       const areaMatch =
         selectedArea.length === 0 || selectedArea.includes(row.area_desempeño);
