@@ -15,7 +15,7 @@
     "@emotion/styled": "^11.14.0",
     "@heroicons/react": "^2.2.0",
     "@mui/icons-material": "^7.1.0",
-    "@mui/material": "^7.1.0",
+    "@mui/material": "^7.3.7",
     "@mui/x-data-grid": "^7.28.1",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.13",

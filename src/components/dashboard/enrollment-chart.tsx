@@ -36,7 +36,7 @@ export function EnrollmentChart({ data }: EnrollmentChartProps) {
         horizontal: true,
         borderRadius: 8,
         columnWidth: "60%",
-        horizontal:true
+        
       },
     },
     dataLabels: {

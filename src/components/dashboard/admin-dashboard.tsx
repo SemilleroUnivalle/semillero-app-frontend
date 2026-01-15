@@ -2,7 +2,7 @@
 
 import React from "react"
 import { useState, useEffect } from "react"
-import { Box, Container, Typography, Grid, Paper, Tabs, Tab, CircularProgress, Alert } from "@mui/material"
+import { CircularProgress } from "@mui/material"
 import {
   People as PeopleIcon,
   MenuBook as MenuBookIcon,
@@ -25,7 +25,6 @@ import dynamic from 'next/dynamic';
 
 const COLOMBIA_GEOJSON_URL = '/colombia.json';
 
-//import para cargar el componente solo en el cliente
 const ColombiaMapWithNoSSR = dynamic(
   () => import('./ColombiaMap'),
   { 
@@ -40,10 +39,10 @@ interface TabPanelProps {
 }
 
 function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props
+  const { children, value, index } = props
   return (
-    <div role="tabpanel" hidden={value !== index} {...other}>
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+    <div role="tabpanel" hidden={value !== index} className={value === index ? "py-3" : ""}>
+      {value === index && <div className="py-3">{children}</div>}
     </div>
   )
 }
@@ -74,38 +73,27 @@ export function AdminDashboard() {
 
   if (loading) {
     return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          bgcolor: "#e8e8e8",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Box textAlign="center">
+      <div className="min-h-screen bg-gray-200 flex items-center justify-center">
+        <div className="text-center">
           <CircularProgress sx={{ color: "#c20e1a", mb: 2 }} />
-          <Typography variant="body1" color="text.secondary">
-            Cargando datos del dashboard...
-          </Typography>
-        </Box>
-      </Box>
+          <p className="text-gray-600 mt-4">Cargando datos del dashboard...</p>
+        </div>
+      </div>
     )
   }
 
   if (error || !data) {
     return (
-      <Box sx={{ minHeight: "100vh", bgcolor: "#e8e8e8", p: 4 }}>
-        <Container maxWidth="xl">
-          <Alert severity="error" sx={{ mt: 4 }}>
+      <div className="min-h-screen bg-gray-200 p-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4">
             {error || "No se pudieron cargar los datos del dashboard"}
-          </Alert>
-        </Container>
-      </Box>
+          </div>
+        </div>
+      </div>
     )
   }
 
-  // Protección: puede que enrollmentsByModule sea [] o undefined
   const mostPopularModule = data.enrollmentsByModule?.[0] ?? { name: "—", enrollments: 0 }
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -113,99 +101,97 @@ export function AdminDashboard() {
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#e8e8e8" }}>
+    <div className="min-h-screen bg-gray-200">
       {/* Header */}
-      <Paper
-        elevation={0}
-        sx={{
-          borderBottom: "1px solid #d0d0d0",
-          bgcolor: "white",
-        }}
-      >
-        <Container maxWidth="xl" sx={{ py: 3 }}>
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Box>
-              <Typography variant="h4" fontWeight="bold" color="text.primary">
+      <div className="bg-white border-b border-gray-300">
+        <div className="max-w-7xl mx-auto py-3 px-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900">
                 Panel de Administración
-              </Typography>
-            </Box>
-            <Box display="flex" alignItems="center" gap={1}>
-              <CalendarIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-              <Typography variant="body2" color="text.secondary">
+              </h1>
+            </div>
+            <div className="flex items-center gap-1">
+              <CalendarIcon sx={{ fontSize: 16, color: "#999" }} />
+              <p className="text-sm text-gray-600">
                 Actualizado: {new Date().toLocaleDateString("es-ES")}
-              </Typography>
-            </Box>
-          </Box>
-        </Container>
-      </Paper>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <Container maxWidth="xl" sx={{ py: 1 }}>
+      <div className="max-w-7xl mx-auto py-1 px-4">
         {/* Key Stats */}
-        <Grid container spacing={1} sx={{ mb: 2 }}>
-    {/* Primer Card - 2/12 en lg */}
-    <Grid item xs={6} sm={4} lg={2}>
-        <Link href="/admin/registros/verRegistros" legacyBehavior>
-        <a style={{ display: 'block', textDecoration: 'none' }} aria-label="Ver inscritos">
-        <StatsCard
-            title="Total Inscritos"
-            value={data.totalRegister.toLocaleString()}
-            icon={PeopleIcon}
-            trend={data.inscritosNoMatriculados.toLocaleString()}
-            trendLabel="% no matriculados"
-        />
-        </a>
-        </Link>
-    </Grid>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1 mb-4">
+          {/* Primer Card - Total Inscritos */}
+          <div className="col-span-1">
+            <Link href="/admin/registros/verRegistros" legacyBehavior>
+              <a className="block no-underline">
+                <StatsCard
+                  title="Total Inscritos"
+                  value={data.totalRegister.toLocaleString()}
+                  icon={PeopleIcon}
+                  trend={data.inscritosNoMatriculados.toLocaleString()}
+                  trendLabel="% no matriculados"
+                />
+              </a>
+            </Link>
+          </div>
 
-    {/* Segundo Card - 2/12 en lg */}
-    <Grid item xs={6} sm={4} lg={2}>
-        <Link href="/admin/matriculas/verMatriculas" legacyBehavior>
-        <a style={{ display: 'block', textDecoration: 'none' }} aria-label="Ver matriculados">
-        <StatsCard
-            title="Total Matriculados"
-            value={data.totalEnrollments.toLocaleString()}
-            icon={PeopleIcon}
-            trend={data.inscritosMatriculados.toLocaleString()}
-            trendLabel="% de los inscritos se ha matriculado"
-        />
-        </a>
-        </Link>
-    </Grid>
+          {/* Segundo Card - Total Matriculados */}
+          <div className="col-span-1">
+            <Link href="/admin/matriculas/verMatriculas" legacyBehavior>
+              <a className="block no-underline">
+                <StatsCard
+                  title="Total Matriculados"
+                  value={data.totalEnrollments.toLocaleString()}
+                  icon={PeopleIcon}
+                  trend={data.inscritosMatriculados.toLocaleString()}
+                  trendLabel="% de los inscritos se ha matriculado"
+                />
+              </a>
+            </Link>
+          </div>
 
-    {/* Tercer Card - 2/12 en lg */}
-    <Grid item xs={6} sm={4} lg={2}>
-        <Link href="/admin/cursos/verCursos" legacyBehavior>
-          <a style={{ display: 'block', textDecoration: 'none' }} aria-label="Ver curso">
-            <StatsCard
-              title="Módulos Activos"
-              value={data.activeModules.toString()}
-              icon={MenuBookIcon}
-              description="En diferentes áreas"
-            />
+          {/* Tercer Card - Módulos Activos */}
+          <div className="col-span-1">
+            <Link href="/admin/cursos/verCursos" legacyBehavior>
+              <a className="block no-underline">
+                <StatsCard
+                  title="Módulos Activos"
+                  value={data.activeModules.toString()}
+                  icon={MenuBookIcon}
+                  description="En diferentes áreas"
+                />
+              </a>
+            </Link>
+          </div>
 
-          </a>
-        </Link>
-    </Grid>
-
-                    <Grid item xs={12} sm={6} lg={4}>
+          {/* Profesores */}
+          <div className="col-span-1">
             <StatsCard
               title="Profesores"
-              value={data.totalProfessors}
+              value={data.totalProfessors.toString()}
               icon={PeopleIcon}
               description="En diferentes modulos"
               compact
             />
-          </Grid>
-          <Grid item xs={12} sm={6} lg={4}>
+          </div>
+
+          {/* Monitores Académicos */}
+          <div className="col-span-1">
             <StatsCard
-              title="Monitores Academicos"
-              value={data.totalMonitors}
+              title="Monitores Académicos"
+              value={data.totalMonitors.toString()}
               icon={PeopleIcon}
               description="En diferentes modulos"
               compact
             />
-          </Grid>
-          <Grid item xs={12} sm={6} lg={4}>
+          </div>
+
+          {/* Grupos Activos */}
+          <div className="col-span-1">
             <StatsCard
               title="Grupos Activos"
               value="9"
@@ -213,262 +199,231 @@ export function AdminDashboard() {
               description="En diferentes modulos"
               compact
             />
-          </Grid>
-        
+          </div>
 
+          {/* Módulo Más Popular */}
+          <div className="col-span-2 lg:col-span-1">
+            <StatsCard
+              title="Módulo Más Popular"
+              value={mostPopularModule.name}
+              icon={TrendingUpIcon}
+              description={`${mostPopularModule.enrollments} estudiantes`}
+              compact
+            />
+          </div>
+        </div>
 
-    {/* Cuarto Card - 2/12 en lg */}
-    <Grid item xs={6} sm={4} lg={2}>
-        <StatsCard
-            title="Módulo Más Popular"
-            value={mostPopularModule.name}
-            icon={TrendingUpIcon}
-            description={`${mostPopularModule.enrollments} estudiantes`}
-            compact
-        />
-    </Grid>
-
-    
-</Grid>
         {/* Main Content Tabs */}
-        <Paper elevation={0} sx={{ border: "1px solid #d0d0d0" }}>
-          <Tabs
-            value={tabValue}
-            onChange={handleTabChange}
-            sx={{
-              borderBottom: "1px solid #d0d0d0",
-              "& .MuiTab-root": {
-                textTransform: "none",
-                fontWeight: 500,
-              },
-              "& .Mui-selected": {
-                color: "#c20e1a",
-              },
-              "& .MuiTabs-indicator": {
-                backgroundColor: "#c20e1a",
-              },
-            }}
-          >
-            <Tab label="Información de Matriculados" />
-            <Tab label="Información de Inscritos no Matriculados" />
-            <Tab label="Información geográfica estudiantes" />
-            <Tab label="Módulos" />
-          </Tabs>
+        <div className="bg-white border border-gray-300 rounded">
+          <div className="border-b border-gray-300 flex">
+            {["Información de Matriculados", "Información de Inscritos no Matriculados", "Información geográfica estudiantes", "Módulos"].map((label, index) => (
+              <button
+                key={index}
+                onClick={() => handleTabChange({} as React.SyntheticEvent, index)}
+                className={`px-4 py-3 text-sm font-medium transition-colors ${
+                  tabValue === index
+                    ? "text-red-700 border-b-2 border-red-700"
+                    : "text-gray-700 hover:text-gray-900"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
-          <Box sx={{ p: 3 }}>
+          <div className="p-6">
             {/* Overview Tab */}
             <TabPanel value={tabValue} index={0}>
-              <Grid container spacing={3}>
-                <Grid item xs={12} lg={6}>
-                  <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0", mb: 3 }}>
-                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <div className="bg-white p-6 border border-gray-300 rounded mb-6">
+                    <h3 className="text-lg font-bold mb-2 text-gray-900">
                       Matriculas totales por Módulo y Género
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-4">
                       Distribución de estudiantes matriculados en cada módulo, segmentado por género.
-                    </Typography>
-                    {/* Llama al nuevo componente con la data cruzada del backend */}
+                    </p>
                     <ModuleGenderChart data={data?.enrollmentsByModuleAndGender ?? []} />
-                  </Paper>
-                </Grid>
-                <Grid item xs={12} lg={6}>
-                  <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
-                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="bg-white p-6 border border-gray-300 rounded">
+                    <h3 className="text-lg font-bold mb-2 text-gray-900">
                       Matriculados por Módulo
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      
-                    </Typography>
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Número de estudiantes por módulo
+                    </p>
                     <EnrollmentChart data={data.enrollmentsByModule ?? []} />
-                  </Paper>
-                </Grid>
+                  </div>
+                </div>
 
-                <Grid item xs={12} lg={6}>
-                  <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
-                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                <div>
+                  <div className="bg-white p-6 border border-gray-300 rounded">
+                    <h3 className="text-lg font-bold mb-2 text-gray-900">
                       Segmentación por Estamento
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">
                       Estudiantes matriculados por estamento del colegio
-                    </Typography>
+                    </p>
                     <EstamentoSegmentation data={data.enrollmentsByEstamento ?? []} />
-                  </Paper>
-                </Grid>
+                  </div>
+                </div>
 
-                <Grid item xs={12} lg={8}>
-                  <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
-                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                <div>
+                  <div className="bg-white p-6 border border-gray-300 rounded">
+                    <h3 className="text-lg font-bold mb-2 text-gray-900">
                       Distribución por Grado
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">
                       Estudiantes matriculados por nivel educativo
-                    </Typography>
+                    </p>
                     <ModuleDistribution data={data.enrollmentsByGrade ?? []} />
-                  </Paper>
-                </Grid>
-                <Grid item xs={12} lg={6}>
-        <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
-            <Typography variant="h6" fontWeight="bold" gutterBottom>
-                Distribución por Estrato Socioeconómico
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Estudiantes matriculados por estrato Socioeconómico.
-            </Typography>
-            {/* 🛑 Aquí se usa el nuevo componente. 
-                 Nota que no necesita props, ya que los datos están integrados. */}
-            <EstratoSocioeconomicoDistributionInterno /> 
-        </Paper>
-    </Grid>
-    <Grid item xs={12} lg={6}>
-        <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
-            <Typography variant="h6" fontWeight="bold" gutterBottom>
-                Distribución por Tipo de Vinculación
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Base: 170 estudiantes. Datos simulados.
-            </Typography>
-            {/* 🛑 Aquí se usa el nuevo componente de Vinculación */}
-            <VinculacionDistributionInterno /> 
-        </Paper>
-    </Grid>
-    <Grid item xs={12} lg={6}>
-        {/* ¡Nueva Gráfica! Municipios */}
-        <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
-            <Typography variant="h6" fontWeight="bold" gutterBottom>
-                Procedencia por Municipio
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Base: 170 estudiantes (Mayoría Valle del Cauca).
-            </Typography>
-            <MunicipioDistributionInterno />
-        </Paper>
-    </Grid>
-              </Grid>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="bg-white p-6 border border-gray-300 rounded">
+                    <h3 className="text-lg font-bold mb-2 text-gray-900">
+                      Distribución por Estrato Socioeconómico
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Estudiantes matriculados por estrato Socioeconómico.
+                    </p>
+                    <EstratoSocioeconomicoDistributionInterno /> 
+                  </div>
+                </div>
+
+                <div>
+                  <div className="bg-white p-6 border border-gray-300 rounded">
+                    <h3 className="text-lg font-bold mb-2 text-gray-900">
+                      Distribución por Tipo de Vinculación
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Base: 170 estudiantes. Datos simulados.
+                    </p>
+                    <VinculacionDistributionInterno /> 
+                  </div>
+                </div>
+
+                <div>
+                  <div className="bg-white p-6 border border-gray-300 rounded">
+                    <h3 className="text-lg font-bold mb-2 text-gray-900">
+                      Procedencia por Municipio
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Base: 170 estudiantes (Mayoría Valle del Cauca).
+                    </p>
+                    <MunicipioDistributionInterno />
+                  </div>
+                </div>
+              </div>
             </TabPanel>
 
-            {/* Students Tab */}
+            {/* Non-Enrolled Students Tab */}
+            <TabPanel value={tabValue} index={1}>
+              <p className="text-gray-900">
+                Información de estudiantes inscritos no matriculados
+              </p>
+            </TabPanel>
+
+            {/* Geographic Tab */}
             <TabPanel value={tabValue} index={2}>
-              <Grid 
-                container 
-                spacing={2} 
-                justifyContent="center"
-              >
-                <Grid item xs={12} lg={12}>
+              <div className="grid grid-cols-1 gap-4 justify-center mb-4">
+                <div className="col-span-1">
                   <ColombiaMapWithNoSSR geojsonDataUrl={COLOMBIA_GEOJSON_URL} />
-                </Grid>
-                
-              </Grid>
+                </div>
+              </div>
 
-              <Grid container spacing={2}>
-                <Grid item xs={12} lg={4}>
-                  <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
-                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+                <div className="col-span-1">
+                  <div className="bg-white p-6 border border-gray-300 rounded">
+                    <h3 className="text-lg font-bold mb-2 text-gray-900">
                       Demografía de Estudiantes
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">
                       Distribución por género (estudiantes)
-                    </Typography>
+                    </p>
                     <DemographicsOverview genderData={data.genderDistribution ?? []} />
-                  </Paper>
-                </Grid>
+                  </div>
+                </div>
 
-                <Grid item xs={12} lg={6}>
-                  <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
-                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                <div className="col-span-1 lg:col-span-2">
+                  <div className="bg-white p-6 border border-gray-300 rounded">
+                    <h3 className="text-lg font-bold mb-2 text-gray-900">
                       Distribución por Estamento
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">
                       Colegios públicos vs. privados
-                    </Typography>
-                    <Box display="flex" flexDirection="column" gap={2}>
+                    </p>
+                    <div className="flex flex-col gap-3">
                       {(data.enrollmentsByEstamento ?? []).map((item, index) => (
-                        <Box key={index}>
-                          <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-                            <Box display="flex" alignItems="center" gap={1}>
-                              <SchoolIcon sx={{ fontSize: 20, color: "text.secondary" }} />
-                              <Typography variant="body1" fontWeight="500">
+                        <div key={index}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <SchoolIcon sx={{ fontSize: 20, color: "#999" }} />
+                              <p className="font-semibold text-gray-900">
                                 {item.estamento}
-                              </Typography>
-                            </Box>
-                            <Typography variant="body2" fontWeight="600">
+                              </p>
+                            </div>
+                            <p className="text-sm font-semibold text-gray-900">
                               {item.count} ({item.percentage}%)
-                            </Typography>
-                          </Box>
-                          <Box
-                            sx={{
-                              height: 8,
-                              bgcolor: "#e0e0e0",
-                              borderRadius: 1,
-                              overflow: "hidden",
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                height: "100%",
-                                width: `${item.percentage}%`,
-                                bgcolor: "#c20e1a",
-                                borderRadius: 1,
-                                transition: "width 0.3s",
-                              }}
+                            </p>
+                          </div>
+                          <div className="h-2 bg-gray-300 rounded overflow-hidden">
+                            <div
+                              className="h-full bg-red-700 rounded transition-all duration-300"
+                              style={{ width: `${item.percentage}%` }}
                             />
-                          </Box>
-                        </Box>
+                          </div>
+                        </div>
                       ))}
-                    </Box>
-                  </Paper>
-                </Grid>
-              </Grid>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </TabPanel>
+
             {/* Modules Tab */}
             <TabPanel value={tabValue} index={3}>
-              <Paper elevation={0} sx={{ p: 3, border: "1px solid #d0d0d0" }}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
+              <div className="bg-white p-6 border border-gray-300 rounded">
+                <h3 className="text-lg font-bold mb-2 text-gray-900">
                   Análisis de Módulos
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
                   Rendimiento y popularidad de cada módulo
-                </Typography>
-                <Box display="flex" flexDirection="column" gap={2}>
+                </p>
+                <div className="flex flex-col gap-3">
                   {(data.enrollmentsByModule ?? []).map((module, index) => (
-                    <Paper
+                    <div
                       key={index}
-                      elevation={0}
-                      sx={{
-                        p: 2,
-                        border: "1px solid #d0d0d0",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        transition: "background-color 0.2s",
-                        "&:hover": {
-                          bgcolor: "#f5f5f5",
-                        },
-                      }}
+                      className="bg-white p-4 border border-gray-300 rounded flex items-center justify-between transition-colors hover:bg-gray-50"
                     >
-                      <Box flex={1}>
-                        <Typography variant="subtitle1" fontWeight="600">
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900">
                           {module.name}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        </p>
+                        <p className="text-sm text-gray-600">
                           {module.area}
-                        </Typography>
-                      </Box>
-                      <Box textAlign="right">
-                        <Typography variant="h5" fontWeight="bold" color="#c20e1a">
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-red-700">
                           {module.enrollments}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
+                        </p>
+                        <p className="text-xs text-gray-600">
                           estudiantes
-                        </Typography>
-                      </Box>
-                    </Paper>
+                        </p>
+                      </div>
+                    </div>
                   ))}
-                </Box>
-              </Paper>
+                </div>
+              </div>
             </TabPanel>
-          </Box>
-        </Paper>
-      </Container>
-    </Box>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

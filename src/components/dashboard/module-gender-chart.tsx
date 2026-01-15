@@ -150,10 +150,10 @@ export function ModuleGenderChart({ data }: ModuleGenderChartProps) {
       return <Typography variant="body1" color="text.secondary">No hay datos de inscripción por género disponibles.</Typography>
   }
 
-  return (
-    <Grid container spacing={4}>
+   return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {/* Gráfico para Mujeres */}
-      <Grid item xs={12} lg={6}>
+      <div>
           <SingleGenderBarChart
               title="Femenino"
               series={femeninoData.series}
@@ -161,10 +161,10 @@ export function ModuleGenderChart({ data }: ModuleGenderChartProps) {
               color={GENDER_COLORS.Femenino}
               totalCount={femeninoData.totalCount}
           />
-      </Grid>
+      </div>
       
       {/* Gráfico para Hombres */}
-      <Grid item xs={12} lg={6}>
+      <div>
           <SingleGenderBarChart
               title="Masculino"
               series={masculinoData.series}
@@ -172,7 +172,7 @@ export function ModuleGenderChart({ data }: ModuleGenderChartProps) {
               color={GENDER_COLORS.Masculino}
               totalCount={masculinoData.totalCount}
           />
-      </Grid>
-    </Grid>
+      </div>
+    </div>
   )
 }
