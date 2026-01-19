@@ -9,6 +9,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <StyledEngineProvider injectFirst>
       <div className="p-5">
+        
         <div className="">
           <Link href={"/auth/login"}>
           <Image
@@ -20,6 +21,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             priority
           /></Link>
         </div>
+
         <div className="flex items-center justify-center">
           <div className="hidden w-min flex-grow p-20 md:block">
             <Image
@@ -32,7 +34,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             />
           </div>
 
-          <div className="w-min flex-grow">{children}</div>
+          <div className="w-11/12 flex-grow">{children}</div>
 
           <div className="hidden w-min flex-grow p-20 md:block">
             <Image
