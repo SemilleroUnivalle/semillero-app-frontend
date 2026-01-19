@@ -41,6 +41,10 @@ body {
 
 
 /* Estilos para inputs */
+.inputs-textfield{
+  text-transform: uppercase;
+}
+
 
 .inputs-textfield .MuiOutlinedInput-root {
   border-radius: 1rem; /* Borde redondeado */
