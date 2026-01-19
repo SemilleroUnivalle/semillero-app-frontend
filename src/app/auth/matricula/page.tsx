@@ -193,7 +193,7 @@ export default function Matricula() {
       </Snackbar>
 
       <h2 className="text-center font-semibold text-primary">
-        Oferta Académica
+        OFERTA ACADÉMICA Y MATRÍCULA
       </h2>
 
       <form className="items-center" onSubmit={handleSubmit}>
@@ -268,7 +268,7 @@ export default function Matricula() {
             className="my-4 text-center font-semibold text-primary"
             id="tipo-vinculacion"
           >
-            <h2>Tipo de vinculación</h2>
+            <h2>TIPO DE VINCULACIÓN</h2>
           </FormLabel>
           <RadioGroup
             row
@@ -288,24 +288,20 @@ export default function Matricula() {
             <FormControlLabel
               value="Relacion Univalle - Hijos de funcionarios"
               control={<Radio />}
-              label="Relación Univalle"
+              label="Relación Univalle - Hijos de funcionarios"
             />
             <FormControlLabel
               value="Relacion Univalle - Hijos de egresados"
               control={<Radio />}
-              label="Relación Univalle"
+              label="Relación Univalle - Hijos de egresados"
             />
 
-            <FormControlLabel
-              value="Becado"
-              control={<Radio />}
-              label="Becado"
-            />
+            
           </RadioGroup>
         </FormControl>
 
         <h2 className="my-4 text-center font-semibold text-primary">
-          Documentación
+          DOCUMENTACIÓN
         </h2>
         {/* Inputs para subir archivos */}
         <div className="flex flex-wrap justify-around gap-4 text-gray-600">
