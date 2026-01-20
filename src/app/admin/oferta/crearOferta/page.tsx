@@ -432,31 +432,21 @@ export default function CrearOferta() {
                     id={`precio-univalle-${nombreCategoria}`}
                     name={`precio-univalle-${nombreCategoria}`}
                     className="inputs-textfield w-full sm:w-1/3"
-                    label="Precio Relación Univalle"
+                    label="Precio Relación Univalle - Funcionarios"
                     type="number"
                     required={
                       selectedCursosPorCategoria[nombreCategoria]?.length > 0
                     }
-                    // error={
-                    //   formTouched &&
-                    //   selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
-                    //   !(
-                    //     document.getElementById(
-                    //       `precio-univalle-${nombreCategoria}`,
-                    //     ) as HTMLInputElement
-                    //   )?.value
-                    // }
-                    // helperText={
-                    //   formTouched &&
-                    //   selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
-                    //   !(
-                    //     document.getElementById(
-                    //       `precio-univalle-${nombreCategoria}`,
-                    //     ) as HTMLInputElement
-                    //   )?.value
-                    //     ? "Campo requerido"
-                    //     : ""
-                    // }
+                  />
+                  <TextField
+                    id={`precio-univalle-egresados-${nombreCategoria}`}
+                    name={`precio-univalle-egresados-${nombreCategoria}`}
+                    className="inputs-textfield w-full sm:w-1/3"
+                    label="Precio Relación Univalle - Hijos de Egresados"
+                    type="number"
+                    required={
+                      selectedCursosPorCategoria[nombreCategoria]?.length > 0
+                    }
                   />
                 </Box>
 
