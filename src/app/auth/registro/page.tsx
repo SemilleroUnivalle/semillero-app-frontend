@@ -341,7 +341,7 @@ export default function Registro() {
           <h1 className="text-center font-semibold text-primary">
             FORMULARIO DE INSCRIPCIÓN
           </h1>
-          <div className="flex w-full flex-row rounded-2xl bg-white py-5 shadow-sm" >
+          <div className="flex w-full flex-row rounded-2xl bg-white py-5 shadow-sm">
             {/* Campo Seleccionar Fotografia */}
             <div className="flex w-1/3 flex-col items-center justify-around">
               {/* Avatar que muestra la imagen */}
@@ -363,7 +363,7 @@ export default function Registro() {
               </Button>
             </div>
 
-            <div className="flex w-2/3 flex-col uppercase items-center justify-center">
+            <div className="flex w-2/3 flex-col items-center justify-center uppercase">
               {/* Contenedor Informacion Personal */}
               <h2 className="text-md my-4 text-center font-semibold text-primary">
                 DATOS DEL ESTUDIANTE
@@ -380,7 +380,10 @@ export default function Registro() {
                   required
                   value={formData.nombre}
                   onChange={(e) =>
-                    setFormData({ ...formData, nombre: e.target.value.toUpperCase() })
+                    setFormData({
+                      ...formData,
+                      nombre: e.target.value.toUpperCase(),
+                    })
                   }
                 />
                 {/* Campo Apellidos */}
@@ -394,7 +397,10 @@ export default function Registro() {
                   required
                   value={formData.apellido}
                   onChange={(e) =>
-                    setFormData({ ...formData, apellido: e.target.value.toUpperCase() })
+                    setFormData({
+                      ...formData,
+                      apellido: e.target.value.toUpperCase(),
+                    })
                   }
                 />
                 {/* Campo Tipo de Documento */}
@@ -464,7 +470,10 @@ export default function Registro() {
                   options={generos}
                   value={formData.genero}
                   onChange={(_, newValue) =>
-                    setFormData({ ...formData, genero: newValue?.toUpperCase() || "" })
+                    setFormData({
+                      ...formData,
+                      genero: newValue?.toUpperCase() || "",
+                    })
                   }
                   renderInput={(params) => (
                     <TextField
@@ -498,7 +507,10 @@ export default function Registro() {
               required
               value={formData.email}
               onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value.toUpperCase() })
+                setFormData({
+                  ...formData,
+                  email: e.target.value.toUpperCase(),
+                })
               }
             />
             {/* Campo Celular */}
@@ -594,7 +606,10 @@ export default function Registro() {
               required
               value={formData.comuna_residencia}
               onChange={(e) =>
-                setFormData({ ...formData, comuna_residencia: e.target.value.toUpperCase() })
+                setFormData({
+                  ...formData,
+                  comuna_residencia: e.target.value.toUpperCase(),
+                })
               }
             />
 
@@ -739,7 +754,10 @@ export default function Registro() {
               required
               value={formData.colegio}
               onChange={(e) =>
-                setFormData({ ...formData, colegio: e.target.value.toUpperCase() })
+                setFormData({
+                  ...formData,
+                  colegio: e.target.value.toUpperCase(),
+                })
               }
             />
             {/* Campo Estamento Colegio */}
@@ -757,7 +775,10 @@ export default function Registro() {
                   required
                   value={formData.estamento}
                   onChange={(e) =>
-                    setFormData({ ...formData, estamento: e.target.value.toUpperCase() })
+                    setFormData({
+                      ...formData,
+                      estamento: e.target.value.toUpperCase(),
+                    })
                   }
                 >
                   <MenuItem value={"Público"}>Público</MenuItem>
@@ -790,15 +811,15 @@ export default function Registro() {
             </FormControl>
 
             {/* Campo Grado de Escolaridad */}
-            <FormControl className="inputs-textfield w-full sm:w-1/4">
-              <InputLabel hidden={!esDocente} id="grado_escolaridad">
+
+            {/* <FormControl className="inputs-textfield w-full sm:w-1/4">
+              <InputLabel id="grado_escolaridad">
                 Grado de escolaridad
               </InputLabel>
               <Select
                 labelId="grado_escolaridad"
                 id="grado_escolaridad"
                 name="grado_escolaridad"
-                hidden={!esDocente}
                 label="Grado de escolaridad"
                 required
                 value={formData.grado_escolaridad || ""}
@@ -819,9 +840,11 @@ export default function Registro() {
               </Select>
             </FormControl>
 
+             */}
+
             {/* Campo Área de Enseñanza */}
-            <FormControl className="inputs-textfield w-full sm:w-1/4">
-              <InputLabel hidden={!esDocente} id="area_ensenanza">
+            {/* <FormControl className="inputs-textfield w-full sm:w-1/4">
+              <InputLabel id="area_ensenanza">
                 Área de enseñanza
               </InputLabel>
               <Select
@@ -829,7 +852,6 @@ export default function Registro() {
                 id="area_ensenanza"
                 name="area_ensenanza"
                 label="Área de enseñanza"
-                hidden={!esDocente}
                 required
                 value={formData.area_desempeño || ""}
                 onChange={(e) =>
@@ -848,7 +870,7 @@ export default function Registro() {
                 <MenuItem value="Tecnología">Tecnología</MenuItem>
                 <MenuItem value="Otra">Otra</MenuItem>
               </Select>
-            </FormControl>
+            </FormControl> */}
           </div>
         </div>
 
