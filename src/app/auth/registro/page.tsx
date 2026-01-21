@@ -334,6 +334,11 @@ export default function Registro() {
     }
   };
 
+  const isValidEmail = (email: string) =>
+    /^[a-zA-Z0-9._%+-]+@(gmail\.com|correounivalle\.edu\.co)$/.test(
+      email.toLowerCase(),
+    );
+
   return (
     <div className="mx-auto my-4 content-center rounded-2xl p-5 text-center">
       <form className="items-center" onSubmit={handleSubmit}>
@@ -511,6 +516,12 @@ export default function Registro() {
                   ...formData,
                   email: e.target.value.toUpperCase(),
                 })
+              }
+              error={formData.email !== "" && !isValidEmail(formData.email)}
+              helperText={
+                formData.email !== "" && !isValidEmail(formData.email)
+                  ? "Solo se permiten correos @gmail.com o @correounivalle.edu.co"
+                  : ""
               }
             />
             {/* Campo Celular */}
@@ -916,49 +927,7 @@ export default function Registro() {
                   })
                 }
               />
-              {/* Campo Tipo de Documento */}
-              <FormControl className="inputs-textfield w-full sm:w-1/4">
-                <InputLabel id="tipo_documento_acudiente">
-                  Tipo de documento
-                </InputLabel>
-                <Select
-                  labelId="tipo_documento_acudiente"
-                  id="tipo_documento_acudiente"
-                  label="tipo_documento_acudiente"
-                  required
-                  value={formDataAcudiente.tipo_documento_acudiente || ""}
-                  onChange={(e) =>
-                    setFormDataAcudiente({
-                      ...formDataAcudiente,
-                      tipo_documento_acudiente: e.target.value.toUpperCase(),
-                    })
-                  }
-                >
-                  <MenuItem value={"TI"}>Tarjeta de identidad</MenuItem>
-                  <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
-                  <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
-                  <MenuItem value={"PPT"}>
-                    Permiso de protección temporal
-                  </MenuItem>
-                </Select>
-              </FormControl>
-              {/* Campo Numero de Documento */}
-              <TextField
-                className="inputs-textfield flex w-full flex-col sm:w-1/4"
-                label="Número de identificación"
-                name="numero_identificacion"
-                variant="outlined"
-                type="number"
-                fullWidth
-                required
-                value={formDataAcudiente.numero_documento_acudiente}
-                onChange={(e) =>
-                  setFormDataAcudiente({
-                    ...formDataAcudiente,
-                    numero_documento_acudiente: e.target.value,
-                  })
-                }
-              />
+
               {/* Campo Correo Electronico del Acudiente */}
               <TextField
                 className="inputs-textfield flex w-full flex-col sm:w-1/4"
