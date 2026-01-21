@@ -1049,9 +1049,9 @@ const handleSave = async () => {
                         setFormData({ ...formData, estamento: e.target.value })
                       }
                     >
-                      <MenuItem value={"Público"}>Público</MenuItem>
-                      <MenuItem value={"Privado"}>Privado</MenuItem>
-                      <MenuItem value={"Cobertura"}>Cobertura</MenuItem>
+                      <MenuItem value={"PÚBLICO"}>PÚBLICO</MenuItem>
+                      <MenuItem value={"PRIVADO"}>PRIVADO</MenuItem>
+                      <MenuItem value={"COBERTURA"}>COBERTURA</MenuItem>
                     </Select>
                   </FormControl>
                 </div>

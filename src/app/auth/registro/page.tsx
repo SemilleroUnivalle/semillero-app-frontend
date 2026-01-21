@@ -137,6 +137,16 @@ export default function Registro() {
 
     console.log("Datos enviados del acudiente:", formDataAcudiente);
 
+    if (!fotoPerfil) {
+      alert("La foto de perfil es obligatoria");
+      return;
+    }
+
+    if (!documentoIdentidad) {
+      alert("El documento de identidad es obligatorio");
+      return;
+    }
+
     try {
       const formDataToSend = new FormData();
 
@@ -792,9 +802,9 @@ export default function Registro() {
                     })
                   }
                 >
-                  <MenuItem value={"Público"}>Público</MenuItem>
-                  <MenuItem value={"Privado"}>Privado</MenuItem>
-                  <MenuItem value={"Cobertura"}>Cobertura</MenuItem>
+                  <MenuItem value={"PÚBLICO"}>Público</MenuItem>
+                  <MenuItem value={"PRIVADO"}>Privado</MenuItem>
+                  <MenuItem value={"COBERTURA"}>Cobertura</MenuItem>
                 </Select>
               </FormControl>
             )}
@@ -909,6 +919,7 @@ export default function Registro() {
                     nombre_acudiente: e.target.value.toUpperCase(),
                   })
                 }
+                
               />
               {/* Campo Apellidos del acudiente  */}
               <TextField
@@ -944,6 +955,12 @@ export default function Registro() {
                     email_acudiente: e.target.value.toUpperCase(),
                   })
                 }
+                error={formDataAcudiente.email_acudiente !== "" && !isValidEmail(formDataAcudiente.email_acudiente)}
+              helperText={
+                formDataAcudiente.email_acudiente !== "" && !isValidEmail(formDataAcudiente.email_acudiente)
+                  ? "Solo se permiten correos @gmail.com o @correounivalle.edu.co"
+                  : ""
+              }
               />
               {/* Campo Celular del Acudiente */}
               <TextField
