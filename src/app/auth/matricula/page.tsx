@@ -147,7 +147,7 @@ export default function Matricula() {
         },
       });
       setSuccess(true);
-      router.push("/auth/login"); // Redirige al login
+      router.push("/auth/matricula-finalizada"); // Redirige al login
     } catch (error) {
       console.error("Error al enviar la matrícula:", error);
       setError("Hubo un error al enviar la matrícula.");
