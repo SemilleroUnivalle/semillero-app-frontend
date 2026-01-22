@@ -920,6 +920,7 @@ export default function Registro() {
                     nombre_acudiente: e.target.value.toUpperCase(),
                   })
                 }
+                
               />
               {/* Campo Apellidos del acudiente  */}
               <TextField
