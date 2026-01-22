@@ -95,6 +95,8 @@ export default function Registro() {
     null,
   );
 
+  // Formulario de datos del estudiante
+
   const [formData, setFormData] = useState({
     nombre: "",
     apellido: "",

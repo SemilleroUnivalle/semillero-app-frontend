@@ -48,8 +48,8 @@ const grados: string[] = [
   "9",
   "10",
   "11",
-  "Egresado colegios",
-  "Docente",
+  "EGRESADO",
+  "DOCENTE",
 ];
 
 const generos = ["Masculino", "Femenino"];
@@ -1258,9 +1258,9 @@ export default function DetallarMatricula() {
                         })
                       }
                     >
-                      <MenuItem value={"Público"}>Público</MenuItem>
-                      <MenuItem value={"Privado"}>Privado</MenuItem>
-                      <MenuItem value={"Cobertura"}>Cobertura</MenuItem>
+                      <MenuItem value={"PÚBLICO"}>PÚBLICO</MenuItem>
+                      <MenuItem value={"PRIVADO"}>PRIVADO</MenuItem>
+                      <MenuItem value={"COBERTURA"}>COBERTURA</MenuItem>
                     </Select>
                   </FormControl>
                 </div>

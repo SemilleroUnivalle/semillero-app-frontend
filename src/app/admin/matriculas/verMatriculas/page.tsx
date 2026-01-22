@@ -20,7 +20,8 @@ import {
 } from "@mui/material";
 
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import { TrashIcon } from "@heroicons/react/24/outline";
+import { TrashIcon  } from "@heroicons/react/24/outline";
+import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 
@@ -464,6 +465,14 @@ export default function VerMatriculas() {
           onClick={handleExportExcel}
         >
           Exportar a Excel
+        </Button>
+        <Button
+          variant="outlined"
+          startIcon={<AddCircleOutlineOutlinedIcon />}
+          className="m-4 rounded-xl border-primary text-primary hover:bg-primary hover:text-white"
+          onClick={() => router.push("/admin/matriculas/crear-matricula")}
+        >
+          Crear Matricula
         </Button>
         <Paper
           className="border-none shadow-none"
