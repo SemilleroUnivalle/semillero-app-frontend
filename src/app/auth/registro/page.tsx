@@ -214,6 +214,7 @@ export default function Registro() {
 
           alert("Registro exitoso");
           localStorage.setItem("estamento", formData.estamento);
+          localStorage.setItem("grado", formData.grado);
           router.push("/auth/matricula"); // Redirigir a la página de matricula
         } else {
           console.error(
