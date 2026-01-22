@@ -11,6 +11,7 @@ import {
   Avatar,
   Button,
   Autocomplete,
+  Alert,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 
@@ -54,8 +55,8 @@ const grados: string[] = [
   "9",
   "10",
   "11",
-  "Egresado colegios",
-  "Docente",
+  "EGRESADO",
+  "DOCENTE",
 ];
 
 const generos = ["Masculino", "Femenino"];
@@ -377,9 +378,9 @@ export default function Registro() {
                 />
               </Button>
             </div>
+            {/* Contenedor Informacion Personal */}
 
             <div className="flex w-2/3 flex-col items-center justify-center uppercase">
-              {/* Contenedor Informacion Personal */}
               <h2 className="text-md my-4 text-center font-semibold text-primary">
                 DATOS DEL ESTUDIANTE
               </h2>
@@ -572,7 +573,7 @@ export default function Registro() {
                 id="departamento_residencia"
                 label="Departamento"
                 required
-                value={formData.departamento_residencia.toUpperCase()}
+                value={formData.departamento_residencia}
                 onChange={handleChangeDepartamento}
               >
                 {departamentos.map((dept) => (
@@ -598,7 +599,7 @@ export default function Registro() {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    ciudad_residencia: e.target.value.toUpperCase(),
+                    ciudad_residencia: e.target.value,
                   })
                 }
               >
@@ -802,9 +803,9 @@ export default function Registro() {
                     })
                   }
                 >
-                  <MenuItem value={"PÚBLICO"}>Público</MenuItem>
-                  <MenuItem value={"PRIVADO"}>Privado</MenuItem>
-                  <MenuItem value={"COBERTURA"}>Cobertura</MenuItem>
+                  <MenuItem value={"PÚBLICO"}>PÚBLICO</MenuItem>
+                  <MenuItem value={"PRIVADO"}>PRIVADO</MenuItem>
+                  <MenuItem value={"COBERTURA"}>COBERTURA</MenuItem>
                 </Select>
               </FormControl>
             )}
@@ -955,12 +956,16 @@ export default function Registro() {
                     email_acudiente: e.target.value.toUpperCase(),
                   })
                 }
-                error={formDataAcudiente.email_acudiente !== "" && !isValidEmail(formDataAcudiente.email_acudiente)}
-              helperText={
-                formDataAcudiente.email_acudiente !== "" && !isValidEmail(formDataAcudiente.email_acudiente)
-                  ? "Solo se permiten correos @gmail.com o @correounivalle.edu.co"
-                  : ""
-              }
+                error={
+                  formDataAcudiente.email_acudiente !== "" &&
+                  !isValidEmail(formDataAcudiente.email_acudiente)
+                }
+                helperText={
+                  formDataAcudiente.email_acudiente !== "" &&
+                  !isValidEmail(formDataAcudiente.email_acudiente)
+                    ? "Solo se permiten correos @gmail.com o @correounivalle.edu.co"
+                    : ""
+                }
               />
               {/* Campo Celular del Acudiente */}
               <TextField
@@ -992,19 +997,36 @@ export default function Registro() {
             <InputLabel id="documento_identidad">
               Documento de identidad
             </InputLabel>
-            <input
-              name="documento_identidad"
-              type="file"
-              accept=".pdf"
-              className="block w-1/2 text-sm text-gray-500"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  setDocumentoIdentidad(file);
-                }
-              }}
-            />
+            <Button
+              variant="contained"
+              component="label"
+              className="my-2 rounded-2xl bg-primary"
+            >
+              Elegir documento (PDF)
+              <input
+                name="documento_identidad"
+                type="file"
+                hidden
+                accept=".pdf"
+                // className="block w-1/2 text-sm text-gray-500"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setDocumentoIdentidad(file);
+                  }
+                }}
+              />
+            </Button>
+
+            <h2> {documentoIdentidad ? documentoIdentidad.name : "No se ha seleccionado un documento"}</h2>
+
+            
           </div>
+          <Alert className="mt-3" severity="info">
+            La fotografía y el documento de identidad son obligatorios y deben
+            pesar menos de 2 Mb.
+          </Alert>
+
           <Button
             type="submit"
             variant="outlined"
