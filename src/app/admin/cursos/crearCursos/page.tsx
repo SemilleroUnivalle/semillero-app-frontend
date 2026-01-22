@@ -421,6 +421,9 @@ export default function CrearCursos() {
                 </MenuItem><MenuItem key={"11"} value={"11"}>
                   11
                 </MenuItem>
+                <MenuItem key={"EGRESADO"} value={"EGRESADO"}>
+                  EGRESADO
+                </MenuItem>
          
             </Select>
           </FormControl>
