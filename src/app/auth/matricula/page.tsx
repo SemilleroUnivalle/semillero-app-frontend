@@ -111,6 +111,16 @@ export default function Matricula() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+     if (!reciboPago) {
+      alert("El recibo de pago es obligatorio");
+      return;
+    }
+
+    if (!certificado) {
+      alert("El certificado es obligatorio");
+      return;
+    }
+
     const id_estudiante = localStorage.getItem("id_estudiante");
     const estamento = localStorage.getItem("estamento");
 

@@ -57,44 +57,44 @@ export default function VerMatriculas() {
       headerName: "Tipo de Inscrito",
       flex: 1,
     },
-    {
-      field: "estado",
-      headerName: "Estado",
-      flex: 1,
-      renderCell: (params) => {
-        if (params.value === "Revisado") {
-          return (
-            <Chip
-              label="Revisado"
-              color="success"
-              variant="outlined"
-              sx={{ fontWeight: "bold" }}
-            />
-          );
-        }
-        if (params.value === "No revisado") {
-          return (
-            <Chip
-              label="No revisado"
-              color="error"
-              variant="outlined"
-              sx={{ fontWeight: "bold" }}
-            />
-          );
-        }
-        if (params.value === "Pendiente") {
-          return (
-            <Chip
-              label="Pendiente"
-              color="warning"
-              variant="outlined"
-              sx={{ fontWeight: "bold" }}
-            />
-          );
-        }
-        return null;
-      },
-    },
+    // {
+    //   field: "estado",
+    //   headerName: "Estado",
+    //   flex: 1,
+    //   renderCell: (params) => {
+    //     if (params.value === "Revisado") {
+    //       return (
+    //         <Chip
+    //           label="Revisado"
+    //           color="success"
+    //           variant="outlined"
+    //           sx={{ fontWeight: "bold" }}
+    //         />
+    //       );
+    //     }
+    //     if (params.value === "No revisado") {
+    //       return (
+    //         <Chip
+    //           label="No revisado"
+    //           color="error"
+    //           variant="outlined"
+    //           sx={{ fontWeight: "bold" }}
+    //         />
+    //       );
+    //     }
+    //     if (params.value === "Pendiente") {
+    //       return (
+    //         <Chip
+    //           label="Pendiente"
+    //           color="warning"
+    //           variant="outlined"
+    //           sx={{ fontWeight: "bold" }}
+    //         />
+    //       );
+    //     }
+    //     return null;
+    //   },
+    // },
     {
       field: "editar",
       headerName: "Acciones",
@@ -446,12 +446,12 @@ export default function VerMatriculas() {
             onChange={handleChangeEstado}
             renderValue={(selected) => selected.join(", ")}
           >
-            {[...new Set(rows.map((row) => row.estado))].map((estado) => (
+            {/* {[...new Set(rows.map((row) => row.estado))].map((estado) => (
               <MenuItem key={estado} value={estado}>
                 <Checkbox checked={selectedEstado.indexOf(estado) > -1} />
                 <ListItemText primary={estado} />
               </MenuItem>
-            ))}
+            ))} */}
           </Select>
         </FormControl>
       </div>
