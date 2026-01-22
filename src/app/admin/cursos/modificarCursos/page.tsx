@@ -353,7 +353,7 @@ export default function ModificarCursos() {
           <TextField
             className="inputs-textfield w-full"
             label="Dirigido a"
-            name="dirigido"
+            name="dirigido_a"
             variant="outlined"
             type="text"
             fullWidth

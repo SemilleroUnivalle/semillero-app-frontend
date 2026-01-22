@@ -54,9 +54,12 @@ export default function Matricula() {
   const [loading, setLoading] = useState(true);
 
   const [estamento, setEstamento] = useState<string>("");
+  const [grado, setGrado] = useState<string>("");
 
   useEffect(() => {
     const est = localStorage.getItem("estamento");
+    const grd = localStorage.getItem("grado");
+    if (grd) setGrado(grd);
     if (est) setEstamento(est);
   }, []);
 
@@ -89,12 +92,32 @@ export default function Matricula() {
     : [];
 
   // Módulos disponibles según la categoría seleccionada
+  // const modulosDisponibles =
+  //   formData.oferta && formData.area
+  //     ? ofertas[formData.oferta]?.find(
+  //         (ofertaCat) =>
+  //           ofertaCat.id_categoria.id_categoria === Number(formData.area),
+  //       )?.modulo || []
+  //     : [];
+
+  // Módulos disponibles según la categoría seleccionada Y el grado del estudiante
   const modulosDisponibles =
     formData.oferta && formData.area
-      ? ofertas[formData.oferta]?.find(
-          (ofertaCat) =>
-            ofertaCat.id_categoria.id_categoria === Number(formData.area),
-        )?.modulo || []
+      ? (
+          ofertas[formData.oferta]?.find(
+            (ofertaCat) =>
+              ofertaCat.id_categoria.id_categoria === Number(formData.area),
+          )?.modulo || []
+        ).filter((modulo: Modulo) => {
+          // Verificar si el grado del estudiante está en los grados del módulo
+          if (modulo.dirigido_a) {
+            const gradosArray = modulo.dirigido_a
+              .split(",")
+              .map((g) => g.trim());
+            return gradosArray.includes(grado);
+          }
+          return false;
+        })
       : [];
 
   const handleChange = (event: SelectChangeEvent<string>, field: string) => {
@@ -111,7 +134,7 @@ export default function Matricula() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-     if (!reciboPago) {
+    if (!reciboPago) {
       alert("El recibo de pago es obligatorio");
       return;
     }
@@ -123,7 +146,9 @@ export default function Matricula() {
 
     const id_estudiante = localStorage.getItem("id_estudiante");
     const estamento = localStorage.getItem("estamento");
+    const grado = localStorage.getItem("grado");
 
+    console.log("Grado del usuario:", grado);
     console.log("Estamento del usuario:", estamento);
     console.log("ID del estudiante:", id_estudiante);
 
@@ -305,8 +330,6 @@ export default function Matricula() {
               control={<Radio />}
               label="Relación Univalle - Hijos de egresados"
             />
-
-            
           </RadioGroup>
         </FormControl>
 
@@ -327,7 +350,7 @@ export default function Matricula() {
           </div>
           {/* Mostrar solo si NO es estamento Privado con tipo de vinculación Particular */}
           {!(
-            estamento === "Privado" &&
+            estamento === "PRIVADO" &&
             formData.tipo_vinculacion === "Particular"
           ) && (
             <div className="my-4 flex flex-col gap-3">
