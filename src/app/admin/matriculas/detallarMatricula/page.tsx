@@ -167,7 +167,7 @@ export default function DetallarMatricula() {
       incluye: null,
       id_area: {
         id_area: "",
-        nombre_area:"",
+        nombre_area: "",
       },
       id_oferta_categoria: [],
       imagen_modulo: null,
@@ -175,26 +175,28 @@ export default function DetallarMatricula() {
     },
     estudiante: formDataEstudiante,
     oferta_categoria: {
-      modulo: [{
-        id_modulo: 0,
-        id_categoria: {
-          id_categoria: 0,
-          nombre: "",
+      modulo: [
+        {
+          id_modulo: 0,
+          id_categoria: {
+            id_categoria: 0,
+            nombre: "",
+            estado: false,
+          },
+          nombre_modulo: "",
+          descripcion_modulo: "",
+          intensidad_horaria: 0,
+          dirigido_a: null,
+          incluye: null,
+          imagen_modulo: null,
           estado: false,
+          id_area: {
+            id_area: "",
+            nombre_area: "",
+          },
+          id_oferta_categoria: [],
         },
-        nombre_modulo: "",
-        descripcion_modulo: "",
-        intensidad_horaria: 0,
-        dirigido_a: null,
-        incluye: null,
-        imagen_modulo: null,
-        estado: false,
-         id_area: {
-        id_area: "",
-        nombre_area:"",
-      },
-        id_oferta_categoria: [],
-      }],
+      ],
       id_oferta_categoria: 0,
       id_oferta_academica: {
         id_oferta_academica: 0,
@@ -235,8 +237,8 @@ export default function DetallarMatricula() {
   const [documentoIdentidad, setDocumentoIdentidad] = useState<File | null>(
     null,
   );
-  // const [reciboPago, setReciboPago] = useState<File | null>(null);
-  // const [reciboCertificado, setReciboCertificado] = useState<File | null>(null);
+  const [reciboPago, setReciboPago] = useState<File | null>(null);
+  const [certificado, setCertificado] = useState<File | null>(null);
 
   // const [image, setImage] = useState<string | null>(null);
 
@@ -314,6 +316,7 @@ export default function DetallarMatricula() {
     fetchDepartamentos();
   }, []);
 
+  // Actualizar datos del acudiente cuando cambian los datos del estudiante
   useEffect(() => {
     if (formDataEstudiante.acudiente) {
       setFormDataAcudiente({
@@ -436,12 +439,20 @@ export default function DetallarMatricula() {
 
     //Peticion para actualizar la matricula
     try {
+      const formDataMatriculaToSend = new FormData();
+
+      if (reciboPago) {
+        formDataMatriculaToSend.append("recibo_pago", reciboPago);
+      }
+      if (certificado) {
+        formDataMatriculaToSend.append("certificado", certificado);
+      }
       await axios.patch(
         `${API_BASE_URL}/matricula/mat/${formDataMatricula.id_inscripcion}/`,
-        { observaciones: formDataMatricula.observaciones },
+        formDataMatriculaToSend,
         {
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "multipart/form-data",
             Authorization: `Token ${token}`,
           },
         },
@@ -1706,9 +1717,7 @@ export default function DetallarMatricula() {
               component="label"
               className="my-2 rounded-2xl bg-primary"
             >
-              {documentoIdentidad
-                ? "Cambiar Recibo de Pago"
-                : "Elegir Recibo de Pago"}
+              {reciboPago ? "Cambiar Recibo de Pago" : "Elegir Recibo de Pago"}
               <input
                 name="recibo_pago"
                 type="file"
@@ -1717,14 +1726,14 @@ export default function DetallarMatricula() {
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
-                    setDocumentoIdentidad(file);
+                    setReciboPago(file);
                   }
                 }}
               />
             </Button>
-            {documentoIdentidad && (
+            {reciboPago && (
               <Typography variant="caption" color="textSecondary">
-                {documentoIdentidad.name}
+                {reciboPago.name}
               </Typography>
             )}
           </div>
@@ -1742,6 +1751,36 @@ export default function DetallarMatricula() {
           >
             Ver certificado
           </Button>
+        )}
+
+        {editable && (
+          <div className="my-4 flex flex-col items-center gap-3">
+            <InputLabel id="certificado">Certificado</InputLabel>
+            <Button
+              variant="contained"
+              component="label"
+              className="my-2 rounded-2xl bg-primary"
+            >
+              {certificado ? "Cambiar Certificado" : "Elegir Certificado"}
+              <input
+                name="certificado"
+                type="file"
+                accept=".pdf"
+                hidden
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setCertificado(file);
+                  }
+                }}
+              />
+            </Button>
+            {certificado && (
+              <Typography variant="caption" color="textSecondary">
+                {certificado.name}
+              </Typography>
+            )}
+          </div>
         )}
       </div>
 
