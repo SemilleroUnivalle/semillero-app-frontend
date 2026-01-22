@@ -134,19 +134,24 @@ export default function Matricula() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const id_estudiante = localStorage.getItem("id_estudiante");
+    const estamento = localStorage.getItem("estamento");
+    const grado = localStorage.getItem("grado");
+
     if (!reciboPago) {
       alert("El recibo de pago es obligatorio");
       return;
     }
 
-    if (!certificado) {
+    // El certificado es obligatorio SOLO si NO es (estamento PRIVADO AND tipo_vinculacion Particular)
+    const certificadoObligatorio = !(
+      estamento === "PRIVADO" && formData.tipo_vinculacion === "Particular"
+    );
+
+    if (certificadoObligatorio && !certificado) {
       alert("El certificado es obligatorio");
       return;
     }
-
-    const id_estudiante = localStorage.getItem("id_estudiante");
-    const estamento = localStorage.getItem("estamento");
-    const grado = localStorage.getItem("grado");
 
     console.log("Grado del usuario:", grado);
     console.log("Estamento del usuario:", estamento);
