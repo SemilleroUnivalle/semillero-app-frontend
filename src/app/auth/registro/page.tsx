@@ -88,12 +88,17 @@ const epss = [
 export default function Registro() {
   const router = useRouter();
 
+  // Estados generales
   const [esDocente, setEsDocente] = useState(false);
   const [fotoPerfil, setFotoPerfil] = useState<File | null>(null);
-  // Estado para el documento de identidad
   const [documentoIdentidad, setDocumentoIdentidad] = useState<File | null>(
     null,
   );
+
+  // Estados de carga
+  const [cargando, setCargando] = useState(false);
+
+  // Formulario de datos del estudiante
 
   const [formData, setFormData] = useState({
     nombre: "",
@@ -135,16 +140,19 @@ export default function Registro() {
   // Enviar datos al backend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCargando(true);
 
     console.log("Datos enviados del acudiente:", formDataAcudiente);
 
     if (!fotoPerfil) {
       alert("La foto de perfil es obligatoria");
+      setCargando(false);
       return;
     }
 
     if (!documentoIdentidad) {
       alert("El documento de identidad es obligatorio");
+      setCargando(false);
       return;
     }
 
@@ -206,15 +214,16 @@ export default function Registro() {
         );
         if (responseEstudiante.status === 201) {
           console.log("Estudiante agregado con éxito");
-          localStorage.setItem("id_estudiante", responseEstudiante.data.id);
           console.log(
             "ID del estudiante guardado en localStorage:",
             responseEstudiante.data.id,
           );
-
-          alert("Registro exitoso");
+          // Guardando datos en el local storage
+          localStorage.setItem("id_estudiante", responseEstudiante.data.id);
           localStorage.setItem("estamento", formData.estamento);
           localStorage.setItem("grado", formData.grado);
+
+          setCargando(false);
           router.push("/auth/matricula"); // Redirigir a la página de matricula
         } else {
           console.error(
@@ -227,12 +236,12 @@ export default function Registro() {
           "Error al agregar el acudiente:",
           responseAcudiente.status,
         );
+        setCargando(false);
       }
     } catch (error) {
       console.error("Error de conexión:", error);
-      alert(
-        "Acudiente: hubo un error de conexión al intentar crear el estudiante.",
-      );
+      alert("Hubo un error de conexión al intentar crear el estudiante.");
+      setCargando(false);
     }
   };
 
@@ -247,7 +256,7 @@ export default function Registro() {
     string | ""
   >("");
 
-  const [cargandoCiudades, setCargandoCiudades] = useState<boolean>(false);
+  const [cargandoCiudades, setCargandoCiudades] = useState<boolean>(true);
 
   // Manejo de subida de fotografia
   const [image, setImage] = useState<string | null>(null);
@@ -353,6 +362,15 @@ export default function Registro() {
 
   return (
     <div className="mx-auto my-4 content-center rounded-2xl p-5 text-center">
+      {cargando && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-50">
+          <CircularProgress size={60} />
+          <p className="mt-4 text-lg font-semibold text-white">
+            Registrando...
+          </p>
+        </div>
+      )}
+
       <form className="items-center" onSubmit={handleSubmit}>
         <div className="flex w-full flex-col rounded-2xl bg-white py-5 shadow-sm">
           <h1 className="text-center font-semibold text-primary">
@@ -1019,9 +1037,12 @@ export default function Registro() {
               />
             </Button>
 
-            <h2> {documentoIdentidad ? documentoIdentidad.name : "No se ha seleccionado un documento"}</h2>
-
-            
+            <h2>
+              {" "}
+              {documentoIdentidad
+                ? documentoIdentidad.name
+                : "No se ha seleccionado un documento"}
+            </h2>
           </div>
           <Alert className="mt-3" severity="info">
             La fotografía y el documento de identidad son obligatorios y deben

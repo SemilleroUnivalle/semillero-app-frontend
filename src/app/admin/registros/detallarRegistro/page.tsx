@@ -46,8 +46,8 @@ const grados: string[] = [
   "9",
   "10",
   "11",
-  "Egresado colegios",
-  "Docente",
+  "EGRESADO",
+  "DOCENTE",
 ];
 
 const generos = ["Masculino", "Femenino"];
