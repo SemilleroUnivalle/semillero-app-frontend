@@ -242,7 +242,7 @@ export default function CrearMatricula() {
 
       // Redirigir después de 2 segundos
       setTimeout(() => {
-        router.push("/admin/matriculas");
+        router.push("/admin/matriculas/verMatriculas");
       }, 2000);
     } catch (err: any) {
       console.error("Error al enviar la matrícula:", err);
@@ -268,7 +268,7 @@ export default function CrearMatricula() {
   };
 
   return (
-    <div className="mx-auto my-4 w-full rounded-2xl bg-white p-5 shadow-md">
+    <div className="mx-auto my-4 w-11/12 rounded-2xl bg-white p-5 shadow-md">
       <Snackbar
         open={!!error}
         autoHideDuration={6000}
@@ -301,7 +301,7 @@ export default function CrearMatricula() {
         CREAR MATRÍCULA
       </h2>
 
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+      <form className="inputs-textfield flex flex-col gap-4" onSubmit={handleSubmit}>
         {/* Selector de Estudiante */}
         <FormControl fullWidth required>
           <InputLabel id="estudiante-label">Seleccionar Estudiante</InputLabel>
