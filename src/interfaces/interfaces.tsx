@@ -64,7 +64,7 @@ export interface Estudiante {
   audit_documento_identidad: AuditInterface | null;
   audit_informacion: AuditInterface | null;
   foto: string | null;
-  documento_identidad: string |  null;
+  documento_identidad: string | null;
   estado: string;
 }
 
@@ -100,9 +100,9 @@ export interface ProfesorInterface {
 }
 
 export interface Area {
-    id_area: string;
-    nombre_area: string;
-  }
+  id_area: string;
+  nombre_area: string;
+}
 
 export interface Categoria {
   id_categoria: number;
@@ -170,8 +170,6 @@ export interface Grupo {
   monitor_academico: ProfesorInterface;
 }
 
-
-
 // Estudiante mínimo incluido dentro de la inscripción
 export interface EstudianteRef {
   id_estudiante: number;
@@ -185,7 +183,7 @@ export interface EstudianteRef {
 // Referencia a la inscripción usada en la asistencia
 export interface InscripcionRef {
   id_estudiante: EstudianteRef;
-  grupo_view:Grupo;
+  grupo_view: Grupo;
   modulo: Modulo;
   periodo: OfertaAcademica;
 }
@@ -241,3 +239,47 @@ export interface PruebaDiagnostica {
   preguntas: Pregunta[];
   total_preguntas: number;
 }
+
+export const grados: string[] = [
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "11",
+  "EGRESADO",
+  "DOCENTE",
+];
+
+export const generos = ["Masculino", "Femenino"];
+
+export const epss = [
+  "Emssanar",
+  "Sura",
+  "Sanitas",
+  "Nueva EPS",
+  "Compensar",
+  "Coomeva",
+  "Salud Total",
+  "Famisanar",
+  "Cafesalud",
+  "Medimás",
+  "SOS",
+  "Cruz Blanca",
+  "Aliansalud",
+  "Colsubsidio",
+  "Ecoopsos",
+  "Comfenalco Valle",
+  "Comfandi",
+  "Mutual Ser",
+  "Caprecom",
+  "EPS Convida",
+  "EPS Savia Salud",
+  "EPS Comfachocó",
+  "EPS Comfaoriente",
+];

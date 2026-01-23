@@ -1,16 +1,6 @@
 "use client";
 
 import {
-  Estudiante,
-  Acudiente,
-  Ciudad,
-  Matricula,
-  Departamento,
-  DepartamentoApi,
-  CiudadApi,
-} from "@/interfaces/interfaces";
-
-import {
   TextField,
   InputLabel,
   Select,
@@ -33,58 +23,27 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { API_BASE_URL } from "../../../../../config";
+import { API_BASE_URL } from "../../config";
 import { useRouter } from "next/navigation";
+import {
+  Estudiante,
+  Acudiente,
+  Ciudad,
+  Departamento,
+  DepartamentoApi,
+  CiudadApi,
+  grados,
+  generos,
+  epss,
+} from "@/interfaces/interfaces";
 
-import DetallarRegistro from "@/components/formulario";
-
-const grados: string[] = [
-  "1",
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "10",
-  "11",
-  "EGRESADO",
-  "DOCENTE",
-];
-
-const generos = ["Masculino", "Femenino"];
-const epss = [
-  "Emssanar",
-  "Sura",
-  "Sanitas",
-  "Nueva EPS",
-  "Compensar",
-  "Coomeva",
-  "Salud Total",
-  "Famisanar",
-  "Cafesalud",
-  "Medimás",
-  "SOS",
-  "Cruz Blanca",
-  "Aliansalud",
-  "Colsubsidio",
-  "Ecoopsos",
-  "Comfenalco Valle",
-  "Comfandi",
-  "Mutual Ser",
-  "Caprecom",
-  "EPS Convida",
-  "EPS Savia Salud",
-  "EPS Comfachocó",
-  "EPS Comfaoriente",
-];
-
-export default function DetallarMatricula() {
+export default function DetallarRegistro({
+  id_estudiante,
+}: {
+  id_estudiante: number;
+}) {
   const router = useRouter();
 
-  const [estudiante, setEstudiante] = useState<Estudiante | null>(null);
   const [loading, setLoading] = useState(true);
   const [editable, setEditable] = useState(false);
 
@@ -95,8 +54,8 @@ export default function DetallarMatricula() {
     useState<string>("");
   const [cargandoCiudades, setCargandoCiudades] = useState<boolean>(false);
 
-  // Estados para el formulario de estudiante, acudiente y matrícula
-  const [formDataEstudiante, setFormDataEstudiante] = useState<Estudiante>({
+  // Estado para el formulario
+  const [formData, setFormData] = useState<Estudiante>({
     id_estudiante: 0,
     nombre: "",
     apellido: "",
@@ -143,93 +102,13 @@ export default function DetallarMatricula() {
 
   const [formDataAcudiente, setFormDataAcudiente] = useState<Acudiente>({
     id_acudiente: 0,
-    nombre_acudiente: formDataEstudiante.acudiente.nombre_acudiente || "",
-    apellido_acudiente: formDataEstudiante.acudiente.apellido_acudiente || "",
-    tipo_documento_acudiente:
-      formDataEstudiante.acudiente.tipo_documento_acudiente || "",
+    nombre_acudiente: formData.acudiente.nombre_acudiente || "",
+    apellido_acudiente: formData.acudiente.apellido_acudiente || "",
+    tipo_documento_acudiente: formData.acudiente.tipo_documento_acudiente || "",
     numero_documento_acudiente:
-      formDataEstudiante.acudiente.numero_documento_acudiente || "",
-    email_acudiente: formDataEstudiante.acudiente.email_acudiente || "",
-    celular_acudiente: formDataEstudiante.acudiente.celular_acudiente || "",
-  });
-
-  const [formDataMatricula, setFormDataMatricula] = useState<Matricula>({
-    id_inscripcion: 0,
-    modulo: {
-      id_modulo: 0,
-      id_categoria: {
-        id_categoria: 0,
-        nombre: "",
-        estado: false,
-      },
-      nombre_modulo: "",
-      descripcion_modulo: "",
-      intensidad_horaria: 0,
-      dirigido_a: null,
-      incluye: null,
-      id_area: {
-        id_area: "",
-        nombre_area: "",
-      },
-      id_oferta_categoria: [],
-      imagen_modulo: null,
-      estado: false,
-    },
-    estudiante: formDataEstudiante,
-    oferta_categoria: {
-      modulo: [
-        {
-          id_modulo: 0,
-          id_categoria: {
-            id_categoria: 0,
-            nombre: "",
-            estado: false,
-          },
-          nombre_modulo: "",
-          descripcion_modulo: "",
-          intensidad_horaria: 0,
-          dirigido_a: null,
-          incluye: null,
-          imagen_modulo: null,
-          estado: false,
-          id_area: {
-            id_area: "",
-            nombre_area: "",
-          },
-          id_oferta_categoria: [],
-        },
-      ],
-      id_oferta_categoria: 0,
-      id_oferta_academica: {
-        id_oferta_academica: 0,
-        fecha_inicio: "",
-        nombre: "",
-        estado: false,
-      },
-      precio_publico: "",
-      precio_privado: "",
-      precio_univalle: "",
-      precio_univalle_egresados: null,
-      fecha_finalizacion: "",
-      estado: false,
-      id_categoria: {
-        id_categoria: 0,
-        nombre: "",
-        estado: false,
-      },
-    },
-    estado: "",
-    grupo: "",
-    fecha_inscripcion: "",
-    tipo_vinculacion: "",
-    terminos: false,
-    observaciones: null,
-    recibo_pago: "",
-    certificado: "",
-    verificacion_recibo_pago: null,
-    verificacion_certificado: null,
-    audit_documento_recibo_pago: null,
-    audit_certificado: null,
+      formData.acudiente.numero_documento_acudiente || "",
+    email_acudiente: formData.acudiente.email_acudiente || "",
+    celular_acudiente: formData.acudiente.celular_acudiente || "",
   });
 
   const [success, setSuccess] = useState(false);
@@ -239,14 +118,11 @@ export default function DetallarMatricula() {
   const [documentoIdentidad, setDocumentoIdentidad] = useState<File | null>(
     null,
   );
-  const [reciboPago, setReciboPago] = useState<File | null>(null);
-  const [certificado, setCertificado] = useState<File | null>(null);
-
-  // const [image, setImage] = useState<string | null>(null);
+  const [image] = useState<string | null>(null);
+  // const [documento, setDocumento] = useState<string | null>(null);
 
   // Manejo de campo para otro género
 
-  // const [mostrarOtroGenero, setMostrarOtroGenero] = useState(false);
   const [mostrarTipoDiscapacidad, setTipoDiscapacidad] = useState(false);
 
   const [esDocente, setEsDocente] = useState(false);
@@ -271,70 +147,50 @@ export default function DetallarMatricula() {
       }
     };
 
-    const storedData = localStorage.getItem("matriculaSeleccionada");
-    if (storedData) {
-      const seleccionado = JSON.parse(storedData);
-      const id = seleccionado.id || seleccionado.id_inscripcion;
-      if (id) {
-        const userString = localStorage.getItem("user");
-        let token = "";
-        if (userString) {
-          const user = JSON.parse(userString);
-          token = user.token;
-        }
-        axios
-          .get(`${API_BASE_URL}/matricula/mat/${id}/`, {
-            headers: {
-              Authorization: `Token ${token}`,
-            },
-          })
-          .then((res) => {
-            setEstudiante(res.data.estudiante);
-            setDepartamentoSeleccionado(
-              res.data.estudiante.departamento_residencia || "",
-            );
-            setFormDataMatricula({
-              ...formDataMatricula,
-              ...res.data,
-            });
-
-            console.log(res.data);
-
-            setLoading(false); // <-- termina la carga
-            // En tu useEffect después de obtener el estudiante
-            setFormDataEstudiante({
-              ...formDataEstudiante,
-              ...res.data.estudiante,
-            });
-          })
-
-          .catch(() => setLoading(false)); // <-- termina la carga en error
-      } else {
-        setLoading(false); // <-- termina la carga si no hay id
+    if (id_estudiante) {
+      const userString = localStorage.getItem("user");
+      let token = "";
+      if (userString) {
+        const user = JSON.parse(userString);
+        token = user.token;
       }
+      axios
+        .get(`${API_BASE_URL}/estudiante/est/${id_estudiante}/`, {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        })
+        .then((res) => {
+          setDepartamentoSeleccionado(res.data.departamento_residencia || "");
+          setLoading(false); // <-- termina la carga
+          // En tu useEffect después de obtener el estudiante
+          setFormData({
+            ...formData,
+            ...res.data,
+          });
+        })
+        .catch(() => setLoading(false)); // <-- termina la carga en error
     } else {
       setLoading(false); // <-- termina la carga si no hay datos
     }
     fetchDepartamentos();
   }, []);
 
-  // Actualizar datos del acudiente cuando cambian los datos del estudiante
   useEffect(() => {
-    if (formDataEstudiante.acudiente) {
+    if (formData.acudiente) {
       setFormDataAcudiente({
-        id_acudiente: formDataEstudiante.acudiente.id_acudiente || 0,
-        nombre_acudiente: formDataEstudiante.acudiente.nombre_acudiente || "",
-        apellido_acudiente:
-          formDataEstudiante.acudiente.apellido_acudiente || "",
+        id_acudiente: formData.acudiente.id_acudiente || 0,
+        nombre_acudiente: formData.acudiente.nombre_acudiente || "",
+        apellido_acudiente: formData.acudiente.apellido_acudiente || "",
         tipo_documento_acudiente:
-          formDataEstudiante.acudiente.tipo_documento_acudiente || "",
+          formData.acudiente.tipo_documento_acudiente || "",
         numero_documento_acudiente:
-          formDataEstudiante.acudiente.numero_documento_acudiente || "",
-        celular_acudiente: formDataEstudiante.acudiente.celular_acudiente || "",
-        email_acudiente: formDataEstudiante.acudiente.email_acudiente || "",
+          formData.acudiente.numero_documento_acudiente || "",
+        celular_acudiente: formData.acudiente.celular_acudiente || "",
+        email_acudiente: formData.acudiente.email_acudiente || "",
       });
     }
-  }, [formDataEstudiante.acudiente]);
+  }, [formData.acudiente]);
 
   // Obtener ciudades cuando cambia el departamento seleccionado en modo edición
   useEffect(() => {
@@ -367,70 +223,101 @@ export default function DetallarMatricula() {
     }
   }, [editable, departamentoSeleccionado, departamentos]);
 
-  function getToken() {
-    const userString = localStorage.getItem("user");
-    if (!userString) return "";
-    try {
-      const user = JSON.parse(userString);
-      return user.token || "";
-    } catch {
-      return "";
-    }
-  }
-
+  // Función para guardar los cambios
   const handleSave = async () => {
-    const token = getToken();
-
-    //Peticion para actualizar estudiante
-
     try {
       const formDataToSend = new FormData();
 
-      // Lista de campos que NO se deben enviar
+      // Lista de campos que NO se deben enviar automáticamente
       const camposExcluidos = [
         "contrasena",
         "id_estudiante",
+        "is_active",
         "foto",
         "documento_identidad",
-
-        "is_active",
+        "acudiente", // Excluir acudiente del envío automático
       ];
 
-      for (const key in formDataEstudiante) {
-        if (camposExcluidos.includes(key)) continue; // Salta los campos excluidos
+      // Agrega los campos normales del estudiante
+      for (const key in formData) {
+        if (camposExcluidos.includes(key)) continue;
 
-        let value = formDataEstudiante[key as keyof Estudiante];
+        const typedKey = key as keyof typeof formData;
+        let value = formData[typedKey];
+
         if (typeof value === "boolean") {
           value = value ? "True" : "False";
         }
-        formDataToSend.append(key, value as string | Blob);
+
+        // Solo agregar si no es un objeto (como acudiente)
+        if (typeof value !== "object") {
+          formDataToSend.append(key, value as string);
+        }
       }
 
+      // Agregar campos del acudiente con prefijo
+      for (const key in formDataAcudiente) {
+        const typedKey = key as keyof typeof formDataAcudiente;
+        const value = formDataAcudiente[typedKey];
+
+        if (key !== "id_acudiente" && value !== undefined && value !== null) {
+          formDataToSend.append(`acudiente.${key}`, value.toString());
+        }
+      }
+
+      // Solo agrega archivos si el usuario seleccionó uno nuevo
       if (fotoPerfil) {
+        console.log("Adjuntando foto de perfil:", fotoPerfil);
         formDataToSend.append("foto", fotoPerfil);
       }
+
       if (documentoIdentidad) {
         formDataToSend.append("documento_identidad", documentoIdentidad);
       }
 
-      // Obtener token del localStorage
+      // Token
+      const userString = localStorage.getItem("user");
+      let token = "";
+      if (userString) {
+        const user = JSON.parse(userString);
+        token = user.token;
+      }
 
+      // Debug - mostrar qué se está enviando
+      console.log("=== Datos que se envían ===");
       for (const pair of formDataToSend.entries()) {
         console.log(`${pair[0]}:`, pair[1]);
       }
+
       const response = await axios.patch(
-        `${API_BASE_URL}/estudiante/est/${formDataEstudiante.id_estudiante}/`,
+        `${API_BASE_URL}/estudiante/est/${formData.id_estudiante}/`,
         formDataToSend,
         {
           headers: {
-            "Content-Type": "multipart/form-data",
             Authorization: `Token ${token}`,
+            "Content-Type": "multipart/form-data", // Asegurar el content-type correcto
           },
         },
       );
 
       if (response.status === 200) {
         alert("Actualización exitosa");
+        setEditable(false);
+
+        // Actualizar el estado local con la respuesta del servidor
+        setFormData((prevData) => ({
+          ...prevData,
+          ...response.data,
+          // Mantener archivos existentes si no se enviaron nuevos
+          foto: fotoPerfil ? response.data.foto : prevData.foto,
+          documento_identidad: documentoIdentidad
+            ? response.data.documento_identidad
+            : prevData.documento_identidad,
+        }));
+
+        // Limpiar archivos seleccionados
+        setFotoPerfil(null);
+        setDocumentoIdentidad(null);
       } else {
         alert("Error al actualizar");
       }
@@ -438,93 +325,31 @@ export default function DetallarMatricula() {
       console.error("Error de conexión:", error);
       alert("Hubo un error al actualizar el estudiante.");
     }
-
-    //Peticion para actualizar la matricula
-    try {
-      const formDataMatriculaToSend = new FormData();
-
-      if (reciboPago) {
-        formDataMatriculaToSend.append("recibo_pago", reciboPago);
-      }
-      if (certificado) {
-        formDataMatriculaToSend.append("certificado", certificado);
-      }
-      await axios.patch(
-        `${API_BASE_URL}/matricula/mat/${formDataMatricula.id_inscripcion}/`,
-        formDataMatriculaToSend,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Token ${token}`,
-          },
-        },
-      );
-      alert("Observaciones actualizadas correctamente.");
-    } catch (error) {
-      console.error("Error al actualizar observaciones:", error);
-      alert("No se pudo actualizar las observaciones.");
-    }
   };
 
-  // Función para eliminar un inscrito
-  const handleDelete = async (id: number) => {
-    const confirmDelete = window.confirm(
-      "¿Estás seguro de que deseas eliminar este inscrito?",
-    );
-    if (!confirmDelete) return;
 
-    try {
-      await axios.delete(`${API_BASE_URL}/estudiante/est/${id}/`, {
-        headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
-        },
-      });
-
-      setSuccess(true);
-      router.push("/admin/inscripciones/verInscripciones");
-    } catch (error) {
-      console.error("Error al eliminar el inscrito:", error);
-      alert(
-        "Hubo un error al eliminar el inscrito. Por favor, inténtalo de nuevo.",
-      );
-    }
-  };
-
-  // Estados para las verificaciones
   const [estadoInformacion, setEstadoInformacion] = useState<boolean | null>(
-    formDataEstudiante.verificacion_informacion,
+    formData.verificacion_informacion,
   );
   const [estadoFotoPerfil, setEstadoFotoPerfil] = useState<boolean | null>(
-    formDataEstudiante.verificacion_foto,
+    formData.verificacion_foto,
   );
   const [estadoDocumentoIdentidad, setEstadoDocumentoIdentidad] = useState<
     boolean | null
-  >(formDataEstudiante.verificacion_documento_identidad);
-
-  const [estadoReciboPago, setEstadoReciboPago] = useState<boolean | null>(
-    formDataMatricula.verificacion_recibo_pago,
-  );
-  const [estadoCertificado, setEstadoCertificado] = useState<boolean | null>(
-    formDataMatricula.verificacion_certificado,
-  );
+  >(formData.verificacion_documento_identidad);
 
   useEffect(() => {
-    setEstadoInformacion(formDataEstudiante.verificacion_informacion);
-    setEstadoFotoPerfil(formDataEstudiante.verificacion_foto);
-    setEstadoDocumentoIdentidad(
-      formDataEstudiante.verificacion_documento_identidad,
-    );
-    setEstadoReciboPago(formDataMatricula.verificacion_recibo_pago);
-    setEstadoCertificado(formDataMatricula.verificacion_certificado);
-  }, [formDataEstudiante]);
+    setEstadoInformacion(formData.verificacion_informacion);
+    setEstadoFotoPerfil(formData.verificacion_foto);
+    setEstadoDocumentoIdentidad(formData.verificacion_documento_identidad);
+  }, [formData]);
 
-  // Manejadores para los cambios en los estados de verificación
-
+  // Handler para el cambio
   const handleEstadoInformacion = async (
     event: React.MouseEvent<HTMLElement>,
     newEstado: true | false | null,
   ) => {
-    if (newEstado !== null && formDataEstudiante.id_estudiante) {
+    if (newEstado !== null && formData.id_estudiante) {
       try {
         const userString = localStorage.getItem("user");
         let token = "";
@@ -533,7 +358,7 @@ export default function DetallarMatricula() {
           token = user.token;
         }
         await axios.patch(
-          `${API_BASE_URL}/estudiante/est/${formDataEstudiante.id_estudiante}/`,
+          `${API_BASE_URL}/estudiante/est/${formData.id_estudiante}/`,
           { verificacion_informacion: newEstado },
           {
             headers: {
@@ -551,12 +376,11 @@ export default function DetallarMatricula() {
       }
     }
   };
-
   const handleEstadoFotoPerfil = async (
     event: React.MouseEvent<HTMLElement>,
     newEstado: true | false | null,
   ) => {
-    if (newEstado !== null && formDataEstudiante.id_estudiante) {
+    if (newEstado !== null && formData.id_estudiante) {
       try {
         const userString = localStorage.getItem("user");
         let token = "";
@@ -565,7 +389,7 @@ export default function DetallarMatricula() {
           token = user.token;
         }
         await axios.patch(
-          `${API_BASE_URL}/estudiante/est/${formDataEstudiante.id_estudiante}/`,
+          `${API_BASE_URL}/estudiante/est/${formData.id_estudiante}/`,
           { verificacion_foto: newEstado },
           {
             headers: {
@@ -584,7 +408,7 @@ export default function DetallarMatricula() {
     event: React.MouseEvent<HTMLElement>,
     newEstado: true | false | null,
   ) => {
-    if (newEstado !== null && formDataEstudiante.id_estudiante) {
+    if (newEstado !== null && formData.id_estudiante) {
       try {
         const userString = localStorage.getItem("user");
         let token = "";
@@ -593,7 +417,7 @@ export default function DetallarMatricula() {
           token = user.token;
         }
         await axios.patch(
-          `${API_BASE_URL}/estudiante/est/${formDataEstudiante.id_estudiante}/`,
+          `${API_BASE_URL}/estudiante/est/${formData.id_estudiante}/`,
           { verificacion_documento_identidad: newEstado },
           {
             headers: {
@@ -604,68 +428,6 @@ export default function DetallarMatricula() {
         setEstadoDocumentoIdentidad(newEstado);
       } catch (error) {
         console.error("Error al actualizar verificación de documento:", error);
-      }
-    }
-  };
-
-  const handleEstadoReciboPago = async (
-    event: React.MouseEvent<HTMLElement>,
-    newEstado: true | false | null,
-  ) => {
-    if (newEstado !== null && formDataMatricula.id_inscripcion) {
-      try {
-        const userString = localStorage.getItem("user");
-        let token = "";
-        if (userString) {
-          const user = JSON.parse(userString);
-          token = user.token;
-        }
-        await axios.patch(
-          `${API_BASE_URL}/matricula/mat/${formDataMatricula.id_inscripcion}/`,
-          { verificacion_recibo_pago: newEstado },
-          {
-            headers: {
-              Authorization: `Token ${token}`,
-            },
-          },
-        );
-        setEstadoReciboPago(newEstado);
-      } catch (error) {
-        console.error(
-          "Error al actualizar verificación de recibo de pago:",
-          error,
-        );
-      }
-    }
-  };
-
-  const handleEstadoCertificado = async (
-    event: React.MouseEvent<HTMLElement>,
-    newEstado: true | false | null,
-  ) => {
-    if (newEstado !== null && formDataMatricula.id_inscripcion) {
-      try {
-        const userString = localStorage.getItem("user");
-        let token = "";
-        if (userString) {
-          const user = JSON.parse(userString);
-          token = user.token;
-        }
-        await axios.patch(
-          `${API_BASE_URL}/matricula/mat/${formDataMatricula.id_inscripcion}/`,
-          { verificacion_certificado: newEstado },
-          {
-            headers: {
-              Authorization: `Token ${token}`,
-            },
-          },
-        );
-        setEstadoCertificado(newEstado);
-      } catch (error) {
-        console.error(
-          "Error al actualizar verificación de certificado:",
-          error,
-        );
       }
     }
   };
@@ -681,7 +443,7 @@ export default function DetallarMatricula() {
     );
   }
 
-  if (!estudiante) {
+  if (!formData) {
     return (
       <Box className="mx-auto flex max-w-md flex-col items-center justify-center rounded-xl bg-white p-4 shadow">
         <Typography>No se encontró información del estudiante.</Typography>
@@ -691,12 +453,6 @@ export default function DetallarMatricula() {
 
   return (
     <div className="mx-auto my-4 w-11/12 content-center rounded-2xl bg-white p-5 text-center shadow-md">
-      {estudiante && (
-        <DetallarRegistro
-          id_estudiante={estudiante.id_estudiante}
-        ></DetallarRegistro>
-      )}
-
       <Snackbar
         open={success}
         autoHideDuration={4000}
@@ -718,7 +474,7 @@ export default function DetallarMatricula() {
         {/* Fotografía */}
         <div className="my-4 flex flex-col items-center justify-around">
           <Avatar
-            src={estudiante.foto || ""}
+            src={image ?? formData.foto ?? undefined}
             sx={{ width: 150, height: 150 }}
             alt="Foto del estudiante"
           />
@@ -738,11 +494,6 @@ export default function DetallarMatricula() {
                   const file = e.target.files?.[0];
                   if (file) {
                     setFotoPerfil(file);
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      // setImage(reader.result as string);
-                    };
-                    reader.readAsDataURL(file);
                   }
                 }}
               />
@@ -770,15 +521,13 @@ export default function DetallarMatricula() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Nombres"
-              value={formDataEstudiante.nombre}
+              value={formData.nombre}
               onChange={(e) =>
-                setFormDataEstudiante({
-                  ...formDataEstudiante,
-                  nombre: e.target.value,
-                })
+                setFormData({ ...formData, nombre: e.target.value })
               }
               InputProps={{ readOnly: !editable }}
             />
+
             <TextField
               className={
                 editable
@@ -786,15 +535,13 @@ export default function DetallarMatricula() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Apellidos"
-              value={formDataEstudiante.apellido}
+              value={formData.apellido}
               onChange={(e) =>
-                setFormDataEstudiante({
-                  ...formDataEstudiante,
-                  apellido: e.target.value,
-                })
+                setFormData({ ...formData, apellido: e.target.value })
               }
               InputProps={{ readOnly: !editable }}
             />
+
             {/* Campo Tipo de Documento */}
             <FormControl
               className={
@@ -810,12 +557,9 @@ export default function DetallarMatricula() {
                 label="tipo_documento"
                 required
                 inputProps={{ readOnly: !editable }}
-                value={formDataEstudiante.tipo_documento}
+                value={formData.tipo_documento}
                 onChange={(e: SelectChangeEvent<string>) =>
-                  setFormDataEstudiante({
-                    ...formDataEstudiante,
-                    tipo_documento: e.target.value,
-                  })
+                  setFormData({ ...formData, tipo_documento: e.target.value })
                 }
               >
                 <MenuItem value={"TI"}>Tarjeta de identidad</MenuItem>
@@ -826,6 +570,7 @@ export default function DetallarMatricula() {
                 </MenuItem>
               </Select>
             </FormControl>
+
             <TextField
               className={
                 editable
@@ -833,15 +578,13 @@ export default function DetallarMatricula() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Número de identificación"
-              value={formDataEstudiante.numero_documento}
+              value={formData.numero_documento}
               InputProps={{ readOnly: !editable }}
               onChange={(e) =>
-                setFormDataEstudiante({
-                  ...formDataEstudiante,
-                  numero_documento: e.target.value,
-                })
+                setFormData({ ...formData, numero_documento: e.target.value })
               }
             />
+
             {/* Campo Genero */}
             <Autocomplete
               className={
@@ -851,13 +594,10 @@ export default function DetallarMatricula() {
               }
               freeSolo
               options={generos}
-              value={formDataEstudiante.genero}
+              value={formData.genero}
               disabled={!editable}
               onChange={(_, newValue) =>
-                setFormDataEstudiante({
-                  ...formDataEstudiante,
-                  genero: newValue || "",
-                })
+                setFormData({ ...formData, genero: newValue || "" })
               }
               renderInput={(params) => (
                 <TextField
@@ -877,7 +617,7 @@ export default function DetallarMatricula() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Fecha de nacimiento"
-              value={formDataEstudiante.fecha_nacimiento || ""}
+              value={formData.fecha_nacimiento || ""}
               InputProps={{ readOnly: !editable }}
             />
           </div>
@@ -896,12 +636,9 @@ export default function DetallarMatricula() {
               }
               label="Correo Electrónico"
               InputProps={{ readOnly: !editable }}
-              value={formDataEstudiante.email}
+              value={formData.email}
               onChange={(e) =>
-                setFormDataEstudiante({
-                  ...formDataEstudiante,
-                  email: e.target.value,
-                })
+                setFormData({ ...formData, email: e.target.value })
               }
             />
             <TextField
@@ -912,12 +649,9 @@ export default function DetallarMatricula() {
               }
               label="Celular"
               InputProps={{ readOnly: !editable }}
-              value={formDataEstudiante.celular}
+              value={formData.celular}
               onChange={(e) =>
-                setFormDataEstudiante({
-                  ...formDataEstudiante,
-                  celular: e.target.value,
-                })
+                setFormData({ ...formData, celular: e.target.value })
               }
             />
             <TextField
@@ -927,12 +661,9 @@ export default function DetallarMatricula() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Teléfono fijo"
-              value={formDataEstudiante.telefono_fijo}
+              value={formData.telefono_fijo}
               onChange={(e) =>
-                setFormDataEstudiante({
-                  ...formDataEstudiante,
-                  telefono_fijo: e.target.value,
-                })
+                setFormData({ ...formData, telefono_fijo: e.target.value })
               }
               InputProps={{ readOnly: !editable }}
             />
@@ -946,10 +677,10 @@ export default function DetallarMatricula() {
                     labelId="departamento_residencia"
                     id="departamento_residencia"
                     label="Departamento"
-                    value={formDataEstudiante.departamento_residencia}
+                    value={formData.departamento_residencia}
                     onChange={(e: SelectChangeEvent<string>) => {
-                      setFormDataEstudiante({
-                        ...formDataEstudiante,
+                      setFormData({
+                        ...formData,
                         departamento_residencia: e.target.value,
                         ciudad_residencia: "",
                       });
@@ -970,10 +701,10 @@ export default function DetallarMatricula() {
                   <InputLabel id="ciudad">Ciudad</InputLabel>
                   <Select
                     labelId="ciudad"
-                    value={formDataEstudiante.ciudad_residencia}
+                    value={formData.ciudad_residencia}
                     onChange={(e: SelectChangeEvent<string>) =>
-                      setFormDataEstudiante({
-                        ...formDataEstudiante,
+                      setFormData({
+                        ...formData,
                         ciudad_residencia: e.target.value,
                       })
                     }
@@ -998,14 +729,14 @@ export default function DetallarMatricula() {
                 <TextField
                   className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
                   label="Departamento"
-                  value={formDataEstudiante.departamento_residencia || ""}
+                  value={formData.departamento_residencia || ""}
                   InputProps={{ readOnly: true }}
                 />
 
                 <TextField
                   className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
                   label="Ciudad"
-                  value={formDataEstudiante.ciudad_residencia || ""}
+                  value={formData.ciudad_residencia || ""}
                   InputProps={{ readOnly: true }}
                 />
               </>
@@ -1017,10 +748,10 @@ export default function DetallarMatricula() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Comuna"
-              value={formDataEstudiante.comuna_residencia}
+              value={formData.comuna_residencia}
               onChange={(e) =>
-                setFormDataEstudiante({
-                  ...formDataEstudiante,
+                setFormData({
+                  ...formData,
                   comuna_residencia: e.target.value,
                 })
               }
@@ -1033,7 +764,7 @@ export default function DetallarMatricula() {
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Dirección"
-              value={formDataEstudiante.direccion_residencia || ""}
+              value={formData.direccion_residencia || ""}
               InputProps={{ readOnly: !editable }}
             />
           </div>
@@ -1053,12 +784,9 @@ export default function DetallarMatricula() {
               }
               freeSolo
               options={epss}
-              value={formDataEstudiante.eps}
+              value={formData.eps}
               onChange={(_, newValue) =>
-                setFormDataEstudiante({
-                  ...formDataEstudiante,
-                  eps: newValue || "",
-                })
+                setFormData({ ...formData, eps: newValue || "" })
               }
               disabled={!editable}
               renderInput={(params) => (
@@ -1087,19 +815,19 @@ export default function DetallarMatricula() {
                 id="discapacidad"
                 name="discapacidad"
                 label="¿Tiene alguna discapacidad?"
-                value={formDataEstudiante.discapacidad.toString()}
+                value={formData.discapacidad.toString()}
                 onChange={
                   editable
                     ? (e) => {
                         const value = e.target.value === "true";
-                        setFormDataEstudiante({
-                          ...formDataEstudiante,
+                        setFormData({
+                          ...formData,
                           discapacidad: value,
                           tipo_discapacidad: value
-                            ? formDataEstudiante.tipo_discapacidad
+                            ? formData.tipo_discapacidad
                             : "",
                           descripcion_discapacidad: value
-                            ? formDataEstudiante.descripcion_discapacidad
+                            ? formData.descripcion_discapacidad
                             : "",
                         });
                         setTipoDiscapacidad(value);
@@ -1130,12 +858,12 @@ export default function DetallarMatricula() {
                     id="tipo_discapacidad"
                     label="Tipo de discapacidad"
                     required
-                    value={formDataEstudiante.tipo_discapacidad}
+                    value={formData.tipo_discapacidad}
                     onChange={
                       editable
                         ? (e) =>
-                            setFormDataEstudiante({
-                              ...formDataEstudiante,
+                            setFormData({
+                              ...formData,
                               tipo_discapacidad: e.target.value,
                             })
                         : undefined
@@ -1163,12 +891,12 @@ export default function DetallarMatricula() {
                   type="text"
                   fullWidth
                   required
-                  value={formDataEstudiante.descripcion_discapacidad}
+                  value={formData.descripcion_discapacidad}
                   onChange={
                     editable
                       ? (e) =>
-                          setFormDataEstudiante({
-                            ...formDataEstudiante,
+                          setFormData({
+                            ...formData,
                             descripcion_discapacidad: e.target.value,
                           })
                       : undefined
@@ -1184,7 +912,7 @@ export default function DetallarMatricula() {
             Información Académica
           </h2>
           <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-            {/* Campo de grado escolar */}
+            {/* Campo Grado */}
             <FormControl
               className={
                 editable
@@ -1198,19 +926,16 @@ export default function DetallarMatricula() {
                 id="grado"
                 label="Grado"
                 required
-                value={formDataEstudiante.grado || ""}
+                inputProps={{ readOnly: !editable }}
+                value={formData.grado || ""}
                 onChange={
                   editable
                     ? (e) => {
-                        setFormDataEstudiante({
-                          ...formDataEstudiante,
-                          grado: e.target.value,
-                        });
+                        setFormData({ ...formData, grado: e.target.value });
                         setEsDocente(e.target.value === "Docente");
                       }
                     : undefined
                 }
-                disabled={!editable}
               >
                 {grados.map((grado) => (
                   <MenuItem key={grado} value={grado}>
@@ -1220,7 +945,7 @@ export default function DetallarMatricula() {
               </Select>
             </FormControl>
 
-            {/* Mostrar campos adicionales para docentes */}
+            {/* Mostrar campos según si es docente o no */}
             {!esDocente ? (
               <>
                 <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
@@ -1232,12 +957,9 @@ export default function DetallarMatricula() {
                         : "inputs-textfield-readonly w-full sm:w-1/4"
                     }
                     label="Colegio"
-                    value={formDataEstudiante.colegio}
+                    value={formData.colegio}
                     onChange={(e) =>
-                      setFormDataEstudiante({
-                        ...formDataEstudiante,
-                        colegio: e.target.value,
-                      })
+                      setFormData({ ...formData, colegio: e.target.value })
                     }
                     InputProps={{ readOnly: !editable }}
                   />
@@ -1258,12 +980,9 @@ export default function DetallarMatricula() {
                       label="Estamento"
                       required
                       inputProps={{ readOnly: !editable }}
-                      value={formDataEstudiante.estamento}
+                      value={formData.estamento}
                       onChange={(e) =>
-                        setFormDataEstudiante({
-                          ...formDataEstudiante,
-                          estamento: e.target.value,
-                        })
+                        setFormData({ ...formData, estamento: e.target.value })
                       }
                     >
                       <MenuItem value={"PÚBLICO"}>PÚBLICO</MenuItem>
@@ -1286,10 +1005,10 @@ export default function DetallarMatricula() {
                       name="grado_escolaridad"
                       label="Grado de escolaridad"
                       required
-                      value={formDataEstudiante.grado_escolaridad || ""}
+                      value={formData.grado_escolaridad || ""}
                       onChange={(e) =>
-                        setFormDataEstudiante({
-                          ...formDataEstudiante,
+                        setFormData({
+                          ...formData,
                           grado_escolaridad: e.target.value,
                         })
                       }
@@ -1315,10 +1034,10 @@ export default function DetallarMatricula() {
                       name="area_ensenanza"
                       label="Área de enseñanza"
                       required
-                      value={formDataEstudiante.area_desempeño || ""}
+                      value={formData.area_desempeño || ""}
                       onChange={(e) =>
-                        setFormDataEstudiante({
-                          ...formDataEstudiante,
+                        setFormData({
+                          ...formData,
                           area_desempeño: e.target.value,
                         })
                       }
@@ -1346,6 +1065,8 @@ export default function DetallarMatricula() {
               </>
             )}
           </div>
+
+          {/* Mostrar información del acudiente si no es docente */}
 
           {!esDocente ? (
             <>
@@ -1501,13 +1222,15 @@ export default function DetallarMatricula() {
             </>
           ) : null}
         </div>
+      </div>
 
-        {/* Documento de identidad */}
-        <div className="mt-4 flex flex-col items-center">
-          {estudiante.documento_identidad && (
+      {/* Documentos */}
+      <div className="mt-4 flex flex-col items-center">
+        {formData.documento_identidad && (
+          <div className="flex flex-col items-center">
             <Button
               variant="outlined"
-              href={estudiante.documento_identidad}
+              href={formData.documento_identidad}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-2 rounded-2xl border-primary text-primary"
@@ -1515,44 +1238,46 @@ export default function DetallarMatricula() {
             >
               Ver documento de identidad
             </Button>
-          )}
-          {editable && (
-            <div className="my-4 flex flex-col items-center gap-3">
-              <InputLabel id="documento_identidad">
-                Documento de identidad
-              </InputLabel>
-              <Button
-                variant="contained"
-                component="label"
-                className="my-2 rounded-2xl bg-primary"
-              >
-                {documentoIdentidad ? "Cambiar Documento" : "Elegir Documento"}
-                <input
-                  name="documento_identidad"
-                  type="file"
-                  accept=".pdf"
-                  hidden
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setDocumentoIdentidad(file);
-                    }
-                  }}
-                />
-              </Button>
-              {documentoIdentidad && (
-                <Typography variant="caption" color="textSecondary">
-                  {documentoIdentidad.name}
-                </Typography>
-              )}
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Verificaciones de informacion personal */}
+        {editable && (
+          <div className="my-4 flex flex-col items-center gap-3">
+            <InputLabel id="documento_identidad">
+              Documento de identidad
+            </InputLabel>
+            <Button
+              variant="contained"
+              component="label"
+              className="my-2 rounded-2xl bg-primary"
+            >
+              {documentoIdentidad ? "Cambiar Documento" : "Elegir Documento"}
+              <input
+                name="documento_identidad"
+                type="file"
+                accept=".pdf"
+                hidden
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setDocumentoIdentidad(file);
+                  }
+                }}
+              />
+            </Button>
+            {documentoIdentidad && (
+              <Typography variant="caption" color="textSecondary">
+                {documentoIdentidad.name}
+              </Typography>
+            )}
+          </div>
+        )}
+
+        {/* Verificaciones */}
         <h2 className="text-md my-4 text-center font-semibold text-primary">
           Verificaciones
         </h2>
+
         <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
           <div>
             <Typography variant="body1" color="textSecondary">
@@ -1576,12 +1301,12 @@ export default function DetallarMatricula() {
             <div>
               <p className="text-xs">
                 <span className="font-bold">Usuario: </span>
-                {formDataEstudiante.audit_informacion?.usuario}
+                {formData.audit_informacion?.usuario}
                 <br />
                 <span className="font-bold">Fecha: </span>
-                {formDataEstudiante.audit_informacion?.timestamp
+                {formData.audit_informacion?.timestamp
                   ? new Date(
-                      formDataEstudiante.audit_informacion.timestamp,
+                      formData.audit_informacion.timestamp,
                     ).toLocaleString("es-CO", {
                       day: "2-digit",
                       month: "2-digit",
@@ -1615,12 +1340,12 @@ export default function DetallarMatricula() {
             <div>
               <p className="text-xs">
                 <span className="font-bold">Usuario:</span>{" "}
-                {formDataEstudiante.audit_documento_identidad?.usuario}
+                {formData.audit_documento_identidad?.usuario}
                 <br />
                 <span className="font-bold">Fecha: </span>
-                {formDataEstudiante.audit_documento_identidad?.timestamp
+                {formData.audit_documento_identidad?.timestamp
                   ? new Date(
-                      formDataEstudiante.audit_documento_identidad.timestamp,
+                      formData.audit_documento_identidad.timestamp,
                     ).toLocaleString("es-CO", {
                       day: "2-digit",
                       month: "2-digit",
@@ -1653,274 +1378,42 @@ export default function DetallarMatricula() {
             <div>
               <p className="text-xs">
                 <span className="font-bold">Usuario:</span>{" "}
-                {formDataEstudiante.audit_foto?.usuario}
+                {formData.audit_foto?.usuario}
                 <br />
                 <span className="font-bold">Fecha: </span>
-                {formDataEstudiante.audit_foto?.timestamp
-                  ? new Date(
-                      formDataEstudiante.audit_foto.timestamp,
-                    ).toLocaleString("es-CO", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
+                {formData.audit_foto?.timestamp
+                  ? new Date(formData.audit_foto.timestamp).toLocaleString(
+                      "es-CO",
+                      {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      },
+                    )
                   : ""}
               </p>
             </div>
           </div>
         </div>
-      </div>
 
-      <h2 className="text-md my-4 text-center font-semibold text-primary">
-        Información de Matricula
-      </h2>
-      {/* Información de Matricula */}
-      <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-        <TextField
-          className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-          label="Módulo inscrito"
-          value={formDataMatricula.modulo.nombre_modulo || ""}
-          InputProps={{ readOnly: true }}
-        />
-        <TextField
-          className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-          label="Periodo"
-          value={
-            formDataMatricula.oferta_categoria.id_oferta_academica.nombre || ""
-          }
-          InputProps={{ readOnly: true }}
-        />
-
-        <TextField
-          className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-          label="Tipo de vinculación"
-          value={formDataMatricula.tipo_vinculacion || ""}
-          InputProps={{ readOnly: true }}
-        />
-      </div>
-
-      {/* Documentos de Matricula */}
-      <div className="mt-3 flex w-full flex-wrap justify-around gap-4 text-gray-600">
-        {formDataMatricula.recibo_pago && (
+        <div className="mt-4 flex w-full flex-wrap justify-around gap-4">
           <Button
-            variant="outlined"
-            color="primary"
-            href={formDataMatricula.recibo_pago}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 rounded-2xl border-primary text-primary"
-            startIcon={<PictureAsPdfIcon />}
+            variant="contained"
+            className="text-md mt-4 w-1/3 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
+            onClick={() => {
+              if (editable) {
+                handleSave();
+              } else {
+                setEditable(true);
+              }
+            }}
           >
-            Ver recibo de pago
+            {editable ? "Guardar" : "Editar"}
           </Button>
-        )}
 
-        {editable && (
-          <div className="my-4 flex flex-col items-center gap-3">
-            <InputLabel id="recibo_pago">Recibo de pago</InputLabel>
-            <Button
-              variant="contained"
-              component="label"
-              className="my-2 rounded-2xl bg-primary"
-            >
-              {reciboPago ? "Cambiar Recibo de Pago" : "Elegir Recibo de Pago"}
-              <input
-                name="recibo_pago"
-                type="file"
-                accept=".pdf"
-                hidden
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setReciboPago(file);
-                  }
-                }}
-              />
-            </Button>
-            {reciboPago && (
-              <Typography variant="caption" color="textSecondary">
-                {reciboPago.name}
-              </Typography>
-            )}
-          </div>
-        )}
-
-        {formDataMatricula.certificado && (
-          <Button
-            variant="outlined"
-            color="primary"
-            href={formDataMatricula.certificado}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 rounded-2xl border-primary text-primary"
-            startIcon={<PictureAsPdfIcon />}
-          >
-            Ver certificado
-          </Button>
-        )}
-
-        {editable && (
-          <div className="my-4 flex flex-col items-center gap-3">
-            <InputLabel id="certificado">Certificado</InputLabel>
-            <Button
-              variant="contained"
-              component="label"
-              className="my-2 rounded-2xl bg-primary"
-            >
-              {certificado ? "Cambiar Certificado" : "Elegir Certificado"}
-              <input
-                name="certificado"
-                type="file"
-                accept=".pdf"
-                hidden
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setCertificado(file);
-                  }
-                }}
-              />
-            </Button>
-            {certificado && (
-              <Typography variant="caption" color="textSecondary">
-                {certificado.name}
-              </Typography>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Verificaciones de matricula */}
-      <h2 className="text-md my-4 text-center font-semibold text-primary">
-        Verificaciones de Matrícula
-      </h2>
-
-      <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-        <div>
-          <Typography variant="body1" color="textSecondary">
-            Recibo de pago verificado
-          </Typography>
-          <ToggleButtonGroup
-            value={estadoReciboPago}
-            exclusive
-            onChange={handleEstadoReciboPago}
-            aria-label="Estado de verificación"
-            sx={{ marginY: 2 }}
-          >
-            <ToggleButton value={true} aria-label="Aprobado" color="success">
-              <CheckCircleIcon></CheckCircleIcon>
-            </ToggleButton>
-            <ToggleButton value={false} aria-label="Rechazado" color="error">
-              <CancelIcon></CancelIcon>
-            </ToggleButton>
-          </ToggleButtonGroup>
-          <div>
-            <p className="text-xs">
-              <span className="font-bold">Usuario: </span>
-              {formDataMatricula.audit_documento_recibo_pago?.usuario}
-              <br />
-              <span className="font-bold">Fecha: </span>
-              {formDataMatricula.audit_documento_recibo_pago?.timestamp
-                ? new Date(
-                    formDataMatricula.audit_documento_recibo_pago.timestamp,
-                  ).toLocaleString("es-CO", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                : ""}
-            </p>
-          </div>
         </div>
-        <div>
-          <Typography variant="body1" color="textSecondary">
-            Certificado verificado
-          </Typography>
-          <ToggleButtonGroup
-            value={estadoCertificado}
-            exclusive
-            onChange={handleEstadoCertificado}
-            aria-label="Estado de verificación"
-            sx={{ marginY: 2 }}
-          >
-            <ToggleButton value={true} aria-label="Aprobado" color="success">
-              <CheckCircleIcon></CheckCircleIcon>
-            </ToggleButton>
-            <ToggleButton value={false} aria-label="Rechazado" color="error">
-              <CancelIcon></CancelIcon>
-            </ToggleButton>
-          </ToggleButtonGroup>
-          <div>
-            <p className="text-xs">
-              <span className="font-bold">Usuario: </span>
-              {formDataMatricula.audit_certificado?.usuario}
-              <br />
-              <span className="font-bold">Fecha: </span>
-              {formDataMatricula.audit_certificado?.timestamp
-                ? new Date(
-                    formDataMatricula.audit_certificado.timestamp,
-                  ).toLocaleString("es-CO", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                : ""}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <h2 className="text-md my-4 text-center font-semibold text-primary">
-        Observaciones
-      </h2>
-      <TextField
-        className={
-          editable
-            ? "inputs-textfield w-full"
-            : "inputs-textfield-readonly w-full"
-        }
-        value={formDataMatricula.observaciones || ""}
-        onChange={(e) =>
-          setFormDataMatricula({
-            ...formDataMatricula,
-            observaciones: e.target.value,
-          })
-        }
-        placeholder="Escriba las observaciones acerca de la matricula"
-        InputProps={{ readOnly: !editable }}
-        multiline
-        rows={4}
-      />
-      <div className="mt-4 flex w-full flex-wrap justify-around gap-4">
-        <Button
-          variant="contained"
-          className="text-md mt-4 w-1/3 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
-          onClick={() => {
-            if (editable) {
-              handleSave();
-            } else {
-              setEditable(true);
-            }
-          }}
-        >
-          {editable ? "Guardar" : "Editar"}
-        </Button>
-
-        <Button
-          variant="contained"
-          className="text-md mt-4 w-1/3 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
-          onClick={() => {
-            handleDelete(formDataEstudiante.id_estudiante);
-          }}
-        >
-          Eliminar
-        </Button>
       </div>
     </div>
   );
