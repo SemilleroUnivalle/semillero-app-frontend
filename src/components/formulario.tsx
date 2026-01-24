@@ -37,7 +37,7 @@ import {
   epss,
 } from "@/interfaces/interfaces";
 
-export default function DetallarRegistro({
+export default function FormularioDatos({
   id_estudiante,
 }: {
   id_estudiante: number;
@@ -126,6 +126,8 @@ export default function DetallarRegistro({
   const [mostrarTipoDiscapacidad, setTipoDiscapacidad] = useState(false);
 
   const [esDocente, setEsDocente] = useState(false);
+
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   // Obtener datos del estudiante y departamentos
   useEffect(() => {
@@ -452,7 +454,7 @@ export default function DetallarRegistro({
   }
 
   return (
-    <div className="mx-auto my-4 w-11/12 content-center rounded-2xl bg-white p-5 text-center shadow-md">
+    <div className="mx-auto py-3 w-full content-center rounded-2xl bg-white text-center shadow-md">
       <Snackbar
         open={success}
         autoHideDuration={4000}
@@ -1286,6 +1288,7 @@ export default function DetallarRegistro({
             <ToggleButtonGroup
               className="border-rounded rounded-xl"
               value={estadoInformacion}
+              disabled={user.tipo_usuario !== "administrador"}
               exclusive
               onChange={handleEstadoInformacion}
               aria-label="Estado de verificación"
@@ -1298,7 +1301,7 @@ export default function DetallarRegistro({
                 <CancelIcon></CancelIcon>
               </ToggleButton>
             </ToggleButtonGroup>
-            <div>
+            <div hidden={user.tipo_usuario !== "administrador"}>
               <p className="text-xs">
                 <span className="font-bold">Usuario: </span>
                 {formData.audit_informacion?.usuario}
@@ -1325,6 +1328,7 @@ export default function DetallarRegistro({
             </Typography>
             <ToggleButtonGroup
               value={estadoDocumentoIdentidad}
+              disabled={user.tipo_usuario !== "administrador"}
               exclusive
               onChange={handleEstadoDocumentoIdentidad}
               aria-label="Estado de verificación"
@@ -1337,7 +1341,7 @@ export default function DetallarRegistro({
                 <CancelIcon></CancelIcon>
               </ToggleButton>
             </ToggleButtonGroup>
-            <div>
+            <div hidden={user.tipo_usuario !== "administrador"}>
               <p className="text-xs">
                 <span className="font-bold">Usuario:</span>{" "}
                 {formData.audit_documento_identidad?.usuario}
@@ -1364,6 +1368,7 @@ export default function DetallarRegistro({
             <ToggleButtonGroup
               value={estadoFotoPerfil}
               exclusive
+              disabled={user.tipo_usuario !== "administrador"}
               onChange={handleEstadoFotoPerfil}
               aria-label="Estado de verificación"
               sx={{ marginY: 2 }}
@@ -1375,7 +1380,7 @@ export default function DetallarRegistro({
                 <CancelIcon></CancelIcon>
               </ToggleButton>
             </ToggleButtonGroup>
-            <div>
+            <div hidden={user.tipo_usuario !== "administrador"}>
               <p className="text-xs">
                 <span className="font-bold">Usuario:</span>{" "}
                 {formData.audit_foto?.usuario}
