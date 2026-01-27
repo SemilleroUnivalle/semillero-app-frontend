@@ -329,7 +329,6 @@ export default function FormularioDatos({
     }
   };
 
-
   const [estadoInformacion, setEstadoInformacion] = useState<boolean | null>(
     formData.verificacion_informacion,
   );
@@ -454,7 +453,7 @@ export default function FormularioDatos({
   }
 
   return (
-    <div className="mx-auto py-3 w-full content-center rounded-2xl bg-white text-center shadow-md">
+    <div className="rounded-2xlp-3 mx-auto w-full content-center text-center shadow-md">
       <Snackbar
         open={success}
         autoHideDuration={4000}
@@ -468,162 +467,170 @@ export default function FormularioDatos({
           Inscrito eliminado exitosamente.
         </Alert>
       </Snackbar>
-      <h2 className="mb-4 text-center font-semibold text-primary">
-        Detalle de Inscripción
-      </h2>
 
-      <div className="flex flex-col justify-around">
-        {/* Fotografía */}
-        <div className="my-4 flex flex-col items-center justify-around">
-          <Avatar
-            src={image ?? formData.foto ?? undefined}
-            sx={{ width: 150, height: 150 }}
-            alt="Foto del estudiante"
-          />
+      <div className="flex w-full flex-col rounded-2xl bg-white py-5 shadow-sm">
+        <h2 className="mb-4 text-center font-semibold text-primary">
+          INFORMACIÓN DEL ESTUDIANTE
+        </h2>
 
-          {editable && (
-            <Button
-              variant="contained"
-              component="label"
-              className="my-4 w-1/3 rounded-2xl bg-primary"
-            >
-              {fotoPerfil ? "Cambiar Imagen" : "Elegir Imagen"}
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setFotoPerfil(file);
-                  }
-                }}
-              />
-            </Button>
-          )}
-        </div>
-
-        {fotoPerfil && (
-          <Typography variant="caption" color="textSecondary">
-            {fotoPerfil.name}
-          </Typography>
-        )}
-
-        {/* Información personal */}
-        <div className="flex flex-col items-center justify-center">
-          <h2 className="text-md my-4 text-center font-semibold text-primary">
-            Información Personal
-          </h2>
-
-          <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-            <TextField
-              className={
-                editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-              }
-              label="Nombres"
-              value={formData.nombre}
-              onChange={(e) =>
-                setFormData({ ...formData, nombre: e.target.value })
-              }
-              InputProps={{ readOnly: !editable }}
+        <div className="flex w-full flex-row rounded-2xl bg-white">
+          {/*Contenedor de Fotografía */}
+          <div className="flex w-1/3 flex-col items-center justify-around">
+            <Avatar
+              src={image ?? formData.foto ?? undefined}
+              sx={{ width: 150, height: 150 }}
+              alt="Foto del estudiante"
             />
 
-            <TextField
-              className={
-                editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-              }
-              label="Apellidos"
-              value={formData.apellido}
-              onChange={(e) =>
-                setFormData({ ...formData, apellido: e.target.value })
-              }
-              InputProps={{ readOnly: !editable }}
-            />
-
-            {/* Campo Tipo de Documento */}
-            <FormControl
-              className={
-                editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-              }
-            >
-              <InputLabel id="tipo_documento">Tipo de documento</InputLabel>
-              <Select
-                labelId="tipo_documento"
-                id="tipo_documento"
-                label="tipo_documento"
-                required
-                inputProps={{ readOnly: !editable }}
-                value={formData.tipo_documento}
-                onChange={(e: SelectChangeEvent<string>) =>
-                  setFormData({ ...formData, tipo_documento: e.target.value })
-                }
+            {editable && (
+              <Button
+                variant="contained"
+                component="label"
+                className="my-4 w-1/3 rounded-2xl bg-primary"
               >
-                <MenuItem value={"TI"}>Tarjeta de identidad</MenuItem>
-                <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
-                <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
-                <MenuItem value={"PPT"}>
-                  Permiso de protección temporal
-                </MenuItem>
-              </Select>
-            </FormControl>
-
-            <TextField
-              className={
-                editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-              }
-              label="Número de identificación"
-              value={formData.numero_documento}
-              InputProps={{ readOnly: !editable }}
-              onChange={(e) =>
-                setFormData({ ...formData, numero_documento: e.target.value })
-              }
-            />
-
-            {/* Campo Genero */}
-            <Autocomplete
-              className={
-                editable
-                  ? "inputs-textfield w-full sm:w-1/4"
-                  : "inputs-textfield-readonly w-full sm:w-1/4"
-              }
-              freeSolo
-              options={generos}
-              value={formData.genero}
-              disabled={!editable}
-              onChange={(_, newValue) =>
-                setFormData({ ...formData, genero: newValue || "" })
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Género"
-                  required
-                  variant="outlined"
-                  fullWidth
+                {fotoPerfil ? "Cambiar Imagen" : "Elegir Imagen"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setFotoPerfil(file);
+                    }
+                  }}
                 />
-              )}
-            />
-
-            <TextField
-              className={
-                editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-              }
-              label="Fecha de nacimiento"
-              value={formData.fecha_nacimiento || ""}
-              InputProps={{ readOnly: !editable }}
-            />
+              </Button>
+            )}
           </div>
 
+          {fotoPerfil && (
+            <Typography variant="caption" color="textSecondary">
+              {fotoPerfil.name}
+            </Typography>
+          )}
+
+          {/* Contenedor de información personal */}
+          <div className="flex w-2/3 flex-col items-center justify-center">
+            <h2 className="text-md my-4 text-center font-semibold text-primary">
+              Información Personal
+            </h2>
+
+            <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
+              <TextField
+                className={
+                  editable
+                    ? "inputs-textfield flex w-full flex-col sm:w-1/4"
+                    : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+                }
+                label="Nombres"
+                value={formData.nombre}
+                onChange={(e) =>
+                  setFormData({ ...formData, nombre: e.target.value })
+                }
+                InputProps={{ readOnly: !editable }}
+              />
+
+              <TextField
+                className={
+                  editable
+                    ? "inputs-textfield flex w-full flex-col sm:w-1/4"
+                    : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+                }
+                label="Apellidos"
+                value={formData.apellido}
+                onChange={(e) =>
+                  setFormData({ ...formData, apellido: e.target.value })
+                }
+                InputProps={{ readOnly: !editable }}
+              />
+
+              {/* Campo Tipo de Documento */}
+              <FormControl
+                className={
+                  editable
+                    ? "inputs-textfield flex w-full flex-col sm:w-1/4"
+                    : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+                }
+              >
+                <InputLabel id="tipo_documento">Tipo de documento</InputLabel>
+                <Select
+                  labelId="tipo_documento"
+                  id="tipo_documento"
+                  label="tipo_documento"
+                  required
+                  inputProps={{ readOnly: !editable }}
+                  value={formData.tipo_documento}
+                  onChange={(e: SelectChangeEvent<string>) =>
+                    setFormData({ ...formData, tipo_documento: e.target.value })
+                  }
+                >
+                  <MenuItem value={"TI"}>Tarjeta de identidad</MenuItem>
+                  <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
+                  <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
+                  <MenuItem value={"PPT"}>
+                    Permiso de protección temporal
+                  </MenuItem>
+                </Select>
+              </FormControl>
+
+              <TextField
+                className={
+                  editable
+                    ? "inputs-textfield flex w-full flex-col sm:w-1/4"
+                    : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+                }
+                label="Número de identificación"
+                value={formData.numero_documento}
+                InputProps={{ readOnly: !editable }}
+                onChange={(e) =>
+                  setFormData({ ...formData, numero_documento: e.target.value })
+                }
+              />
+
+              {/* Campo Genero */}
+              <Autocomplete
+                className={
+                  editable
+                    ? "inputs-textfield w-full sm:w-1/4"
+                    : "inputs-textfield-readonly w-full sm:w-1/4"
+                }
+                freeSolo
+                options={generos}
+                value={formData.genero}
+                disabled={!editable}
+                onChange={(_, newValue) =>
+                  setFormData({ ...formData, genero: newValue || "" })
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Género"
+                    required
+                    variant="outlined"
+                    fullWidth
+                  />
+                )}
+              />
+
+              <TextField
+                className={
+                  editable
+                    ? "inputs-textfield flex w-full flex-col sm:w-1/4"
+                    : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+                }
+                label="Fecha de nacimiento"
+                value={formData.fecha_nacimiento || ""}
+                InputProps={{ readOnly: !editable }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col justify-around">
+        {/* Información personal */}
+        <div className="flex flex-col items-center justify-center">
           {/* Información de Contacto y Ubicación */}
           <h2 className="text-md my-4 text-center font-semibold text-primary">
             Información de Contacto y Ubicación
@@ -1417,7 +1424,6 @@ export default function FormularioDatos({
           >
             {editable ? "Guardar" : "Editar"}
           </Button>
-
         </div>
       </div>
     </div>
