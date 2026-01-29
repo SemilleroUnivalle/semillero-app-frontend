@@ -19,6 +19,7 @@ import {
   Autocomplete,
 } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { useEffect, useState } from "react";
@@ -453,7 +454,7 @@ export default function FormularioDatos({
   }
 
   return (
-    <div className="rounded-2xlp-3 mx-auto w-full content-center text-center shadow-md">
+    <div className="rounded-2xlp-3 mx-auto w-full content-center text-center">
       <Snackbar
         open={success}
         autoHideDuration={4000}
@@ -628,15 +629,552 @@ export default function FormularioDatos({
         </div>
       </div>
 
-      <div className="flex flex-col justify-around">
-        {/* Información personal */}
-        <div className="flex flex-col items-center justify-center">
-          {/* Información de Contacto y Ubicación */}
-          <h2 className="text-md my-4 text-center font-semibold text-primary">
-            Información de Contacto y Ubicación
-          </h2>
+      {/* Contenedor Información de Contacto y Ubicación */}
+      <div className="my-4 justify-center rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="text-md my-4 text-center font-semibold text-primary">
+          Información de Contacto y Ubicación
+        </h2>
+        <div className="flex flex-wrap justify-between gap-2 text-gray-600">
+          <TextField
+            className={
+              editable
+                ? "inputs-textfield flex w-full flex-col sm:w-1/4"
+                : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+            }
+            label="Correo Electrónico"
+            InputProps={{ readOnly: !editable }}
+            value={formData.email}
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
+          />
+          <TextField
+            className={
+              editable
+                ? "inputs-textfield flex w-full flex-col sm:w-1/4"
+                : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+            }
+            label="Celular"
+            InputProps={{ readOnly: !editable }}
+            value={formData.celular}
+            onChange={(e) =>
+              setFormData({ ...formData, celular: e.target.value })
+            }
+          />
+          <TextField
+            className={
+              editable
+                ? "inputs-textfield flex w-full flex-col sm:w-1/4"
+                : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+            }
+            label="Teléfono fijo"
+            value={formData.telefono_fijo}
+            onChange={(e) =>
+              setFormData({ ...formData, telefono_fijo: e.target.value })
+            }
+            InputProps={{ readOnly: !editable }}
+          />
+          {editable ? (
+            <>
+              <FormControl className="inputs-textfield w-full sm:w-1/4">
+                <InputLabel id="departamento_residencia">
+                  Departamento
+                </InputLabel>
+                <Select
+                  labelId="departamento_residencia"
+                  id="departamento_residencia"
+                  label="Departamento"
+                  value={formData.departamento_residencia}
+                  onChange={(e: SelectChangeEvent<string>) => {
+                    setFormData({
+                      ...formData,
+                      departamento_residencia: e.target.value,
+                      ciudad_residencia: "",
+                    });
+                    setDepartamentoSeleccionado(e.target.value);
+                  }}
+                >
+                  {departamentos.map((dept) => (
+                    <MenuItem key={dept.id} value={dept.nombre}>
+                      {dept.nombre}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl
+                className="inputs-textfield w-full sm:w-1/4"
+                disabled={cargandoCiudades}
+              >
+                <InputLabel id="ciudad">Ciudad</InputLabel>
+                <Select
+                  labelId="ciudad"
+                  value={formData.ciudad_residencia}
+                  onChange={(e: SelectChangeEvent<string>) =>
+                    setFormData({
+                      ...formData,
+                      ciudad_residencia: e.target.value,
+                    })
+                  }
+                  disabled={!editable}
+                >
+                  {cargandoCiudades ? (
+                    <MenuItem disabled>
+                      <CircularProgress size={24} />
+                    </MenuItem>
+                  ) : (
+                    ciudades.map((ciudad) => (
+                      <MenuItem key={ciudad.id} value={ciudad.nombre}>
+                        {ciudad.nombre}
+                      </MenuItem>
+                    ))
+                  )}
+                </Select>
+              </FormControl>{" "}
+            </>
+          ) : (
+            <>
+              <TextField
+                className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+                label="Departamento"
+                value={formData.departamento_residencia || ""}
+                InputProps={{ readOnly: true }}
+              />
 
-          <div className="flex flex-wrap justify-around gap-4 text-gray-600">
+              <TextField
+                className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+                label="Ciudad"
+                value={formData.ciudad_residencia || ""}
+                InputProps={{ readOnly: true }}
+              />
+            </>
+          )}
+          <TextField
+            className={
+              editable
+                ? "inputs-textfield flex w-full flex-col sm:w-1/4"
+                : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+            }
+            label="Comuna"
+            value={formData.comuna_residencia}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                comuna_residencia: e.target.value,
+              })
+            }
+            InputProps={{ readOnly: !editable }}
+          />
+          <TextField
+            className={
+              editable
+                ? "inputs-textfield flex w-full flex-col sm:w-1/4"
+                : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+            }
+            label="Dirección"
+            value={formData.direccion_residencia || ""}
+            InputProps={{ readOnly: !editable }}
+          />
+        </div>
+      </div>
+
+      {/* Contenedor de Información de Salud */}
+      <div className="my-4 justify-center rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="text-md my-4 text-center font-semibold text-primary">
+          Información de Salud
+        </h2>
+        <div className="flex flex-wrap justify-between gap-2 text-gray-600">
+          {/* Campo eps */}
+          <Autocomplete
+            className={
+              editable
+                ? "inputs-textfield w-full sm:w-1/4"
+                : "inputs-textfield-readonly w-full sm:w-1/4"
+            }
+            freeSolo
+            options={epss}
+            value={formData.eps}
+            onChange={(_, newValue) =>
+              setFormData({ ...formData, eps: newValue || "" })
+            }
+            disabled={!editable}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="EPS"
+                required
+                variant="outlined"
+                fullWidth
+              />
+            )}
+          />
+
+          {/* Campo Select Discapacidad */}
+
+          <FormControl
+            className={
+              editable
+                ? "inputs-textfield w-full sm:w-1/4"
+                : "inputs-textfield-readonly w-full sm:w-1/4"
+            }
+          >
+            <InputLabel id="discapacidad">Discapacidad</InputLabel>
+            <Select
+              labelId="discapacidad"
+              id="discapacidad"
+              name="discapacidad"
+              label="¿Tiene alguna discapacidad?"
+              value={formData.discapacidad.toString()}
+              onChange={
+                editable
+                  ? (e) => {
+                      const value = e.target.value === "true";
+                      setFormData({
+                        ...formData,
+                        discapacidad: value,
+                        tipo_discapacidad: value
+                          ? formData.tipo_discapacidad
+                          : "",
+                        descripcion_discapacidad: value
+                          ? formData.descripcion_discapacidad
+                          : "",
+                      });
+                      setTipoDiscapacidad(value);
+                    }
+                  : undefined
+              }
+              required
+              disabled={!editable}
+            >
+              <MenuItem value="true">Sí</MenuItem>
+              <MenuItem value="false">No</MenuItem>
+            </Select>
+          </FormControl>
+          {mostrarTipoDiscapacidad && (
+            <>
+              <FormControl
+                className={
+                  editable
+                    ? "inputs-textfield w-full sm:w-1/4"
+                    : "inputs-textfield-readonly w-full sm:w-1/4"
+                }
+              >
+                <InputLabel id="tipo_discapacidad">
+                  Tipo de discapacidad
+                </InputLabel>
+                <Select
+                  labelId="tipo_discapacidad"
+                  id="tipo_discapacidad"
+                  label="Tipo de discapacidad"
+                  required
+                  value={formData.tipo_discapacidad}
+                  onChange={
+                    editable
+                      ? (e) =>
+                          setFormData({
+                            ...formData,
+                            tipo_discapacidad: e.target.value,
+                          })
+                      : undefined
+                  }
+                  disabled={!editable}
+                >
+                  <MenuItem value={"Auditiva"}>Auditiva</MenuItem>
+                  <MenuItem value={"Fisica"}>Física</MenuItem>
+                  <MenuItem value={"Intelectual"}>Intelectual</MenuItem>
+                  <MenuItem value={"Visual"}>Visual</MenuItem>
+                  <MenuItem value={"Sordoceguera"}>Sordoceguera</MenuItem>
+                  <MenuItem value={"Psicosocial"}>Psicosocial</MenuItem>
+                  <MenuItem value={"Multiple"}>Múltiple</MenuItem>
+                </Select>
+              </FormControl>
+              <TextField
+                className={
+                  editable
+                    ? "inputs-textfield flex w-full flex-col sm:w-1/4"
+                    : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+                }
+                label="Descripción de discapacidad"
+                name="descripcion_discapacidad"
+                variant="outlined"
+                type="text"
+                fullWidth
+                required
+                value={formData.descripcion_discapacidad}
+                onChange={
+                  editable
+                    ? (e) =>
+                        setFormData({
+                          ...formData,
+                          descripcion_discapacidad: e.target.value,
+                        })
+                    : undefined
+                }
+                InputProps={{ readOnly: !editable }}
+              />
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Contenedor Información Académica */}
+      <div className="my-4 justify-center rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="text-md my-4 text-center font-semibold text-primary">
+          Información Académica
+        </h2>
+        <div className="flex flex-wrap justify-between gap-2 text-gray-600">
+          {/* Campo Colegio */}
+          <TextField
+            className={
+              editable
+                ? "inputs-textfield w-full sm:w-1/4"
+                : "inputs-textfield-readonly w-full sm:w-1/4"
+            }
+            label="Colegio"
+            hidden={esDocente}
+            value={formData.colegio}
+            onChange={(e) =>
+              setFormData({ ...formData, colegio: e.target.value })
+            }
+            InputProps={{ readOnly: !editable }}
+          />
+
+          {!esDocente ? (
+            <FormControl
+              className={
+                editable
+                  ? "inputs-textfield w-full sm:w-1/4"
+                  : "inputs-textfield-readonly w-full sm:w-1/4"
+              }
+            >
+              <InputLabel id="estamento">Estamento</InputLabel>
+              <Select
+                labelId="estamento"
+                name="estamento"
+                id="estamento"
+                label="Estamento"
+                required
+                inputProps={{ readOnly: !editable }}
+                value={formData.estamento}
+                onChange={(e) =>
+                  setFormData({ ...formData, estamento: e.target.value })
+                }
+              >
+                <MenuItem value={"PÚBLICO"}>PÚBLICO</MenuItem>
+                <MenuItem value={"PRIVADO"}>PRIVADO</MenuItem>
+                <MenuItem value={"COBERTURA"}>COBERTURA</MenuItem>
+              </Select>
+            </FormControl>
+          ) : (
+            <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
+              {/* Grado de escolaridad */}
+              <FormControl className="inputs-textfield w-full sm:w-1/4">
+                <InputLabel id="grado_escolaridad">
+                  Grado de escolaridad
+                </InputLabel>
+                <Select
+                  labelId="grado_escolaridad"
+                  id="grado_escolaridad"
+                  name="grado_escolaridad"
+                  label="Grado de escolaridad"
+                  required
+                  value={formData.grado_escolaridad || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      grado_escolaridad: e.target.value,
+                    })
+                  }
+                >
+                  <MenuItem value="Técnico">Técnico</MenuItem>
+                  <MenuItem value="Tecnólogo">Tecnólogo</MenuItem>
+                  <MenuItem value="Licenciatura">Licenciatura</MenuItem>
+                  <MenuItem value="Especialización">Especialización</MenuItem>
+                  <MenuItem value="Maestría">Maestría</MenuItem>
+                  <MenuItem value="Doctorado">Doctorado</MenuItem>
+                  <MenuItem value="Otro">Otro</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Área de enseñanza */}
+              <FormControl className="inputs-textfield w-full sm:w-1/4">
+                <InputLabel id="area_ensenanza">Área de enseñanza</InputLabel>
+                <Select
+                  labelId="area_ensenanza"
+                  id="area_ensenanza"
+                  name="area_ensenanza"
+                  label="Área de enseñanza"
+                  required
+                  value={formData.area_desempeño || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      area_desempeño: e.target.value,
+                    })
+                  }
+                >
+                  <MenuItem value="Matemáticas">Matemáticas</MenuItem>
+                  <MenuItem value="Ciencias Naturales">
+                    Ciencias Naturales
+                  </MenuItem>
+                  <MenuItem value="Ciencias Sociales">
+                    Ciencias Sociales
+                  </MenuItem>
+                  <MenuItem value="Lengua Castellana">
+                    Lengua Castellana
+                  </MenuItem>
+                  <MenuItem value="Inglés">Inglés</MenuItem>
+                  <MenuItem value="Educación Física">Educación Física</MenuItem>
+                  <MenuItem value="Artes">Artes</MenuItem>
+                  <MenuItem value="Tecnología">Tecnología</MenuItem>
+                  <MenuItem value="Otra">Otra</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
+          )}
+
+          {/* Campo Grado */}
+          <FormControl
+            className={
+              editable
+                ? "inputs-textfield w-full sm:w-1/4"
+                : "inputs-textfield-readonly w-full sm:w-1/4"
+            }
+          >
+            <InputLabel id="grado">Grado</InputLabel>
+            <Select
+              labelId="grado"
+              id="grado"
+              label="Grado"
+              required
+              inputProps={{ readOnly: !editable }}
+              value={formData.grado || ""}
+              onChange={
+                editable
+                  ? (e) => {
+                      setFormData({ ...formData, grado: e.target.value });
+                      setEsDocente(e.target.value === "Docente");
+                    }
+                  : undefined
+              }
+            >
+              {grados.map((grado) => (
+                <MenuItem key={grado} value={grado}>
+                  {grado}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </div>
+      </div>
+
+      {/* Contenedor Información del Acudiente */}
+      {!esDocente ? (
+        <div className="my-4 justify-center rounded-2xl bg-white p-5 shadow-sm">
+          {/* Contenedor Informacion de Acudiente */}
+          <h2 className="text-md my-4 text-center font-semibold text-primary">
+            Información del Acudiente o Responsable del Estudiante
+          </h2>
+          <div className="flex flex-wrap justify-between gap-4 text-gray-600">
+            {/* Campo Nombres del Acudiente */}
+            <TextField
+              className={
+                editable
+                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
+                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+              }
+              label="Nombres del acudiente"
+              name="nombre_acudiente"
+              variant="outlined"
+              fullWidth
+              type="text"
+              required
+              InputProps={{ readOnly: !editable }}
+              value={formDataAcudiente.nombre_acudiente}
+              onChange={(e) =>
+                setFormDataAcudiente({
+                  ...formDataAcudiente,
+                  nombre_acudiente: e.target.value,
+                })
+              }
+            />
+            {/* Campo Apellidos del acudiente  */}
+            <TextField
+              className={
+                editable
+                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
+                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+              }
+              label="Apellidos del acudiente"
+              name="apellido_acudiente"
+              variant="outlined"
+              fullWidth
+              type="text"
+              required
+              InputProps={{ readOnly: !editable }}
+              value={formDataAcudiente.apellido_acudiente}
+              onChange={(e) =>
+                setFormDataAcudiente({
+                  ...formDataAcudiente,
+                  apellido_acudiente: e.target.value,
+                })
+              }
+            />
+            {/* Campo Tipo de Documento */}
+            <FormControl
+              className={
+                editable
+                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
+                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+              }
+            >
+              <InputLabel id="tipo_documento_acudiente">
+                Tipo de documento
+              </InputLabel>
+              <Select
+                labelId="tipo_documento_acudiente"
+                id="tipo_documento_acudiente"
+                label="tipo_documento_acudiente"
+                required
+                disabled={!editable}
+                value={formDataAcudiente.tipo_documento_acudiente}
+                onChange={(e) =>
+                  setFormDataAcudiente({
+                    ...formDataAcudiente,
+                    tipo_documento_acudiente: e.target.value,
+                  })
+                }
+              >
+                <MenuItem value={"TI"}>Tarjeta de identidad</MenuItem>
+                <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
+                <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
+                <MenuItem value={"PPT"}>
+                  Permiso de protección temporal
+                </MenuItem>
+              </Select>
+            </FormControl>
+            {/* Campo Numero de Documento */}
+            <TextField
+              className={
+                editable
+                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
+                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+              }
+              label="Número de identificación"
+              name="numero_identificacion"
+              variant="outlined"
+              type="number"
+              fullWidth
+              required
+              InputProps={{ readOnly: !editable }}
+              value={formDataAcudiente.numero_documento_acudiente}
+              onChange={(e) =>
+                setFormDataAcudiente({
+                  ...formDataAcudiente,
+                  numero_documento_acudiente: e.target.value,
+                })
+              }
+            />
+            {/* Campo Correo Electronico del Acudiente */}
             <TextField
               className={
                 editable
@@ -644,12 +1182,21 @@ export default function FormularioDatos({
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Correo Electrónico"
+              name="email"
+              variant="outlined"
+              type="email"
+              fullWidth
+              required
               InputProps={{ readOnly: !editable }}
-              value={formData.email}
+              value={formDataAcudiente.email_acudiente}
               onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
+                setFormDataAcudiente({
+                  ...formDataAcudiente,
+                  email_acudiente: e.target.value,
+                })
               }
             />
+            {/* Campo Celular del Acudiente */}
             <TextField
               className={
                 editable
@@ -657,636 +1204,83 @@ export default function FormularioDatos({
                   : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
               }
               label="Celular"
+              name="celular"
+              variant="outlined"
+              type="number"
+              fullWidth
+              required
               InputProps={{ readOnly: !editable }}
-              value={formData.celular}
+              value={formDataAcudiente.celular_acudiente}
               onChange={(e) =>
-                setFormData({ ...formData, celular: e.target.value })
-              }
-            />
-            <TextField
-              className={
-                editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-              }
-              label="Teléfono fijo"
-              value={formData.telefono_fijo}
-              onChange={(e) =>
-                setFormData({ ...formData, telefono_fijo: e.target.value })
-              }
-              InputProps={{ readOnly: !editable }}
-            />
-            {editable ? (
-              <>
-                <FormControl className="inputs-textfield w-full sm:w-1/4">
-                  <InputLabel id="departamento_residencia">
-                    Departamento
-                  </InputLabel>
-                  <Select
-                    labelId="departamento_residencia"
-                    id="departamento_residencia"
-                    label="Departamento"
-                    value={formData.departamento_residencia}
-                    onChange={(e: SelectChangeEvent<string>) => {
-                      setFormData({
-                        ...formData,
-                        departamento_residencia: e.target.value,
-                        ciudad_residencia: "",
-                      });
-                      setDepartamentoSeleccionado(e.target.value);
-                    }}
-                  >
-                    {departamentos.map((dept) => (
-                      <MenuItem key={dept.id} value={dept.nombre}>
-                        {dept.nombre}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl
-                  className="inputs-textfield w-full sm:w-1/4"
-                  disabled={cargandoCiudades}
-                >
-                  <InputLabel id="ciudad">Ciudad</InputLabel>
-                  <Select
-                    labelId="ciudad"
-                    value={formData.ciudad_residencia}
-                    onChange={(e: SelectChangeEvent<string>) =>
-                      setFormData({
-                        ...formData,
-                        ciudad_residencia: e.target.value,
-                      })
-                    }
-                    disabled={!editable}
-                  >
-                    {cargandoCiudades ? (
-                      <MenuItem disabled>
-                        <CircularProgress size={24} />
-                      </MenuItem>
-                    ) : (
-                      ciudades.map((ciudad) => (
-                        <MenuItem key={ciudad.id} value={ciudad.nombre}>
-                          {ciudad.nombre}
-                        </MenuItem>
-                      ))
-                    )}
-                  </Select>
-                </FormControl>{" "}
-              </>
-            ) : (
-              <>
-                <TextField
-                  className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-                  label="Departamento"
-                  value={formData.departamento_residencia || ""}
-                  InputProps={{ readOnly: true }}
-                />
-
-                <TextField
-                  className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-                  label="Ciudad"
-                  value={formData.ciudad_residencia || ""}
-                  InputProps={{ readOnly: true }}
-                />
-              </>
-            )}
-            <TextField
-              className={
-                editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-              }
-              label="Comuna"
-              value={formData.comuna_residencia}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  comuna_residencia: e.target.value,
+                setFormDataAcudiente({
+                  ...formDataAcudiente,
+                  celular_acudiente: e.target.value,
                 })
               }
-              InputProps={{ readOnly: !editable }}
-            />
-            <TextField
-              className={
-                editable
-                  ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                  : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-              }
-              label="Dirección"
-              value={formData.direccion_residencia || ""}
-              InputProps={{ readOnly: !editable }}
             />
           </div>
+        </div>
+      ) : null}
 
-          {/* Información de Salud */}
-          <h2 className="text-md my-4 text-center font-semibold text-primary">
-            Información de Salud
-          </h2>
-
-          <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-            {/* Campo eps */}
-            <Autocomplete
-              className={
-                editable
-                  ? "inputs-textfield w-full sm:w-1/4"
-                  : "inputs-textfield-readonly w-full sm:w-1/4"
-              }
-              freeSolo
-              options={epss}
-              value={formData.eps}
-              onChange={(_, newValue) =>
-                setFormData({ ...formData, eps: newValue || "" })
-              }
-              disabled={!editable}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="EPS"
-                  required
-                  variant="outlined"
-                  fullWidth
+      {/* Contenedor de Documentación */}
+      <div className="my-4 justify-center rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="text-md my-4 text-center font-semibold text-primary">
+          Documentación
+        </h2>
+        <div className="my-4 flex flex-col items-center gap-3">
+          {formData.documento_identidad && (
+            <div className="flex flex-col items-center">
+              <Button
+                variant="outlined"
+                href={formData.documento_identidad}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 rounded-2xl border-primary p-3 text-primary hover:bg-primary/5"
+                startIcon={<PictureAsPdfIcon />}
+              >
+                Ver documento de identidad
+              </Button>
+            </div>
+          )}
+          {editable && (
+            <div className="my-4 flex flex-col items-center gap-3">
+              <InputLabel id="documento_identidad">
+                Documento de identidad
+              </InputLabel>
+              <Button
+                variant="contained"
+                component="label"
+                className="my-2 rounded-2xl bg-primary"
+              >
+                {documentoIdentidad ? "Cambiar Documento" : "Elegir Documento"}
+                <input
+                  name="documento_identidad"
+                  type="file"
+                  accept=".pdf"
+                  hidden
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setDocumentoIdentidad(file);
+                    }
+                  }}
                 />
+              </Button>
+              {documentoIdentidad && (
+                <Typography variant="caption" color="textSecondary">
+                  {documentoIdentidad.name}
+                </Typography>
               )}
-            />
-
-            {/* Campo Select Discapacidad */}
-
-            <FormControl
-              className={
-                editable
-                  ? "inputs-textfield w-full sm:w-1/4"
-                  : "inputs-textfield-readonly w-full sm:w-1/4"
-              }
-            >
-              <InputLabel id="discapacidad">Discapacidad</InputLabel>
-              <Select
-                labelId="discapacidad"
-                id="discapacidad"
-                name="discapacidad"
-                label="¿Tiene alguna discapacidad?"
-                value={formData.discapacidad.toString()}
-                onChange={
-                  editable
-                    ? (e) => {
-                        const value = e.target.value === "true";
-                        setFormData({
-                          ...formData,
-                          discapacidad: value,
-                          tipo_discapacidad: value
-                            ? formData.tipo_discapacidad
-                            : "",
-                          descripcion_discapacidad: value
-                            ? formData.descripcion_discapacidad
-                            : "",
-                        });
-                        setTipoDiscapacidad(value);
-                      }
-                    : undefined
-                }
-                required
-                disabled={!editable}
-              >
-                <MenuItem value="true">Sí</MenuItem>
-                <MenuItem value="false">No</MenuItem>
-              </Select>
-            </FormControl>
-            {mostrarTipoDiscapacidad && (
-              <>
-                <FormControl
-                  className={
-                    editable
-                      ? "inputs-textfield w-full sm:w-1/4"
-                      : "inputs-textfield-readonly w-full sm:w-1/4"
-                  }
-                >
-                  <InputLabel id="tipo_discapacidad">
-                    Tipo de discapacidad
-                  </InputLabel>
-                  <Select
-                    labelId="tipo_discapacidad"
-                    id="tipo_discapacidad"
-                    label="Tipo de discapacidad"
-                    required
-                    value={formData.tipo_discapacidad}
-                    onChange={
-                      editable
-                        ? (e) =>
-                            setFormData({
-                              ...formData,
-                              tipo_discapacidad: e.target.value,
-                            })
-                        : undefined
-                    }
-                    disabled={!editable}
-                  >
-                    <MenuItem value={"Auditiva"}>Auditiva</MenuItem>
-                    <MenuItem value={"Fisica"}>Física</MenuItem>
-                    <MenuItem value={"Intelectual"}>Intelectual</MenuItem>
-                    <MenuItem value={"Visual"}>Visual</MenuItem>
-                    <MenuItem value={"Sordoceguera"}>Sordoceguera</MenuItem>
-                    <MenuItem value={"Psicosocial"}>Psicosocial</MenuItem>
-                    <MenuItem value={"Multiple"}>Múltiple</MenuItem>
-                  </Select>
-                </FormControl>
-                <TextField
-                  className={
-                    editable
-                      ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                      : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-                  }
-                  label="Descripción de discapacidad"
-                  name="descripcion_discapacidad"
-                  variant="outlined"
-                  type="text"
-                  fullWidth
-                  required
-                  value={formData.descripcion_discapacidad}
-                  onChange={
-                    editable
-                      ? (e) =>
-                          setFormData({
-                            ...formData,
-                            descripcion_discapacidad: e.target.value,
-                          })
-                      : undefined
-                  }
-                  InputProps={{ readOnly: !editable }}
-                />
-              </>
-            )}
-          </div>
-
-          {/* Informacion Académica */}
-          <h2 className="text-md my-4 text-center font-semibold text-primary">
-            Información Académica
-          </h2>
-          <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-            {/* Campo Grado */}
-            <FormControl
-              className={
-                editable
-                  ? "inputs-textfield w-full sm:w-1/4"
-                  : "inputs-textfield-readonly w-full sm:w-1/4"
-              }
-            >
-              <InputLabel id="grado">Grado</InputLabel>
-              <Select
-                labelId="grado"
-                id="grado"
-                label="Grado"
-                required
-                inputProps={{ readOnly: !editable }}
-                value={formData.grado || ""}
-                onChange={
-                  editable
-                    ? (e) => {
-                        setFormData({ ...formData, grado: e.target.value });
-                        setEsDocente(e.target.value === "Docente");
-                      }
-                    : undefined
-                }
-              >
-                {grados.map((grado) => (
-                  <MenuItem key={grado} value={grado}>
-                    {grado}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {/* Mostrar campos según si es docente o no */}
-            {!esDocente ? (
-              <>
-                <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-                  {/* Campo Colegio */}
-                  <TextField
-                    className={
-                      editable
-                        ? "inputs-textfield w-full sm:w-1/4"
-                        : "inputs-textfield-readonly w-full sm:w-1/4"
-                    }
-                    label="Colegio"
-                    value={formData.colegio}
-                    onChange={(e) =>
-                      setFormData({ ...formData, colegio: e.target.value })
-                    }
-                    InputProps={{ readOnly: !editable }}
-                  />
-
-                  {/* Campo Estamento Colegio */}
-                  <FormControl
-                    className={
-                      editable
-                        ? "inputs-textfield w-full sm:w-1/4"
-                        : "inputs-textfield-readonly w-full sm:w-1/4"
-                    }
-                  >
-                    <InputLabel id="estamento">Estamento</InputLabel>
-                    <Select
-                      labelId="estamento"
-                      name="estamento"
-                      id="estamento"
-                      label="Estamento"
-                      required
-                      inputProps={{ readOnly: !editable }}
-                      value={formData.estamento}
-                      onChange={(e) =>
-                        setFormData({ ...formData, estamento: e.target.value })
-                      }
-                    >
-                      <MenuItem value={"PÚBLICO"}>PÚBLICO</MenuItem>
-                      <MenuItem value={"PRIVADO"}>PRIVADO</MenuItem>
-                      <MenuItem value={"COBERTURA"}>COBERTURA</MenuItem>
-                    </Select>
-                  </FormControl>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-                  <FormControl className="inputs-textfield w-full sm:w-1/4">
-                    <InputLabel id="grado_escolaridad">
-                      Grado de escolaridad
-                    </InputLabel>
-                    <Select
-                      labelId="grado_escolaridad"
-                      id="grado_escolaridad"
-                      name="grado_escolaridad"
-                      label="Grado de escolaridad"
-                      required
-                      value={formData.grado_escolaridad || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          grado_escolaridad: e.target.value,
-                        })
-                      }
-                    >
-                      <MenuItem value="Técnico">Técnico</MenuItem>
-                      <MenuItem value="Tecnólogo">Tecnólogo</MenuItem>
-                      <MenuItem value="Licenciatura">Licenciatura</MenuItem>
-                      <MenuItem value="Especialización">
-                        Especialización
-                      </MenuItem>
-                      <MenuItem value="Maestría">Maestría</MenuItem>
-                      <MenuItem value="Doctorado">Doctorado</MenuItem>
-                      <MenuItem value="Otro">Otro</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <FormControl className="inputs-textfield w-full sm:w-1/4">
-                    <InputLabel id="area_ensenanza">
-                      Área de enseñanza
-                    </InputLabel>
-                    <Select
-                      labelId="area_ensenanza"
-                      id="area_ensenanza"
-                      name="area_ensenanza"
-                      label="Área de enseñanza"
-                      required
-                      value={formData.area_desempeño || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          area_desempeño: e.target.value,
-                        })
-                      }
-                    >
-                      <MenuItem value="Matemáticas">Matemáticas</MenuItem>
-                      <MenuItem value="Ciencias Naturales">
-                        Ciencias Naturales
-                      </MenuItem>
-                      <MenuItem value="Ciencias Sociales">
-                        Ciencias Sociales
-                      </MenuItem>
-                      <MenuItem value="Lengua Castellana">
-                        Lengua Castellana
-                      </MenuItem>
-                      <MenuItem value="Inglés">Inglés</MenuItem>
-                      <MenuItem value="Educación Física">
-                        Educación Física
-                      </MenuItem>
-                      <MenuItem value="Artes">Artes</MenuItem>
-                      <MenuItem value="Tecnología">Tecnología</MenuItem>
-                      <MenuItem value="Otra">Otra</MenuItem>
-                    </Select>
-                  </FormControl>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Mostrar información del acudiente si no es docente */}
-
-          {!esDocente ? (
-            <>
-              {/* Contenedor Informacion de Acudiente */}
-              <h2 className="text-md my-4 text-center font-semibold text-primary">
-                Información de Acudiente
-              </h2>
-              <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-                {/* Campo Nombres del Acudiente */}
-                <TextField
-                  className={
-                    editable
-                      ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                      : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-                  }
-                  label="Nombres del acudiente"
-                  name="nombre_acudiente"
-                  variant="outlined"
-                  fullWidth
-                  type="text"
-                  required
-                  InputProps={{ readOnly: !editable }}
-                  value={formDataAcudiente.nombre_acudiente}
-                  onChange={(e) =>
-                    setFormDataAcudiente({
-                      ...formDataAcudiente,
-                      nombre_acudiente: e.target.value,
-                    })
-                  }
-                />
-                {/* Campo Apellidos del acudiente  */}
-                <TextField
-                  className={
-                    editable
-                      ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                      : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-                  }
-                  label="Apellidos del acudiente"
-                  name="apellido_acudiente"
-                  variant="outlined"
-                  fullWidth
-                  type="text"
-                  required
-                  InputProps={{ readOnly: !editable }}
-                  value={formDataAcudiente.apellido_acudiente}
-                  onChange={(e) =>
-                    setFormDataAcudiente({
-                      ...formDataAcudiente,
-                      apellido_acudiente: e.target.value,
-                    })
-                  }
-                />
-                {/* Campo Tipo de Documento */}
-                <FormControl
-                  className={
-                    editable
-                      ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                      : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-                  }
-                >
-                  <InputLabel id="tipo_documento_acudiente">
-                    Tipo de documento
-                  </InputLabel>
-                  <Select
-                    labelId="tipo_documento_acudiente"
-                    id="tipo_documento_acudiente"
-                    label="tipo_documento_acudiente"
-                    required
-                    disabled={!editable}
-                    value={formDataAcudiente.tipo_documento_acudiente}
-                    onChange={(e) =>
-                      setFormDataAcudiente({
-                        ...formDataAcudiente,
-                        tipo_documento_acudiente: e.target.value,
-                      })
-                    }
-                  >
-                    <MenuItem value={"TI"}>Tarjeta de identidad</MenuItem>
-                    <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
-                    <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
-                    <MenuItem value={"PPT"}>
-                      Permiso de protección temporal
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-                {/* Campo Numero de Documento */}
-                <TextField
-                  className={
-                    editable
-                      ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                      : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-                  }
-                  label="Número de identificación"
-                  name="numero_identificacion"
-                  variant="outlined"
-                  type="number"
-                  fullWidth
-                  required
-                  InputProps={{ readOnly: !editable }}
-                  value={formDataAcudiente.numero_documento_acudiente}
-                  onChange={(e) =>
-                    setFormDataAcudiente({
-                      ...formDataAcudiente,
-                      numero_documento_acudiente: e.target.value,
-                    })
-                  }
-                />
-                {/* Campo Correo Electronico del Acudiente */}
-                <TextField
-                  className={
-                    editable
-                      ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                      : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-                  }
-                  label="Correo Electrónico"
-                  name="email"
-                  variant="outlined"
-                  type="email"
-                  fullWidth
-                  required
-                  InputProps={{ readOnly: !editable }}
-                  value={formDataAcudiente.email_acudiente}
-                  onChange={(e) =>
-                    setFormDataAcudiente({
-                      ...formDataAcudiente,
-                      email_acudiente: e.target.value,
-                    })
-                  }
-                />
-                {/* Campo Celular del Acudiente */}
-                <TextField
-                  className={
-                    editable
-                      ? "inputs-textfield flex w-full flex-col sm:w-1/4"
-                      : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-                  }
-                  label="Celular"
-                  name="celular"
-                  variant="outlined"
-                  type="number"
-                  fullWidth
-                  required
-                  InputProps={{ readOnly: !editable }}
-                  value={formDataAcudiente.celular_acudiente}
-                  onChange={(e) =>
-                    setFormDataAcudiente({
-                      ...formDataAcudiente,
-                      celular_acudiente: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </>
-          ) : null}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Documentos */}
-      <div className="mt-4 flex flex-col items-center">
-        {formData.documento_identidad && (
-          <div className="flex flex-col items-center">
-            <Button
-              variant="outlined"
-              href={formData.documento_identidad}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 rounded-2xl border-primary text-primary"
-              startIcon={<PictureAsPdfIcon />}
-            >
-              Ver documento de identidad
-            </Button>
-          </div>
-        )}
-
-        {editable && (
-          <div className="my-4 flex flex-col items-center gap-3">
-            <InputLabel id="documento_identidad">
-              Documento de identidad
-            </InputLabel>
-            <Button
-              variant="contained"
-              component="label"
-              className="my-2 rounded-2xl bg-primary"
-            >
-              {documentoIdentidad ? "Cambiar Documento" : "Elegir Documento"}
-              <input
-                name="documento_identidad"
-                type="file"
-                accept=".pdf"
-                hidden
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setDocumentoIdentidad(file);
-                  }
-                }}
-              />
-            </Button>
-            {documentoIdentidad && (
-              <Typography variant="caption" color="textSecondary">
-                {documentoIdentidad.name}
-              </Typography>
-            )}
-          </div>
-        )}
-
-        {/* Verificaciones */}
+      {/* Contenedor de Verificaciones */}
+      <div className="my-4 justify-center rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="text-md my-4 text-center font-semibold text-primary">
           Verificaciones
         </h2>
-
         <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
           <div>
             <Typography variant="body1" color="textSecondary">
@@ -1409,23 +1403,26 @@ export default function FormularioDatos({
             </div>
           </div>
         </div>
-
         <div className="mt-4 flex w-full flex-wrap justify-around gap-4">
-          <Button
-            variant="contained"
-            className="text-md mt-4 w-1/3 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
-            onClick={() => {
-              if (editable) {
-                handleSave();
-              } else {
-                setEditable(true);
-              }
-            }}
-          >
-            {editable ? "Guardar" : "Editar"}
-          </Button>
-        </div>
+        <Button
+          variant="outlined"
+          // className="text-md mt-4 w-1/3 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
+          className="mt-2 w-3/4 rounded-2xl border-primary p-3 text-primary hover:bg-primary/5"
+          startIcon={<EditOutlinedIcon />}
+          onClick={() => {
+            if (editable) {
+              handleSave();
+            } else {
+              setEditable(true);
+            }
+          }}
+        >
+          {editable ? "Guardar" : "Editar"}
+        </Button>
       </div>
+      </div>
+
+      
     </div>
   );
 }

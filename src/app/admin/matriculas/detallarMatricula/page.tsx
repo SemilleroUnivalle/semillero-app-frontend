@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Estudiante,
-  Acudiente,
-  Ciudad,
-  Matricula,
-  Departamento,
-  DepartamentoApi,
-  CiudadApi,
-} from "@/interfaces/interfaces";
+import { Estudiante, Matricula } from "@/interfaces/interfaces";
 
 import {
   TextField,
@@ -21,6 +13,7 @@ import {
   Alert,
   ToggleButton,
   ToggleButtonGroup,
+  Divider,
 } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -357,12 +350,13 @@ export default function DetallarMatricula() {
         </Alert>
       </Snackbar>
 
+      <Divider></Divider>
+
       {/* Contenedor información de matricula  */}
-      <Box className="mt-4 mx-auto rounded-2xl bg-white p-5 shadow-md">
+      <Box className="my-4 justify-center rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="text-md my-4 text-center font-semibold text-primary">
-          Información de Matricula
+          Información de Matrícula
         </h2>
-        {/* Información de Matricula */}
         <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
           <TextField
             className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
@@ -387,8 +381,14 @@ export default function DetallarMatricula() {
             InputProps={{ readOnly: true }}
           />
         </div>
+      </Box>
 
-        {/* Documentos de Matricula */}
+      {/* Contenedor documentación de matricula */}
+
+      <Box className="my-4 justify-center rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="text-md my-4 text-center font-semibold text-primary">
+          Documentación de Matrícula
+        </h2>
         <div className="mt-3 flex w-full flex-wrap justify-around gap-4 text-gray-600">
           {formDataMatricula.recibo_pago && (
             <Button
@@ -397,7 +397,7 @@ export default function DetallarMatricula() {
               href={formDataMatricula.recibo_pago}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 rounded-2xl border-primary text-primary"
+              className="mt-2 p-3 rounded-2xl border-primary text-primary"
               startIcon={<PictureAsPdfIcon />}
             >
               Ver recibo de pago
@@ -410,7 +410,7 @@ export default function DetallarMatricula() {
               <Button
                 variant="contained"
                 component="label"
-                className="my-2 rounded-2xl bg-primary"
+                className="my-2 p-3 rounded-2xl bg-primary"
               >
                 {reciboPago
                   ? "Cambiar Recibo de Pago"
@@ -480,6 +480,14 @@ export default function DetallarMatricula() {
             </div>
           )}
         </div>
+      </Box>
+
+
+
+      {/* Contenedor información de matricula  */}
+      <Box className="mx-auto mt-4 rounded-2xl bg-white p-5 shadow-md">
+        {/* Documentos de Matricula */}
+        
 
         {/* Verificaciones de matricula */}
         <h2 className="text-md my-4 text-center font-semibold text-primary">
