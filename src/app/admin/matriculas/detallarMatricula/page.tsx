@@ -17,6 +17,8 @@ import {
 } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import CancelIcon from "@mui/icons-material/Cancel";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -24,6 +26,7 @@ import { API_BASE_URL } from "../../../../../config";
 import { useRouter } from "next/navigation";
 
 import Formulario from "@/components/formulario";
+
 
 export default function DetallarMatricula() {
   const router = useRouter();
@@ -243,6 +246,7 @@ export default function DetallarMatricula() {
         },
       );
       alert("Observaciones actualizadas correctamente.");
+      setEditable(false);
     } catch (error) {
       console.error("Error al actualizar observaciones:", error);
       alert("No se pudo actualizar las observaciones.");
@@ -384,7 +388,6 @@ export default function DetallarMatricula() {
       </Box>
 
       {/* Contenedor documentación de matricula */}
-
       <Box className="my-4 justify-center rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="text-md my-4 text-center font-semibold text-primary">
           Documentación de Matrícula
@@ -397,7 +400,7 @@ export default function DetallarMatricula() {
               href={formDataMatricula.recibo_pago}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 p-3 rounded-2xl border-primary text-primary"
+              className="buttons-secondary mt-2"
               startIcon={<PictureAsPdfIcon />}
             >
               Ver recibo de pago
@@ -410,7 +413,7 @@ export default function DetallarMatricula() {
               <Button
                 variant="contained"
                 component="label"
-                className="my-2 p-3 rounded-2xl bg-primary"
+                className="my-2 rounded-2xl bg-primary p-3"
               >
                 {reciboPago
                   ? "Cambiar Recibo de Pago"
@@ -443,7 +446,7 @@ export default function DetallarMatricula() {
               href={formDataMatricula.certificado}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 rounded-2xl border-primary text-primary"
+              className="buttons-secondary mt-2"
               startIcon={<PictureAsPdfIcon />}
             >
               Ver certificado
@@ -482,14 +485,8 @@ export default function DetallarMatricula() {
         </div>
       </Box>
 
-
-
-      {/* Contenedor información de matricula  */}
+      {/* Contenedor verificaciones de matricula  */}
       <Box className="mx-auto mt-4 rounded-2xl bg-white p-5 shadow-md">
-        {/* Documentos de Matricula */}
-        
-
-        {/* Verificaciones de matricula */}
         <h2 className="text-md my-4 text-center font-semibold text-primary">
           Verificaciones de Matrícula
         </h2>
@@ -596,8 +593,9 @@ export default function DetallarMatricula() {
         />
         <div className="mt-4 flex w-full flex-wrap justify-around gap-4">
           <Button
-            variant="contained"
-            className="text-md mt-4 w-1/3 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
+            variant="outlined"
+            className="buttons-primary mt-2 w-1/3"
+            startIcon={!editable ? <EditOutlinedIcon /> : <SaveOutlinedIcon />}
             onClick={() => {
               if (editable) {
                 handleSave();

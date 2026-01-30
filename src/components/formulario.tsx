@@ -19,7 +19,7 @@ import {
   Autocomplete,
 } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { useEffect, useState } from "react";
@@ -1235,7 +1235,7 @@ export default function FormularioDatos({
                 href={formData.documento_identidad}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 rounded-2xl border-primary p-3 text-primary hover:bg-primary/5"
+                className="buttons-secondary mt-2"
                 startIcon={<PictureAsPdfIcon />}
               >
                 Ver documento de identidad
@@ -1404,25 +1404,22 @@ export default function FormularioDatos({
           </div>
         </div>
         <div className="mt-4 flex w-full flex-wrap justify-around gap-4">
-        <Button
-          variant="outlined"
-          // className="text-md mt-4 w-1/3 rounded-2xl border-2 border-solid border-primary bg-white py-2 font-semibold capitalize text-primary shadow-none transition hover:bg-primary hover:text-white"
-          className="mt-2 w-3/4 rounded-2xl border-primary p-3 text-primary hover:bg-primary/5"
-          startIcon={<EditOutlinedIcon />}
-          onClick={() => {
-            if (editable) {
-              handleSave();
-            } else {
-              setEditable(true);
-            }
-          }}
-        >
-          {editable ? "Guardar" : "Editar"}
-        </Button>
+          <Button
+            variant="outlined"
+            className="buttons-primary mt-2 w-1/3"
+            startIcon={<EditOutlinedIcon />}
+            onClick={() => {
+              if (editable) {
+                handleSave();
+              } else {
+                setEditable(true);
+              }
+            }}
+          >
+            {editable ? "Guardar" : "Editar"}
+          </Button>
+        </div>
       </div>
-      </div>
-
-      
     </div>
   );
 }
