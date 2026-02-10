@@ -39,12 +39,10 @@ body {
   font-family: Helvetica, sans-serif;
 }
 
-
 /* Estilos para inputs */
-.inputs-textfield{
+.inputs-textfield {
   text-transform: uppercase;
 }
-
 
 .inputs-textfield .MuiOutlinedInput-root {
   border-radius: 1rem; /* Borde redondeado */
@@ -82,11 +80,9 @@ body {
   border-color: darkred !important; /* Borde más oscuro al pasar el mouse */
 }
 
-
 .selects .Mui-checked {
-  color: #c20e1a; /* Color del check */ 
+  color: #c20e1a; /* Color del check */
 }
-
 
 /*  */
 
@@ -132,22 +128,33 @@ body {
 }
 
 .buttons-primary {
- border-color: #c20e1a;
- color: #c20e1a;
+  border-color: #c20e1a;
+  color: white;
   border-radius: 1rem;
+  background-color: #c20e1a;
+  padding: 0.75rem;
 }
 
 .buttons-primary:hover {
-  background-color: #c20e1a25;
+  background-color: white;
   color: #c20e1a;
 }
 
-.buttons-principal {
- background-color: #c20e1a;
- color: white;
+.buttons-secondary {
+  border-color: #c20e1a;
+  color: #c20e1a;
   border-radius: 1rem;
+  background-color: white;
+  padding: 0.75rem;
 }
 
+.buttons-secondary:hover {
+  background-color: #c20e1a;
+  color: white;
+}
 
-
-
+.buttons-principal {
+  background-color: #c20e1a;
+  color: white;
+  border-radius: 1rem;
+}
