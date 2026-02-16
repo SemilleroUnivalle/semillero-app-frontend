@@ -55,12 +55,15 @@ export default function Matricula() {
 
   const [estamento, setEstamento] = useState<string>("");
   const [grado, setGrado] = useState<string>("");
+  const [tipoVinculacion, setTipoVinculacion] = useState<string>("");
 
   useEffect(() => {
     const est = localStorage.getItem("estamento");
     const grd = localStorage.getItem("grado");
+    const tipoVinc = localStorage.getItem("tipo_vinculacion");
     if (grd) setGrado(grd);
     if (est) setEstamento(est);
+    if (tipoVinc) setTipoVinculacion(tipoVinc);
   }, []);
 
   useEffect(() => {
@@ -320,21 +323,31 @@ export default function Matricula() {
               setFormData({ ...formData, tipo_vinculacion: e.target.value })
             }
           >
-            <FormControlLabel
-              value="Particular"
-              control={<Radio />}
-              label="Particular"
-            />
-            <FormControlLabel
-              value="Relacion Univalle - Hijos de funcionarios"
-              control={<Radio />}
-              label="Relación Univalle - Hijos de funcionarios"
-            />
-            <FormControlLabel
-              value="Relacion Univalle - Hijos de egresados"
-              control={<Radio />}
-              label="Relación Univalle - Hijos de egresados"
-            />
+            {tipoVinculacion === "Becados" ? (
+              <FormControlLabel
+                value="Becados"
+                control={<Radio />}
+                label="Becados"
+              />
+            ) : (
+              <>
+                <FormControlLabel
+                  value="Particular"
+                  control={<Radio />}
+                  label="Particular"
+                />
+                <FormControlLabel
+                  value="Relacion Univalle - Hijos de funcionarios"
+                  control={<Radio />}
+                  label="Relación Univalle - Hijos de funcionarios"
+                />
+                <FormControlLabel
+                  value="Relacion Univalle - Hijos de egresados"
+                  control={<Radio />}
+                  label="Relación Univalle - Hijos de egresados"
+                />
+              </>
+            )}
           </RadioGroup>
         </FormControl>
 
