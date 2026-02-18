@@ -17,8 +17,8 @@ import {
 } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -26,7 +26,6 @@ import { API_BASE_URL } from "../../../../../config";
 import { useRouter } from "next/navigation";
 
 import Formulario from "@/components/formulario";
-
 
 export default function DetallarMatricula() {
   const router = useRouter();
@@ -154,6 +153,7 @@ export default function DetallarMatricula() {
     observaciones: null,
     recibo_pago: "",
     certificado: "",
+    recibo_servicio: "",
     verificacion_recibo_pago: null,
     verificacion_certificado: null,
     audit_documento_recibo_pago: null,
@@ -165,6 +165,7 @@ export default function DetallarMatricula() {
   // Estados para manejo de archivos
   const [reciboPago, setReciboPago] = useState<File | null>(null);
   const [certificado, setCertificado] = useState<File | null>(null);
+  const [reciboServicio, setReciboServicio] = useState<File | null>(null);
 
   // Obtener datos del estudiante y matricula
   useEffect(() => {
@@ -234,6 +235,9 @@ export default function DetallarMatricula() {
       }
       if (certificado) {
         formDataMatriculaToSend.append("certificado", certificado);
+      }
+      if (reciboServicio) {
+        formDataMatriculaToSend.append("recibo_servicio", reciboServicio);
       }
       await axios.patch(
         `${API_BASE_URL}/matricula/mat/${formDataMatricula.id_inscripcion}/`,
@@ -478,6 +482,50 @@ export default function DetallarMatricula() {
               {certificado && (
                 <Typography variant="caption" color="textSecondary">
                   {certificado.name}
+                </Typography>
+              )}
+            </div>
+          )}
+
+          {formDataMatricula.recibo_servicio && (
+            <Button
+              variant="outlined"
+              color="primary"
+              href={formDataMatricula.recibo_servicio}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="buttons-secondary mt-2"
+              startIcon={<PictureAsPdfIcon />}
+            >
+              Ver recibo de servicios
+            </Button>
+          )}
+
+          {editable && (
+            <div className="my-4 flex flex-col items-center gap-3">
+              <InputLabel id="recibo_servicio">Recibo de servicios</InputLabel>
+              <Button
+                variant="contained"
+                component="label"
+                className="my-2 rounded-2xl bg-primary"
+              >
+                {reciboServicio ? "Cambiar Recibo de Servicios" : "Elegir Recibo de Servicios"}
+                <input
+                  name="recibo_servicio"
+                  type="file"
+                  accept=".pdf"
+                  hidden
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setReciboServicio(file);
+                    }
+                  }}
+                />
+              </Button>
+              {reciboServicio && (
+                <Typography variant="caption" color="textSecondary">
+                  {reciboServicio.name}
                 </Typography>
               )}
             </div>
