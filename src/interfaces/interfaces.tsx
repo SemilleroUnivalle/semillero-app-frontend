@@ -157,6 +157,7 @@ export interface Matricula {
   observaciones: string | null;
   recibo_pago: string;
   certificado: string;
+  recibo_servicio: string;
   verificacion_recibo_pago: boolean | null;
   verificacion_certificado: boolean | null;
   audit_documento_recibo_pago: AuditInterface | null;

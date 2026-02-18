@@ -37,6 +37,7 @@ export default function Matricula() {
   // Estados para los archivos
   const [reciboPago, setReciboPago] = useState<File | null>(null);
   const [certificado, setCertificado] = useState<File | null>(null);
+  const [reciboServicio, setReciboServicio] = useState<File | null>(null);
 
   // Estado para términos
   const [terminos, setTerminos] = useState(false);
@@ -55,12 +56,15 @@ export default function Matricula() {
 
   const [estamento, setEstamento] = useState<string>("");
   const [grado, setGrado] = useState<string>("");
+  const [tipoVinculacion, setTipoVinculacion] = useState<string>("");
 
   useEffect(() => {
     const est = localStorage.getItem("estamento");
     const grd = localStorage.getItem("grado");
+    const tipoVinc = localStorage.getItem("tipo_vinculacion");
     if (grd) setGrado(grd);
     if (est) setEstamento(est);
+    if (tipoVinc) setTipoVinculacion(tipoVinc);
   }, []);
 
   useEffect(() => {
@@ -138,8 +142,13 @@ export default function Matricula() {
     const estamento = localStorage.getItem("estamento");
     const grado = localStorage.getItem("grado");
 
-    if (!reciboPago) {
+    if (tipoVinculacion !== "Becados" && !reciboPago) {
       alert("El recibo de pago es obligatorio");
+      return;
+    }
+
+    if (tipoVinculacion === "Becados" && !reciboServicio) {
+      alert("El recibo de servicios es obligatorio para becados");
       return;
     }
 
@@ -173,6 +182,9 @@ export default function Matricula() {
     }
     if (certificado) {
       formDataToSend.append("certificado", certificado);
+    }
+    if (reciboServicio) {
+      formDataToSend.append("recibo_servicio", reciboServicio);
     }
 
     // Imprime todos los datos que se van a enviar
@@ -320,21 +332,31 @@ export default function Matricula() {
               setFormData({ ...formData, tipo_vinculacion: e.target.value })
             }
           >
-            <FormControlLabel
-              value="Particular"
-              control={<Radio />}
-              label="Particular"
-            />
-            <FormControlLabel
-              value="Relacion Univalle - Hijos de funcionarios"
-              control={<Radio />}
-              label="Relación Univalle - Hijos de funcionarios"
-            />
-            <FormControlLabel
-              value="Relacion Univalle - Hijos de egresados"
-              control={<Radio />}
-              label="Relación Univalle - Hijos de egresados"
-            />
+            {tipoVinculacion === "Becados" ? (
+              <FormControlLabel
+                value="Becados"
+                control={<Radio />}
+                label="Becados"
+              />
+            ) : (
+              <>
+                <FormControlLabel
+                  value="Particular"
+                  control={<Radio />}
+                  label="Particular"
+                />
+                <FormControlLabel
+                  value="Relacion Univalle - Hijos de funcionarios"
+                  control={<Radio />}
+                  label="Relación Univalle - Hijos de funcionarios"
+                />
+                <FormControlLabel
+                  value="Relacion Univalle - Hijos de egresados"
+                  control={<Radio />}
+                  label="Relación Univalle - Hijos de egresados"
+                />
+              </>
+            )}
           </RadioGroup>
         </FormControl>
 
@@ -343,34 +365,116 @@ export default function Matricula() {
         </h2>
         {/* Inputs para subir archivos */}
         <div className="flex flex-wrap justify-around gap-4 text-gray-600">
-          <div className="my-4 flex flex-col gap-3">
-            <h3>Recibo de pago</h3>
-            <input
-              name="recibo_pago"
-              type="file"
-              accept=".pdf"
-              className="block w-full text-sm text-gray-500"
-              onChange={(e) => setReciboPago(e.target.files?.[0] || null)}
-            />
-          </div>
+          {tipoVinculacion === "Becados" ? (
+            <div className="my-4 flex flex-col gap-3">
+              <InputLabel id="recibo-servicios-label" className="font-bold">
+                Recibo de servicios
+              </InputLabel>
+              <Button
+                variant="contained"
+                component="label"
+                className="my-2 rounded-2xl bg-primary"
+              >
+                Elegir documento (PDF)
+                <input
+                  name="recibo_servicio"
+                  type="file"
+                  hidden
+                  accept=".pdf"
+                  // className="block w-1/2 text-sm text-gray-500"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setReciboServicio(file);
+                    }
+                  }}
+                />
+              </Button>
+
+              <h2>
+                {" "}
+                {reciboServicio
+                  ? reciboServicio.name
+                  : "No se ha seleccionado un recibo de servicios"}
+              </h2>
+            </div>
+          ) : (
+
+
+            <div className="my-4 flex flex-col gap-3">
+              <InputLabel id="recibo-pago-label" className="font-bold">
+                Recibo de pago
+              </InputLabel>
+              <Button
+                variant="contained"
+                component="label"
+                className="my-2 rounded-2xl bg-primary"
+              >
+                Elegir documento (PDF)
+                <input
+                  name="recibo_pago"
+                  type="file"
+                  hidden
+                  accept=".pdf"
+                  // className="block w-1/2 text-sm text-gray-500"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setReciboPago(file);
+                    }
+                  }}
+                />
+              </Button>
+
+              <h2>
+                {" "}
+                {reciboPago
+                  ? reciboPago.name
+                  : "No se ha seleccionado un recibo de pago"}
+              </h2>
+            </div>
+          )}
           {/* Mostrar solo si NO es estamento Privado con tipo de vinculación Particular */}
           {!(
             estamento === "PRIVADO" &&
             formData.tipo_vinculacion === "Particular"
           ) && (
+
             <div className="my-4 flex flex-col gap-3">
-              <h3>Certificado</h3>
+              <InputLabel id="certificado-label" className="font-bold">
+                Certificado
+              </InputLabel>
               <p>
                 (Certificado de estudios, acta de grado, diploma, certificado
                 relación Univalle)
               </p>
-              <input
-                name="certificado_estudio"
-                type="file"
-                accept=".pdf"
-                className="block w-full text-sm text-gray-500"
-                onChange={(e) => setCertificado(e.target.files?.[0] || null)}
-              />
+              <Button
+                variant="contained"
+                component="label"
+                className="my-2 rounded-2xl bg-primary"
+              >
+                Elegir documento (PDF)
+                <input
+                  name="certificado"
+                  type="file"
+                  hidden
+                  accept=".pdf"
+                  // className="block w-1/2 text-sm text-gray-500"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setCertificado(file);
+                    }
+                  }}
+                />
+              </Button>
+
+              <h2>
+                {" "}
+                {certificado
+                  ? certificado.name
+                  : "No se ha seleccionado un certificado"}
+              </h2>
             </div>
           )}
         </div>
