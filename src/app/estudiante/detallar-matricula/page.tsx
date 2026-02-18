@@ -128,6 +128,7 @@ export default function DetallarMatricula() {
       observaciones: null,
       recibo_pago: "",
       certificado: "",
+      recibo_servicio: "",
       verificacion_certificado: null,
       verificacion_recibo_pago: null,
       audit_documento_recibo_pago: null,
