@@ -414,6 +414,20 @@ export default function RegistroBecados() {
                   onChange={handleFotoChange}
                 />
               </Button>
+              <h2>
+                {fotoPerfil ? (
+                  <>
+                  
+                    {fotoPerfil.size / (1024 * 1024) > 2 && (
+                      <span style={{ color: "red", marginLeft: "8px" }}>
+                        ⚠️ La imagen excede 2 MB
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  "No se ha seleccionado imagen"
+                )}
+              </h2>
             </div>
 
             {/* Contenedor Informacion Personal */}
@@ -1117,10 +1131,22 @@ export default function RegistroBecados() {
             </Button>
 
             <h2>
-              {" "}
-              {documentoIdentidad
-                ? documentoIdentidad.name
-                : "No se ha seleccionado un documento"}
+              {documentoIdentidad ? (
+                <>
+                  {documentoIdentidad.size / (1024 * 1024) > 2 && (
+                    <span style={{ color: "red", marginLeft: "8px" }}>
+                      ⚠️ El documento excede 2 MB
+                    </span>
+                  )}
+                  <br />
+                  <span>
+                    {documentoIdentidad.name} -{" "}
+                    {(documentoIdentidad.size / (1024 * 1024)).toFixed(2)} MB
+                  </span>
+                </>
+              ) : (
+                "No se ha seleccionado documento"
+              )}
             </h2>
           </div>
           <Alert className="mt-3" severity="info">

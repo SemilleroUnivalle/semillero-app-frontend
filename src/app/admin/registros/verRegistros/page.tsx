@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Estudiante } from "@/interfaces/interfaces";
+import { Estudiante, Matricula } from "@/interfaces/interfaces";
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -49,6 +49,14 @@ export default function VerRegistros() {
       headerName: "Grado",
       flex: 0.5,
     },
+    {
+    field: "matriculas", 
+    headerName: "Matrículas",
+    flex: 0.5,
+    renderCell: (params) => (
+      <Chip label={params.value} color="primary" variant="outlined" />
+    ),
+  },
     {
       field: "estado",
       headerName: "Estado",
@@ -136,6 +144,7 @@ export default function VerRegistros() {
     estamento: string;
     grado: string;
     estado: string;
+    matriculas: number;
   }
 
   const [rows, setRows] = useState<EstudianteRow[]>([]);
@@ -185,21 +194,40 @@ export default function VerRegistros() {
         });
 
         if (response.status === 200) {
-          // Formatea los datos para la tabla
-          const formateado = response.data.map((student: Estudiante) => ({
-            id: student.id_estudiante,
-            numero_documento: student.numero_documento || "",
-            apellido: student.apellido || "",
-            nombre: student.nombre || "",
-            email: student.email || "",
-            direccion: student.direccion_residencia || "",
-            estamento: student.estamento || "",
-            grado: student.grado || "", // No viene en el endpoint, lo dejas vacío
-            estado: student.estado || "",
-          }));
+        // Obtén todas las matrículas
+        const matriculasResponse = await axios.get(
+          `${API_BASE_URL}/matricula/mat/`,
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          },
+        );
 
-          setRows(formateado);
-        }
+        const matriculasPorEstudiante: Record<number, number> = {};
+        matriculasResponse.data.forEach((matricula: Matricula) => {
+          const idEst = matricula.estudiante.id_estudiante;
+          matriculasPorEstudiante[idEst] =
+            (matriculasPorEstudiante[idEst] || 0) + 1;
+        });
+
+        console.log("Matrículas por estudiante:", matriculasPorEstudiante); // Verifica el conteo de matrículas
+
+        const formateado = response.data.map((student: Estudiante) => ({
+          id: student.id_estudiante,
+          numero_documento: student.numero_documento || "",
+          apellido: student.apellido || "",
+          nombre: student.nombre || "",
+          email: student.email || "",
+          direccion: student.direccion_residencia || "",
+          estamento: student.estamento || "",
+          grado: student.grado || "",
+          estado: student.estado || "",
+          matriculas: matriculasPorEstudiante[student.id_estudiante] || 0, // 👈 Aquí
+        }));
+
+        setRows(formateado);
+      }
 
         setLoading(false);
       } catch (error) {
