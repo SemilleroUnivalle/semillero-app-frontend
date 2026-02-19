@@ -18,7 +18,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../config";
-import Matricula from "../matricula/page";
 
 // Interfaces para Departamentos y Municipios
 
@@ -85,6 +84,23 @@ const epss = [
   "EPS Savia Salud",
   "EPS Comfachocó",
   "EPS Comfaoriente",
+];
+const colegios = [
+  "I.E Carlos Holguin Lloreda",
+  "I.E Compartir",
+  "I.E Felidia",
+  "I.E Hernando Caicedo",
+  "I.E INEM Jorge Isaac",
+  "I.E Jose Manuel Saaveda Galindo",
+  "I.E Jose Maria Cabal",
+  "I.E Juan XIII",
+  "I.E Las Américas",
+  "I.E Pichindé",
+  "I.E Santa Fe",
+  "I.E Titan",
+  "I.E. Panebianco Americano (Candelaria)",
+  "I.E. Republica de Argentina",
+  "I.E.T.I. Comuna 17",
 ];
 export default function RegistroBecados() {
   const router = useRouter();
@@ -399,7 +415,7 @@ export default function RegistroBecados() {
                 />
               </Button>
             </div>
-            
+
             {/* Contenedor Informacion Personal */}
             <div className="flex w-2/3 flex-col items-center justify-center uppercase">
               <h2 className="text-md my-4 text-center font-semibold text-primary">
@@ -688,6 +704,13 @@ export default function RegistroBecados() {
               freeSolo
               options={epss}
               value={formData.eps}
+              inputValue={formData.eps}
+              onInputChange={(_, newInputValue) =>
+                setFormData({
+                  ...formData,
+                  eps: newInputValue.toUpperCase(),
+                })
+              }
               onChange={(_, newValue) =>
                 setFormData({ ...formData, eps: newValue?.toUpperCase() || "" })
               }
@@ -786,22 +809,34 @@ export default function RegistroBecados() {
           </h2>
           <div className="flex flex-wrap justify-between gap-2 text-gray-600">
             {/* Campo Colegio */}
-            <TextField
+
+            <Autocomplete
               className="inputs-textfield flex w-full flex-col sm:w-1/4"
-              hidden={esDocente}
-              label="Colegio"
-              name="colegio"
-              variant="outlined"
-              type="text"
-              fullWidth
-              required
+              freeSolo
+              options={colegios}
               value={formData.colegio}
-              onChange={(e) =>
+              inputValue={formData.colegio}
+              onChange={(_, newValue) =>
                 setFormData({
                   ...formData,
-                  colegio: e.target.value.toUpperCase(),
+                  colegio: newValue?.toUpperCase() || "",
                 })
               }
+              onInputChange={(_, newInputValue) =>
+                setFormData({
+                  ...formData,
+                  colegio: newInputValue.toUpperCase(),
+                })
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Colegio"
+                  required
+                  variant="outlined"
+                  fullWidth
+                />
+              )}
             />
             {/* Campo Estamento Colegio */}
             {!esDocente && (
@@ -941,7 +976,6 @@ export default function RegistroBecados() {
                     nombre_acudiente: e.target.value.toUpperCase(),
                   })
                 }
-                
               />
               {/* Campo Apellidos del acudiente  */}
               <TextField
@@ -961,50 +995,48 @@ export default function RegistroBecados() {
                 }
               />
 
-{/* Campo Tipo de Documento */}
-                <FormControl
-                  className="inputs-textfield flex w-full flex-col sm:w-1/4"
-                >
-                  <InputLabel id="tipo_documento_acudiente">
-                    Tipo de documento
-                  </InputLabel>
-                  <Select
-                    labelId="tipo_documento_acudiente"
-                    id="tipo_documento_acudiente"
-                    label="tipo_documento_acudiente"
-                    required
-                    value={formDataAcudiente.tipo_documento_acudiente}
-                    onChange={(e) =>
-                      setFormDataAcudiente({
-                        ...formDataAcudiente,
-                        tipo_documento_acudiente: e.target.value,
-                      })
-                    }
-                  >
-                    <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
-                    <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
-                    <MenuItem value={"PPT"}>
-                      Permiso de protección temporal
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-                {/* Campo Numero de Documento */}
-                <TextField
-                  className="inputs-textfield flex w-full flex-col sm:w-1/4"
-                  label="Número de identificación"
-                  name="numero_identificacion"
-                  variant="outlined"
-                  type="number"
-                  fullWidth
+              {/* Campo Tipo de Documento */}
+              <FormControl className="inputs-textfield flex w-full flex-col sm:w-1/4">
+                <InputLabel id="tipo_documento_acudiente">
+                  Tipo de documento
+                </InputLabel>
+                <Select
+                  labelId="tipo_documento_acudiente"
+                  id="tipo_documento_acudiente"
+                  label="tipo_documento_acudiente"
                   required
-                  value={formDataAcudiente.numero_documento_acudiente}
+                  value={formDataAcudiente.tipo_documento_acudiente}
                   onChange={(e) =>
                     setFormDataAcudiente({
                       ...formDataAcudiente,
-                      numero_documento_acudiente: e.target.value,
+                      tipo_documento_acudiente: e.target.value,
                     })
                   }
-                />
+                >
+                  <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
+                  <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
+                  <MenuItem value={"PPT"}>
+                    Permiso de protección temporal
+                  </MenuItem>
+                </Select>
+              </FormControl>
+              {/* Campo Numero de Documento */}
+              <TextField
+                className="inputs-textfield flex w-full flex-col sm:w-1/4"
+                label="Número de identificación"
+                name="numero_identificacion"
+                variant="outlined"
+                type="number"
+                fullWidth
+                required
+                value={formDataAcudiente.numero_documento_acudiente}
+                onChange={(e) =>
+                  setFormDataAcudiente({
+                    ...formDataAcudiente,
+                    numero_documento_acudiente: e.target.value,
+                  })
+                }
+              />
 
               {/* Campo Correo Electronico del Acudiente */}
               <TextField
@@ -1105,7 +1137,6 @@ export default function RegistroBecados() {
           </Button>
         </div>
       </form>
-
     </div>
   );
 }

@@ -397,7 +397,7 @@ export default function Registro() {
                 />
               </Button>
             </div>
-            
+
             {/* Contenedor Informacion Personal */}
             <div className="flex w-2/3 flex-col items-center justify-center uppercase">
               <h2 className="text-md my-4 text-center font-semibold text-primary">
@@ -686,6 +686,13 @@ export default function Registro() {
               freeSolo
               options={epss}
               value={formData.eps}
+              inputValue={formData.eps}
+              onInputChange={(_, newInputValue) =>
+                setFormData({
+                  ...formData,
+                  eps: newInputValue.toUpperCase(),
+                })
+              }
               onChange={(_, newValue) =>
                 setFormData({ ...formData, eps: newValue?.toUpperCase() || "" })
               }
@@ -939,7 +946,6 @@ export default function Registro() {
                     nombre_acudiente: e.target.value.toUpperCase(),
                   })
                 }
-                
               />
               {/* Campo Apellidos del acudiente  */}
               <TextField
@@ -959,50 +965,48 @@ export default function Registro() {
                 }
               />
 
-{/* Campo Tipo de Documento */}
-                <FormControl
-                  className="inputs-textfield flex w-full flex-col sm:w-1/4"
-                >
-                  <InputLabel id="tipo_documento_acudiente">
-                    Tipo de documento
-                  </InputLabel>
-                  <Select
-                    labelId="tipo_documento_acudiente"
-                    id="tipo_documento_acudiente"
-                    label="tipo_documento_acudiente"
-                    required
-                    value={formDataAcudiente.tipo_documento_acudiente}
-                    onChange={(e) =>
-                      setFormDataAcudiente({
-                        ...formDataAcudiente,
-                        tipo_documento_acudiente: e.target.value,
-                      })
-                    }
-                  >
-                    <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
-                    <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
-                    <MenuItem value={"PPT"}>
-                      Permiso de protección temporal
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-                {/* Campo Numero de Documento */}
-                <TextField
-                  className="inputs-textfield flex w-full flex-col sm:w-1/4"
-                  label="Número de identificación"
-                  name="numero_identificacion"
-                  variant="outlined"
-                  type="number"
-                  fullWidth
+              {/* Campo Tipo de Documento */}
+              <FormControl className="inputs-textfield flex w-full flex-col sm:w-1/4">
+                <InputLabel id="tipo_documento_acudiente">
+                  Tipo de documento
+                </InputLabel>
+                <Select
+                  labelId="tipo_documento_acudiente"
+                  id="tipo_documento_acudiente"
+                  label="tipo_documento_acudiente"
                   required
-                  value={formDataAcudiente.numero_documento_acudiente}
+                  value={formDataAcudiente.tipo_documento_acudiente}
                   onChange={(e) =>
                     setFormDataAcudiente({
                       ...formDataAcudiente,
-                      numero_documento_acudiente: e.target.value,
+                      tipo_documento_acudiente: e.target.value,
                     })
                   }
-                />
+                >
+                  <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
+                  <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
+                  <MenuItem value={"PPT"}>
+                    Permiso de protección temporal
+                  </MenuItem>
+                </Select>
+              </FormControl>
+              {/* Campo Numero de Documento */}
+              <TextField
+                className="inputs-textfield flex w-full flex-col sm:w-1/4"
+                label="Número de identificación"
+                name="numero_identificacion"
+                variant="outlined"
+                type="number"
+                fullWidth
+                required
+                value={formDataAcudiente.numero_documento_acudiente}
+                onChange={(e) =>
+                  setFormDataAcudiente({
+                    ...formDataAcudiente,
+                    numero_documento_acudiente: e.target.value,
+                  })
+                }
+              />
 
               {/* Campo Correo Electronico del Acudiente */}
               <TextField

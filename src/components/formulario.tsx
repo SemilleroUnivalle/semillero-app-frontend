@@ -615,6 +615,7 @@ export default function FormularioDatos({
               />
 
               <TextField
+              type="date"
                 className={
                   editable
                     ? "inputs-textfield flex w-full flex-col sm:w-1/4"
@@ -623,6 +624,10 @@ export default function FormularioDatos({
                 label="Fecha de nacimiento"
                 value={formData.fecha_nacimiento || ""}
                 InputProps={{ readOnly: !editable }}
+                onChange={(e) =>
+                  setFormData({ ...formData, fecha_nacimiento: e.target.value })
+                }
+                
               />
             </div>
           </div>
