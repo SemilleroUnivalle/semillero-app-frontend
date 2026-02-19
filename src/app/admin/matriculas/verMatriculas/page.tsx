@@ -58,44 +58,44 @@ export default function VerMatriculas() {
       headerName: "Tipo de Inscrito",
       flex: 1,
     },
-    // {
-    //   field: "estado",
-    //   headerName: "Estado",
-    //   flex: 1,
-    //   renderCell: (params) => {
-    //     if (params.value === "Revisado") {
-    //       return (
-    //         <Chip
-    //           label="Revisado"
-    //           color="success"
-    //           variant="outlined"
-    //           sx={{ fontWeight: "bold" }}
-    //         />
-    //       );
-    //     }
-    //     if (params.value === "No revisado") {
-    //       return (
-    //         <Chip
-    //           label="No revisado"
-    //           color="error"
-    //           variant="outlined"
-    //           sx={{ fontWeight: "bold" }}
-    //         />
-    //       );
-    //     }
-    //     if (params.value === "Pendiente") {
-    //       return (
-    //         <Chip
-    //           label="Pendiente"
-    //           color="warning"
-    //           variant="outlined"
-    //           sx={{ fontWeight: "bold" }}
-    //         />
-    //       );
-    //     }
-    //     return null;
-    //   },
-    // },
+     {
+       field: "estado",
+       headerName: "Estado",
+       flex: 0.5,
+       renderCell: (params) => {
+         if (params.value === "Revisado") {
+           return (
+             <Chip
+               label="Revisado"
+               color="success"
+               variant="outlined"
+               sx={{ fontWeight: "bold" }}
+             />
+           );
+         }
+         if (params.value === "No revisado") {
+           return (
+             <Chip
+               label="No revisado"
+               color="error"
+               variant="outlined"
+               sx={{ fontWeight: "bold" }}
+             />
+           );
+         }
+         if (params.value === "Pendiente") {
+           return (
+             <Chip
+               label="Pendiente"
+               color="warning"
+               variant="outlined"
+               sx={{ fontWeight: "bold" }}
+             />
+           );
+         }
+         return null;
+       },
+     },
     {
       field: "editar",
       headerName: "Acciones",
@@ -208,7 +208,7 @@ export default function VerMatriculas() {
             modulo: matricula.modulo.nombre_modulo || "",
             estamento: matricula.estudiante.estamento || "",
             tipo: matricula.tipo_vinculacion || "",
-            estado: matricula.estado, // true si es "Verificado", false en otro caso
+            estado: matricula.estudiante.estado, // true si es "Verificado", false en otro caso
           }));
 
           console.log("Datos formateados:", formateado); // Verifica los datos formateados
