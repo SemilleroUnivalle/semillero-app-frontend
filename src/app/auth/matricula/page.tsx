@@ -323,7 +323,7 @@ export default function Matricula() {
             <h2>TIPO DE VINCULACIÓN</h2>
           </FormLabel>
           <RadioGroup
-            row
+            row={false}
             className="selects"
             aria-labelledby="tipo-vinculacion"
             name="tipo-vinculacion"
@@ -333,11 +333,28 @@ export default function Matricula() {
             }
           >
             {tipoVinculacion === "Becados" ? (
-              <FormControlLabel
-                value="Becados"
-                control={<Radio />}
-                label="Becados"
-              />
+              <>
+                <FormControlLabel
+                  value="Becados - Relación Docentes"
+                  control={<Radio />}
+                  label="Becados - Relación Docentes"
+                />
+                <FormControlLabel
+                  value="Becados - SINTRAUNICOL"
+                  control={<Radio />}
+                  label="Becados - SINTRAUNICOL"
+                />
+                <FormControlLabel
+                  value="Becados - Universidad pal Barrio"
+                  control={<Radio />}
+                  label="Becados - Universidad pal Barrio"
+                />
+                <FormControlLabel
+                  value="Becados - Solicitud Individual"
+                  control={<Radio />}
+                  label="Becados - Solicitud Individual"
+                />
+              </>
             ) : (
               <>
                 <FormControlLabel
@@ -399,8 +416,6 @@ export default function Matricula() {
               </h2>
             </div>
           ) : (
-
-
             <div className="my-4 flex flex-col gap-3">
               <InputLabel id="recibo-pago-label" className="font-bold">
                 Recibo de pago
@@ -439,7 +454,6 @@ export default function Matricula() {
             estamento === "PRIVADO" &&
             formData.tipo_vinculacion === "Particular"
           ) && (
-
             <div className="my-4 flex flex-col gap-3">
               <InputLabel id="certificado-label" className="font-bold">
                 Certificado
