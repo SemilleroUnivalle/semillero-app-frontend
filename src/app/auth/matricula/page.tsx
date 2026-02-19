@@ -454,6 +454,7 @@ export default function Matricula() {
             estamento === "PRIVADO" &&
             formData.tipo_vinculacion === "Particular"
           ) && (
+
             <div className="my-4 flex flex-col gap-3">
               <InputLabel id="certificado-label" className="font-bold">
                 Certificado
