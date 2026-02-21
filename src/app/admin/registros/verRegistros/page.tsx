@@ -338,6 +338,7 @@ export default function VerRegistros() {
         </Alert>
       </Snackbar>
       <div className="mx-auto mt-4 flex w-11/12 justify-around rounded-2xl bg-white p-2 shadow-md">
+      {/* Barra buscadora */}
         <TextField
           label="Buscar por nombre, apellido o correo"
           variant="outlined"
