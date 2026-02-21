@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {Matricula} from "@/interfaces/interfaces"
+import { Matricula } from "@/interfaces/interfaces";
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -15,13 +15,14 @@ import {
   ListItemText,
   Tooltip,
   Snackbar,
+  TextField,
   Alert,
   Chip,
 } from "@mui/material";
 
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import { TrashIcon  } from "@heroicons/react/24/outline";
-import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
+import { TrashIcon } from "@heroicons/react/24/outline";
+import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 
@@ -58,44 +59,44 @@ export default function VerMatriculas() {
       headerName: "Tipo de Inscrito",
       flex: 1,
     },
-     {
-       field: "estado",
-       headerName: "Estado",
-       flex: 0.5,
-       renderCell: (params) => {
-         if (params.value === "Revisado") {
-           return (
-             <Chip
-               label="Revisado"
-               color="success"
-               variant="outlined"
-               sx={{ fontWeight: "bold" }}
-             />
-           );
-         }
-         if (params.value === "No revisado") {
-           return (
-             <Chip
-               label="No revisado"
-               color="error"
-               variant="outlined"
-               sx={{ fontWeight: "bold" }}
-             />
-           );
-         }
-         if (params.value === "Pendiente") {
-           return (
-             <Chip
-               label="Pendiente"
-               color="warning"
-               variant="outlined"
-               sx={{ fontWeight: "bold" }}
-             />
-           );
-         }
-         return null;
-       },
-     },
+    {
+      field: "estado",
+      headerName: "Estado",
+      flex: 0.5,
+      renderCell: (params) => {
+        if (params.value === "Revisado") {
+          return (
+            <Chip
+              label="Revisado"
+              color="success"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        if (params.value === "No revisado") {
+          return (
+            <Chip
+              label="No revisado"
+              color="error"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        if (params.value === "Pendiente") {
+          return (
+            <Chip
+              label="Pendiente"
+              color="warning"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        return null;
+      },
+    },
     {
       field: "editar",
       headerName: "Acciones",
@@ -134,20 +135,21 @@ export default function VerMatriculas() {
   const paginationModel = { page: 0, pageSize: 50 };
 
   interface MatriculaRow {
-  id: number;
-  apellido: string;
-  nombre: string;
-  email: string;
-  direccion: string;
-  periodo: string;
-  modulo: string;
-  estamento: string;
-  tipo: string;
-  estado: string;
-}
+    id: number;
+    apellido: string;
+    nombre: string;
+    email: string;
+    direccion: string;
+    periodo: string;
+    modulo: string;
+    estamento: string;
+    tipo: string;
+    estado: string;
+  }
 
   const [rows, setRows] = useState<MatriculaRow[]>([]);
   const [success, setSuccess] = useState(false);
+   const [searchText, setSearchText] = useState("");
 
   const [loading, setLoading] = useState(true);
 
@@ -215,7 +217,6 @@ export default function VerMatriculas() {
 
           setRows(formateado);
         }
-
 
         setLoading(false);
       } catch (error) {
@@ -312,16 +313,23 @@ export default function VerMatriculas() {
       const tipoMatch =
         selectedTipo.length === 0 || selectedTipo.includes(row.tipo);
 
-      const estadoAsString = row.estado ? "Activo" : "Inactivo";
       const estadoMatch =
-        selectedEstado.length === 0 || selectedEstado.includes(estadoAsString);
+        selectedEstado.length === 0 || selectedEstado.includes(row.estado);
+
+// Filtro de búsqueda por texto
+      const searchMatch =
+        searchText === "" ||
+        row.nombre.toLowerCase().includes(searchText.toLowerCase()) ||
+        row.apellido.toLowerCase().includes(searchText.toLowerCase()) ||
+        row.email.toLowerCase().includes(searchText.toLowerCase());
 
       return (
         periodoMatch &&
         moduloMatch &&
         estamentoMatch &&
         tipoMatch &&
-        estadoMatch
+        estadoMatch &&
+        searchMatch
       );
     });
   }, [
@@ -331,6 +339,7 @@ export default function VerMatriculas() {
     selectedEstamento,
     selectedTipo,
     selectedEstado,
+    searchText,
   ]);
 
   if (loading!) {
@@ -353,6 +362,16 @@ export default function VerMatriculas() {
         </Alert>
       </Snackbar>
       <div className="mx-auto mt-4 flex w-11/12 justify-between rounded-2xl bg-white p-2 shadow-md">
+        {/* Barra buscadora */}
+        <TextField
+          label="Buscar por nombre, apellido o correo"
+          variant="outlined"
+          fullWidth
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          placeholder="Escribe para buscar..."
+          className="inputs-textfield w-full sm:w-1/6"
+        />
         {/* Filtro por Periodos */}
         <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
           <InputLabel id="filtro-periodos">Periodos</InputLabel>
@@ -447,12 +466,12 @@ export default function VerMatriculas() {
             onChange={handleChangeEstado}
             renderValue={(selected) => selected.join(", ")}
           >
-            {/* {[...new Set(rows.map((row) => row.estado))].map((estado) => (
+            {[...new Set(rows.map((row) => row.estado))].map((estado) => (
               <MenuItem key={estado} value={estado}>
                 <Checkbox checked={selectedEstado.indexOf(estado) > -1} />
                 <ListItemText primary={estado} />
               </MenuItem>
-            ))} */}
+            ))}
           </Select>
         </FormControl>
       </div>

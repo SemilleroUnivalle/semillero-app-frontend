@@ -85,6 +85,31 @@ const epss = [
   "EPS Comfachocó",
   "EPS Comfaoriente",
 ];
+const comunasCali = [
+  "RURAL",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "11",
+  "12",
+  "13",
+  "14",
+  "15",
+  "16",
+  "17",
+  "18",
+  "19",
+  "20",
+  "21",
+  "22",
+];
 export default function Registro() {
   const router = useRouter();
 
@@ -238,10 +263,23 @@ export default function Registro() {
         );
         setCargando(false);
       }
-    } catch (error) {
-      console.error("Error de conexión:", error);
-      alert("Hubo un error de conexión al intentar crear el estudiante.");
+    } catch (err) {
       setCargando(false);
+
+      let mensaje = "Error desconocido";
+      if (axios.isAxiosError(err)) {
+        // el backend puede devolver {detail: "..."} / {message: "..."} / etc.
+        mensaje =
+          (err.response?.data as any)?.detail ||
+          (err.response?.data as any)?.message ||
+          JSON.stringify(err.response?.data) ||
+          err.message;
+      } else if (err instanceof Error) {
+        mensaje = err.message;
+      }
+
+      console.error("Error al crear estudiante:", err);
+      alert(`Hubo un error al intentar crear el estudiante:\n${mensaje}`);
     }
   };
 
@@ -399,7 +437,6 @@ export default function Registro() {
               <h2>
                 {fotoPerfil ? (
                   <>
-                  
                     {fotoPerfil.size / (1024 * 1024) > 2 && (
                       <span style={{ color: "red", marginLeft: "8px" }}>
                         ⚠️ La imagen excede 2 MB
@@ -651,22 +688,28 @@ export default function Registro() {
             </FormControl>
 
             {/* Campo Comuna */}
-            <TextField
-              className="inputs-textfield flex w-full flex-col sm:w-1/4"
-              label="Comuna"
-              name="comuna"
-              variant="outlined"
-              type="number"
-              fullWidth
-              required
-              value={formData.comuna_residencia}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  comuna_residencia: e.target.value.toUpperCase(),
-                })
-              }
-            />
+            <FormControl className="inputs-textfield flex w-full flex-col sm:w-1/4">
+              <InputLabel id="comuna_residencia">Comuna</InputLabel>
+              <Select
+                labelId="comuna_residencia"
+                id="comuna_residencia"
+                label="Comuna"
+                required
+                value={formData.comuna_residencia}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    comuna_residencia: e.target.value,
+                  })
+                }
+              >
+                {comunasCali.map((comuna) => (
+                  <MenuItem key={comuna} value={comuna}>
+                    {comuna}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
             {/* Campo Dirección */}
             <TextField
