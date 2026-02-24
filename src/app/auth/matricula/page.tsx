@@ -372,6 +372,11 @@ export default function Matricula() {
                   control={<Radio />}
                   label="Relación Univalle - Hijos de egresados"
                 />
+                <FormControlLabel
+                  value="Convenio colegios"
+                  control={<Radio />}
+                  label="Convenio colegios"
+                />
               </>
             )}
           </RadioGroup>

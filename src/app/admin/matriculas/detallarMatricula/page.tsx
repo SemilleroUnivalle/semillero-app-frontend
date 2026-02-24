@@ -5,7 +5,6 @@ import { Estudiante, Matricula } from "@/interfaces/interfaces";
 import {
   TextField,
   InputLabel,
-  CircularProgress,
   Button,
   Typography,
   Box,
@@ -14,6 +13,9 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Divider,
+  FormControl,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -230,6 +232,17 @@ export default function DetallarMatricula() {
     try {
       const formDataMatriculaToSend = new FormData();
 
+      formDataMatriculaToSend.append(
+        "tipo_vinculacion",
+        formDataMatricula.tipo_vinculacion || "",
+      );
+      if (formDataMatricula.observaciones !== null) {
+        formDataMatriculaToSend.append(
+          "observaciones",
+          formDataMatricula.observaciones,
+        );
+      }
+
       if (reciboPago) {
         formDataMatriculaToSend.append("recibo_pago", reciboPago);
       }
@@ -249,11 +262,11 @@ export default function DetallarMatricula() {
           },
         },
       );
-      alert("Observaciones actualizadas correctamente.");
+      alert("Matricula actualizada correctamente.");
       setEditable(false);
     } catch (error) {
-      console.error("Error al actualizar observaciones:", error);
-      alert("No se pudo actualizar las observaciones.");
+      console.error("Error al actualizar matricula:", error);
+      alert("No se pudo actualizar la matricula.");
     }
   };
 
@@ -382,12 +395,52 @@ export default function DetallarMatricula() {
             InputProps={{ readOnly: true }}
           />
 
-          <TextField
-            className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
-            label="Tipo de vinculación"
-            value={formDataMatricula.tipo_vinculacion || ""}
-            InputProps={{ readOnly: true }}
-          />
+          {editable ? (
+            <FormControl className="inputs-textfield flex w-full flex-col sm:w-1/4">
+              <InputLabel id="tipo-vinculacion-label">
+                Tipo de vinculación
+              </InputLabel>
+              <Select
+                labelId="tipo-vinculacion-label"
+                value={formDataMatricula.tipo_vinculacion || ""}
+                label="Tipo de vinculación"
+                onChange={(e) =>
+                  setFormDataMatricula({
+                    ...formDataMatricula,
+                    tipo_vinculacion: e.target.value as string,
+                  })
+                }
+              >
+                <MenuItem value="Particular">Particular</MenuItem>
+                <MenuItem value="Relacion Univalle - Hijos de funcionarios">
+                  Relación Univalle - Hijos de funcionarios
+                </MenuItem>
+                <MenuItem value="Relacion Univalle - Hijos de egresados">
+                  Relación Univalle - Hijos de egresados
+                </MenuItem>
+                <MenuItem value="Convenio colegios">Convenio colegios</MenuItem>
+                <MenuItem value="Becados - Relación Docentes">
+                  Becados - Relación Docentes
+                </MenuItem>
+                <MenuItem value="Becados - SINTRAUNICOL">
+                  Becados - SINTRAUNICOL
+                </MenuItem>
+                <MenuItem value="Becados - Universidad pal Barrio">
+                  Becados - Universidad pal Barrio
+                </MenuItem>
+                <MenuItem value="Becados - Solicitud Individual">
+                  Becados - Solicitud Individual
+                </MenuItem>
+              </Select>
+            </FormControl>
+          ) : (
+            <TextField
+              className="inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
+              label="Tipo de vinculación"
+              value={formDataMatricula.tipo_vinculacion || ""}
+              InputProps={{ readOnly: true }}
+            />
+          )}
         </div>
       </Box>
 
@@ -509,7 +562,9 @@ export default function DetallarMatricula() {
                 component="label"
                 className="my-2 rounded-2xl bg-primary"
               >
-                {reciboServicio ? "Cambiar Recibo de Servicios" : "Elegir Recibo de Servicios"}
+                {reciboServicio
+                  ? "Cambiar Recibo de Servicios"
+                  : "Elegir Recibo de Servicios"}
                 <input
                   name="recibo_servicio"
                   type="file"
