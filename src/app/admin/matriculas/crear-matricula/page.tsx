@@ -405,6 +405,31 @@ export default function CrearMatricula() {
               control={<Radio />}
               label="Relación Univalle - Hijos de egresados"
             />
+            <FormControlLabel
+              value="Convenio colegios"
+              control={<Radio />}
+              label="Convenio colegios"
+            />
+            <FormControlLabel
+              value="Becados - Relación Docentes"
+              control={<Radio />}
+              label="Becados - Relación Docentes"
+            />
+            <FormControlLabel
+              value="Becados - SINTRAUNICOL"
+              control={<Radio />}
+              label="Becados - SINTRAUNICOL"
+            />
+            <FormControlLabel
+              value="Becados - Universidad pal Barrio"
+              control={<Radio />}
+              label="Becados - Universidad pal Barrio"
+            />
+            <FormControlLabel
+              value="Becados - Solicitud Individual"
+              control={<Radio />}
+              label="Becados - Solicitud Individual"
+            />
           </RadioGroup>
         </FormControl>
 
