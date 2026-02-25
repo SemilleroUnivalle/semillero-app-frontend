@@ -60,8 +60,46 @@ export default function VerMatriculas() {
       flex: 1,
     },
     {
-      field: "estado",
-      headerName: "Estado",
+      field: "estado_registro",
+      headerName: "Estado Registro",
+      flex: 0.5,
+      renderCell: (params) => {
+        if (params.value === "Revisado") {
+          return (
+            <Chip
+              label="Revisado"
+              color="success"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        if (params.value === "No revisado") {
+          return (
+            <Chip
+              label="No revisado"
+              color="error"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        if (params.value === "Pendiente") {
+          return (
+            <Chip
+              label="Pendiente"
+              color="warning"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        return null;
+      },
+    },
+    {
+      field: "estado_matricula",
+      headerName: "Estado Matrícula",
       flex: 0.5,
       renderCell: (params) => {
         if (params.value === "Revisado") {
@@ -144,7 +182,8 @@ export default function VerMatriculas() {
     modulo: string;
     estamento: string;
     tipo: string;
-    estado: string;
+    estado_registro: string;
+    estado_matricula: string;
   }
 
   const [rows, setRows] = useState<MatriculaRow[]>([]);
@@ -210,7 +249,8 @@ export default function VerMatriculas() {
             modulo: matricula.modulo.nombre_modulo || "",
             estamento: matricula.estudiante.estamento || "",
             tipo: matricula.tipo_vinculacion || "",
-            estado: matricula.estudiante.estado, // true si es "Verificado", false en otro caso
+            estado_registro: matricula.estudiante.estado, // true si es "Verificado", false en otro caso
+            estado_matricula: matricula.estado,
           }));
 
           console.log("Datos formateados:", formateado); // Verifica los datos formateados
@@ -314,7 +354,7 @@ export default function VerMatriculas() {
         selectedTipo.length === 0 || selectedTipo.includes(row.tipo);
 
       const estadoMatch =
-        selectedEstado.length === 0 || selectedEstado.includes(row.estado);
+        selectedEstado.length === 0 || selectedEstado.includes(row.estado_registro);
 
 // Filtro de búsqueda por texto
       const searchMatch =
@@ -466,7 +506,7 @@ export default function VerMatriculas() {
             onChange={handleChangeEstado}
             renderValue={(selected) => selected.join(", ")}
           >
-            {[...new Set(rows.map((row) => row.estado))].map((estado) => (
+            {[...new Set(rows.map((row) => row.estado_registro))].map((estado) => (
               <MenuItem key={estado} value={estado}>
                 <Checkbox checked={selectedEstado.indexOf(estado) > -1} />
                 <ListItemText primary={estado} />

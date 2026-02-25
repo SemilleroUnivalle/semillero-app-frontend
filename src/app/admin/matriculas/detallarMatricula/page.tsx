@@ -158,8 +158,10 @@ export default function DetallarMatricula() {
     recibo_servicio: "",
     verificacion_recibo_pago: null,
     verificacion_certificado: null,
+    verificacion_recibo_servicio: null,
     audit_documento_recibo_pago: null,
     audit_certificado: null,
+    audit_recibo_servicio: null,
   });
 
   const [success, setSuccess] = useState(false);
@@ -278,6 +280,15 @@ export default function DetallarMatricula() {
   const [estadoCertificado, setEstadoCertificado] = useState<boolean | null>(
     formDataMatricula.verificacion_certificado,
   );
+  const [estadoReciboServicio, setEstadoReciboServicio] = useState<
+    boolean | null
+  >(formDataMatricula.verificacion_recibo_servicio);
+
+  useEffect(() => {
+    setEstadoReciboPago(formDataMatricula.verificacion_recibo_pago);
+    setEstadoCertificado(formDataMatricula.verificacion_certificado);
+    setEstadoReciboServicio(formDataMatricula.verificacion_recibo_servicio);
+  }, [formDataMatricula]);
 
   // Manejadores para los cambios en los estados de verificación
 
@@ -337,6 +348,37 @@ export default function DetallarMatricula() {
       } catch (error) {
         console.error(
           "Error al actualizar verificación de certificado:",
+          error,
+        );
+      }
+    }
+  };
+
+  const handleEstadoReciboServicio = async (
+    event: React.MouseEvent<HTMLElement>,
+    newEstado: true | false | null,
+  ) => {
+    if (newEstado !== null && formDataMatricula.id_inscripcion) {
+      try {
+        const userString = localStorage.getItem("user");
+        let token = "";
+        if (userString) {
+          const user = JSON.parse(userString);
+          token = user.token;
+        }
+        await axios.patch(
+          `${API_BASE_URL}/matricula/mat/${formDataMatricula.id_inscripcion}/`,
+          { verificacion_recibo_servicio: newEstado },
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          },
+        );
+        setEstadoReciboServicio(newEstado);
+      } catch (error) {
+        console.error(
+          "Error al actualizar verificación de recibo de servicio:",
           error,
         );
       }
@@ -595,82 +637,152 @@ export default function DetallarMatricula() {
         </h2>
 
         <div className="flex w-full flex-wrap justify-around gap-4 text-gray-600">
-          <div>
-            <Typography variant="body1" color="textSecondary">
-              Recibo de pago verificado
-            </Typography>
-            <ToggleButtonGroup
-              value={estadoReciboPago}
-              exclusive
-              onChange={handleEstadoReciboPago}
-              aria-label="Estado de verificación"
-              sx={{ marginY: 2 }}
-            >
-              <ToggleButton value={true} aria-label="Aprobado" color="success">
-                <CheckCircleIcon></CheckCircleIcon>
-              </ToggleButton>
-              <ToggleButton value={false} aria-label="Rechazado" color="error">
-                <CancelIcon></CancelIcon>
-              </ToggleButton>
-            </ToggleButtonGroup>
+          {formDataMatricula.recibo_pago && (
             <div>
-              <p className="text-xs">
-                <span className="font-bold">Usuario: </span>
-                {formDataMatricula.audit_documento_recibo_pago?.usuario}
-                <br />
-                <span className="font-bold">Fecha: </span>
-                {formDataMatricula.audit_documento_recibo_pago?.timestamp
-                  ? new Date(
-                      formDataMatricula.audit_documento_recibo_pago.timestamp,
-                    ).toLocaleString("es-CO", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  : ""}
-              </p>
+              <Typography variant="body1" color="textSecondary">
+                Recibo de pago verificado
+              </Typography>
+              <ToggleButtonGroup
+                value={estadoReciboPago}
+                exclusive
+                onChange={handleEstadoReciboPago}
+                aria-label="Estado de verificación"
+                sx={{ marginY: 2 }}
+              >
+                <ToggleButton
+                  value={true}
+                  aria-label="Aprobado"
+                  color="success"
+                >
+                  <CheckCircleIcon></CheckCircleIcon>
+                </ToggleButton>
+                <ToggleButton
+                  value={false}
+                  aria-label="Rechazado"
+                  color="error"
+                >
+                  <CancelIcon></CancelIcon>
+                </ToggleButton>
+              </ToggleButtonGroup>
+              <div>
+                <p className="text-xs">
+                  <span className="font-bold">Usuario: </span>
+                  {formDataMatricula.audit_documento_recibo_pago?.usuario}
+                  <br />
+                  <span className="font-bold">Fecha: </span>
+                  {formDataMatricula.audit_documento_recibo_pago?.timestamp
+                    ? new Date(
+                        formDataMatricula.audit_documento_recibo_pago.timestamp,
+                      ).toLocaleString("es-CO", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : ""}
+                </p>
+              </div>
             </div>
-          </div>
-          <div>
-            <Typography variant="body1" color="textSecondary">
-              Certificado verificado
-            </Typography>
-            <ToggleButtonGroup
-              value={estadoCertificado}
-              exclusive
-              onChange={handleEstadoCertificado}
-              aria-label="Estado de verificación"
-              sx={{ marginY: 2 }}
-            >
-              <ToggleButton value={true} aria-label="Aprobado" color="success">
-                <CheckCircleIcon></CheckCircleIcon>
-              </ToggleButton>
-              <ToggleButton value={false} aria-label="Rechazado" color="error">
-                <CancelIcon></CancelIcon>
-              </ToggleButton>
-            </ToggleButtonGroup>
+          )}
+
+          {formDataMatricula.certificado && (
             <div>
-              <p className="text-xs">
-                <span className="font-bold">Usuario: </span>
-                {formDataMatricula.audit_certificado?.usuario}
-                <br />
-                <span className="font-bold">Fecha: </span>
-                {formDataMatricula.audit_certificado?.timestamp
-                  ? new Date(
-                      formDataMatricula.audit_certificado.timestamp,
-                    ).toLocaleString("es-CO", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  : ""}
-              </p>
+              <Typography variant="body1" color="textSecondary">
+                Certificado verificado
+              </Typography>
+              <ToggleButtonGroup
+                value={estadoCertificado}
+                exclusive
+                onChange={handleEstadoCertificado}
+                aria-label="Estado de verificación"
+                sx={{ marginY: 2 }}
+              >
+                <ToggleButton
+                  value={true}
+                  aria-label="Aprobado"
+                  color="success"
+                >
+                  <CheckCircleIcon></CheckCircleIcon>
+                </ToggleButton>
+                <ToggleButton
+                  value={false}
+                  aria-label="Rechazado"
+                  color="error"
+                >
+                  <CancelIcon></CancelIcon>
+                </ToggleButton>
+              </ToggleButtonGroup>
+              <div>
+                <p className="text-xs">
+                  <span className="font-bold">Usuario: </span>
+                  {formDataMatricula.audit_certificado?.usuario}
+                  <br />
+                  <span className="font-bold">Fecha: </span>
+                  {formDataMatricula.audit_certificado?.timestamp
+                    ? new Date(
+                        formDataMatricula.audit_certificado.timestamp,
+                      ).toLocaleString("es-CO", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : ""}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
+
+          {formDataMatricula.recibo_servicio && (
+            <div>
+              <Typography variant="body1" color="textSecondary">
+                Recibo de servicio verificado
+              </Typography>
+              <ToggleButtonGroup
+                value={estadoReciboServicio}
+                exclusive
+                onChange={handleEstadoReciboServicio}
+                aria-label="Estado de verificación"
+                sx={{ marginY: 2 }}
+              >
+                <ToggleButton
+                  value={true}
+                  aria-label="Aprobado"
+                  color="success"
+                >
+                  <CheckCircleIcon></CheckCircleIcon>
+                </ToggleButton>
+                <ToggleButton
+                  value={false}
+                  aria-label="Rechazado"
+                  color="error"
+                >
+                  <CancelIcon></CancelIcon>
+                </ToggleButton>
+              </ToggleButtonGroup>
+              <div>
+                <p className="text-xs">
+                  <span className="font-bold">Usuario: </span>
+                  {formDataMatricula.audit_recibo_servicio?.usuario}
+                  <br />
+                  <span className="font-bold">Fecha: </span>
+                  {formDataMatricula.audit_recibo_servicio?.timestamp
+                    ? new Date(
+                        formDataMatricula.audit_recibo_servicio.timestamp,
+                      ).toLocaleString("es-CO", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : ""}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         <h2 className="text-md my-4 text-center font-semibold text-primary">

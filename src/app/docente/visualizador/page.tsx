@@ -171,9 +171,14 @@ export default function VisualizadorAsistencia() {
           },
         );
 
-        if (response.status === 200) {
-          setSuccess(true);
-        }
+        if (response.status === 204) {
+        // Eliminar la asistencia del estado local
+        setRows((prevRows) =>
+          prevRows.filter((asistencia) => asistencia.id_asistencia !== id)
+        );
+        setSuccess(true);
+        console.log("Asistencia eliminada exitosamente");
+      }
 
         // setLoading(false);
       } catch (error) {

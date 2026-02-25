@@ -160,8 +160,10 @@ export interface Matricula {
   recibo_servicio: string;
   verificacion_recibo_pago: boolean | null;
   verificacion_certificado: boolean | null;
+  verificacion_recibo_servicio: boolean | null;
   audit_documento_recibo_pago: AuditInterface | null;
   audit_certificado: AuditInterface | null;
+  audit_recibo_servicio: AuditInterface | null;
 }
 
 export interface Grupo {
