@@ -216,6 +216,16 @@ export default function AsistenciaDocente() {
       return;
     }
 
+    if (!fechaAsistencia) {
+      alert("Debe seleccionar una fecha de asistencia");
+      return;
+    }
+
+    if (!sesionSeleccionada) {
+      alert("Debe seleccionar una sesión");
+      return;
+    }
+
     setSaving(true);
     try {
       const token = getToken();

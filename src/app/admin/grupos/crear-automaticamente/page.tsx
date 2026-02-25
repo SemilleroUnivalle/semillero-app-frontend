@@ -355,12 +355,12 @@ export default function CrearGruposAutomatico() {
       return;
     }
 
-    // Verificar que todos los grupos tengan monitor asignado
-    const gruposConMonitor = Object.keys(selectedMonitoresPorGrupo).length;
-    if (gruposConMonitor !== gruposPreview.length) {
-      alert("Debe asignar un monitor a cada grupo antes de crear");
-      return;
-    }
+    // // Verificar que todos los grupos tengan monitor asignado
+    // const gruposConMonitor = Object.keys(selectedMonitoresPorGrupo).length;
+    // if (gruposConMonitor !== gruposPreview.length) {
+    //   alert("Debe asignar un monitor a cada grupo antes de crear");
+    //   return;
+    // }
 
     // Usar la función optimizada para crear grupos reales
     const grupos = dividirEnGruposParaCreacion(filteredMatriculas);
@@ -378,9 +378,9 @@ export default function CrearGruposAutomatico() {
         const monitor = selectedMonitoresPorGrupo[i] || monitores[0];
         const docente = selectedDocentesPorGrupo[i] || docentes[0];
 
-        if (!monitor) {
-          throw new Error(`No hay monitor asignado para el grupo ${i + 1}`);
-        }
+        // if (!monitor) {
+        //   throw new Error(`No hay monitor asignado para el grupo ${i + 1}`);
+        // }
         if (!docente) {
           throw new Error(`No hay docente asignado para el grupo ${i + 1}`);
         }
@@ -389,7 +389,7 @@ export default function CrearGruposAutomatico() {
         const groupData = {
           nombre: `${prefijoNombre.trim()} ${i + 1}`,
           profesor: docente.id,
-          monitor_academico: monitor.id,
+          monitor_academico: monitor?.id,
         };
 
         const response = await fetch(`${API_BASE_URL}/grupo/grupo/`, {
@@ -908,9 +908,7 @@ Los grupos han sido creados y los estudiantes han sido asignados automáticament
           disabled={
             creatingGroups ||
             filteredMatriculas.length === 0 ||
-            gruposPreview.length > docentes.length ||
-            Object.keys(selectedMonitoresPorGrupo).length !==
-              gruposPreview.length
+            gruposPreview.length > docentes.length 
           }
           startIcon={
             creatingGroups ? (
