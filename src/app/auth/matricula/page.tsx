@@ -335,9 +335,9 @@ export default function Matricula() {
             {tipoVinculacion === "Becados" ? (
               <>
                 <FormControlLabel
-                  value="Becados - Relación Docentes"
+                  value="Becados - Ins. Educativas (Docente Enlace)"
                   control={<Radio />}
-                  label="Becados - Relación Docentes"
+                  label="Becados - Ins. Educativas (Docente Enlace)"
                 />
                 <FormControlLabel
                   value="Becados - SINTRAUNICOL"
