@@ -48,6 +48,7 @@ export default function CrearMatricula() {
   // Estados para los archivos
   const [reciboPago, setReciboPago] = useState<File | null>(null);
   const [certificado, setCertificado] = useState<File | null>(null);
+  const [reciboServicio, setReciboServicio] = useState<File | null>(null);
 
   // Estado para términos
   const [terminos, setTerminos] = useState(false);
@@ -176,6 +177,11 @@ export default function CrearMatricula() {
       return;
     }
 
+    if (!reciboServicio && formData.tipo_vinculacion.includes("Becados")) {
+      setError("El recibo de servicios es obligatorio para becados");
+      return;
+    }
+
     if (!terminos) {
       setError("Debe aceptar los términos y condiciones");
       return;
@@ -195,6 +201,9 @@ export default function CrearMatricula() {
       }
       if (certificado) {
         formDataToSend.append("certificado", certificado);
+      }
+      if (reciboServicio) {
+        formDataToSend.append("recibo_servicio", reciboServicio);
       }
 
       // Imprime todos los datos que se van a enviar
@@ -384,7 +393,7 @@ export default function CrearMatricula() {
             TIPO DE VINCULACIÓN
           </FormLabel>
           <RadioGroup
-            row
+            row={false}
             value={formData.tipo_vinculacion}
             onChange={(e) =>
               setFormData({ ...formData, tipo_vinculacion: e.target.value })
@@ -411,9 +420,9 @@ export default function CrearMatricula() {
               label="Convenio colegios"
             />
             <FormControlLabel
-              value="Becados - Relación Docentes"
+              value="Becados - Ins. Educativas (Docente Enlace)"
               control={<Radio />}
-              label="Becados - Relación Docentes"
+              label="Becados - Ins. Educativas (Docente Enlace)"
             />
             <FormControlLabel
               value="Becados - SINTRAUNICOL"
@@ -475,6 +484,25 @@ export default function CrearMatricula() {
             />
           </div>
         )}
+
+        {/* Recibo de Servicios - Solo para becados */}
+        {formData.tipo_vinculacion.includes("Becados") && (
+          <div className="flex flex-col gap-2">
+            <label className="font-semibold text-gray-700">
+              Recibo de Servicios <span className="text-red-500">*</span>
+            </label>
+            <input
+              name="recibo_servicio"
+              type="file"
+              accept=".pdf"
+              required
+              className="block w-full rounded border border-gray-300 p-2 text-sm text-gray-500"
+              onChange={(e) => setReciboServicio(e.target.files?.[0] || null)}
+            />
+          </div>
+        )}
+
+        
 
         {/* Términos y Condiciones */}
         <div className="flex flex-col items-start gap-3 border-t pt-4">
