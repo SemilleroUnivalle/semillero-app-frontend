@@ -461,8 +461,8 @@ export default function DetallarMatricula() {
                   Relación Univalle - Hijos de egresados
                 </MenuItem>
                 <MenuItem value="Convenio colegios">Convenio colegios</MenuItem>
-                <MenuItem value="Becados - Relación Docentes">
-                  Becados - Relación Docentes
+                <MenuItem value="Becados - Ins. Educativas (Docente Enlace)">
+                  Becados - Ins. Educativas (Docente Enlace)
                 </MenuItem>
                 <MenuItem value="Becados - SINTRAUNICOL">
                   Becados - SINTRAUNICOL
