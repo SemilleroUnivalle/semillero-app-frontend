@@ -12,6 +12,7 @@ export const exportMatriculasToExcel = (data: Matricula[]) => {
     // Estudiante
     Nombres: matricula.estudiante.nombre,
     Apellidos: matricula.estudiante.apellido,
+    Tipo_Documento: matricula.estudiante.tipo_documento,
     Documento: matricula.estudiante.numero_documento,
     Email: matricula.estudiante.email,
     Celular: matricula.estudiante.celular,
