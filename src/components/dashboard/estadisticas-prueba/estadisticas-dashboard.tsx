@@ -67,6 +67,9 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export function EstadisticasDashboard() {
+
+    const pathname = usePathname();
+
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -148,7 +151,7 @@ export function EstadisticasDashboard() {
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
-  const pathname = usePathname();
+
 
   // Divide la ruta en segmentos y genera los enlaces
   const pathSegments = pathname.split("/").filter(Boolean).slice(1); // Quita el primer segmento "admin"

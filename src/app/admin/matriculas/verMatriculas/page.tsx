@@ -257,7 +257,7 @@ export default function VerMatriculas() {
             estado_matricula: matricula.estado,
           }));
 
-          matriculas.length === 0 && setMatriculas(response.data); // Guarda las matriculas originales para exportar a Excel
+          setMatriculas(response.data); // Guarda las matriculas originales para exportar a Excel
 
           console.log("Datos formateados:", formateado); // Verifica los datos formateados
 
