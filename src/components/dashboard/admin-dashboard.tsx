@@ -114,7 +114,7 @@ export function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-primary">
-                Oferta Activa: 2026-2
+                Oferta Activa: 2026-1
               </h1>
             </div>
             <div className="flex items-center gap-1">
