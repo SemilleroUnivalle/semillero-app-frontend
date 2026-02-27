@@ -25,7 +25,6 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../config";
-import { useRouter } from "next/navigation";
 import {
   Estudiante,
   Acudiente,
@@ -43,7 +42,59 @@ export default function FormularioDatos({
 }: {
   id_estudiante: number;
 }) {
-  const router = useRouter();
+  const comunasCali = [
+    "RURAL",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "18",
+    "19",
+    "20",
+    "21",
+    "22",
+  ];
+
+  const generos = ["Masculino", "Femenino"];
+
+  const epss = [
+    "Emssanar",
+    "Sura",
+    "Sanitas",
+    "Nueva EPS",
+    "Compensar",
+    "Coomeva",
+    "Salud Total",
+    "Famisanar",
+    "Cafesalud",
+    "Medimás",
+    "SOS",
+    "Cruz Blanca",
+    "Aliansalud",
+    "Colsubsidio",
+    "Ecoopsos",
+    "Comfenalco Valle",
+    "Comfandi",
+    "Mutual Ser",
+    "Caprecom",
+    "EPS Convida",
+    "EPS Savia Salud",
+    "EPS Comfachocó",
+    "EPS Comfaoriente",
+  ];
 
   const [loading, setLoading] = useState(true);
   const [editable, setEditable] = useState(false);
@@ -615,7 +666,7 @@ export default function FormularioDatos({
               />
 
               <TextField
-              type="date"
+                type="date"
                 className={
                   editable
                     ? "inputs-textfield flex w-full flex-col sm:w-1/4"
@@ -627,7 +678,6 @@ export default function FormularioDatos({
                 onChange={(e) =>
                   setFormData({ ...formData, fecha_nacimiento: e.target.value })
                 }
-                
               />
             </div>
           </div>
@@ -753,22 +803,36 @@ export default function FormularioDatos({
               />
             </>
           )}
-          <TextField
+          <FormControl
             className={
               editable
                 ? "inputs-textfield flex w-full flex-col sm:w-1/4"
                 : "inputs-textfield-readonly flex w-full flex-col sm:w-1/4"
             }
-            label="Comuna"
-            value={formData.comuna_residencia}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                comuna_residencia: e.target.value,
-              })
-            }
-            InputProps={{ readOnly: !editable }}
-          />
+          >
+            <InputLabel id="comuna_residencia">Comuna</InputLabel>
+            <Select
+              labelId="comuna_residencia"
+              id="comuna_residencia"
+              label="Comuna"
+              required
+              inputProps={{ readOnly: !editable }}
+              value={formData.comuna_residencia}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  comuna_residencia: e.target.value,
+                })
+              }
+            >
+              {comunasCali.map((comuna) => (
+                <MenuItem key={comuna} value={comuna}>
+                  {comuna}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
           <TextField
             className={
               editable
@@ -777,6 +841,9 @@ export default function FormularioDatos({
             }
             label="Dirección"
             value={formData.direccion_residencia || ""}
+            onChange={(e) =>
+              setFormData({ ...formData, direccion_residencia: e.target.value })
+            }
             InputProps={{ readOnly: !editable }}
           />
         </div>
