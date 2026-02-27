@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import dynamic from "next/dynamic"
-import { Box } from "@mui/material"
+import { Box, Typography } from "@mui/material"
 import type ApexCharts from "apexcharts" // Declaración de ApexCharts
 
 // 1. Interfaz de datos
@@ -97,6 +97,14 @@ export function EstratoSocioeconomicoDistributionInterno({ data: externalData }:
 
   if (!isClient) {
     return <Box height={300} />
+  }
+
+  if (!data || data.length === 0) {
+    return (
+      <Box height={300} display="flex" alignItems="center" justifyContent="center">
+        <Typography color="textSecondary">No hay datos disponibles</Typography>
+      </Box>
+    )
   }
 
   return (

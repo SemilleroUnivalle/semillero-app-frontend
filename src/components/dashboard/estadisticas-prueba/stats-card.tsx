@@ -26,7 +26,6 @@ export function StatsCard({
 }: StatsCardProps) {
   return (
     <Paper
-    className="mx-auto"
       elevation={0}
       sx={{
         p: 3,
@@ -41,8 +40,8 @@ export function StatsCard({
         },
       }}
     >
-      <Box display="flex" alignItems="flex-start" justifyContent="space-between" sx={{ height: "50%" }} className="h-full">
-        <Box className="my-auto" flex={1}>
+      <Box display="flex" alignItems="flex-start" justifyContent="space-between" sx={{ height: "100%" }}>
+        <Box flex={1}>
           <Typography variant="body2" color="text.secondary" fontWeight={500} gutterBottom>
             {title}
           </Typography>
@@ -72,7 +71,7 @@ export function StatsCard({
             </Box>
           )}
         </Box>
-        <Box className="my-auto"
+        <Box
           sx={{
             p: 1.5,
             borderRadius: "1rem",
