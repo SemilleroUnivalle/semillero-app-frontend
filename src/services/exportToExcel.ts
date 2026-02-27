@@ -18,6 +18,13 @@ export const exportMatriculasToExcel = (data: Matricula[]) => {
     Grado: matricula.estudiante.grado,
     Colegio: matricula.estudiante.colegio,
     Estamento: matricula.estudiante.estamento,
+    Fecha_Nacimiento: matricula.estudiante.fecha_nacimiento,
+    Edad: matricula.estudiante.fecha_nacimiento
+      ? Math.floor(
+          (new Date().getTime() - new Date(matricula.estudiante.fecha_nacimiento).getTime()) /
+            (1000 * 60 * 60 * 24 * 365.25)
+        )
+      : "N/A",
 
     Nombre_Acudiente:
       matricula.estudiante.acudiente.nombre_acudiente +
