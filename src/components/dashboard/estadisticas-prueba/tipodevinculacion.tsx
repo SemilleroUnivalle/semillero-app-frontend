@@ -2,37 +2,46 @@
 
 import { useEffect, useState } from "react"
 import dynamic from "next/dynamic"
-import { Box } from "@mui/material"
-import type ApexCharts from "apexcharts" // Declaración de ApexCharts
+import { Box, Typography } from "@mui/material"
+import type ApexCharts from "apexcharts"
 
 // 1. Interfaz de datos
-interface EstratoData {
-  estrato: string
+interface VinculacionData {
+  type: string
   count: number
 }
 
-// 2. Datos inventados del estrato socioeconómico (170 estudiantes)
-// Usamos el mismo formato de datos que antes, pero con nombres de interfaz adaptados
-const DATOS_ESTRATO: EstratoData[] = [
-  { estrato: "1", count: 50 },
-  { estrato: "2", count: 25 },
-  { estrato: "3", count: 20 },
-  { estrato: "4", count: 5 },
+// 2. Datos inventados de Tipo de Vinculación (Total: 170 estudiantes)
+const DATOS_VINCULACION: VinculacionData[] = [
+  { type: "Tiempo Completo", count: 70 },
+  { type: "Tiempo Parcial", count: 15 },
+  { type: "Fin de Semana", count: 15 },
 ];
 
-interface EstratoSocioeconomicoProps {
-  data?: EstratoData[]
+interface VinculacionDistributionProps {
+  data?: VinculacionData[]
 }
 
-export function EstratoSocioeconomicoDistributionInterno({ data: externalData }: EstratoSocioeconomicoProps = {}) {
+export function VinculacionDistributionInterno({ data: externalData }: VinculacionDistributionProps = {}) {
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
     setIsClient(true)
   }, [])
 
-  // Usamos los datos externos si están disponibles, si no usamos los datos internos
-  const data = externalData || DATOS_ESTRATO;
+  const data = externalData || DATOS_VINCULACION;
+
+  if (!isClient) {
+    return <Box height={300} />
+  }
+
+  if (!data || data.length === 0) {
+    return (
+      <Box height={300} display="flex" alignItems="center" justifyContent="center">
+        <Typography color="textSecondary">No hay datos disponibles</Typography>
+      </Box>
+    )
+  }
 
   const options: ApexCharts.ApexOptions = {
     chart: {
@@ -51,10 +60,10 @@ export function EstratoSocioeconomicoDistributionInterno({ data: externalData }:
     dataLabels: {
       enabled: true,
     },
-    colors: ["#c20e1a"],
+    colors: ["#c20e1a"], 
     xaxis: {
-      // Usamos el campo 'estrato' para las categorías del eje X
-      categories: data.map((item) => item.estrato),
+      // Usamos el campo 'type' para las categorías del eje X
+      categories: data.map((item) => item.type),
       title: {
         text: "Cantidad de Estudiantes", // Título del eje X (cantidad)
       },
@@ -64,7 +73,7 @@ export function EstratoSocioeconomicoDistributionInterno({ data: externalData }:
     },
     yaxis: {
       title: {
-        text: "Estrato Socioeconómico", // Título del eje Y (Estrato)
+        text: "Tipo de Vinculación", // Título del eje Y (Tipo)
       },
       labels: {
         style: {
@@ -94,10 +103,6 @@ export function EstratoSocioeconomicoDistributionInterno({ data: externalData }:
   ]
 
   const ReactApexCharts = dynamic(() => import("react-apexcharts"), { ssr: false })
-
-  if (!isClient) {
-    return <Box height={300} />
-  }
 
   return (
     <Box>

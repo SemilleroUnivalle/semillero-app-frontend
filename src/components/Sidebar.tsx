@@ -80,6 +80,11 @@ const adminLinks: LinkItem[] = [
     href: "/admin/pruebas-diagnosticas/ver-pruebas",
     icon: PsychologyAltOutlinedIcon,
   },
+  {
+    name: "Certificados",
+    href: "/admin/certificados",
+    icon: ContentPasteSearchOutlinedIcon,
+  },
   { name: "Estadísticas", href: "/admin/estadisticas", icon: AnalyticsOutlinedIcon },
   { name: "Ajustes", href: "/admin/ajustes/ajustes", icon: CogIcon },
 ];

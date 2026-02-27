@@ -7,25 +7,29 @@ import type ApexCharts from "apexcharts"
 
 // 1. Interfaz de datos
 interface VinculacionData {
-  tipo: string
+  type: string
   count: number
 }
 
 // 2. Datos inventados de Tipo de Vinculación (Total: 170 estudiantes)
 const DATOS_VINCULACION: VinculacionData[] = [
-  { tipo: "Regular", count: 70 },
-  { tipo: "Extraescolar", count: 15 },
-  { tipo: "Cultural", count: 15 },
+  { type: "Tiempo Completo", count: 70 },
+  { type: "Tiempo Parcial", count: 15 },
+  { type: "Fin de Semana", count: 15 },
 ];
 
-export function VinculacionDistributionInterno() {
+interface VinculacionDistributionProps {
+  data?: VinculacionData[]
+}
+
+export function VinculacionDistributionInterno({ data: externalData }: VinculacionDistributionProps = {}) {
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
     setIsClient(true)
   }, [])
 
-  const data = DATOS_VINCULACION;
+  const data = externalData || DATOS_VINCULACION;
 
   const options: ApexCharts.ApexOptions = {
     chart: {
@@ -46,8 +50,8 @@ export function VinculacionDistributionInterno() {
     },
     colors: ["#c20e1a"], 
     xaxis: {
-      // Usamos el campo 'tipo' para las categorías del eje X
-      categories: data.map((item) => item.tipo),
+      // Usamos el campo 'type' para las categorías del eje X
+      categories: data.map((item) => item.type),
       title: {
         text: "Cantidad de Estudiantes", // Título del eje X (cantidad)
       },

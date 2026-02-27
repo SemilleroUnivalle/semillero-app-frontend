@@ -30,6 +30,7 @@ import axios from "axios";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { API_BASE_URL } from "../../../../../config";
 import { useRouter } from "next/navigation";
+import { exportMatriculasToExcel } from "@/services/exportToExcel";
 
 export default function VerMatriculas() {
   const router = useRouter();
@@ -188,9 +189,11 @@ export default function VerMatriculas() {
 
   const [rows, setRows] = useState<MatriculaRow[]>([]);
   const [success, setSuccess] = useState(false);
-   const [searchText, setSearchText] = useState("");
-
+  const [searchText, setSearchText] = useState("");
   const [loading, setLoading] = useState(true);
+  const [matriculas, setMatriculas] = useState<Matricula[]>([]);
+
+
 
   // Función para eliminar una matricula
   const handleDelete = async (id: number) => {
@@ -217,6 +220,7 @@ export default function VerMatriculas() {
     }
   };
 
+  // Funcion para traer las matriculas desde el backend
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -252,6 +256,8 @@ export default function VerMatriculas() {
             estado_registro: matricula.estudiante.estado, // true si es "Verificado", false en otro caso
             estado_matricula: matricula.estado,
           }));
+
+          setMatriculas(response.data); // Guarda las matriculas originales para exportar a Excel
 
           console.log("Datos formateados:", formateado); // Verifica los datos formateados
 
@@ -521,7 +527,7 @@ export default function VerMatriculas() {
           variant="outlined"
           startIcon={<FileDownloadIcon />}
           className="m-4 rounded-xl border-primary text-primary hover:bg-primary hover:text-white"
-          onClick={handleExportExcel}
+          onClick={() => exportMatriculasToExcel(matriculas)}
         >
           Exportar a Excel
         </Button>

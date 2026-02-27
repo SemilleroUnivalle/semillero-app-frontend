@@ -1,3 +1,5 @@
-export default function EstadisticasPage() {
-  return 
-<h1>Estadiusticas Admin Page</h1>;}
+import { EstadisticasDashboard } from "@/components/dashboard/estadisticas-prueba/estadisticas-dashboard"
+
+export default function AdminInicioPage() {
+  return <EstadisticasDashboard />
+}
