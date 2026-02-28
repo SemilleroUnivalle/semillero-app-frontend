@@ -1202,7 +1202,7 @@ export default function RegistroBecados() {
             variant="outlined"
             className="mt-4 w-3/4 rounded-2xl border-2 border-[#C20E1A] py-2 font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white"
           >
-            Continuar
+            Continuar.
           </Button>
         </div>
       </form>
