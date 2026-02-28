@@ -48,6 +48,7 @@ export const exportMatriculasToExcel = (data: Matricula[]) => {
     Recibo_Pago: matricula.recibo_pago,
     Certificado: matricula.certificado,
     Recibo_Servicio: matricula.recibo_servicio,
+    Foto: matricula.estudiante.foto,
 
   }));
 
