@@ -369,17 +369,6 @@ export default function Registro() {
   // Manejo de subida de fotografia
   const [image, setImage] = useState<string | null>(null);
 
-  // Mastrar imagen seleccionada
-  // const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = event.target.files?.[0]; // Obtener el archivo seleccionado
-  //   if (file) {
-  //     const reader = new FileReader();
-  //     reader.onloadend = () => {
-  //       setImage(reader.result as string); // Guardar la URL de la imagen en el estado
-  //     };
-  //     reader.readAsDataURL(file);
-  //   }
-  // };
   const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
@@ -1239,6 +1228,7 @@ export default function Registro() {
         </div>
 
         <Matricula
+          ref={matriculaFormRef}
           estamento_form={formData.estamento}
           grado_form={formData.grado}
           tipoVinculacion_form={"Regular"}
