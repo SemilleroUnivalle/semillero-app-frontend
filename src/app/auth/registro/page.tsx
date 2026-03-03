@@ -13,8 +13,8 @@ import {
   Autocomplete,
   Alert,
 } from "@mui/material";
-import { useState, useEffect } from "react";
-
+import { useState, useEffect, useRef } from "react";
+import Matricula from "../matricula/page";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../config";
@@ -161,27 +161,47 @@ export default function Registro() {
     celular_acudiente: "",
   });
 
+  const matriculaFormRef = useRef<{
+    getFormData: () => any;
+    validate: () => boolean;
+  }>(null);
+
   // Manejar envío del formulario
   // Enviar datos al backend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate Matricula form first
+    if (matriculaFormRef.current && !matriculaFormRef.current.validate()) {
+      alert("Por favor completa todos los campos del formulario de matrícula");
+      return;
+    }
     setCargando(true);
 
-    console.log("Datos enviados del acudiente:", formDataAcudiente);
-
-    if (!fotoPerfil) {
-      alert("La foto de perfil es obligatoria");
-      setCargando(false);
-      return;
-    }
-
-    if (!documentoIdentidad) {
-      alert("El documento de identidad es obligatorio");
-      setCargando(false);
-      return;
-    }
-
     try {
+      if (!fotoPerfil) {
+        alert("La foto de perfil es obligatoria");
+        setCargando(false);
+        return;
+      }
+
+      if (!documentoIdentidad) {
+        alert("El documento de identidad es obligatorio");
+        setCargando(false);
+        return;
+      }
+
+      if (
+        fotoPerfil.size > 2 * 1024 * 1024 ||
+        documentoIdentidad.size > 2 * 1024 * 1024
+      ) {
+        alert(
+          "La foto de perfil o el documento de identidad tienen un peso mayor a 2MB",
+        );
+        setCargando(false);
+        return;
+      }
+
       const formDataToSend = new FormData();
 
       // Añadir todos los campos del formData al FormData
@@ -210,14 +230,13 @@ export default function Registro() {
         } else {
           id_acudiente = responseAcudiente.data.data.id_acudiente; // Obtener el ID del acudiente creado
         }
-        console.log("ID del acudiente:", id_acudiente);
 
         formDataToSend.append("acudiente", id_acudiente);
+
         for (const pair of formDataToSend.entries()) {
           console.log(`${pair[0]}:`, pair[1]);
         }
 
-        // Paso 2: añadir archivos (asegúrate de capturarlos)
         if (fotoPerfil) {
           formDataToSend.append("foto", fotoPerfil);
         }
@@ -226,8 +245,7 @@ export default function Registro() {
           formDataToSend.append("documento_identidad", documentoIdentidad);
         }
 
-        console.log("Acudiente agregado con éxito");
-
+        //Creacion de estudiante
         const responseEstudiante = await axios.post(
           `${API_BASE_URL}/estudiante/est/`,
           formDataToSend,
@@ -239,36 +257,89 @@ export default function Registro() {
         );
         if (responseEstudiante.status === 201) {
           console.log("Estudiante agregado con éxito");
-          console.log(
-            "ID del estudiante guardado en localStorage:",
-            responseEstudiante.data.id,
-          );
-          // Guardando datos en el local storage
-          localStorage.setItem("id_estudiante", responseEstudiante.data.id);
-          localStorage.setItem("estamento", formData.estamento);
-          localStorage.setItem("grado", formData.grado);
 
-          setCargando(false);
-          router.push("/auth/matricula"); // Redirigir a la página de matricula
-        } else {
-          console.error(
-            "Error al agregar el estudiante:",
-            responseEstudiante.status,
-          );
+          // AHORA crear la matrícula con el ID del estudiante
+          if (matriculaFormRef.current) {
+            try {
+              const matriculaData = matriculaFormRef.current.getFormData();
+
+              if (!matriculaData) {
+                throw new Error(
+                  "No se pudieron obtener los datos de la matrícula",
+                );
+              }
+
+              const matriculaFormData = new FormData();
+              matriculaFormData.append(
+                "id_estudiante",
+                responseEstudiante.data.id,
+              );
+              matriculaFormData.append("id_modulo", matriculaData.modulo);
+              matriculaFormData.append(
+                "tipo_vinculacion",
+                matriculaData.tipo_vinculacion,
+              );
+              matriculaFormData.append(
+                "terminos",
+                matriculaData.terminos ? "True" : "False",
+              );
+
+              if (matriculaData.reciboPago) {
+                matriculaFormData.append(
+                  "recibo_pago",
+                  matriculaData.reciboPago,
+                );
+              }
+              if (matriculaData.certificado) {
+                matriculaFormData.append(
+                  "certificado",
+                  matriculaData.certificado,
+                );
+              }
+              if (matriculaData.reciboServicio) {
+                matriculaFormData.append(
+                  "recibo_servicio",
+                  matriculaData.reciboServicio,
+                );
+              }
+
+              const responseMatricula = await axios.post(
+                `${API_BASE_URL}/matricula/mat/`,
+                matriculaFormData,
+                {
+                  headers: {
+                    "Content-Type": "multipart/form-data",
+                  },
+                },
+              );
+
+              if (responseMatricula.status === 201) {
+                setCargando(false);
+                alert("¡Registro exitoso!");
+                router.push("/auth/matricula-finalizada");
+              }
+            } catch (matriculaError) {
+              setCargando(false);
+              let mensaje = "Error desconocido en matrícula";
+              if (axios.isAxiosError(matriculaError)) {
+                mensaje =
+                  (matriculaError.response?.data as any)?.detail ||
+                  (matriculaError.response?.data as any)?.message ||
+                  JSON.stringify(matriculaError.response?.data) ||
+                  matriculaError.message;
+              } else if (matriculaError instanceof Error) {
+                mensaje = matriculaError.message;
+              }
+              console.error("Error al crear matrícula:", matriculaError);
+              alert(`Error al crear la matrícula:\n${mensaje}`);
+            }
+          }
         }
-      } else {
-        console.error(
-          "Error al agregar el acudiente:",
-          responseAcudiente.status,
-        );
-        setCargando(false);
       }
     } catch (err) {
       setCargando(false);
-
       let mensaje = "Error desconocido";
       if (axios.isAxiosError(err)) {
-        // el backend puede devolver {detail: "..."} / {message: "..."} / etc.
         mensaje =
           (err.response?.data as any)?.detail ||
           (err.response?.data as any)?.message ||
@@ -277,8 +348,7 @@ export default function Registro() {
       } else if (err instanceof Error) {
         mensaje = err.message;
       }
-
-      console.error("Error al crear estudiante:", err);
+      console.error("Error:", err);
       alert(`Hubo un error al intentar crear el estudiante:\n${mensaje}`);
     }
   };
@@ -1152,7 +1222,7 @@ export default function Registro() {
                     </span>
                   )}
                   <br />
-                  <span>
+                  <span className="text-gray-600">
                     {documentoIdentidad.name} -{" "}
                     {(documentoIdentidad.size / (1024 * 1024)).toFixed(2)} MB
                   </span>
@@ -1166,15 +1236,21 @@ export default function Registro() {
             La fotografía y el documento de identidad son obligatorios y deben
             pesar menos de 2 Mb.
           </Alert>
-
-          <Button
-            type="submit"
-            variant="outlined"
-            className="mt-4 w-3/4 rounded-2xl border-2 border-[#C20E1A] py-2 font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white"
-          >
-            Registrar
-          </Button>
         </div>
+
+        <Matricula
+          estamento_form={formData.estamento}
+          grado_form={formData.grado}
+          tipoVinculacion_form={"Regular"}
+        />
+
+        <Button
+          type="submit"
+          variant="outlined"
+          className="mt-4 w-3/4 rounded-2xl border-2 border-[#C20E1A] py-2 font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white"
+        >
+          Registrar
+        </Button>
       </form>
 
       {/* Botón de iniciar sesión*/}

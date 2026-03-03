@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { API_BASE_URL } from "../../../../config";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -21,234 +21,274 @@ import {
   Snackbar,
 } from "@mui/material";
 
-export default function Matricula() {
-  const router = useRouter();
+interface MatriculaHandle {
+  validate: () => boolean;
+  getFormData: () => {
+    modulo: string;
+    tipo_vinculacion: string;
+    terminos: boolean;
+    reciboPago: File | null;
+    certificado: File | null;
+    reciboServicio: File | null;
+  };
+}
+interface MatriculaProps {
+  estamento_form: string;
+  grado_form: string;
+  tipoVinculacion_form: string;
+}
 
-  const [formData, setFormData] = useState({
-    oferta: "",
-    area: "",
-    modulo: "",
-    tipo_vinculacion: "",
-    terminos: true,
-    id_estudiante: 1,
-    id_modulo: "",
-  });
+const Matricula = forwardRef<MatriculaHandle, MatriculaProps>(
+  ({ estamento_form, grado_form, tipoVinculacion_form }, ref) => {
+    const [formData, setFormData] = useState({
+      oferta: "",
+      area: "",
+      modulo: "",
+      tipo_vinculacion: "",
+      terminos: true,
+      id_estudiante: 1,
+      id_modulo: "",
+    });
 
-  // Estados para los archivos
-  const [reciboPago, setReciboPago] = useState<File | null>(null);
-  const [certificado, setCertificado] = useState<File | null>(null);
-  const [reciboServicio, setReciboServicio] = useState<File | null>(null);
-
-  // Estado para términos
-  const [terminos, setTerminos] = useState(false);
-
-  // Estado para alertas
-  const [alerta, setAlerta] = useState<{
-    tipo: "error" | "success";
-    mensaje: string;
-  } | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
-  // Estado para las ofertas académicas activas
-  const [ofertas, setOfertas] = useState<Record<string, OfertaCategoria[]>>({});
-  const [loading, setLoading] = useState(true);
-
-  const [estamento, setEstamento] = useState<string>("");
-  const [grado, setGrado] = useState<string>("");
-  const [tipoVinculacion, setTipoVinculacion] = useState<string>("");
-
-  useEffect(() => {
-    const est = localStorage.getItem("estamento");
-    const grd = localStorage.getItem("grado");
-    const tipoVinc = localStorage.getItem("tipo_vinculacion");
-    if (grd) setGrado(grd);
-    if (est) setEstamento(est);
-    if (tipoVinc) setTipoVinculacion(tipoVinc);
-  }, []);
-
-  useEffect(() => {
-    // Reemplaza la URL por la de tu endpoint real
-    axios
-      .get(`${API_BASE_URL}/oferta_categoria/ofer/por-oferta-academica/`)
-      .then((res) => {
-        console.log("Ofertas académicas obtenidas:", res.data);
-        setOfertas(res.data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
-  // Obtén la lista de ofertas académicas
-  const ofertasAcademicas = Object.values(ofertas)
-    .flat()
-    .map((oferta) => oferta.id_oferta_academica)
-    .filter(
-      (value, index, self) =>
-        self.findIndex(
-          (v) => v.id_oferta_academica === value.id_oferta_academica,
-        ) === index,
+    const [reciboPago, setReciboPago] = useState<File | null>(null);
+    const [certificado, setCertificado] = useState<File | null>(null);
+    const [reciboServicio, setReciboServicio] = useState<File | null>(null);
+    const [terminos, setTerminos] = useState(false);
+    const [ofertas, setOfertas] = useState<Record<string, OfertaCategoria[]>>(
+      {},
     );
+    const [loading, setLoading] = useState(true);
 
-  // Categorías disponibles según la oferta seleccionada
-  const categoriasDisponibles = formData.oferta
-    ? ofertas[formData.oferta]?.map((ofertaCat) => ofertaCat.id_categoria) || []
-    : [];
-
-  // Módulos disponibles según la categoría seleccionada
-  // const modulosDisponibles =
-  //   formData.oferta && formData.area
-  //     ? ofertas[formData.oferta]?.find(
-  //         (ofertaCat) =>
-  //           ofertaCat.id_categoria.id_categoria === Number(formData.area),
-  //       )?.modulo || []
-  //     : [];
-
-  // Módulos disponibles según la categoría seleccionada Y el grado del estudiante
-  const modulosDisponibles =
-    formData.oferta && formData.area
-      ? (
-          ofertas[formData.oferta]?.find(
-            (ofertaCat) =>
-              ofertaCat.id_categoria.id_categoria === Number(formData.area),
-          )?.modulo || []
-        ).filter((modulo: Modulo) => {
-          // Verificar si el grado del estudiante está en los grados del módulo
-          if (modulo.dirigido_a) {
-            const gradosArray = modulo.dirigido_a
-              .split(",")
-              .map((g) => g.trim());
-            return gradosArray.includes(grado);
-          }
-          return false;
+    //Carga las ofertas académicas al montar el componente
+    useEffect(() => {
+      axios
+        .get(`${API_BASE_URL}/oferta_categoria/ofer/por-oferta-academica/`)
+        .then((res) => {
+          setOfertas(res.data);
+          setLoading(false);
         })
+        .catch(() => setLoading(false));
+    }, []);
+
+    useImperativeHandle(ref, () => ({
+      validate: () => {
+        if (!formData.oferta) {
+          alert("Por favor selecciona una oferta académica");
+          return false;
+        }
+        if (!formData.area) {
+          alert("Por favor selecciona una categoría");
+          return false;
+        }
+        if (!formData.modulo) {
+          alert("Por favor selecciona un módulo");
+          return false;
+        }
+        if (!formData.tipo_vinculacion) {
+          alert("Por favor selecciona un tipo de vinculación");
+          return false;
+        }
+        if (!terminos) {
+          alert("Debes aceptar los términos y condiciones");
+          return false;
+        }
+
+        if (tipoVinculacion_form !== "Becados" && !reciboPago) {
+          alert("El recibo de pago es obligatorio");
+          return false;
+        }
+
+        if (tipoVinculacion_form === "Becados" && !reciboServicio) {
+          alert("El recibo de servicios es obligatorio para becados");
+          return false;
+        }
+
+        const certificadoObligatorio = !(
+          estamento_form === "PRIVADO" &&
+          formData.tipo_vinculacion === "Particular"
+        );
+
+        if (certificadoObligatorio && !certificado) {
+          alert("El certificado es obligatorio");
+          return false;
+        }
+
+        return true;
+      },
+      getFormData: () => ({
+        modulo: formData.modulo,
+        tipo_vinculacion: formData.tipo_vinculacion,
+        terminos,
+        reciboPago,
+        certificado,
+        reciboServicio,
+      }),
+    }));
+
+    // export default function Matricula({
+    //   estamento_form,
+    //   grado_form,
+    //   tipoVinculacion_form,
+    // }: {
+    //   estamento_form: string;
+    //   grado_form: string;
+    //   tipoVinculacion_form: string;
+    // }) {
+    //   const router = useRouter();
+
+    //   const [formData, setFormData] = useState({
+    //     oferta: "",
+    //     area: "",
+    //     modulo: "",
+    //     tipo_vinculacion: "",
+    //     terminos: true,
+    //     id_estudiante: 1,
+    //     id_modulo: "",
+    //   });
+
+    //   // Estados para los archivos
+    //   const [reciboPago, setReciboPago] = useState<File | null>(null);
+    //   const [certificado, setCertificado] = useState<File | null>(null);
+    //   const [reciboServicio, setReciboServicio] = useState<File | null>(null);
+
+    //   // Estado para términos
+    //   const [terminos, setTerminos] = useState(false);
+    //   const [error, setError] = useState<string | null>(null);
+    //   const [success, setSuccess] = useState(false);
+
+    //   // Estado para las ofertas académicas activas
+    //   const [ofertas, setOfertas] = useState<Record<string, OfertaCategoria[]>>({});
+    //   const [loading, setLoading] = useState(true);
+
+    // Carga las ofertas académicas al montar el componente
+
+    // Obtén la lista de ofertas académicas
+    
+    const ofertasAcademicas = Object.values(ofertas)
+      .flat()
+      .map((oferta) => oferta.id_oferta_academica)
+      .filter(
+        (value, index, self) =>
+          self.findIndex(
+            (v) => v.id_oferta_academica === value.id_oferta_academica,
+          ) === index,
+      );
+
+    // Categorías disponibles según la oferta seleccionada
+    const categoriasDisponibles = formData.oferta
+      ? ofertas[formData.oferta]?.map((ofertaCat) => ofertaCat.id_categoria) ||
+        []
       : [];
 
-  const handleChange = (event: SelectChangeEvent<string>, field: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: event.target.value,
-      ...(field === "oferta" ? { area: "", modulo: "" } : {}),
-      ...(field === "area" ? { modulo: "" } : {}),
-    }));
-  };
+    // Módulos disponibles según la categoría seleccionada Y el grado del estudiante
+    const modulosDisponibles =
+      formData.oferta && formData.area
+        ? (
+            ofertas[formData.oferta]?.find(
+              (ofertaCat) =>
+                ofertaCat.id_categoria.id_categoria === Number(formData.area),
+            )?.modulo || []
+          ).filter((modulo: Modulo) => {
+            // Verificar si el grado del estudiante está en los grados del módulo
+            if (modulo.dirigido_a) {
+              const gradosArray = modulo.dirigido_a
+                .split(",")
+                .map((g) => g.trim());
+              return gradosArray.includes(grado_form);
+            }
+            return false;
+          })
+        : [];
 
-  // if (loading) return <div>Cargando ofertas...</div>;
+    const handleChange = (event: SelectChangeEvent<string>, field: string) => {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: event.target.value,
+        ...(field === "oferta" ? { area: "", modulo: "" } : {}),
+        ...(field === "area" ? { modulo: "" } : {}),
+      }));
+    };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    // if (loading) return <div>Cargando ofertas...</div>;
 
-    const id_estudiante = localStorage.getItem("id_estudiante");
-    const estamento = localStorage.getItem("estamento");
-    const grado = localStorage.getItem("grado");
+    // const handleSubmit = async (e: React.FormEvent) => {
+    //   e.preventDefault();
 
-    if (tipoVinculacion !== "Becados" && !reciboPago) {
-      alert("El recibo de pago es obligatorio");
-      return;
-    }
+    //   const id_estudiante = localStorage.getItem("id_estudiante");
 
-    if (tipoVinculacion === "Becados" && !reciboServicio) {
-      alert("El recibo de servicios es obligatorio para becados");
-      return;
-    }
+    //   if (tipoVinculacion_form !== "Becados" && !reciboPago) {
+    //     alert("El recibo de pago es obligatorio");
+    //     return;
+    //   }
 
-    // El certificado es obligatorio SOLO si NO es (estamento PRIVADO AND tipo_vinculacion Particular)
-    const certificadoObligatorio = !(
-      estamento === "PRIVADO" && formData.tipo_vinculacion === "Particular"
-    );
+    //   if (tipoVinculacion_form === "Becados" && !reciboServicio) {
+    //     alert("El recibo de servicios es obligatorio para becados");
+    //     return;
+    //   }
 
-    if (certificadoObligatorio && !certificado) {
-      alert("El certificado es obligatorio");
-      return;
-    }
+    //   // El certificado es obligatorio SOLO si NO es (estamento PRIVADO AND tipo_vinculacion Particular)
+    //   const certificadoObligatorio = !(
+    //     estamento_form === "PRIVADO" && formData.tipo_vinculacion === "Particular"
+    //   );
 
-    console.log("Grado del usuario:", grado);
-    console.log("Estamento del usuario:", estamento);
-    console.log("ID del estudiante:", id_estudiante);
+    //   if (certificadoObligatorio && !certificado) {
+    //     alert("El certificado es obligatorio");
+    //     return;
+    //   }
 
-    if (!id_estudiante) {
-      alert("No se encontró el id del estudiante.");
-      return;
-    }
+    //   console.log("Grado del usuario:", grado_form);
+    //   console.log("Estamento del usuario:", estamento_form);
+    //   console.log("ID del estudiante:", id_estudiante);
 
-    const formDataToSend = new FormData();
-    formDataToSend.append("id_estudiante", id_estudiante);
-    formDataToSend.append("id_modulo", formData.modulo);
-    formDataToSend.append("tipo_vinculacion", formData.tipo_vinculacion);
-    formDataToSend.append("terminos", terminos ? "True" : "False");
+    //   if (!id_estudiante) {
+    //     alert("No se encontró el id del estudiante.");
+    //     return;
+    //   }
 
-    if (reciboPago) {
-      formDataToSend.append("recibo_pago", reciboPago);
-    }
-    if (certificado) {
-      formDataToSend.append("certificado", certificado);
-    }
-    if (reciboServicio) {
-      formDataToSend.append("recibo_servicio", reciboServicio);
-    }
+    //   const formDataToSend = new FormData();
+    //   formDataToSend.append("id_estudiante", id_estudiante);
+    //   formDataToSend.append("id_modulo", formData.modulo);
+    //   formDataToSend.append("tipo_vinculacion", formData.tipo_vinculacion);
+    //   formDataToSend.append("terminos", terminos ? "True" : "False");
 
-    // Imprime todos los datos que se van a enviar
-    for (const pair of formDataToSend.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
+    //   if (reciboPago) {
+    //     formDataToSend.append("recibo_pago", reciboPago);
+    //   }
+    //   if (certificado) {
+    //     formDataToSend.append("certificado", certificado);
+    //   }
+    //   if (reciboServicio) {
+    //     formDataToSend.append("recibo_servicio", reciboServicio);
+    //   }
 
-    try {
-      await axios.post(`${API_BASE_URL}/matricula/mat/`, formDataToSend, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      setSuccess(true);
-      router.push("/auth/matricula-finalizada"); // Redirige al login
-    } catch (error) {
-      console.error("Error al enviar la matrícula:", error);
-      setError("Hubo un error al enviar la matrícula.");
-    }
-  };
+    //   // Imprime todos los datos que se van a enviar
+    //   for (const pair of formDataToSend.entries()) {
+    //     console.log(`${pair[0]}:`, pair[1]);
+    //   }
 
-  // Manejo del cierre del snackbar
-  const handleCloseSnackbar = () => {
-    setError(null);
-    setSuccess(false);
-  };
+    //   try {
+    //     await axios.post(`${API_BASE_URL}/matricula/mat/`, formDataToSend, {
+    //       headers: {
+    //         "Content-Type": "multipart/form-data",
+    //       },
+    //     });
+    //     setSuccess(true);
+    //     router.push("/auth/matricula-finalizada"); // Redirige al login
+    //   } catch (error) {
+    //     console.error("Error al enviar la matrícula:", error);
+    //     setError("Hubo un error al enviar la matrícula.");
+    //   }
+    // };
 
-  if (loading) return <div>Cargando ofertas...</div>;
+    if (loading) return <div>Cargando ofertas...</div>;
 
-  return (
-    <div className="mx-auto my-4 w-full rounded-2xl bg-white p-5 text-center shadow-md">
-      <Snackbar
-        open={!!error}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity="error"
-          sx={{ width: "100%" }}
-        >
-          {error}
-        </Alert>
-      </Snackbar>
+    return (
+      <div className="mx-auto my-4 w-full rounded-2xl bg-white p-5 text-center shadow-md">
+        <h2 className="text-center font-semibold text-primary">
+          OFERTA ACADÉMICA Y MATRÍCULA
+        </h2>
 
-      <Snackbar
-        open={success}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity="success"
-          sx={{ width: "100%" }}
-        >
-          Matrícula enviada correctamente.
-        </Alert>
-      </Snackbar>
-
-      <h2 className="text-center font-semibold text-primary">
-        OFERTA ACADÉMICA Y MATRÍCULA
-      </h2>
-
-      <form className="items-center" onSubmit={handleSubmit}>
+        {/* <form className="items-center" onSubmit={handleSubmit}> */}
         {/* Selector de Oferta Académica */}
         <FormControl className="inputs-textfield mx-auto mt-2 flex w-full sm:w-1/4">
           <InputLabel id="oferta-label">Oferta académica</InputLabel>
@@ -332,7 +372,7 @@ export default function Matricula() {
               setFormData({ ...formData, tipo_vinculacion: e.target.value })
             }
           >
-            {tipoVinculacion === "Becados" ? (
+            {tipoVinculacion_form === "Becados" ? (
               <>
                 <FormControlLabel
                   value="Becados - Ins. Educativas (Docente Enlace)"
@@ -387,7 +427,7 @@ export default function Matricula() {
         </h2>
         {/* Inputs para subir archivos */}
         <div className="flex flex-wrap justify-around gap-4 text-gray-600">
-          {tipoVinculacion === "Becados" ? (
+          {tipoVinculacion_form === "Becados" ? (
             <div className="my-4 flex flex-col gap-3">
               <InputLabel id="recibo-servicios-label" className="font-bold">
                 Recibo de servicios
@@ -447,19 +487,30 @@ export default function Matricula() {
               </Button>
 
               <h2>
-                {" "}
-                {reciboPago
-                  ? reciboPago.name
-                  : "No se ha seleccionado un recibo de pago"}
+                {reciboPago ? (
+                  <>
+                    {reciboPago.size / (1024 * 1024) > 2 && (
+                      <span style={{ color: "red", marginLeft: "8px" }}>
+                        ⚠️ El documento excede 2 MB
+                      </span>
+                    )}
+                    <br />
+                    <span className="text-gray-600">
+                      {reciboPago.name} -{" "}
+                      {(reciboPago.size / (1024 * 1024)).toFixed(2)} MB
+                    </span>
+                  </>
+                ) : (
+                  "No se ha seleccionado documento"
+                )}
               </h2>
             </div>
           )}
           {/* Mostrar solo si NO es estamento Privado con tipo de vinculación Particular */}
           {!(
-            estamento === "PRIVADO" &&
+            estamento_form === "PRIVADO" &&
             formData.tipo_vinculacion === "Particular"
           ) && (
-
             <div className="my-4 flex flex-col gap-3">
               <InputLabel id="certificado-label" className="font-bold">
                 Certificado
@@ -490,10 +541,22 @@ export default function Matricula() {
               </Button>
 
               <h2>
-                {" "}
-                {certificado
-                  ? certificado.name
-                  : "No se ha seleccionado un certificado"}
+                {certificado ? (
+                  <>
+                    {certificado.size / (1024 * 1024) > 2 && (
+                      <span style={{ color: "red", marginLeft: "8px" }}>
+                        ⚠️ El documento excede 2 MB
+                      </span>
+                    )}
+                    <br />
+                    <span className="text-gray-600">
+                      {certificado.name} -{" "}
+                      {(certificado.size / (1024 * 1024)).toFixed(2)} MB
+                    </span>
+                  </>
+                ) : (
+                  "No se ha seleccionado documento"
+                )}
               </h2>
             </div>
           )}
@@ -528,14 +591,10 @@ export default function Matricula() {
             required
           />
         </div>
-        <Button
-          type="submit"
-          variant="outlined"
-          className="mt-4 w-3/4 rounded-2xl border-2 border-[#C20E1A] py-2 font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white"
-        >
-          Enviar
-        </Button>
-      </form>
-    </div>
-  );
-}
+      </div>
+    );
+  },
+);
+
+Matricula.displayName = "Matricula";
+export default Matricula;
