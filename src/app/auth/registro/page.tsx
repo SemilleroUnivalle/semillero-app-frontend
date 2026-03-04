@@ -12,6 +12,11 @@ import {
   Button,
   Autocomplete,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Typography,
 } from "@mui/material";
 import { useState, useEffect, useRef } from "react";
 import Matricula from "../matricula/page";
@@ -110,10 +115,34 @@ const comunasCali = [
   "21",
   "22",
 ];
-export default function Registro() {
+
+const colegios = [
+  "I.E Carlos Holguin Lloreda",
+  "I.E Compartir",
+  "I.E Felidia",
+  "I.E Hernando Caicedo",
+  "I.E INEM Jorge Isaac",
+  "I.E Jose Manuel Saaveda Galindo",
+  "I.E Jose Maria Cabal",
+  "I.E Juan XIII",
+  "I.E Las Américas",
+  "I.E Pichindé",
+  "I.E Santa Fe",
+  "I.E Titan",
+  "I.E. Panebianco Americano (Candelaria)",
+  "I.E. Republica de Argentina",
+  "I.E.T.I. Comuna 17",
+];
+
+export default function Registro({
+  tipo_usuario_form,
+}: {
+  tipo_usuario_form: string;
+}) {
   const router = useRouter();
 
   // Estados generales
+  const [openModal, setOpenModal] = useState(true);
   const [esDocente, setEsDocente] = useState(false);
   const [fotoPerfil, setFotoPerfil] = useState<File | null>(null);
   const [documentoIdentidad, setDocumentoIdentidad] = useState<File | null>(
@@ -181,6 +210,17 @@ export default function Registro() {
     try {
       if (!fotoPerfil) {
         alert("La foto de perfil es obligatoria");
+        setCargando(false);
+        return;
+      }
+
+      if (
+        !isValidEmail(formData.email) ||
+        !isValidEmail(formDataAcudiente.email_acudiente)
+      ) {
+        alert(
+          "Los correos electrónicos deben ser @gmail.com o @correounivalle.edu.co",
+        );
         setCargando(false);
         return;
       }
@@ -316,6 +356,8 @@ export default function Registro() {
               if (responseMatricula.status === 201) {
                 setCargando(false);
                 alert("¡Registro exitoso!");
+                const datos_matricula = responseMatricula.data;
+                localStorage.setItem("datos_matricula", JSON.stringify(datos_matricula));
                 router.push("/auth/matricula-finalizada");
               }
             } catch (matriculaError) {
@@ -459,6 +501,64 @@ export default function Registro() {
 
   return (
     <div className="mx-auto my-4 content-center rounded-2xl p-5 text-center">
+      {/* Modal para información importante */}
+      <Dialog
+        className="rounded-2xl"
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        maxWidth="md"
+      >
+        <DialogContent className="rounded-2xl p-10">
+          <h1>Información importante</h1>
+          <br />- Este formulario debe ser diligenciado una vez realizado el
+          proceso de pago. Si no lo has realizado, sigue el paso a paso en:{" "}
+          <a
+            className="font-bold"
+            href="https://bit.ly/49mogGF"
+            target="_blank"
+          >
+            Instructivo de pago. AQUÍ
+          </a>
+          .
+          <br />
+          - Los archivos cargados deben pesar menos de 2 MB.
+          <br />
+          - La fotografía debe ser 3×4, con fondo blanco y tipo documento. No se
+          aceptan selfies, fotos personales, familiares, de eventos o en lugares
+          públicos.
+          <br />
+          <br />
+          Si sus archivos superan los 2 MB, puede comprimirlos en:{" "}
+          <a
+            className="font-bold"
+            href="https://www.ilovepdf.com/es/comprimir_pdf"
+            target="_blank"
+          >
+            ILovePDF - Comprimir PDF
+          </a>
+          <br />
+          Para eliminar el fondo de la foto:{" "}
+          <a
+            className="font-bold"
+            href="https://www.iloveimg.com/es/eliminar-fondo"
+            target="_blank"
+          >
+            ILoveIMG - Eliminar fondo
+          </a>
+        </DialogContent>
+
+        <DialogActions>
+          <Button
+            variant="contained"
+            className="buttons-principal mx-auto"
+            onClick={() => setOpenModal(false)}
+          >
+            Entendido
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Animación de carga cuando se envie el formulario */}
       {cargando && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-50">
           <CircularProgress size={60} />
@@ -470,12 +570,13 @@ export default function Registro() {
 
       <form className="items-center" onSubmit={handleSubmit}>
         <div className="flex w-full flex-col rounded-2xl bg-white py-5 shadow-sm">
-          <h1 className="text-center font-semibold text-primary">
-            FORMULARIO DE INSCRIPCIÓN
+          <h1>
+            FORMULARIO DE INSCRIPCIÓN{" "}
+            {tipo_usuario_form === "Becados" ? "- BECADOS" : ""}{" "}
           </h1>
-          <div className="flex w-full flex-row rounded-2xl bg-white py-5 shadow-sm">
+          <div className="flex w-full flex-col rounded-2xl bg-white p-5 md:flex-row">
             {/* Campo Seleccionar Fotografia */}
-            <div className="flex w-1/3 flex-col items-center justify-around">
+            <div className="flex w-full flex-col items-center justify-around md:w-1/3">
               {/* Avatar que muestra la imagen */}
               <Avatar src={image || ""} sx={{ width: 150, height: 150 }} />
 
@@ -509,7 +610,7 @@ export default function Registro() {
             </div>
 
             {/* Contenedor Informacion Personal */}
-            <div className="flex w-2/3 flex-col items-center justify-center uppercase">
+            <div className="flex w-full flex-col items-center justify-center uppercase">
               <h2 className="text-md my-4 text-center font-semibold text-primary">
                 DATOS DEL ESTUDIANTE
               </h2>
@@ -907,22 +1008,33 @@ export default function Registro() {
           </h2>
           <div className="flex flex-wrap justify-between gap-2 text-gray-600">
             {/* Campo Colegio */}
-            <TextField
+            <Autocomplete
               className="inputs-textfield flex w-full flex-col sm:w-1/4"
-              hidden={esDocente}
-              label="Colegio"
-              name="colegio"
-              variant="outlined"
-              type="text"
-              fullWidth
-              required
+              freeSolo
+              options={colegios}
               value={formData.colegio}
-              onChange={(e) =>
+              inputValue={formData.colegio}
+              onChange={(_, newValue) =>
                 setFormData({
                   ...formData,
-                  colegio: e.target.value.toUpperCase(),
+                  colegio: newValue?.toUpperCase() || "",
                 })
               }
+              onInputChange={(_, newInputValue) =>
+                setFormData({
+                  ...formData,
+                  colegio: newInputValue.toUpperCase(),
+                })
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Colegio"
+                  required
+                  variant="outlined"
+                  fullWidth
+                />
+              )}
             />
             {/* Campo Estamento Colegio */}
             {!esDocente && (
@@ -1221,26 +1333,24 @@ export default function Registro() {
               )}
             </h2>
           </div>
-          <Alert className="mt-3" severity="info">
-            La fotografía y el documento de identidad son obligatorios y deben
-            pesar menos de 2 Mb.
-          </Alert>
         </div>
 
         <Matricula
           ref={matriculaFormRef}
           estamento_form={formData.estamento}
           grado_form={formData.grado}
-          tipoVinculacion_form={"Regular"}
+          tipoVinculacion_form={tipo_usuario_form}
         />
 
-        <Button
-          type="submit"
-          variant="outlined"
-          className="mt-4 w-3/4 rounded-2xl border-2 border-[#C20E1A] py-2 font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white"
-        >
-          Registrar
-        </Button>
+        <div className="shadow-sm my-4 justify-center rounded-2xl bg-white p-5">
+          <Button
+            type="submit"
+            variant="outlined"
+            className="mt-4 w-full md:w-1/4 rounded-2xl border-2 border-[#C20E1A] py-2 font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white"
+          >
+            Registrar
+          </Button>
+        </div>
       </form>
 
       {/* Botón de iniciar sesión*/}

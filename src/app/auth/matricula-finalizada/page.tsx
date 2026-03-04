@@ -3,6 +3,10 @@
 import { CheckCircle, AccessTime, ErrorOutline } from "@mui/icons-material";
 
 export default function MatriculaFinalizadaPage() {
+  const datos_matricula = JSON.parse(
+    localStorage.getItem("datos_matricula") || "null",
+  );
+
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="w-full max-w-md rounded-lg bg-white p-8 text-center shadow-2xl">
@@ -22,9 +26,29 @@ export default function MatriculaFinalizadaPage() {
         <div className="my-4 h-1 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600"></div>
 
         {/* Mensaje principal */}
-        <p className="mb-6 text-lg font-medium text-gray-600">
-          Tu proceso de matrícula se ha completado exitosamente.
+        <p className="text-md mb-6 font-medium text-gray-600">
+          Puedes imprimir esta vista como constancia de tu inscripción haciendo
+          clic derecho y seleccionando “Imprimir”, o presionando Ctrl + P.
         </p>
+
+        <p className="mb-6 text-md font-bold text-gray-600">
+          Resumen de la matrícula:
+        </p>
+        <div className="mb-4 rounded-lg bg-gray-100 p-4 text-left">
+          <p className="text-sm font-medium text-gray-800">
+            <strong>Nombre completo:</strong>{" "}
+            {datos_matricula?.estudiante.nombre}{" "}
+            {datos_matricula?.estudiante.apellido || "No disponible"}
+          </p>
+          <p className="text-sm font-medium text-gray-800">
+            <strong>Módulo:</strong>{" "}
+            {datos_matricula?.modulo.nombre_modulo || "No disponible"}
+          </p>
+          <p className="text-sm font-medium text-gray-800">
+            <strong>Tipo de vinculación:</strong>{" "}
+            {datos_matricula?.tipo_vinculacion || "No disponible"}
+          </p>
+        </div>
 
         {/* Información de la constancia */}
         <div className="mb-6 border-l-4 border-blue-500 bg-blue-50 p-4 text-left">
@@ -59,9 +83,9 @@ export default function MatriculaFinalizadaPage() {
         </div>
 
         {/* Pie de página */}
-        <p className="mt-6 text-md text-gray-500">
-          Si tienes preguntas, contacta al Semillero <br /> - (+57) 312 681 0276 <br /> - 602
-          3212100 ext. 3098
+        <p className="text-md mt-6 text-gray-500">
+          Si tienes preguntas, contacta al Semillero <br /> - (+57) 312 681 0276{" "}
+          <br /> - 602 3212100 ext. 3098
         </p>
       </div>
     </div>

@@ -3,7 +3,6 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { API_BASE_URL } from "../../../../config";
 import axios from "axios";
-import { useRouter } from "next/navigation";
 import { Modulo, OfertaCategoria } from "@/interfaces/interfaces";
 import {
   InputLabel,
@@ -72,20 +71,8 @@ const Matricula = forwardRef<MatriculaHandle, MatriculaProps>(
 
     useImperativeHandle(ref, () => ({
       validate: () => {
-        if (!formData.oferta) {
-          alert("Por favor selecciona una oferta académica");
-          return false;
-        }
-        if (!formData.area) {
-          alert("Por favor selecciona una categoría");
-          return false;
-        }
-        if (!formData.modulo) {
-          alert("Por favor selecciona un módulo");
-          return false;
-        }
-        if (!formData.tipo_vinculacion) {
-          alert("Por favor selecciona un tipo de vinculación");
+          const { oferta, area, modulo, tipo_vinculacion } = formData;
+        if (!oferta || !area || !modulo || !tipo_vinculacion) {
           return false;
         }
         if (!terminos) {
@@ -163,7 +150,7 @@ const Matricula = forwardRef<MatriculaHandle, MatriculaProps>(
     // Carga las ofertas académicas al montar el componente
 
     // Obtén la lista de ofertas académicas
-    
+
     const ofertasAcademicas = Object.values(ofertas)
       .flat()
       .map((oferta) => oferta.id_oferta_academica)
