@@ -369,10 +369,10 @@ export default function CertificadosPage() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ mb: 4 }}>
+    <Box className="p-3">
+      <Box className="mb-4">
         <h1>Gestión de Certificados</h1>
-        <p style={{ color: "#666", marginTop: "8px" }}>
+        <p className="text-[#575757] mt-2 text-sm">
           Carga certificados de estudiantes por período académico
         </p>
       </Box>
@@ -380,28 +380,45 @@ export default function CertificadosPage() {
       {mensaje && (
         <Alert
           severity={mensaje.tipo}
-          sx={{ mb: 3 }}
+          className="mb-3 rounded-[1rem]"
           onClose={() => setMensaje(null)}
+          sx={{
+            backgroundColor: mensaje.tipo === "success" ? "#f0f8f0" : mensaje.tipo === "error" ? "#fff0f0" : "#FFF9E6",
+            color: mensaje.tipo === "success" ? "#2e7d32" : mensaje.tipo === "error" ? "#c62828" : "#f57f17",
+            "& .MuiAlert-icon": {
+              color: mensaje.tipo === "success" ? "#2e7d32" : mensaje.tipo === "error" ? "#c62828" : "#f57f17"
+            }
+          }}
         >
           {mensaje.texto}
         </Alert>
       )}
 
-      <Box className="inputs-textfield" sx={{ display: "grid", gridTemplateColumns: { lg: "2fr 1fr" }, gap: 3 }}>
+      <Box className="inputs-textfield grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-3">
         {/* Formulario */}
-        <Card className="rounded-2xl">
-          <CardHeader title="Cargar Certificados" />
+        <Card className="rounded-[1rem] shadow-sm border border-gray-200">
+          <CardHeader 
+            title="Cargar Certificados"
+            titleTypographyProps={{
+              sx: { 
+                color: "#C20E1A",
+                fontWeight: 600,
+                fontSize: "1.1rem"
+              }
+            }}
+            sx={{ borderBottom: "1px solid #f0f0f0" }}
+          />
           <CardContent>
-            <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
-              <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
-                <Tab label="Carga Individual" />
-                <Tab label="Carga por Lote" />
+            <Box className="border-b border-gray-200 mb-2">
+              <Tabs className="text-primary" value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
+                <Tab className="text-primary" label="Carga Individual"/>
+                <Tab className="text-primary" label="Carga por Lote" />
               </Tabs>
             </Box>
 
             {/* CARGA INDIVIDUAL */}
             <TabPanel value={tabValue} index={0}>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+              <Box className="flex flex-col gap-2.5">
                 {/* Período */}
                 <FormControl fullWidth>
                   <InputLabel>Período</InputLabel>
@@ -430,6 +447,7 @@ export default function CertificadosPage() {
                   value={busquedaEstudiante}
                   onChange={(e) => setBusquedaEstudiante(e.target.value)}
                   disabled={!periodoSeleccionado}
+                  className="inputs-textfield"
                   InputProps={{
                     startAdornment: <SearchIcon sx={{ mr: 1, color: "#999" }} />,
                   }}
@@ -492,39 +510,27 @@ export default function CertificadosPage() {
 
                 {/* Upload PDF */}
                 <Box
-                  sx={{
-                    border: "2px dashed #c20e1a",
-                    borderRadius: "8px",
-                    p: 2,
-                    textAlign: "center",
-                    cursor: "pointer",
-                    backgroundColor: archivoIndividual ? "#f0f0f0" : "transparent",
-                    "&:hover": { backgroundColor: "#fafafa" },
-                  }}
+                  className={`border-2 border-dashed border-[#C20E1A] rounded-lg p-2 text-center cursor-pointer transition-colors ${
+                    archivoIndividual ? "bg-gray-100" : "bg-transparent"
+                  } hover:bg-gray-50`}
                 >
                   <input
                     type="file"
                     accept=".pdf"
                     onChange={handleArchivoIndividualChange}
-                    style={{ display: "none" }}
+                    className="hidden"
                     id="file-input-individual"
                     disabled={cargando}
                   />
                   <label
                     htmlFor="file-input-individual"
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      cursor: "pointer",
-                      gap: "8px",
-                    }}
+                    className="flex flex-col items-center cursor-pointer gap-2"
                   >
-                    <CloudUploadIcon sx={{ fontSize: 40, color: "#c20e1a" }} />
-                    <span>
+                    <CloudUploadIcon sx={{ fontSize: 40, color: "#C20E1A" }} />
+                    <span className="text-gray-700">
                       {archivoIndividual ? archivoIndividual.name : "Selecciona PDF"}
                     </span>
-                    <small style={{ color: "#999" }}>Máximo 2MB</small>
+                    <small className="text-gray-400">Máximo 2MB</small>
                   </label>
                 </Box>
 
@@ -539,10 +545,7 @@ export default function CertificadosPage() {
                     !archivoIndividual ||
                     cargando
                   }
-                  sx={{
-                    backgroundColor: "#c20e1a",
-                    "&:hover": { backgroundColor: "#a00815" },
-                  }}
+                  className="bg-[#C20E1A] hover:bg-[#970000] disabled:bg-gray-300 disabled:text-gray-500 text-white font-medium rounded-lg py-3"
                 >
                   {cargando ? (
                     <>
@@ -558,10 +561,10 @@ export default function CertificadosPage() {
 
             {/* CARGA POR LOTE */}
             <TabPanel value={tabValue} index={1}>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-                <Alert severity="info">
-                  <Box sx={{ mb: 1, fontWeight: "600" }}>⚠️ Requisitos para la carga por lote:</Box>
-                  <List dense sx={{ pl: 2 }}>
+              <Box className="flex flex-col gap-2.5">
+                <Alert severity="info" className="rounded-lg">
+                  <Box className="mb-1 font-semibold">⚠️ Requisitos para la carga por lote:</Box>
+                  <List dense className="pl-2">
                     <ListItem disablePadding>
                       <ListItemIcon sx={{ minWidth: 32 }}>•</ListItemIcon>
                       <ListItemText primary="Máximo 2MB por archivo PDF" />
@@ -596,42 +599,30 @@ export default function CertificadosPage() {
                 </FormControl>
 
                 <Box
-                  sx={{
-                    border: "2px dashed #c20e1a",
-                    borderRadius: "8px",
-                    p: 3,
-                    textAlign: "center",
-                    cursor: "pointer",
-                    backgroundColor: archivosLote.length > 0 ? "#f0f0f0" : "transparent",
-                    "&:hover": { backgroundColor: "#fafafa" },
-                  }}
+                  className={`border-2 border-dashed border-[#C20E1A] rounded-lg p-3 text-center cursor-pointer transition-colors ${
+                    archivosLote.length > 0 ? "bg-gray-100" : "bg-transparent"
+                  } hover:bg-gray-50`}
                 >
                   <input
                     type="file"
                     multiple
                     accept=".pdf"
                     onChange={handleArchivosMasivoChange}
-                    style={{ display: "none" }}
+                    className="hidden"
                     id="folder-input"
                     disabled={cargando || !periodoMasivo}
                   />
                   <label
                     htmlFor="folder-input"
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      cursor: "pointer",
-                      gap: "8px",
-                    }}
+                    className="flex flex-col items-center cursor-pointer gap-2"
                   >
-                    <CloudUploadIcon sx={{ fontSize: 50, color: "#c20e1a" }} />
-                    <span style={{ fontWeight: "600", fontSize: "16px" }}>
+                    <CloudUploadIcon sx={{ fontSize: 50, color: "#C20E1A" }} />
+                    <span className="font-semibold text-base text-gray-700">
                       {archivosLote.length > 0
                         ? `${archivosLote.length} archivos seleccionados`
                         : "Selecciona una carpeta"}
                     </span>
-                    <small style={{ color: "#999" }}>
+                    <small className="text-gray-400">
                       PDF con nombres: documento.pdf (ej: 1001234567.pdf)
                     </small>
                   </label>
@@ -642,10 +633,7 @@ export default function CertificadosPage() {
                   size="large"
                   onClick={handleCargarMasivo}
                   disabled={!periodoMasivo || archivosLote.length === 0 || cargando}
-                  sx={{
-                    backgroundColor: "#c20e1a",
-                    "&:hover": { backgroundColor: "#a00815" },
-                  }}
+                  className="bg-[#C20E1A] hover:bg-[#970000] disabled:bg-gray-300 disabled:text-gray-500 text-white font-medium rounded-lg py-3"
                 >
                   {cargando ? (
                     <>
@@ -662,30 +650,36 @@ export default function CertificadosPage() {
         </Card>
 
         {/* Panel Lateral */}
-        <Card sx={{ height: "fit-content" }}>
-          <CardHeader title="Información" />
+        <Card className="rounded-[1rem] shadow-sm border border-gray-200 h-fit">
+          <CardHeader 
+            title="Información"
+            titleTypographyProps={{
+              sx: { 
+                color: "#C20E1A",
+                fontWeight: 600,
+                fontSize: "1.1rem"
+              }
+            }}
+            sx={{ borderBottom: "1px solid #f0f0f0" }}
+          />
           <CardContent>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <Box className="flex flex-col gap-2">
               {tabValue === 0 ? (
                 <>
                   {periodoSeleccionado ? (
                     <>
                       <Box>
-                        <p style={{ fontWeight: "600", marginBottom: "8px" }}>
-                          Período:
-                        </p>
+                        <p className="font-semibold mb-2">Período:</p>
                         <Chip label={periodoSeleccionado} color="primary" variant="outlined" />
                       </Box>
 
                       {estudianteSeleccionado && (
                         <Box>
-                          <p style={{ fontWeight: "600", marginBottom: "8px" }}>
-                            Estudiante:
-                          </p>
-                          <p style={{ margin: "0 0 4px 0" }}>
+                          <p className="font-semibold mb-2">Estudiante:</p>
+                          <p className="mb-1 text-gray-700">
                             {estudianteSeleccionado.nombre}
                           </p>
-                          <small style={{ color: "#999" }}>
+                          <small className="text-gray-400">
                             {estudianteSeleccionado.documento}
                           </small>
                         </Box>
@@ -693,22 +687,18 @@ export default function CertificadosPage() {
 
                       {matriculaSeleccionada && (
                         <Box>
-                          <p style={{ fontWeight: "600", marginBottom: "8px" }}>
-                            Matrícula:
-                          </p>
-                          <p style={{ margin: "0 0 4px 0" }}>
+                          <p className="font-semibold mb-2">Matrícula:</p>
+                          <p className="mb-1 text-gray-700">
                             {matriculaSeleccionada.oferta}
                           </p>
-                          <small style={{ color: "#999" }}>
+                          <small className="text-gray-400">
                             Área: {matriculaSeleccionada.area}
                           </small>
                         </Box>
                       )}
                     </>
                   ) : (
-                    <p style={{ color: "#999", textAlign: "center" }}>
-                      Selecciona un período
-                    </p>
+                    <p className="text-gray-400 text-center">Selecciona un período</p>
                   )}
                 </>
               ) : (
@@ -716,24 +706,18 @@ export default function CertificadosPage() {
                   {periodoMasivo ? (
                     <>
                       <Box>
-                        <p style={{ fontWeight: "600", marginBottom: "8px" }}>
-                          Período:
-                        </p>
+                        <p className="font-semibold mb-2">Período:</p>
                         <Chip label={periodoMasivo} color="primary" variant="outlined" />
                       </Box>
                       <Box>
-                        <p style={{ fontWeight: "600", marginBottom: "8px" }}>
-                          Archivos:
-                        </p>
-                        <p style={{ fontSize: "28px", fontWeight: "bold", color: "#c20e1a" }}>
+                        <p className="font-semibold mb-2">Archivos:</p>
+                        <p className="text-3xl font-bold text-[#C20E1A]">
                           {archivosLote.length}
                         </p>
                       </Box>
                     </>
                   ) : (
-                    <p style={{ color: "#999", textAlign: "center" }}>
-                      Selecciona un período
-                    </p>
+                    <p className="text-gray-400 text-center">Selecciona un período</p>
                   )}
                 </>
               )}
@@ -744,48 +728,56 @@ export default function CertificadosPage() {
 
       {/* Tabla de resultados */}
       {certificadosCargados.length > 0 && (
-        <Card sx={{ mt: 4 }}>
+        <Card className="mt-4 rounded-[1rem] shadow-sm border border-gray-200">
           <CardHeader
             title="Historial de Cargas"
+            titleTypographyProps={{
+              sx: { 
+                color: "#C20E1A",
+                fontWeight: 600,
+                fontSize: "1.1rem"
+              }
+            }}
             action={
               <Button
                 startIcon={<DownloadIcon />}
                 onClick={exportarExcel}
-                sx={{ color: "#c20e1a" }}
+                className="text-[#C20E1A] hover:bg-red-50"
               >
                 Exportar Excel
               </Button>
             }
+            sx={{ borderBottom: "1px solid #f0f0f0" }}
           />
-          <TableContainer component={Paper}>
+          <TableContainer component={Paper} className="border-0 shadow-none">
             <Table size="small">
               <TableHead>
-                <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                  <TableCell>Documento</TableCell>
-                  <TableCell>Estudiante</TableCell>
-                  <TableCell>Período</TableCell>
-                  <TableCell>Oferta</TableCell>
-                  <TableCell>Archivo</TableCell>
-                  <TableCell>Fecha</TableCell>
-                  <TableCell align="center">Estado</TableCell>
+                <TableRow className="bg-gray-100">
+                  <TableCell className="font-semibold text-gray-700">Documento</TableCell>
+                  <TableCell className="font-semibold text-gray-700">Estudiante</TableCell>
+                  <TableCell className="font-semibold text-gray-700">Período</TableCell>
+                  <TableCell className="font-semibold text-gray-700">Oferta</TableCell>
+                  <TableCell className="font-semibold text-gray-700">Archivo</TableCell>
+                  <TableCell className="font-semibold text-gray-700">Fecha</TableCell>
+                  <TableCell align="center" className="font-semibold text-gray-700">Estado</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {certificadosCargados.map((cert) => (
-                  <TableRow key={cert.id}>
-                    <TableCell sx={{ fontWeight: "600" }}>
+                  <TableRow key={cert.id} className="hover:bg-gray-50 border-b border-gray-200">
+                    <TableCell className="font-semibold text-gray-700">
                       {cert.estudianteDocumento}
                     </TableCell>
-                    <TableCell>{cert.estudianteNombre}</TableCell>
-                    <TableCell>{cert.periodo}</TableCell>
-                    <TableCell>{cert.oferta}</TableCell>
-                    <TableCell>{cert.archivo}</TableCell>
-                    <TableCell>{cert.fechaCarga}</TableCell>
+                    <TableCell className="text-gray-700">{cert.estudianteNombre}</TableCell>
+                    <TableCell className="text-gray-700">{cert.periodo}</TableCell>
+                    <TableCell className="text-gray-700">{cert.oferta}</TableCell>
+                    <TableCell className="text-gray-700">{cert.archivo}</TableCell>
+                    <TableCell className="text-gray-700">{cert.fechaCarga}</TableCell>
                     <TableCell align="center">
                       {cert.estado === "exitoso" ? (
-                        <CheckCircleIcon sx={{ color: "#4caf50" }} />
+                        <CheckCircleIcon className="text-green-500" />
                       ) : (
-                        <ErrorIcon sx={{ color: "#f44336" }} />
+                        <ErrorIcon className="text-red-500" />
                       )}
                     </TableCell>
                   </TableRow>

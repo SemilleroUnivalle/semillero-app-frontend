@@ -85,6 +85,11 @@ const adminLinks: LinkItem[] = [
     href: "/admin/certificados",
     icon: ContentPasteSearchOutlinedIcon,
   },
+    {
+    name: "Encuestas de Satisfacción",
+    href: "/admin/encuestas",
+    icon: ContentPasteSearchOutlinedIcon,
+  },
   { name: "Estadísticas", href: "/admin/estadisticas", icon: AnalyticsOutlinedIcon },
   { name: "Ajustes", href: "/admin/ajustes/ajustes", icon: CogIcon },
 ];
