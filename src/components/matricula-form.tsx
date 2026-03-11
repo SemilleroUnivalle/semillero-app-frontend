@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
-import { API_BASE_URL } from "../../../../config";
+import { API_BASE_URL } from "../../config";
 import axios from "axios";
 import { Modulo, OfertaCategoria } from "@/interfaces/interfaces";
 import {
@@ -16,8 +16,6 @@ import {
   Button,
   SelectChangeEvent,
   Switch,
-  Alert,
-  Snackbar,
 } from "@mui/material";
 
 interface MatriculaHandle {
@@ -584,4 +582,5 @@ const Matricula = forwardRef<MatriculaHandle, MatriculaProps>(
 );
 
 Matricula.displayName = "Matricula";
+
 export default Matricula;

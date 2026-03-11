@@ -1,11 +1,26 @@
 "use client";
 
+import { Matricula } from "@/interfaces/interfaces";
 import { CheckCircle, AccessTime, ErrorOutline } from "@mui/icons-material";
+import { useEffect, useState } from "react";
 
 export default function MatriculaFinalizadaPage() {
-  const datos_matricula = JSON.parse(
-    localStorage.getItem("datos_matricula") || "null",
-  );
+  const [datos_matricula, setDatos_matricula] = useState<Matricula | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Acceder a localStorage solo en el cliente
+    const datos = JSON.parse(localStorage.getItem("datos_matricula") || "null");
+    setDatos_matricula(datos);
+    setLoading(false);
+  }, []);
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        Cargando...
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center">
@@ -31,7 +46,7 @@ export default function MatriculaFinalizadaPage() {
           clic derecho y seleccionando “Imprimir”, o presionando Ctrl + P.
         </p>
 
-        <p className="mb-6 text-md font-bold text-gray-600">
+        <p className="text-md mb-6 font-bold text-gray-600">
           Resumen de la matrícula:
         </p>
         <div className="mb-4 rounded-lg bg-gray-100 p-4 text-left">

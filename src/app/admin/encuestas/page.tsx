@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import dynamic from "next/dynamic";
 import {
   Box,
   Card,
@@ -21,7 +22,10 @@ import DownloadIcon from "@mui/icons-material/Download";
 import UploadIcon from "@mui/icons-material/CloudUpload";
 
 import * as XLSX from "xlsx";
-import Chart from "react-apexcharts";
+
+
+// Importar Chart solo en cliente
+const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 interface EncuestaRow {
   documento: string;

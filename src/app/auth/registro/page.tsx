@@ -19,8 +19,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useState, useEffect, useRef } from "react";
-import Matricula from "../matricula/page";
-import { useRouter } from "next/navigation";
+import Matricula from "@/components/matricula-form";
+import { useRouter, usePathname } from "next/navigation";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../config";
 
@@ -134,12 +134,12 @@ const colegios = [
   "I.E.T.I. Comuna 17",
 ];
 
-export default function Registro({
-  tipo_usuario_form,
-}: {
-  tipo_usuario_form: string;
-}) {
+export default function Registro() {
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Determinar tipo_usuario_form según la ruta
+  const tipo_usuario_form = pathname.includes("becados") ? "Becados" : "";
 
   // Estados generales
   const [openModal, setOpenModal] = useState(true);
@@ -357,7 +357,10 @@ export default function Registro({
                 setCargando(false);
                 alert("¡Registro exitoso!");
                 const datos_matricula = responseMatricula.data;
-                localStorage.setItem("datos_matricula", JSON.stringify(datos_matricula));
+                localStorage.setItem(
+                  "datos_matricula",
+                  JSON.stringify(datos_matricula),
+                );
                 router.push("/auth/matricula-finalizada");
               }
             } catch (matriculaError) {
@@ -1342,23 +1345,16 @@ export default function Registro({
           tipoVinculacion_form={tipo_usuario_form}
         />
 
-        <div className="shadow-sm my-4 justify-center rounded-2xl bg-white p-5">
+        <div className="my-4 justify-center rounded-2xl bg-white p-5 shadow-sm">
           <Button
             type="submit"
             variant="outlined"
-            className="mt-4 w-full md:w-1/4 rounded-2xl border-2 border-[#C20E1A] py-2 font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white"
+            className="mt-4 w-full rounded-2xl border-2 border-[#C20E1A] py-2 font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white md:w-1/4"
           >
             Registrar
           </Button>
         </div>
       </form>
-
-      {/* Botón de iniciar sesión*/}
-      {/* <Link href="/auth/login">
-        <button className="mt-4 w-3/4 rounded-2xl border-2 border-[#C20E1A] py-2 font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white">
-          Iniciar sesión
-        </button>
-      </Link> */}
     </div>
   );
 }
