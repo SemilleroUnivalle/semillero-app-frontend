@@ -12,10 +12,15 @@ import {
   Button,
   Autocomplete,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Typography,
 } from "@mui/material";
-import { useState, useEffect } from "react";
-
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import Matricula from "@/components/matricula-form";
+import { useRouter, usePathname } from "next/navigation";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../config";
 
@@ -110,10 +115,34 @@ const comunasCali = [
   "21",
   "22",
 ];
+
+const colegios = [
+  "I.E Carlos Holguin Lloreda",
+  "I.E Compartir",
+  "I.E Felidia",
+  "I.E Hernando Caicedo",
+  "I.E INEM Jorge Isaac",
+  "I.E Jose Manuel Saaveda Galindo",
+  "I.E Jose Maria Cabal",
+  "I.E Juan XIII",
+  "I.E Las Américas",
+  "I.E Pichindé",
+  "I.E Santa Fe",
+  "I.E Titan",
+  "I.E. Panebianco Americano (Candelaria)",
+  "I.E. Republica de Argentina",
+  "I.E.T.I. Comuna 17",
+];
+
 export default function Registro() {
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Determinar tipo_usuario_form según la ruta
+  const tipo_usuario_form = pathname.includes("becados") ? "Becados" : "";
 
   // Estados generales
+  const [openModal, setOpenModal] = useState(true);
   const [esDocente, setEsDocente] = useState(false);
   const [fotoPerfil, setFotoPerfil] = useState<File | null>(null);
   const [documentoIdentidad, setDocumentoIdentidad] = useState<File | null>(
@@ -161,27 +190,58 @@ export default function Registro() {
     celular_acudiente: "",
   });
 
+  const matriculaFormRef = useRef<{
+    getFormData: () => any;
+    validate: () => boolean;
+  }>(null);
+
   // Manejar envío del formulario
   // Enviar datos al backend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate Matricula form first
+    if (matriculaFormRef.current && !matriculaFormRef.current.validate()) {
+      alert("Por favor completa todos los campos del formulario de matrícula");
+      return;
+    }
     setCargando(true);
 
-    console.log("Datos enviados del acudiente:", formDataAcudiente);
-
-    if (!fotoPerfil) {
-      alert("La foto de perfil es obligatoria");
-      setCargando(false);
-      return;
-    }
-
-    if (!documentoIdentidad) {
-      alert("El documento de identidad es obligatorio");
-      setCargando(false);
-      return;
-    }
-
     try {
+      if (!fotoPerfil) {
+        alert("La foto de perfil es obligatoria");
+        setCargando(false);
+        return;
+      }
+
+      if (
+        !isValidEmail(formData.email) ||
+        !isValidEmail(formDataAcudiente.email_acudiente)
+      ) {
+        alert(
+          "Los correos electrónicos deben ser @gmail.com o @correounivalle.edu.co",
+        );
+        setCargando(false);
+        return;
+      }
+
+      if (!documentoIdentidad) {
+        alert("El documento de identidad es obligatorio");
+        setCargando(false);
+        return;
+      }
+
+      if (
+        fotoPerfil.size > 2 * 1024 * 1024 ||
+        documentoIdentidad.size > 2 * 1024 * 1024
+      ) {
+        alert(
+          "La foto de perfil o el documento de identidad tienen un peso mayor a 2MB",
+        );
+        setCargando(false);
+        return;
+      }
+
       const formDataToSend = new FormData();
 
       // Añadir todos los campos del formData al FormData
@@ -210,14 +270,13 @@ export default function Registro() {
         } else {
           id_acudiente = responseAcudiente.data.data.id_acudiente; // Obtener el ID del acudiente creado
         }
-        console.log("ID del acudiente:", id_acudiente);
 
         formDataToSend.append("acudiente", id_acudiente);
+
         for (const pair of formDataToSend.entries()) {
           console.log(`${pair[0]}:`, pair[1]);
         }
 
-        // Paso 2: añadir archivos (asegúrate de capturarlos)
         if (fotoPerfil) {
           formDataToSend.append("foto", fotoPerfil);
         }
@@ -226,8 +285,7 @@ export default function Registro() {
           formDataToSend.append("documento_identidad", documentoIdentidad);
         }
 
-        console.log("Acudiente agregado con éxito");
-
+        //Creacion de estudiante
         const responseEstudiante = await axios.post(
           `${API_BASE_URL}/estudiante/est/`,
           formDataToSend,
@@ -239,36 +297,94 @@ export default function Registro() {
         );
         if (responseEstudiante.status === 201) {
           console.log("Estudiante agregado con éxito");
-          console.log(
-            "ID del estudiante guardado en localStorage:",
-            responseEstudiante.data.id,
-          );
-          // Guardando datos en el local storage
-          localStorage.setItem("id_estudiante", responseEstudiante.data.id);
-          localStorage.setItem("estamento", formData.estamento);
-          localStorage.setItem("grado", formData.grado);
 
-          setCargando(false);
-          router.push("/auth/matricula"); // Redirigir a la página de matricula
-        } else {
-          console.error(
-            "Error al agregar el estudiante:",
-            responseEstudiante.status,
-          );
+          // AHORA crear la matrícula con el ID del estudiante
+          if (matriculaFormRef.current) {
+            try {
+              const matriculaData = matriculaFormRef.current.getFormData();
+
+              if (!matriculaData) {
+                throw new Error(
+                  "No se pudieron obtener los datos de la matrícula",
+                );
+              }
+
+              const matriculaFormData = new FormData();
+              matriculaFormData.append(
+                "id_estudiante",
+                responseEstudiante.data.id,
+              );
+              matriculaFormData.append("id_modulo", matriculaData.modulo);
+              matriculaFormData.append(
+                "tipo_vinculacion",
+                matriculaData.tipo_vinculacion,
+              );
+              matriculaFormData.append(
+                "terminos",
+                matriculaData.terminos ? "True" : "False",
+              );
+
+              if (matriculaData.reciboPago) {
+                matriculaFormData.append(
+                  "recibo_pago",
+                  matriculaData.reciboPago,
+                );
+              }
+              if (matriculaData.certificado) {
+                matriculaFormData.append(
+                  "certificado",
+                  matriculaData.certificado,
+                );
+              }
+              if (matriculaData.reciboServicio) {
+                matriculaFormData.append(
+                  "recibo_servicio",
+                  matriculaData.reciboServicio,
+                );
+              }
+
+              const responseMatricula = await axios.post(
+                `${API_BASE_URL}/matricula/mat/`,
+                matriculaFormData,
+                {
+                  headers: {
+                    "Content-Type": "multipart/form-data",
+                  },
+                },
+              );
+
+              if (responseMatricula.status === 201) {
+                setCargando(false);
+                alert("¡Registro exitoso!");
+                const datos_matricula = responseMatricula.data;
+                localStorage.setItem(
+                  "datos_matricula",
+                  JSON.stringify(datos_matricula),
+                );
+                router.push("/auth/matricula-finalizada");
+              }
+            } catch (matriculaError) {
+              setCargando(false);
+              let mensaje = "Error desconocido en matrícula";
+              if (axios.isAxiosError(matriculaError)) {
+                mensaje =
+                  (matriculaError.response?.data as any)?.detail ||
+                  (matriculaError.response?.data as any)?.message ||
+                  JSON.stringify(matriculaError.response?.data) ||
+                  matriculaError.message;
+              } else if (matriculaError instanceof Error) {
+                mensaje = matriculaError.message;
+              }
+              console.error("Error al crear matrícula:", matriculaError);
+              alert(`Error al crear la matrícula:\n${mensaje}`);
+            }
+          }
         }
-      } else {
-        console.error(
-          "Error al agregar el acudiente:",
-          responseAcudiente.status,
-        );
-        setCargando(false);
       }
     } catch (err) {
       setCargando(false);
-
       let mensaje = "Error desconocido";
       if (axios.isAxiosError(err)) {
-        // el backend puede devolver {detail: "..."} / {message: "..."} / etc.
         mensaje =
           (err.response?.data as any)?.detail ||
           (err.response?.data as any)?.message ||
@@ -277,8 +393,7 @@ export default function Registro() {
       } else if (err instanceof Error) {
         mensaje = err.message;
       }
-
-      console.error("Error al crear estudiante:", err);
+      console.error("Error:", err);
       alert(`Hubo un error al intentar crear el estudiante:\n${mensaje}`);
     }
   };
@@ -299,17 +414,6 @@ export default function Registro() {
   // Manejo de subida de fotografia
   const [image, setImage] = useState<string | null>(null);
 
-  // Mastrar imagen seleccionada
-  // const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = event.target.files?.[0]; // Obtener el archivo seleccionado
-  //   if (file) {
-  //     const reader = new FileReader();
-  //     reader.onloadend = () => {
-  //       setImage(reader.result as string); // Guardar la URL de la imagen en el estado
-  //     };
-  //     reader.readAsDataURL(file);
-  //   }
-  // };
   const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
@@ -400,6 +504,64 @@ export default function Registro() {
 
   return (
     <div className="mx-auto my-4 content-center rounded-2xl p-5 text-center">
+      {/* Modal para información importante */}
+      <Dialog
+        className="rounded-2xl"
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        maxWidth="md"
+      >
+        <DialogContent className="rounded-2xl p-10">
+          <h1>Información importante</h1>
+          <br />- Este formulario debe ser diligenciado una vez realizado el
+          proceso de pago. Si no lo has realizado, sigue el paso a paso en:{" "}
+          <a
+            className="font-bold"
+            href="https://bit.ly/49mogGF"
+            target="_blank"
+          >
+            Instructivo de pago. AQUÍ
+          </a>
+          .
+          <br />
+          - Los archivos cargados deben pesar menos de 2 MB.
+          <br />
+          - La fotografía debe ser 3×4, con fondo blanco y tipo documento. No se
+          aceptan selfies, fotos personales, familiares, de eventos o en lugares
+          públicos.
+          <br />
+          <br />
+          Si sus archivos superan los 2 MB, puede comprimirlos en:{" "}
+          <a
+            className="font-bold"
+            href="https://www.ilovepdf.com/es/comprimir_pdf"
+            target="_blank"
+          >
+            ILovePDF - Comprimir PDF
+          </a>
+          <br />
+          Para eliminar el fondo de la foto:{" "}
+          <a
+            className="font-bold"
+            href="https://www.iloveimg.com/es/eliminar-fondo"
+            target="_blank"
+          >
+            ILoveIMG - Eliminar fondo
+          </a>
+        </DialogContent>
+
+        <DialogActions>
+          <Button
+            variant="contained"
+            className="buttons-principal mx-auto"
+            onClick={() => setOpenModal(false)}
+          >
+            Entendido
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Animación de carga cuando se envie el formulario */}
       {cargando && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-50">
           <CircularProgress size={60} />
@@ -411,12 +573,13 @@ export default function Registro() {
 
       <form className="items-center" onSubmit={handleSubmit}>
         <div className="flex w-full flex-col rounded-2xl bg-white py-5 shadow-sm">
-          <h1 className="text-center font-semibold text-primary">
-            FORMULARIO DE INSCRIPCIÓN
+          <h1>
+            FORMULARIO DE INSCRIPCIÓN{" "}
+            {tipo_usuario_form === "Becados" ? "- BECADOS" : ""}{" "}
           </h1>
-          <div className="flex w-full flex-row rounded-2xl bg-white py-5 shadow-sm">
+          <div className="flex w-full flex-col rounded-2xl bg-white p-5 md:flex-row">
             {/* Campo Seleccionar Fotografia */}
-            <div className="flex w-1/3 flex-col items-center justify-around">
+            <div className="flex w-full flex-col items-center justify-around md:w-1/3">
               {/* Avatar que muestra la imagen */}
               <Avatar src={image || ""} sx={{ width: 150, height: 150 }} />
 
@@ -450,7 +613,7 @@ export default function Registro() {
             </div>
 
             {/* Contenedor Informacion Personal */}
-            <div className="flex w-2/3 flex-col items-center justify-center uppercase">
+            <div className="flex w-full flex-col items-center justify-center uppercase">
               <h2 className="text-md my-4 text-center font-semibold text-primary">
                 DATOS DEL ESTUDIANTE
               </h2>
@@ -848,22 +1011,33 @@ export default function Registro() {
           </h2>
           <div className="flex flex-wrap justify-between gap-2 text-gray-600">
             {/* Campo Colegio */}
-            <TextField
+            <Autocomplete
               className="inputs-textfield flex w-full flex-col sm:w-1/4"
-              hidden={esDocente}
-              label="Colegio"
-              name="colegio"
-              variant="outlined"
-              type="text"
-              fullWidth
-              required
+              freeSolo
+              options={colegios}
               value={formData.colegio}
-              onChange={(e) =>
+              inputValue={formData.colegio}
+              onChange={(_, newValue) =>
                 setFormData({
                   ...formData,
-                  colegio: e.target.value.toUpperCase(),
+                  colegio: newValue?.toUpperCase() || "",
                 })
               }
+              onInputChange={(_, newInputValue) =>
+                setFormData({
+                  ...formData,
+                  colegio: newInputValue.toUpperCase(),
+                })
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Colegio"
+                  required
+                  variant="outlined"
+                  fullWidth
+                />
+              )}
             />
             {/* Campo Estamento Colegio */}
             {!esDocente && (
@@ -1152,7 +1326,7 @@ export default function Registro() {
                     </span>
                   )}
                   <br />
-                  <span>
+                  <span className="text-gray-600">
                     {documentoIdentidad.name} -{" "}
                     {(documentoIdentidad.size / (1024 * 1024)).toFixed(2)} MB
                   </span>
@@ -1162,27 +1336,25 @@ export default function Registro() {
               )}
             </h2>
           </div>
-          <Alert className="mt-3" severity="info">
-            La fotografía y el documento de identidad son obligatorios y deben
-            pesar menos de 2 Mb.
-          </Alert>
+        </div>
 
+        <Matricula
+          ref={matriculaFormRef}
+          estamento_form={formData.estamento}
+          grado_form={formData.grado}
+          tipoVinculacion_form={tipo_usuario_form}
+        />
+
+        <div className="my-4 justify-center rounded-2xl bg-white p-5 shadow-sm">
           <Button
             type="submit"
             variant="outlined"
-            className="mt-4 w-3/4 rounded-2xl border-2 border-[#C20E1A] py-2 font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white"
+            className="mt-4 w-full rounded-2xl border-2 border-[#C20E1A] py-2 font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white md:w-1/4"
           >
             Registrar
           </Button>
         </div>
       </form>
-
-      {/* Botón de iniciar sesión*/}
-      {/* <Link href="/auth/login">
-        <button className="mt-4 w-3/4 rounded-2xl border-2 border-[#C20E1A] py-2 font-semibold text-[#C20E1A] transition hover:bg-[#C20E1A] hover:text-white">
-          Iniciar sesión
-        </button>
-      </Link> */}
     </div>
   );
 }
