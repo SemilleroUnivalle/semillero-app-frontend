@@ -74,8 +74,8 @@ export default function DetallarOferta() {
   const [fechasFinalizacionPorCategoria, setFechasFinalizacionPorCategoria] =
     useState<Record<string, string>>({});
 
-      const router = useRouter();
-    
+  const router = useRouter();
+
 
   useEffect(() => {
     const storedOferta = localStorage.getItem("ofertaSeleccionada");
@@ -184,7 +184,7 @@ export default function DetallarOferta() {
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/oferta_academica/ofer/${id}/`, {
+      await axios.delete(`${API_BASE_URL}/oferta_academica/${id}/`, {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
         },

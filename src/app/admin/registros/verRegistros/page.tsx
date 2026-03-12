@@ -50,13 +50,13 @@ export default function VerRegistros() {
       flex: 0.5,
     },
     {
-    field: "matriculas", 
-    headerName: "Matrículas",
-    flex: 0.5,
-    renderCell: (params) => (
-      <Chip label={params.value} color="primary" variant="outlined" />
-    ),
-  },
+      field: "matriculas",
+      headerName: "Matrículas",
+      flex: 0.5,
+      renderCell: (params) => (
+        <Chip label={params.value} color="primary" variant="outlined" />
+      ),
+    },
     {
       field: "estado",
       headerName: "Estado",
@@ -194,40 +194,40 @@ export default function VerRegistros() {
         });
 
         if (response.status === 200) {
-        // Obtén todas las matrículas
-        const matriculasResponse = await axios.get(
-          `${API_BASE_URL}/matricula/mat/`,
-          {
-            headers: {
-              Authorization: `Token ${token}`,
+          // Obtén todas las matrículas
+          const matriculasResponse = await axios.get(
+            `${API_BASE_URL}/inscripcion/`,
+            {
+              headers: {
+                Authorization: `Token ${token}`,
+              },
             },
-          },
-        );
+          );
 
-        const matriculasPorEstudiante: Record<number, number> = {};
-        matriculasResponse.data.forEach((matricula: Matricula) => {
-          const idEst = matricula.estudiante.id_estudiante;
-          matriculasPorEstudiante[idEst] =
-            (matriculasPorEstudiante[idEst] || 0) + 1;
-        });
+          const matriculasPorEstudiante: Record<number, number> = {};
+          matriculasResponse.data.forEach((matricula: Matricula) => {
+            const idEst = matricula.estudiante.id_estudiante;
+            matriculasPorEstudiante[idEst] =
+              (matriculasPorEstudiante[idEst] || 0) + 1;
+          });
 
-        console.log("Matrículas por estudiante:", matriculasPorEstudiante); // Verifica el conteo de matrículas
+          console.log("Matrículas por estudiante:", matriculasPorEstudiante); // Verifica el conteo de matrículas
 
-        const formateado = response.data.map((student: Estudiante) => ({
-          id: student.id_estudiante,
-          numero_documento: student.numero_documento || "",
-          apellido: student.apellido || "",
-          nombre: student.nombre || "",
-          email: student.email || "",
-          direccion: student.direccion_residencia || "",
-          estamento: student.estamento || "",
-          grado: student.grado || "",
-          estado: student.estado || "",
-          matriculas: matriculasPorEstudiante[student.id_estudiante] || 0, // 👈 Aquí
-        }));
+          const formateado = response.data.map((student: Estudiante) => ({
+            id: student.id_estudiante,
+            numero_documento: student.numero_documento || "",
+            apellido: student.apellido || "",
+            nombre: student.nombre || "",
+            email: student.email || "",
+            direccion: student.direccion_residencia || "",
+            estamento: student.estamento || "",
+            grado: student.grado || "",
+            estado: student.estado || "",
+            matriculas: matriculasPorEstudiante[student.id_estudiante] || 0, // 👈 Aquí
+          }));
 
-        setRows(formateado);
-      }
+          setRows(formateado);
+        }
 
         setLoading(false);
       } catch (error) {
@@ -306,7 +306,7 @@ export default function VerRegistros() {
       const estadoMatch =
         selectedEstado.length === 0 || selectedEstado.includes(row.estado);
 
-        // Filtro de búsqueda por texto
+      // Filtro de búsqueda por texto
       const searchMatch =
         searchText === "" ||
         row.nombre.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -338,7 +338,7 @@ export default function VerRegistros() {
         </Alert>
       </Snackbar>
       <div className="mx-auto mt-4 flex w-11/12 justify-around rounded-2xl bg-white p-2 shadow-md">
-      {/* Barra buscadora */}
+        {/* Barra buscadora */}
         <TextField
           label="Buscar por nombre, apellido o correo"
           variant="outlined"
@@ -409,10 +409,10 @@ export default function VerRegistros() {
               </MenuItem>
             ))}
           </Select>
-          
+
         </FormControl>
 
-        
+
 
       </div>
 

@@ -18,6 +18,7 @@ export default function Page() {
     id: number;
     nombre: string;
     fecha_inicio: string;
+    estado: string;
   }
 
   const router = useRouter();
@@ -25,6 +26,46 @@ export default function Page() {
   const [success, setSuccess] = useState(false);
 
   const [rows, setRows] = useState<OfertaRow[]>([]);
+
+  // Función para manejar la navegación a detalle/edición
+  const handleAction = async (id: number, path: string) => {
+    try {
+      // Cargamos las categorías solo cuando se necesita
+      const response = await axios.get(
+        `${API_BASE_URL}/oferta_categoria/ofer/por-oferta-academica/`,
+        {
+          headers: {
+            Authorization: `Token ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+
+      const res = response.data;
+      // Buscar las categorías asociadas a esta oferta académica
+      let categoriesForThisOffer: any[] = [];
+      Object.values(res).forEach((ofertasArray: any) => {
+        const filtered = ofertasArray.filter(
+          (o: any) => o.id_oferta_academica?.id_oferta_academica === id,
+        );
+        if (filtered.length > 0) {
+          categoriesForThisOffer = filtered;
+        }
+      });
+
+      if (categoriesForThisOffer.length > 0) {
+        localStorage.setItem(
+          "ofertaSeleccionada",
+          JSON.stringify(categoriesForThisOffer),
+        );
+        router.push(path);
+      } else {
+        alert("No se encontraron categorías asociadas a esta oferta.");
+      }
+    } catch (error) {
+      console.error("Error al cargar detalles de la oferta:", error);
+      alert("Error al cargar los detalles de la oferta.");
+    }
+  };
 
   const columnsOfertas: GridColDef[] = [
     { field: "id", headerName: "ID", flex: 1 },
@@ -35,7 +76,39 @@ export default function Page() {
       headerName: "Estado",
       flex: 0.5,
       renderCell: (params) => {
-        if (params.value === true) {
+        const estado = params.value?.toString().toLowerCase();
+        if (estado === "en inscripcion" || estado === "inscripciones" || estado === "inscripcion") {
+          return (
+            <Chip
+              label="En inscripción"
+              color="primary"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        if (estado === "en desarrollo" || estado === "desarrollo") {
+          return (
+            <Chip
+              label="En desarrollo"
+              color="success"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        if (estado === "finalizado") {
+          return (
+            <Chip
+              label="Finalizado"
+              color="error"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
+        }
+        // Fallback para valores antiguos o inesperados
+        if (estado === "true" || estado === "activo") {
           return (
             <Chip
               label="Activo"
@@ -45,7 +118,7 @@ export default function Page() {
             />
           );
         }
-        if (params.value === false) {
+        if (estado === "false" || estado === "inactivo") {
           return (
             <Chip
               label="Inactivo"
@@ -55,7 +128,13 @@ export default function Page() {
             />
           );
         }
-        return null;
+        return (
+          <Chip
+            label={params.value || "Desconocido"}
+            variant="outlined"
+            sx={{ fontWeight: "bold" }}
+          />
+        );
       },
     },
     {
@@ -71,30 +150,14 @@ export default function Page() {
           <Tooltip title="Ver detalles" placement="top">
             <VisibilityOutlinedIcon
               className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
-              onClick={() => {
-                const fullData = params.row._original;
-                localStorage.setItem(
-                  "ofertaSeleccionada",
-                  JSON.stringify(fullData),
-                );
-                console.log("Estos son los datos enviados", fullData); // 👉 Guarda la fila completa como JSON
-                router.push("/admin/oferta/detallarOferta/"); // 👉 Navega a la pantalla de modificar
-              }}
+              onClick={() => handleAction(params.row.id, "/admin/oferta/detallarOferta/")}
             />
           </Tooltip>
 
           <Tooltip title="Editar oferta" placement="top">
             <PencilSquareIcon
               className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
-              onClick={() => {
-                const fullData = params.row._original;
-
-                localStorage.setItem(
-                  "ofertaSeleccionada",
-                  JSON.stringify(fullData),
-                ); // 👉 Guarda la fila completa como JSON
-                router.push("/admin/oferta/modificarOfertas/"); // 👉 Navega a la pantalla de modificar
-              }}
+              onClick={() => handleAction(params.row.id, "/admin/oferta/modificarOfertas/")}
             />
           </Tooltip>
 
@@ -117,7 +180,7 @@ export default function Page() {
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/oferta_academica/ofer/${id}/`, {
+      await axios.delete(`${API_BASE_URL}/oferta_academica/${id}/`, {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
         },
@@ -137,7 +200,7 @@ export default function Page() {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          `${API_BASE_URL}/oferta_categoria/ofer/por-oferta-academica/`,
+          `${API_BASE_URL}/oferta_academica/`,
           {
             headers: {
               Authorization: `Token ${localStorage.getItem("token")}`,
@@ -146,31 +209,18 @@ export default function Page() {
         );
         const res = response.data;
 
-        // Agrupar por id_oferta_academica
-        const ofertasPorAcademica: Record<number, OfertaCategoria[]> = {};
-        Object.values(res).forEach((ofertasArray) => {
-          (ofertasArray as OfertaCategoria[]).forEach((oferta) => {
-            const id = oferta.id_oferta_academica?.id_oferta_academica;
-            if (!ofertasPorAcademica[id]) ofertasPorAcademica[id] = [];
-            ofertasPorAcademica[id].push(oferta);
-          });
-        });
-
-        // Construir filas: una por cada oferta académica
-        const rows = Object.values(ofertasPorAcademica).map((ofertas) => {
-          const primera = ofertas[0];
-          return {
-            id: primera.id_oferta_academica.id_oferta_academica,
-            nombre: primera.id_oferta_academica.nombre,
-            fecha_inicio: primera.id_oferta_academica.fecha_inicio,
-            estado: primera.id_oferta_academica.estado,
-            _original: ofertas, // Guarda todas las ofertas_categoria asociadas
-          };
-        });
+        // Construir filas directamente desde la oferta académica
+        const rows = res.map((oferta: any) => ({
+          id: oferta.id_oferta_academica,
+          nombre: oferta.nombre,
+          fecha_inicio: oferta.fecha_inicio,
+          estado: oferta.estado,
+          _original_id: oferta.id_oferta_academica, // Guardamos el ID para fetch posterior
+        }));
 
         setRows(rows);
       } catch (error) {
-        console.error("Error al obtener los datos de las categorías:", error);
+        console.error("Error al obtener las ofertas académicas:", error);
       }
     };
 

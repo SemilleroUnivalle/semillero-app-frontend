@@ -216,7 +216,7 @@ export default function ModificarOferta() {
 
       //Realizar la solicitud PATCH al endpoint /oferta_academica/ofer/
       const ofertaAcademicaResponse = await axios.patch(
-        `${API_BASE_URL}/oferta_academica/ofer/${oferta.id_oferta_academica.id_oferta_academica}/`,
+        `${API_BASE_URL}/oferta_academica/${oferta.id_oferta_academica.id_oferta_academica}/`,
         {
           nombre: nombreOferta,
           fecha_inicio: fechaInicio,
@@ -570,26 +570,26 @@ export default function ModificarOferta() {
                         },
                       }))
                     }
-                    // error={
-                    //   formTouched &&
-                    //   selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
-                    //   !(
-                    //     document.getElementById(
-                    //       `precio-univalle-${nombreCategoria}`,
-                    //     ) as HTMLInputElement
-                    //   )?.value
-                    // }
-                    // helperText={
-                    //   formTouched &&
-                    //   selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
-                    //   !(
-                    //     document.getElementById(
-                    //       `precio-univalle-${nombreCategoria}`,
-                    //     ) as HTMLInputElement
-                    //   )?.value
-                    //     ? "Campo requerido"
-                    //     : ""
-                    // }
+                  // error={
+                  //   formTouched &&
+                  //   selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
+                  //   !(
+                  //     document.getElementById(
+                  //       `precio-univalle-${nombreCategoria}`,
+                  //     ) as HTMLInputElement
+                  //   )?.value
+                  // }
+                  // helperText={
+                  //   formTouched &&
+                  //   selectedCursosPorCategoria[nombreCategoria]?.length > 0 &&
+                  //   !(
+                  //     document.getElementById(
+                  //       `precio-univalle-${nombreCategoria}`,
+                  //     ) as HTMLInputElement
+                  //   )?.value
+                  //     ? "Campo requerido"
+                  //     : ""
+                  // }
                   />
                 </Box>
 

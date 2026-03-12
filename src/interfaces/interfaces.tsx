@@ -164,6 +164,7 @@ export interface Matricula {
   audit_documento_recibo_pago: AuditInterface | null;
   audit_certificado: AuditInterface | null;
   audit_recibo_servicio: AuditInterface | null;
+  periodo?: OfertaAcademica;
 }
 
 export interface Grupo {

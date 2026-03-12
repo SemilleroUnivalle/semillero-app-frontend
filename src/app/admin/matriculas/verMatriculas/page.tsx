@@ -31,6 +31,7 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { API_BASE_URL } from "../../../../../config";
 import { useRouter } from "next/navigation";
 import { exportMatriculasToExcel } from "@/services/exportToExcel";
+import { isPeriodActive } from "@/lib/api/dashboard";
 
 export default function VerMatriculas() {
   const router = useRouter();
@@ -203,7 +204,7 @@ export default function VerMatriculas() {
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/matricula/mat/${id}/`, {
+      await axios.delete(`${API_BASE_URL}/inscripcion/${id}/`, {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
         },
@@ -220,59 +221,123 @@ export default function VerMatriculas() {
     }
   };
 
-  // Funcion para traer las matriculas desde el backend
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const userString = localStorage.getItem("user");
-        let token = "";
-        if (userString) {
-          const user = JSON.parse(userString);
-          token = user.token;
-        }
+  // Estados para periodos
+  const [periods, setPeriods] = useState<any[]>([]);
+  const [selectedPeriodFilter, setSelectedPeriodFilter] = useState<number | string>("all");
 
-        const response = await axios.get(`${API_BASE_URL}/matricula/mat/`, {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
+  // Funcion para traer las matriculas desde el backend
+  const fetchMatriculasData = async (periodId: number | string, periodsList: any[]) => {
+    try {
+      setLoading(true);
+      const userString = localStorage.getItem("user");
+      let token = "";
+      if (userString) {
+        const user = JSON.parse(userString);
+        token = user.token;
+      }
+
+      const url = periodId === "all"
+        ? `${API_BASE_URL}/inscripcion/`
+        : `${API_BASE_URL}/inscripcion/?periodo=${periodId}`;
+
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Token ${token}`,
+        },
+      });
+
+      if (response.status === 200) {
+        console.log("Inscripciones recibidas del servidor:", response.data);
+        const formateado = response.data.map((matricula: any) => {
+          // LÓGICA DE DETECCIÓN DE PERIODO ULTRA-ROBUSTA
+          let periodoNombre = "Sin periodo";
+
+          // 1. Intentar por objeto 'periodo' directo
+          if (matricula.periodo && typeof matricula.periodo === 'object' && matricula.periodo.nombre) {
+            periodoNombre = matricula.periodo.nombre;
+          }
+          // 2. Intentar por objeto anidado 'oferta_categoria -> id_oferta_academica'
+          else if (matricula.oferta_categoria && typeof matricula.oferta_categoria === 'object' &&
+            matricula.oferta_categoria.id_oferta_academica &&
+            typeof matricula.oferta_categoria.id_oferta_academica === 'object' &&
+            matricula.oferta_categoria.id_oferta_academica.nombre) {
+            periodoNombre = matricula.oferta_categoria.id_oferta_academica.nombre;
+          }
+          // 3. Fallback: Buscar por ID si alguno de los campos es un número
+          else {
+            const possibleId = matricula.periodo ||
+              matricula.id_oferta_academica ||
+              (typeof matricula.oferta_categoria === 'object' ? matricula.oferta_categoria.id_oferta_academica : null);
+
+            if (possibleId && (typeof possibleId === 'number' || typeof possibleId === 'string')) {
+              const matched = periodsList.find((p: any) => String(p.id_oferta_academica) === String(possibleId));
+              if (matched) periodoNombre = matched.nombre;
+            }
+          }
+
+          // 4. Último recurso: Campos planos comunes en Django Serializers
+          if (periodoNombre === "Sin periodo") {
+            periodoNombre = matricula.periodo_nombre || matricula.nombre_periodo || matricula.oferta_nombre || "Sin periodo";
+          }
+
+          return {
+            id: matricula.id_inscripcion,
+            apellido: matricula.estudiante?.apellido || "",
+            nombre: matricula.estudiante?.nombre || "",
+            email: matricula.estudiante?.email || "",
+            direccion: matricula.estudiante?.direccion_residencia || "",
+            periodo: periodoNombre,
+            modulo: matricula.modulo?.nombre_modulo || "",
+            estamento: matricula.estudiante?.estamento || "",
+            tipo: matricula.tipo_vinculacion || "",
+            estado_registro: matricula.estudiante?.estado || "Pendiente",
+            estado_matricula: matricula.estado,
+          };
         });
 
-        if (response.status === 200) {
-          // Formatea los datos para la tabla
-          const formateado = response.data.map((matricula: Matricula) => ({
-            id: matricula.id_inscripcion,
-            apellido: matricula.estudiante.apellido || "",
-            nombre: matricula.estudiante.nombre || "",
-            email: matricula.estudiante.email || "",
-            direccion: matricula.estudiante.direccion_residencia || "",
-            periodo:
-              matricula.oferta_categoria &&
-              matricula.oferta_categoria.id_oferta_academica
-                ? matricula.oferta_categoria.id_oferta_academica.nombre
-                : "", // Cambiar cuando los datos no esten nulos
-            modulo: matricula.modulo.nombre_modulo || "",
-            estamento: matricula.estudiante.estamento || "",
-            tipo: matricula.tipo_vinculacion || "",
-            estado_registro: matricula.estudiante.estado, // true si es "Verificado", false en otro caso
-            estado_matricula: matricula.estado,
-          }));
+        setMatriculas(response.data);
+        setRows(formateado);
+      }
+    } catch (error) {
+      console.error("Error al obtener los datos de matriculas:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-          setMatriculas(response.data); // Guarda las matriculas originales para exportar a Excel
+  useEffect(() => {
+    const initPage = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
-          console.log("Datos formateados:", formateado); // Verifica los datos formateados
+        // 1. Obtener Periodos
+        const periodsRes = await axios.get(`${API_BASE_URL}/oferta_academica/`, {
+          headers: { Authorization: `Token ${token}` }
+        });
+        const sortedPeriods = periodsRes.data.sort((a: any, b: any) => (isPeriodActive(b) ? 1 : 0) - (isPeriodActive(a) ? 1 : 0));
+        setPeriods(sortedPeriods);
 
-          setRows(formateado);
-        }
+        // 2. Seleccionar periodo activo por defecto o "all"
+        const active = sortedPeriods.find((p: any) => isPeriodActive(p));
+        // Si el usuario dice que solo ve 2025, vamos a forzar "all" inicialmente para que vea todo
+        const initialPeriod = "all";
+        setSelectedPeriodFilter(initialPeriod);
 
-        setLoading(false);
+        // 3. Cargar datos
+        await fetchMatriculasData(initialPeriod, sortedPeriods);
       } catch (error) {
-        console.error("Error al obtener los datos de matriculas:", error);
+        console.error("Error inicializando página:", error);
         setLoading(false);
       }
     };
 
-    fetchData();
+    initPage();
   }, []);
+
+  const handlePeriodFilterChange = (id: number | string) => {
+    setSelectedPeriodFilter(id);
+    fetchMatriculasData(id, periods);
+  };
 
   // Filtros
 
@@ -362,7 +427,7 @@ export default function VerMatriculas() {
       const estadoMatch =
         selectedEstado.length === 0 || selectedEstado.includes(row.estado_registro);
 
-// Filtro de búsqueda por texto
+      // Filtro de búsqueda por texto
       const searchMatch =
         searchText === "" ||
         row.nombre.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -407,7 +472,25 @@ export default function VerMatriculas() {
           Inscrito eliminado exitosamente.
         </Alert>
       </Snackbar>
-      <div className="mx-auto mt-4 flex w-11/12 justify-between rounded-2xl bg-white p-2 shadow-md">
+      <div className="mx-auto mt-4 flex w-11/12 items-center justify-between gap-4 rounded-2xl bg-white p-3 shadow-md">
+        {/* Selector de Periodo Principal */}
+        <FormControl variant="outlined" size="small" sx={{ minWidth: 220 }}>
+          <InputLabel id="period-main-filter-label">Periodo Académico</InputLabel>
+          <Select
+            labelId="period-main-filter-label"
+            value={selectedPeriodFilter}
+            label="Periodo Académico"
+            onChange={(e) => handlePeriodFilterChange(e.target.value)}
+          >
+            <MenuItem value="all"><em>Ver TODO (Histórico)</em></MenuItem>
+            {periods.map((p) => (
+              <MenuItem key={p.id_oferta_academica} value={p.id_oferta_academica}>
+                {p.nombre} {isPeriodActive(p) ? "(Actual)" : ""}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
         {/* Barra buscadora */}
         <TextField
           label="Buscar por nombre, apellido o correo"

@@ -195,7 +195,7 @@ export default function VerAsistencias() {
     try {
       const token = getToken();
       const response = await axios.get(
-        `${API_BASE_URL}/oferta_academica/ofer/`,
+        `${API_BASE_URL}/oferta_academica/`,
         {
           headers: {
             Authorization: `Token ${token}`,
@@ -932,49 +932,49 @@ export default function VerAsistencias() {
           selectedEstado !== "todos" ||
           fechaInicio ||
           fechaFin) && (
-          <Box mt={3}>
-            <Typography variant="subtitle2" gutterBottom>
-              Filtros activos:
-            </Typography>
-            <Box display="flex" gap={1} flexWrap="wrap">
-              {selectedPeriodo !== "todos" && (
-                <Chip
-                  label={`Período: ${selectedPeriodo}`}
-                  size="small"
-                  variant="outlined"
-                />
-              )}
-              {selectedModulo !== "todos" && (
-                <Chip
-                  label={`Módulo: ${selectedModulo}`}
-                  size="small"
-                  variant="outlined"
-                />
-              )}
-              {selectedEstado !== "todos" && (
-                <Chip
-                  label={`Estado: ${selectedEstado}`}
-                  size="small"
-                  variant="outlined"
-                />
-              )}
-              {fechaInicio && (
-                <Chip
-                  label={`Desde: ${fechaInicio}`}
-                  size="small"
-                  variant="outlined"
-                />
-              )}
-              {fechaFin && (
-                <Chip
-                  label={`Hasta: ${fechaFin}`}
-                  size="small"
-                  variant="outlined"
-                />
-              )}
+            <Box mt={3}>
+              <Typography variant="subtitle2" gutterBottom>
+                Filtros activos:
+              </Typography>
+              <Box display="flex" gap={1} flexWrap="wrap">
+                {selectedPeriodo !== "todos" && (
+                  <Chip
+                    label={`Período: ${selectedPeriodo}`}
+                    size="small"
+                    variant="outlined"
+                  />
+                )}
+                {selectedModulo !== "todos" && (
+                  <Chip
+                    label={`Módulo: ${selectedModulo}`}
+                    size="small"
+                    variant="outlined"
+                  />
+                )}
+                {selectedEstado !== "todos" && (
+                  <Chip
+                    label={`Estado: ${selectedEstado}`}
+                    size="small"
+                    variant="outlined"
+                  />
+                )}
+                {fechaInicio && (
+                  <Chip
+                    label={`Desde: ${fechaInicio}`}
+                    size="small"
+                    variant="outlined"
+                  />
+                )}
+                {fechaFin && (
+                  <Chip
+                    label={`Hasta: ${fechaFin}`}
+                    size="small"
+                    variant="outlined"
+                  />
+                )}
+              </Box>
             </Box>
-          </Box>
-        )}
+          )}
       </div>
 
       {/* Indicadores generales */}
