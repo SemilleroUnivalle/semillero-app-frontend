@@ -473,23 +473,6 @@ export default function VerMatriculas() {
         </Alert>
       </Snackbar>
       <div className="mx-auto mt-4 flex w-11/12 items-center justify-between gap-4 rounded-2xl bg-white p-3 shadow-md">
-        {/* Selector de Periodo Principal */}
-        <FormControl variant="outlined" size="small" sx={{ minWidth: 220 }}>
-          <InputLabel id="period-main-filter-label">Periodo Académico</InputLabel>
-          <Select
-            labelId="period-main-filter-label"
-            value={selectedPeriodFilter}
-            label="Periodo Académico"
-            onChange={(e) => handlePeriodFilterChange(e.target.value)}
-          >
-            <MenuItem value="all"><em>Ver TODO (Histórico)</em></MenuItem>
-            {periods.map((p) => (
-              <MenuItem key={p.id_oferta_academica} value={p.id_oferta_academica}>
-                {p.nombre} {isPeriodActive(p) ? "(Actual)" : ""}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
 
         {/* Barra buscadora */}
         <TextField
@@ -502,7 +485,7 @@ export default function VerMatriculas() {
           className="inputs-textfield w-full sm:w-1/6"
         />
         {/* Filtro por Periodos */}
-        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+        <FormControl className="inputs-textfield w-full sm:w-1/6">
           <InputLabel id="filtro-periodos">Periodos</InputLabel>
           <Select
             labelId="filtro-periodos"
@@ -523,7 +506,7 @@ export default function VerMatriculas() {
         </FormControl>
 
         {/* Filtro por Módulos */}
-        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+        <FormControl className="inputs-textfield w-full sm:w-1/6">
           <InputLabel id="filtro-modulos">Módulos</InputLabel>
           <Select
             labelId="filtro-modulos"
@@ -542,7 +525,7 @@ export default function VerMatriculas() {
         </FormControl>
 
         {/* Filtro por Estamento */}
-        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+        <FormControl className="inputs-textfield w-full sm:w-1/6">
           <InputLabel id="filtro-estamento">Estamentos</InputLabel>
           <Select
             labelId="filtro-estamento"
@@ -563,7 +546,7 @@ export default function VerMatriculas() {
         </FormControl>
 
         {/* Filtro por Tipo de Inscrito */}
-        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+        <FormControl className="inputs-textfield w-full sm:w-1/6">
           <InputLabel id="filtro-tipo">Tipos de Inscritos</InputLabel>
           <Select
             labelId="filtro-tipo"
