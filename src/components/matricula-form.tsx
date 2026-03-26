@@ -69,7 +69,7 @@ const Matricula = forwardRef<MatriculaHandle, MatriculaProps>(
 
     useImperativeHandle(ref, () => ({
       validate: () => {
-          const { oferta, area, modulo, tipo_vinculacion } = formData;
+        const { oferta, area, modulo, tipo_vinculacion } = formData;
         if (!oferta || !area || !modulo || !tipo_vinculacion) {
           return false;
         }
@@ -85,6 +85,21 @@ const Matricula = forwardRef<MatriculaHandle, MatriculaProps>(
 
         if (tipoVinculacion_form === "Becados" && !reciboServicio) {
           alert("El recibo de servicios es obligatorio para becados");
+          return false;
+        }
+
+        if (reciboPago && reciboPago.size > 2 * 1024 * 1024) {
+          alert("El recibo de pago excede el tamaño máximo permitido (2 MB)");
+          return false;
+        }
+
+        if (reciboServicio && reciboServicio.size > 2 * 1024 * 1024) {
+          alert("El recibo de servicios excede el tamaño máximo permitido (2 MB)");
+          return false;
+        }
+
+        if (certificado && certificado.size > 2 * 1024 * 1024) {
+          alert("El certificado excede el tamaño máximo permitido (2 MB)");
           return false;
         }
 
@@ -439,10 +454,22 @@ const Matricula = forwardRef<MatriculaHandle, MatriculaProps>(
               </Button>
 
               <h2>
-                {" "}
-                {reciboServicio
-                  ? reciboServicio.name
-                  : "No se ha seleccionado un recibo de servicios"}
+                {reciboServicio ? (
+                  <>
+                    {reciboServicio.size / (1024 * 1024) > 2 && (
+                      <span style={{ color: "red", marginLeft: "8px" }}>
+                        ⚠️ El documento excede 2 MB
+                      </span>
+                    )}
+                    <br />
+                    <span className="text-gray-600">
+                      {reciboServicio.name} -{" "}
+                      {(reciboServicio.size / (1024 * 1024)).toFixed(2)} MB
+                    </span>
+                  </>
+                ) : (
+                  "No se ha seleccionado documento"
+                )}
               </h2>
             </div>
           ) : (
