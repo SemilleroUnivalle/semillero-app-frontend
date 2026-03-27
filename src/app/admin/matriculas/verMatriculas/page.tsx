@@ -32,6 +32,22 @@ import { API_BASE_URL } from "../../../../../config";
 import { useRouter } from "next/navigation";
 import { exportMatriculasToExcel } from "@/services/exportToExcel";
 
+const CACHE_KEY = "matriculas_cache";
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+// Función helper fuera del componente
+function getCache() {
+  try {
+    const cached = sessionStorage.getItem(CACHE_KEY);
+    if (!cached) return null;
+    const { data, timestamp } = JSON.parse(cached);
+    if (Date.now() - timestamp > CACHE_TTL_MS) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 export default function VerMatriculas() {
   const router = useRouter();
 
@@ -187,13 +203,19 @@ export default function VerMatriculas() {
     estado_matricula: string;
   }
 
-  const [rows, setRows] = useState<MatriculaRow[]>([]);
+  // const [rows, setRows] = useState<MatriculaRow[]>([]);
   const [success, setSuccess] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [matriculas, setMatriculas] = useState<Matricula[]>([]);
+  // const [loading, setLoading] = useState(true);
+  // const [matriculas, setMatriculas] = useState<Matricula[]>([]);
 
-
+  const [rows, setRows] = useState<MatriculaRow[]>(
+    () => getCache()?.formateado ?? [],
+  );
+  const [matriculas, setMatriculas] = useState<Matricula[]>(
+    () => getCache()?.matriculas ?? [],
+  );
+  const [loading, setLoading] = useState(() => getCache() === null); // false si hay caché
 
   // Función para eliminar una matricula
   const handleDelete = async (id: number) => {
@@ -218,10 +240,69 @@ export default function VerMatriculas() {
         "Hubo un error al eliminar la matrícula. Por favor, inténtalo de nuevo.",
       );
     }
+    sessionStorage.removeItem(CACHE_KEY); // ← invalida el caché
+    setRows((prevRows) => prevRows.filter((row) => row.id !== id));
+    setSuccess(true);
   };
 
   // Funcion para traer las matriculas desde el backend
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const userString = localStorage.getItem("user");
+  //       let token = "";
+  //       if (userString) {
+  //         const user = JSON.parse(userString);
+  //         token = user.token;
+  //       }
+
+  //       const response = await axios.get(`${API_BASE_URL}/matricula/mat/`, {
+  //         headers: {
+  //           Authorization: `Token ${token}`,
+  //         },
+  //       });
+
+  //       if (response.status === 200) {
+  //         // Formatea los datos para la tabla
+  //         const formateado = response.data.map((matricula: Matricula) => ({
+  //           id: matricula.id_inscripcion,
+  //           apellido: matricula.estudiante.apellido || "",
+  //           nombre: matricula.estudiante.nombre || "",
+  //           email: matricula.estudiante.email || "",
+  //           direccion: matricula.estudiante.direccion_residencia || "",
+  //           periodo:
+  //             matricula.oferta_categoria &&
+  //             matricula.oferta_categoria.id_oferta_academica
+  //               ? matricula.oferta_categoria.id_oferta_academica.nombre
+  //               : "", // Cambiar cuando los datos no esten nulos
+  //           modulo: matricula.modulo.nombre_modulo || "",
+  //           estamento: matricula.estudiante.estamento || "",
+  //           tipo: matricula.tipo_vinculacion || "",
+  //           estado_registro: matricula.estudiante.estado, // true si es "Verificado", false en otro caso
+  //           estado_matricula: matricula.estado,
+  //         }));
+
+  //         setMatriculas(response.data); // Guarda las matriculas originales para exportar a Excel
+
+  //         console.log("Datos formateados:", formateado); // Verifica los datos formateados
+
+  //         setRows(formateado);
+  //       }
+
+  //       setLoading(false);
+  //     } catch (error) {
+  //       console.error("Error al obtener los datos de matriculas:", error);
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, []);
+
   useEffect(() => {
+    const cache = getCache();
+    if (cache) return; // ✅ Ya tenemos datos, no hacer nada
+
     const fetchData = async () => {
       try {
         const userString = localStorage.getItem("user");
@@ -232,13 +313,10 @@ export default function VerMatriculas() {
         }
 
         const response = await axios.get(`${API_BASE_URL}/matricula/mat/`, {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
+          headers: { Authorization: `Token ${token}` },
         });
 
         if (response.status === 200) {
-          // Formatea los datos para la tabla
           const formateado = response.data.map((matricula: Matricula) => ({
             id: matricula.id_inscripcion,
             apellido: matricula.estudiante.apellido || "",
@@ -246,27 +324,28 @@ export default function VerMatriculas() {
             email: matricula.estudiante.email || "",
             direccion: matricula.estudiante.direccion_residencia || "",
             periodo:
-              matricula.oferta_categoria &&
-              matricula.oferta_categoria.id_oferta_academica
-                ? matricula.oferta_categoria.id_oferta_academica.nombre
-                : "", // Cambiar cuando los datos no esten nulos
+              matricula.oferta_categoria?.id_oferta_academica?.nombre ?? "",
             modulo: matricula.modulo.nombre_modulo || "",
             estamento: matricula.estudiante.estamento || "",
             tipo: matricula.tipo_vinculacion || "",
-            estado_registro: matricula.estudiante.estado, // true si es "Verificado", false en otro caso
+            estado_registro: matricula.estudiante.estado,
             estado_matricula: matricula.estado,
           }));
 
-          setMatriculas(response.data); // Guarda las matriculas originales para exportar a Excel
+          sessionStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({
+              timestamp: Date.now(),
+              data: { formateado, matriculas: response.data },
+            }),
+          );
 
-          console.log("Datos formateados:", formateado); // Verifica los datos formateados
-
+          setMatriculas(response.data);
           setRows(formateado);
         }
-
-        setLoading(false);
       } catch (error) {
         console.error("Error al obtener los datos de matriculas:", error);
+      } finally {
         setLoading(false);
       }
     };
@@ -360,9 +439,10 @@ export default function VerMatriculas() {
         selectedTipo.length === 0 || selectedTipo.includes(row.tipo);
 
       const estadoMatch =
-        selectedEstado.length === 0 || selectedEstado.includes(row.estado_registro);
+        selectedEstado.length === 0 ||
+        selectedEstado.includes(row.estado_registro);
 
-// Filtro de búsqueda por texto
+      // Filtro de búsqueda por texto
       const searchMatch =
         searchText === "" ||
         row.nombre.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -388,7 +468,7 @@ export default function VerMatriculas() {
     searchText,
   ]);
 
-  if (loading!) {
+  if (loading) {
     return <div>Loading...</div>;
   }
 
@@ -512,12 +592,14 @@ export default function VerMatriculas() {
             onChange={handleChangeEstado}
             renderValue={(selected) => selected.join(", ")}
           >
-            {[...new Set(rows.map((row) => row.estado_registro))].map((estado) => (
-              <MenuItem key={estado} value={estado}>
-                <Checkbox checked={selectedEstado.indexOf(estado) > -1} />
-                <ListItemText primary={estado} />
-              </MenuItem>
-            ))}
+            {[...new Set(rows.map((row) => row.estado_registro))].map(
+              (estado) => (
+                <MenuItem key={estado} value={estado}>
+                  <Checkbox checked={selectedEstado.indexOf(estado) > -1} />
+                  <ListItemText primary={estado} />
+                </MenuItem>
+              ),
+            )}
           </Select>
         </FormControl>
       </div>
