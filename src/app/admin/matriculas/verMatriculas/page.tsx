@@ -77,6 +77,11 @@ export default function VerMatriculas() {
       flex: 1,
     },
     {
+      field: "colegio",
+      headerName: "Colegio",
+      flex: 1,
+    },
+    {
       field: "estado_registro",
       headerName: "Estado Registro",
       flex: 0.5,
@@ -199,6 +204,7 @@ export default function VerMatriculas() {
     modulo: string;
     estamento: string;
     tipo: string;
+    colegio: string;
     estado_registro: string;
     estado_matricula: string;
   }
@@ -328,6 +334,7 @@ export default function VerMatriculas() {
             modulo: matricula.modulo.nombre_modulo || "",
             estamento: matricula.estudiante.estamento || "",
             tipo: matricula.tipo_vinculacion || "",
+            colegio: matricula.estudiante.colegio || "",
             estado_registro: matricula.estudiante.estado,
             estado_matricula: matricula.estado,
           }));
@@ -361,6 +368,7 @@ export default function VerMatriculas() {
     [],
   );
   const [selectedTipo, setSelectedTipo] = React.useState<string[]>([]);
+  const [selectedColegio, setSelectedColegio] = React.useState<string[]>([]);
   const [selectedEstado, setSelectedEstado] = React.useState<string[]>([]);
 
   const handleChangePeriodos = (event: SelectChangeEvent<string[]>) => {
@@ -390,6 +398,12 @@ export default function VerMatriculas() {
     setSelectedTipo(typeof value === "string" ? value.split(",") : value);
   };
 
+  const handleChangeColegio = (event: SelectChangeEvent<string[]>) => {
+    const {
+      target: { value },
+    } = event;
+    setSelectedColegio(typeof value === "string" ? value.split(",") : value);
+  };
   const handleChangeEstado = (event: SelectChangeEvent<string[]>) => {
     const {
       target: { value },
@@ -438,6 +452,9 @@ export default function VerMatriculas() {
       const tipoMatch =
         selectedTipo.length === 0 || selectedTipo.includes(row.tipo);
 
+      const colegioMatch =
+        selectedColegio.length === 0 || selectedColegio.includes(row.colegio);
+
       const estadoMatch =
         selectedEstado.length === 0 ||
         selectedEstado.includes(row.estado_registro);
@@ -455,7 +472,8 @@ export default function VerMatriculas() {
         estamentoMatch &&
         tipoMatch &&
         estadoMatch &&
-        searchMatch
+        searchMatch &&
+        colegioMatch
       );
     });
   }, [
@@ -465,6 +483,7 @@ export default function VerMatriculas() {
     selectedEstamento,
     selectedTipo,
     selectedEstado,
+    selectedColegio,
     searchText,
   ]);
 
@@ -579,8 +598,29 @@ export default function VerMatriculas() {
             ))}
           </Select>
         </FormControl>
+        {/* Filtro por colegio */}
+        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+          <InputLabel id="filtro-colegio">Colegios</InputLabel>
+          <Select
+            labelId="filtro-colegio"
+            id="filtro-colegio"
+            label="filtro-colegio"
+            multiple
+            value={selectedColegio}
+            onChange={handleChangeColegio}
+            renderValue={(selected) => selected.join(", ")}
+          >
+            {[...new Set(rows.map((row) => row.colegio))].map((colegio) => (
+              <MenuItem key={colegio} value={colegio}>
+                <Checkbox checked={selectedColegio.indexOf(colegio) > -1} />
+                <ListItemText primary={colegio} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
-        {/* Filtro por Estado */}
+
+        {/* Filtro por Estado
         <FormControl className="inputs-textfield w-full sm:w-1/6">
           <InputLabel id="filtro-estado">Estados</InputLabel>
           <Select
@@ -601,7 +641,7 @@ export default function VerMatriculas() {
               ),
             )}
           </Select>
-        </FormControl>
+        </FormControl> */}
       </div>
 
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 text-center shadow-md">
