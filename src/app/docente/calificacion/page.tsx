@@ -32,6 +32,8 @@ import {
 import SaveIcon from "@mui/icons-material/Save";
 import GroupIcon from "@mui/icons-material/Group";
 import EditIcon from "@mui/icons-material/Edit";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import Link from "next/link";
 
 import axios from "axios";
 import { API_BASE_URL } from "../../../../config";
@@ -57,8 +59,7 @@ interface Grupo {
 }
 
 interface CalificacionRow {
-  id: number;
-  grupo_id: number;
+  id_inscripcion: number;
   grupo_nombre: string;
   id_estudiante: number;
   apellido: string;
@@ -67,10 +68,12 @@ interface CalificacionRow {
   email: string;
   colegio: string;
   tipo_vinculacion: string;
-  seguimiento1: number | null;
-  seguimiento2: number | null;
+  seguimiento_1: number | null;
+  seguimiento_2: number | null;
   nota_conceptual_docente: number | null;
   nota_conceptual_estudiante: number | null;
+  nota_final: number | null;
+  observaciones: string;
 }
 
 interface CalificacionDialogProps {
@@ -88,30 +91,33 @@ const CalificacionDialog: React.FC<CalificacionDialogProps> = ({
   onSave,
   loading,
 }) => {
-  const [seguimiento1, setSeguimiento1] = useState<number | null>(null);
-  const [seguimiento2, setSeguimiento2] = useState<number | null>(null);
-  const [notaConceptualDocente, setNotaConceptualDocente] = useState<
+  const [seguimiento_1, setSeguimiento1] = useState<number | null>(null);
+  const [seguimiento_2, setSeguimiento2] = useState<number | null>(null);
+  const [nota_conceptual_docente, setNotaConceptualDocente] = useState<
     number | null
   >(null);
-  const [notaConceptualEstudiante, setNotaConceptualEstudiante] = useState<
+  const [nota_conceptual_estudiante, setNotaConceptualEstudiante] = useState<
     number | null
   >(null);
+  const [observaciones, setObservaciones] = useState<string>("");
 
   useEffect(() => {
     if (estudiante) {
-      setSeguimiento1(estudiante.seguimiento1);
-      setSeguimiento2(estudiante.seguimiento2);
+      setSeguimiento1(estudiante.seguimiento_1);
+      setSeguimiento2(estudiante.seguimiento_2);
       setNotaConceptualDocente(estudiante.nota_conceptual_docente);
       setNotaConceptualEstudiante(estudiante.nota_conceptual_estudiante);
+      setObservaciones(estudiante.observaciones || "");
     }
   }, [estudiante]);
 
   const handleSave = () => {
     onSave({
-      seguimiento1,
-      seguimiento2,
-      nota_conceptual_docente: notaConceptualDocente,
-      nota_conceptual_estudiante: notaConceptualEstudiante,
+      seguimiento_1,
+      seguimiento_2,
+      nota_conceptual_docente,
+      nota_conceptual_estudiante,
+      observaciones,
     });
   };
 
@@ -120,38 +126,38 @@ const CalificacionDialog: React.FC<CalificacionDialogProps> = ({
   };
 
   const areAllValid =
-    isValidGrade(seguimiento1) &&
-    isValidGrade(seguimiento2) &&
-    isValidGrade(notaConceptualDocente) &&
-    isValidGrade(notaConceptualEstudiante);
+    isValidGrade(seguimiento_1) &&
+    isValidGrade(seguimiento_2) &&
+    isValidGrade(nota_conceptual_docente) &&
+    isValidGrade(nota_conceptual_estudiante);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Calificar Estudiante</DialogTitle>
       <DialogContent className="pt-2">
         {estudiante && (
-          <div>
-            <Typography variant="body2" className="mb-2">
-              <strong>Estudiante:</strong> {estudiante.nombre}{" "}
-              {estudiante.apellido}
-            </Typography>
-            <Typography variant="body2" className="mb-3">
-              <strong>Documento:</strong> {estudiante.numero_documento}
-            </Typography>
+          <div className="flex flex-col gap-4 py-2">
+            <Box>
+              <Typography variant="body1" fontWeight="bold">
+                {estudiante.nombre} {estudiante.apellido}
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                Documento: {estudiante.numero_documento}
+              </Typography>
+            </Box>
 
             <TextField
               fullWidth
               label="Seguimiento 1"
               type="number"
               inputProps={{ min: "0", max: "5", step: "0.1" }}
-              value={seguimiento1 ?? ""}
+              value={seguimiento_1 ?? ""}
               onChange={(e) => {
                 const val = e.target.value ? parseFloat(e.target.value) : null;
                 setSeguimiento1(val);
               }}
-              className="mb-2"
               helperText="Escala de 0 a 5"
-              error={!isValidGrade(seguimiento1)}
+              error={!isValidGrade(seguimiento_1)}
             />
 
             <TextField
@@ -159,14 +165,13 @@ const CalificacionDialog: React.FC<CalificacionDialogProps> = ({
               label="Seguimiento 2"
               type="number"
               inputProps={{ min: "0", max: "5", step: "0.1" }}
-              value={seguimiento2 ?? ""}
+              value={seguimiento_2 ?? ""}
               onChange={(e) => {
                 const val = e.target.value ? parseFloat(e.target.value) : null;
                 setSeguimiento2(val);
               }}
-              className="mb-2"
               helperText="Escala de 0 a 5"
-              error={!isValidGrade(seguimiento2)}
+              error={!isValidGrade(seguimiento_2)}
             />
 
             <TextField
@@ -174,14 +179,13 @@ const CalificacionDialog: React.FC<CalificacionDialogProps> = ({
               label="Nota Conceptual Docente"
               type="number"
               inputProps={{ min: "0", max: "5", step: "0.1" }}
-              value={notaConceptualDocente ?? ""}
+              value={nota_conceptual_docente ?? ""}
               onChange={(e) => {
                 const val = e.target.value ? parseFloat(e.target.value) : null;
                 setNotaConceptualDocente(val);
               }}
-              className="mb-2"
               helperText="Escala de 0 a 5"
-              error={!isValidGrade(notaConceptualDocente)}
+              error={!isValidGrade(nota_conceptual_docente)}
             />
 
             <TextField
@@ -189,18 +193,28 @@ const CalificacionDialog: React.FC<CalificacionDialogProps> = ({
               label="Nota Conceptual Estudiante"
               type="number"
               inputProps={{ min: "0", max: "5", step: "0.1" }}
-              value={notaConceptualEstudiante ?? ""}
+              value={nota_conceptual_estudiante ?? ""}
               onChange={(e) => {
                 const val = e.target.value ? parseFloat(e.target.value) : null;
                 setNotaConceptualEstudiante(val);
               }}
               helperText="Escala de 0 a 5"
-              error={!isValidGrade(notaConceptualEstudiante)}
+              error={!isValidGrade(nota_conceptual_estudiante)}
+            />
+
+            <TextField
+              fullWidth
+              label="Observaciones"
+              multiline
+              rows={3}
+              value={observaciones}
+              onChange={(e) => setObservaciones(e.target.value)}
+              placeholder="Ej: El estudiante demuestra gran interés en el módulo."
             />
           </div>
         )}
       </DialogContent>
-      <DialogActions>
+      <DialogActions className="p-4">
         <Button onClick={onClose} disabled={loading}>
           Cancelar
         </Button>
@@ -210,8 +224,14 @@ const CalificacionDialog: React.FC<CalificacionDialogProps> = ({
           color="primary"
           disabled={loading || !areAllValid}
           startIcon={<SaveIcon />}
+          sx={{
+            backgroundColor: "#c40e1a",
+            "&:hover": {
+              backgroundColor: "#a00e1a",
+            },
+          }}
         >
-          {loading ? <CircularProgress size={24} /> : "Guardar"}
+          {loading ? <CircularProgress size={24} color="inherit" /> : "Guardar"}
         </Button>
       </DialogActions>
     </Dialog>
@@ -219,7 +239,6 @@ const CalificacionDialog: React.FC<CalificacionDialogProps> = ({
 };
 
 export default function CalificacionDocente() {
-
   // Estados
   const [rows, setRows] = useState<CalificacionRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -229,6 +248,7 @@ export default function CalificacionDocente() {
 
   // Estados para filtros
   const [selectedGrupos, setSelectedGrupos] = useState<string[]>([]);
+  const [showOnlyGraded, setShowOnlyGraded] = useState(false);
 
   // Estados para el diálogo de calificación
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -245,30 +265,121 @@ export default function CalificacionDocente() {
     return "";
   };
 
-  // Cargar datos de los grupos del profesor
+  // Cargar datos de los grupos y sus seguimientos
   useEffect(() => {
-    const fetchMisGrupos = async () => {
+    const fetchEstudiantes = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const token = getToken();
 
-        const response = await axios.get(
+        if (!token) {
+          setError("No se encontró una sesión activa. Por favor, inicia sesión.");
+          setLoading(false);
+          return;
+        }
+
+        // 1. Intentar el nuevo endpoint de seguimiento
+        try {
+          const response = await axios.get(
+            `${API_BASE_URL}/seguimiento_academico/seg/estudiantes-seguimiento/`,
+            {
+              headers: {
+                Authorization: `Token ${token}`,
+              },
+            }
+          );
+
+          if (response.status === 200) {
+            console.log("[DEBUG] Datos recibidos del backend:", JSON.stringify(response.data, null, 2));
+            // El backend puede enviar: array directo, { results: [] } (paginado), o un objeto con otra clave
+            let rawData: any[];
+            if (Array.isArray(response.data)) {
+              rawData = response.data;
+            } else if (Array.isArray(response.data.results)) {
+              rawData = response.data.results;
+            } else {
+              // Intentar encontrar el primer valor que sea array
+              const firstArray = Object.values(response.data).find(v => Array.isArray(v));
+              rawData = (firstArray as any[]) || [];
+            }
+
+            console.log(`[DEBUG] Total registros recibidos: ${rawData.length}`);
+            if (rawData.length > 0) {
+              console.log("[DEBUG] Estructura del primer item:", JSON.stringify(rawData[0], null, 2));
+            }
+
+            const formatedData: CalificacionRow[] = rawData.map((item: any) => {
+              // El backend puede devolver las notas planas o en un objeto 'notas'
+              const n = item.notas || {};
+              // Soporte para diferentes nombres de campo de grupo
+              const grupoNombre =
+                item.grupo_nombre ||
+                item.grupo ||
+                item.nombre_grupo ||
+                "Sin grupo";
+              // Soporte para nombre plano o anidado en objeto 'estudiante'
+              const nombre =
+                item.nombre ||
+                item.estudiante_nombre ||
+                item.estudiante?.nombre ||
+                "";
+              const apellido =
+                item.apellido ||
+                item.estudiante_apellido ||
+                item.estudiante?.apellido ||
+                "";
+              const numero_documento =
+                item.numero_documento ||
+                item.estudiante?.numero_documento ||
+                "";
+              return {
+                id_inscripcion: item.id_inscripcion,
+                grupo_nombre: grupoNombre,
+                id_estudiante: item.id_estudiante || item.estudiante?.id_estudiante || 0,
+                apellido,
+                nombre,
+                numero_documento,
+                email: item.email || item.estudiante?.email || "",
+                colegio: item.colegio || item.estudiante?.colegio || "",
+                tipo_vinculacion: item.tipo_vinculacion || item.estudiante?.tipo_vinculacion || "",
+                seguimiento_1: item.seguimiento_1 ?? n.seguimiento_1 ?? null,
+                seguimiento_2: item.seguimiento_2 ?? n.seguimiento_2 ?? null,
+                nota_conceptual_docente: item.nota_conceptual_docente ?? n.nota_conceptual_docente ?? null,
+                nota_conceptual_estudiante: item.nota_conceptual_estudiante ?? n.nota_conceptual_estudiante ?? null,
+                nota_final: item.nota_final ?? n.nota_final ?? null,
+                observaciones: item.observaciones ?? n.observaciones ?? "",
+              };
+            });
+
+            setRows(formatedData);
+            setLoading(false);
+            return;
+          }
+        } catch (err: any) {
+          // Solo si es 404 intentamos el fallback, si es otro error (como conexión) lo lanzamos
+          if (err.response?.status !== 404) {
+            throw err;
+          }
+          console.warn("Endpoint de seguimiento no encontrado, usando mi-grupo como alternativa.");
+        }
+
+        // 2. Fallback: Usar el endpoint original de grupos
+        const responseGrupos = await axios.get(
           `${API_BASE_URL}/profesor/prof/mi-grupo/`,
           {
             headers: {
               Authorization: `Token ${token}`,
             },
-          },
+          }
         );
 
-        if (response.status === 200) {
-          // Formatear todos los estudiantes en una sola tabla
+        if (responseGrupos.status === 200) {
           const todosLosEstudiantes: CalificacionRow[] = [];
-
-          response.data.forEach((grupo: Grupo) => {
-            grupo.estudiantes.forEach((estudiante: Estudiante) => {
+          responseGrupos.data.forEach((grupo: any) => {
+            grupo.estudiantes.forEach((estudiante: any) => {
               todosLosEstudiantes.push({
-                id: estudiante.id_inscripcion,
-                grupo_id: grupo.id,
+                id_inscripcion: estudiante.id_inscripcion,
                 grupo_nombre: grupo.nombre,
                 id_estudiante: estudiante.id_estudiante,
                 apellido: estudiante.apellido,
@@ -277,35 +388,35 @@ export default function CalificacionDocente() {
                 email: estudiante.email,
                 colegio: estudiante.colegio,
                 tipo_vinculacion: estudiante.tipo_vinculacion,
-                seguimiento1: null,
-                seguimiento2: null,
+                seguimiento_1: null,
+                seguimiento_2: null,
                 nota_conceptual_docente: null,
                 nota_conceptual_estudiante: null,
+                nota_final: null,
+                observaciones: "",
               });
             });
           });
-
           setRows(todosLosEstudiantes);
         }
-
         setLoading(false);
-      } catch (error) {
-        console.error("Error al obtener los grupos del profesor:", error);
-        setError("Error al cargar los datos");
+      } catch (err: any) {
+        console.error("Error DETALLADO al obtener estudiantes:", err);
+        let msg = "Error al cargar los datos";
+
+        if (err.code === "ERR_NETWORK") {
+          msg = `No se pudo conectar con el servidor en ${API_BASE_URL}. ¿El puerto es correcto?`;
+        } else if (err.response) {
+          msg = err.response.data?.message || err.response.data?.detail || `Error del servidor (${err.response.status})`;
+        }
+
+        setError(msg);
         setLoading(false);
       }
     };
 
-    fetchMisGrupos();
+    fetchEstudiantes();
   }, []);
-
-  // Handlers para filtros
-  const handleChangeGrupos = (event: SelectChangeEvent<string[]>) => {
-    const {
-      target: { value },
-    } = event;
-    setSelectedGrupos(typeof value === "string" ? value.split(",") : value);
-  };
 
   // Abrir diálogo de calificación
   const handleOpenCalificacionDialog = (estudiante: CalificacionRow) => {
@@ -321,276 +432,324 @@ export default function CalificacionDocente() {
 
   // Guardar calificaciones
   const handleSaveCalificaciones = async (
-    calificaciones: Partial<CalificacionRow>,
+    calificaciones: Partial<CalificacionRow>
   ) => {
     if (!selectedEstudiante) return;
 
     setSaving(true);
     try {
-      // Actualizar la fila localmente
-      setRows((prevRows) =>
-        prevRows.map((row) =>
-          row.id === selectedEstudiante.id
-            ? { ...row, ...calificaciones }
-            : row,
-        ),
+      const token = getToken();
+
+      const response = await axios.post(
+        `${API_BASE_URL}/seguimiento_academico/seg/`,
+        {
+          id_inscripcion: selectedEstudiante.id_inscripcion,
+          seguimiento_1: calificaciones.seguimiento_1,
+          seguimiento_2: calificaciones.seguimiento_2,
+          nota_conceptual_docente: calificaciones.nota_conceptual_docente,
+          nota_conceptual_estudiante: calificaciones.nota_conceptual_estudiante,
+          observaciones: calificaciones.observaciones || "",
+        },
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
       );
 
-      // Aquí iría la llamada a la API para guardar en el backend
-      // Por ahora solo guardamos localmente
-      // TODO: Implementar endpoint en el backend para guardar calificaciones
+      if (response.status === 200 || response.status === 201) {
+        // Actualizar la fila localmente. Usamos un mapeo robusto por si la respuesta trae 'notas' anidado
+        const updatedData = response.data;
+        const n = updatedData.notas || {};
 
-      setSuccess(true);
-      handleCloseCalificacionDialog();
+        // Helper para garantizar que las notas sean siempre number | null
+        const toNum = (v: any): number | null => {
+          if (v === null || v === undefined || v === "") return null;
+          const parsed = parseFloat(v);
+          return isNaN(parsed) ? null : parsed;
+        };
 
-      // Simular un pequeño delay para mejor UX
-      setTimeout(() => {
-        setSuccess(false);
-      }, 3000);
-    } catch (err) {
+        setRows((prevRows) =>
+          prevRows.map((row) =>
+            row.id_inscripcion === selectedEstudiante.id_inscripcion
+              ? {
+                ...row,
+                ...updatedData,
+                // Asegurar que los campos clave sean números y no strings
+                seguimiento_1: toNum(updatedData.seguimiento_1 ?? n.seguimiento_1 ?? row.seguimiento_1),
+                seguimiento_2: toNum(updatedData.seguimiento_2 ?? n.seguimiento_2 ?? row.seguimiento_2),
+                nota_conceptual_docente: toNum(updatedData.nota_conceptual_docente ?? n.nota_conceptual_docente ?? row.nota_conceptual_docente),
+                nota_conceptual_estudiante: toNum(updatedData.nota_conceptual_estudiante ?? n.nota_conceptual_estudiante ?? row.nota_conceptual_estudiante),
+                nota_final: toNum(updatedData.nota_final ?? n.nota_final ?? row.nota_final)
+              }
+              : row
+          )
+        );
+        setSuccess(true);
+        handleCloseCalificacionDialog();
+      }
+    } catch (err: any) {
       console.error("Error al guardar calificaciones:", err);
-      setError("Error al guardar las calificaciones");
-      setTimeout(() => {
-        setError(null);
-      }, 3000);
+      let msg = "Error al guardar las calificaciones";
+
+      if (err.response?.data) {
+        // Extraer mensaje detallado del backend si existe
+        const data = err.response.data;
+        if (typeof data === 'string') {
+          msg = data;
+        } else if (data.message || data.detail || data.error) {
+          msg = data.message || data.detail || data.error;
+        } else if (typeof data === 'object') {
+          // Si es un objeto de errores (ej: {seguimiento_1: ["Error..."]})
+          msg = Object.entries(data)
+            .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : value}`)
+            .join(" | ");
+        }
+      }
+
+      setError(msg);
     } finally {
       setSaving(false);
     }
   };
 
-  // Obtener grupos únicos
+  // Obtener grupos únicos para el filtro
   const uniqueGrupos = Array.from(new Set(rows.map((row) => row.grupo_nombre)));
 
   // Filtrar filas
   const filteredRows = React.useMemo(() => {
-    if (rows.length === 0) return rows;
+    let result = rows;
 
-    return rows.filter((row) => {
-      const grupoMatch =
-        selectedGrupos.length === 0 ||
-        selectedGrupos.includes(row.grupo_nombre);
-      return grupoMatch;
-    });
-  }, [rows, selectedGrupos]);
+    if (showOnlyGraded) {
+      result = result.filter(row =>
+        row.seguimiento_1 !== null ||
+        row.seguimiento_2 !== null ||
+        row.nota_conceptual_docente !== null ||
+        row.nota_conceptual_estudiante !== null ||
+        (row.observaciones && row.observaciones.trim() !== "")
+      );
+    }
 
-  // Calcular estadísticas
-  const totalEstudiantes = filteredRows.length;
-  const estudiantesConCalificaciones = filteredRows.filter(
-    (row) =>
-      row.seguimiento1 !== null ||
-      row.seguimiento2 !== null ||
-      row.nota_conceptual_docente !== null ||
-      row.nota_conceptual_estudiante !== null,
-  );
+    if (selectedGrupos.length === 0) return result;
+    return result.filter((row) => selectedGrupos.includes(row.grupo_nombre));
+  }, [rows, selectedGrupos, showOnlyGraded]);
+
+  // Estadísticas
+  const totalInGroup = rows.length;
+  const calificados = rows.filter(
+    (r) =>
+      r.seguimiento_1 !== null ||
+      r.seguimiento_2 !== null ||
+      r.nota_conceptual_docente !== null
+  ).length;
 
   if (loading) {
     return (
       <Box className="flex h-screen items-center justify-center">
-        <Typography>Cargando...</Typography>
+        <CircularProgress />
+        <Typography sx={{ ml: 2 }}>Cargando estudiantes...</Typography>
+      </Box>
+    );
+  }
+
+  // Si hay error Y no hay filas, mostrar pantalla de error completa
+  if (error && rows.length === 0) {
+    return (
+      <Box className="flex h-screen flex-col items-center justify-center gap-4 p-8">
+        <Alert severity="error" sx={{ maxWidth: 600, width: "100%" }}>
+          <Typography variant="h6" gutterBottom>Error al cargar estudiantes</Typography>
+          <Typography variant="body2">{error}</Typography>
+        </Alert>
+        <Typography variant="caption" color="textSecondary">
+          Endpoint: {API_BASE_URL}/seguimiento_academico/seg/estudiantes-seguimiento/
+        </Typography>
+        <Button variant="outlined" onClick={() => window.location.reload()}>
+          Reintentar
+        </Button>
       </Box>
     );
   }
 
   return (
-    <div className="inputs-textfield p-4">
-      <Box className="mx-auto mt-4 rounded-2xl bg-white p-4 shadow-md">
-        <Typography
-          variant="h5"
-          className="mb-4 text-center font-bold text-primary"
-        >
-          Calificador de Estudiantes
-        </Typography>
-
-        <Box className="mb-2 flex flex-col justify-around gap-3 sm:flex-row">
-          {/* Inputs para fecha, sesión y grupos */}
-          <FormControl fullWidth>
-            <InputLabel>Filtrar por Grupo</InputLabel>
-            <Select
-              multiple
-              value={selectedGrupos}
-              onChange={handleChangeGrupos}
-              label="Filtrar por Grupo"
-              renderValue={(selected) => selected.join(", ")}
+    <div className="flex flex-col gap-6 p-6">
+      {/* Header y Filtros */}
+      <Card className="rounded-2xl shadow-md">
+        <CardContent className="flex flex-col gap-4">
+          <Box className="flex items-center justify-between flex-wrap gap-2">
+            <Typography variant="h5" className="font-bold text-primary">
+              Calificador de Estudiantes
+            </Typography>
+            <Button
+              component={Link}
+              href="/docente/calificacion/estadisticas"
+              startIcon={<BarChartIcon />}
+              variant="outlined"
+              sx={{
+                borderRadius: "12px",
+                borderColor: "#c40e1a",
+                color: "#c40e1a",
+                fontWeight: 700,
+                "&:hover": { backgroundColor: "#fef2f2", borderColor: "#a00e1a" },
+              }}
             >
-              {uniqueGrupos.map((grupo) => (
-                <MenuItem key={grupo} value={grupo}>
-                  {grupo}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
-      </Box>
+              Ver Estadísticas
+            </Button>
+          </Box>
 
-      {/* Snackbars */}
-      <Snackbar
-        open={success}
-        autoHideDuration={3000}
-        onClose={() => setSuccess(false)}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert onClose={() => setSuccess(false)} severity="success">
-          Calificación guardada exitosamente
-        </Alert>
-      </Snackbar>
+          <Box className="flex flex-wrap items-center gap-4">
+            <FormControl sx={{ minWidth: 250 }}>
+              <InputLabel>Filtrar por Grupo</InputLabel>
+              <Select
+                multiple
+                value={selectedGrupos}
+                onChange={(e) =>
+                  setSelectedGrupos(
+                    typeof e.target.value === "string"
+                      ? e.target.value.split(",")
+                      : e.target.value
+                  )
+                }
+                label="Filtrar por Grupo"
+                renderValue={(selected) => (selected as string[]).join(", ")}
+              >
+                {uniqueGrupos.map((grupo) => (
+                  <MenuItem key={grupo} value={grupo}>
+                    {grupo}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-      <Snackbar
-        open={error !== null}
-        autoHideDuration={3000}
-        onClose={() => setError(null)}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert onClose={() => setError(null)} severity="error">
-          {error}
-        </Alert>
-      </Snackbar>
+            <Box className="flex items-center gap-2">
+              <Typography variant="body2" color="textSecondary">Vista:</Typography>
+              <Box
+                component="span"
+                onClick={() => setShowOnlyGraded(!showOnlyGraded)}
+                sx={{
+                  width: 40,
+                  height: 20,
+                  borderRadius: 10,
+                  backgroundColor: showOnlyGraded ? "#c40e1a" : "#ccc",
+                  position: "relative",
+                  cursor: "pointer",
+                  transition: "0.3s",
+                  display: "inline-block"
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: "50%",
+                    backgroundColor: "white",
+                    position: "absolute",
+                    top: 2,
+                    left: showOnlyGraded ? 22 : 2,
+                    transition: "0.3s"
+                  }}
+                />
+              </Box>
+              <Typography variant="body2" fontWeight={showOnlyGraded ? "bold" : "normal"}>Con notas</Typography>
+            </Box>
 
-      {/* Estadísticas */}
+            <Box className="flex gap-6 ml-auto">
+              <Box className="text-center">
+                <Typography variant="h6" className="font-bold">
+                  {totalInGroup}
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                  En Grupo
+                </Typography>
+              </Box>
+              <Box className="text-center">
+                <Typography variant="h6" className="font-bold text-green-600">
+                  {calificados}
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                  Con Notas
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
 
-      <Box className="my-4 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-
-        <Card className="rounded-2xl">
-          <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
-              <div className="flex items-center gap-2">
-                <GroupIcon className="text-5xl text-blue-500" />
-                <div>
-                  <Typography color="textSecondary" gutterBottom>
-                    Total de Estudiantes
-                  </Typography>
-                  <Typography variant="h5">{totalEstudiantes}</Typography>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl">
-          <CardContent className="flex w-full flex-row items-center justify-around sm:flex-col sm:text-center">
-              <div className="flex items-center gap-2">
-                <EditIcon className="text-5xl text-green-500" />
-                <div>
-                  <Typography color="textSecondary" gutterBottom>
-                    Calificados
-                  </Typography>
-                  <Typography variant="h5">
-                    {estudiantesConCalificaciones.length}
-                  </Typography>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-      </Box>
-
-
-      {/* Tabla de Calificaciones */}
-      <Card>
-        <TableContainer component={Paper}>
+      {/* Tabla */}
+      <Card className="rounded-2xl shadow-md overflow-hidden">
+        <TableContainer>
           <Table>
-            <TableHead className="bg-gray-100">
+            <TableHead className="bg-gray-50">
               <TableRow>
                 <TableCell className="font-bold">Grupo</TableCell>
-                <TableCell className="font-bold">Nombre</TableCell>
-                <TableCell className="font-bold">Documento</TableCell>
-                <TableCell className="text-center font-bold">
-                  Seguimiento 1
-                </TableCell>
-                <TableCell className="text-center font-bold">
-                  Seguimiento 2
-                </TableCell>
-                <TableCell className="text-center font-bold">
-                  Nota Conceptual Docente
-                </TableCell>
-                <TableCell className="text-center font-bold">
-                  Nota Conceptual Estudiante
-                </TableCell>
-                <TableCell className="text-center font-bold">
-                  Acciones
-                </TableCell>
+                <TableCell className="font-bold">Estudiante</TableCell>
+                <TableCell className="text-center font-bold">Seg. 1</TableCell>
+                <TableCell className="text-center font-bold">Seg. 2</TableCell>
+                <TableCell className="text-center font-bold">Conc. Docente</TableCell>
+                <TableCell className="text-center font-bold">Conc. Est.</TableCell>
+                <TableCell className="text-center font-bold">Nota Final</TableCell>
+                <TableCell className="text-center font-bold">Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredRows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center" className="py-3">
-                    <Typography color="textSecondary">
-                      No hay estudiantes para mostrar
-                    </Typography>
+                  <TableCell colSpan={8} align="center" className="py-10 text-gray-400">
+                    No se encontraron estudiantes para mostrar.
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredRows.map((row) => (
-                  <TableRow key={row.id} hover>
+                  <TableRow key={row.id_inscripcion} hover>
                     <TableCell>{row.grupo_nombre}</TableCell>
                     <TableCell>
-                      {row.nombre} {row.apellido}
-                    </TableCell>
-                    <TableCell>{row.numero_documento}</TableCell>
-                    <TableCell align="center">
-                      {row.seguimiento1 !== null ? (
-                        <div
-                          className={`rounded px-2 py-1 font-bold ${
-                            row.seguimiento1 >= 3
-                              ? "bg-green-200"
-                              : "bg-orange-200"
-                          }`}
-                        >
-                          {row.seguimiento1.toFixed(1)}
-                        </div>
-                      ) : (
-                        <Typography color="textSecondary">-</Typography>
-                      )}
+                      <Typography fontWeight="500">
+                        {row.nombre} {row.apellido}
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary">
+                        ID: {row.numero_documento}
+                      </Typography>
                     </TableCell>
                     <TableCell align="center">
-                      {row.seguimiento2 !== null ? (
-                        <div
-                          className={`rounded px-2 py-1 font-bold ${
-                            row.seguimiento2 >= 3
-                              ? "bg-green-200"
-                              : "bg-orange-200"
-                          }`}
-                        >
-                          {row.seguimiento2.toFixed(1)}
-                        </div>
-                      ) : (
-                        <Typography color="textSecondary">-</Typography>
-                      )}
+                      <GradeChip value={row.seguimiento_1} />
                     </TableCell>
                     <TableCell align="center">
-                      {row.nota_conceptual_docente !== null ? (
-                        <div
-                          className={`rounded px-2 py-1 font-bold ${
-                            row.nota_conceptual_docente >= 3
-                              ? "bg-green-200"
-                              : "bg-orange-200"
-                          }`}
-                        >
-                          {row.nota_conceptual_docente.toFixed(1)}
-                        </div>
-                      ) : (
-                        <Typography color="textSecondary">-</Typography>
-                      )}
+                      <GradeChip value={row.seguimiento_2} />
                     </TableCell>
                     <TableCell align="center">
-                      {row.nota_conceptual_estudiante !== null ? (
+                      <GradeChip value={row.nota_conceptual_docente} />
+                    </TableCell>
+                    <TableCell align="center">
+                      <GradeChip value={row.nota_conceptual_estudiante} />
+                    </TableCell>
+                    <TableCell align="center">
+                      {row.nota_final !== null ? (
                         <div
-                          className={`rounded px-2 py-1 font-bold ${
-                            row.nota_conceptual_estudiante >= 3
-                              ? "bg-green-200"
-                              : "bg-orange-200"
-                          }`}
+                          className={`inline-block rounded px-3 py-1 font-bold text-white ${row.nota_final >= 3 ? "bg-green-600" : "bg-red-600"
+                            }`}
                         >
-                          {row.nota_conceptual_estudiante.toFixed(1)}
+                          {typeof row.nota_final === "number"
+                            ? row.nota_final.toFixed(1)
+                            : row.nota_final}
                         </div>
                       ) : (
-                        <Typography color="textSecondary">-</Typography>
+                        "-"
                       )}
                     </TableCell>
                     <TableCell align="center">
                       <Button
-                      color="error"
-                        variant="contained"
+                        variant="outlined"
                         size="small"
                         startIcon={<EditIcon />}
                         onClick={() => handleOpenCalificacionDialog(row)}
+                        sx={{
+                          borderRadius: "10px",
+                          borderColor: "#c40e1a",
+                          color: "#c40e1a",
+                          "&:hover": {
+                            borderColor: "#a00e1a",
+                            backgroundColor: "#fee",
+                          },
+                        }}
                       >
                         Calificar
                       </Button>
@@ -603,7 +762,28 @@ export default function CalificacionDocente() {
         </TableContainer>
       </Card>
 
-      {/* Diálogo de Calificación */}
+      {/* Snackbar Notificaciones */}
+      <Snackbar
+        open={success}
+        autoHideDuration={4000}
+        onClose={() => setSuccess(false)}
+      >
+        <Alert severity="success" sx={{ width: "100%" }}>
+          Calificaciones actualizadas correctamente.
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={error !== null}
+        autoHideDuration={5000}
+        onClose={() => setError(null)}
+      >
+        <Alert severity="error" sx={{ width: "100%" }}>
+          {error}
+        </Alert>
+      </Snackbar>
+
+      {/* Diálogo */}
       <CalificacionDialog
         open={dialogOpen}
         estudiante={selectedEstudiante}
@@ -611,6 +791,23 @@ export default function CalificacionDocente() {
         onSave={handleSaveCalificaciones}
         loading={saving}
       />
+    </div>
+  );
+}
+
+// Subcomponente para las notas en la tabla
+function GradeChip({ value }: { value: number | null }) {
+  if (value === null || value === undefined) return <Typography color="textSecondary">-</Typography>;
+  // El backend puede devolver strings; parseFloat garantiza que toFixed funcione
+  const numValue = typeof value === "number" ? value : parseFloat(value as unknown as string);
+  if (isNaN(numValue)) return <Typography color="textSecondary">-</Typography>;
+  const isPassing = numValue >= 3;
+  return (
+    <div
+      className={`inline-block rounded px-2 py-0.5 text-sm font-semibold ${isPassing ? "bg-green-100 text-green-800" : "bg-orange-100 text-orange-800"
+        }`}
+    >
+      {numValue.toFixed(1)}
     </div>
   );
 }

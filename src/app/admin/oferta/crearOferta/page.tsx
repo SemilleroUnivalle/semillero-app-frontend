@@ -142,7 +142,7 @@ export default function CrearOferta() {
 
       // Realizar la solicitud POST al endpoint /oferta_academica/ofer/
       const ofertaAcademicaResponse = await axios.post(
-        `${API_BASE_URL}/oferta_academica/ofer/`,
+        `${API_BASE_URL}/oferta_academica/`,
         {
           nombre: nombreOferta,
           fecha_inicio: fechaInicio,
@@ -267,7 +267,7 @@ export default function CrearOferta() {
       setSelectedCursosPorCategoria({});
 
       Router.push("/admin/oferta/verOfertas");
-      
+
     } catch (error) {
       console.error("Error al enviar los datos:", error);
       setError("Hubo un problema al enviar los datos. Inténtalo de nuevo.");

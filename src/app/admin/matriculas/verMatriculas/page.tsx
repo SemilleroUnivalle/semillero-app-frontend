@@ -31,6 +31,7 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { API_BASE_URL } from "../../../../../config";
 import { useRouter } from "next/navigation";
 import { exportMatriculasToExcel } from "@/services/exportToExcel";
+import { isPeriodActive } from "@/lib/api/dashboard";
 
 const CACHE_KEY = "matriculas_cache";
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -231,7 +232,7 @@ export default function VerMatriculas() {
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/matricula/mat/${id}/`, {
+      await axios.delete(`${API_BASE_URL}/inscripcion/${id}/`, {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
         },
@@ -250,6 +251,10 @@ export default function VerMatriculas() {
     setRows((prevRows) => prevRows.filter((row) => row.id !== id));
     setSuccess(true);
   };
+
+  // Estados para periodos
+  const [periods, setPeriods] = useState<any[]>([]);
+  const [selectedPeriodFilter, setSelectedPeriodFilter] = useState<number | string>("all");
 
   // Funcion para traer las matriculas desde el backend
   // useEffect(() => {
@@ -337,7 +342,8 @@ export default function VerMatriculas() {
             colegio: matricula.estudiante.colegio || "",
             estado_registro: matricula.estudiante.estado,
             estado_matricula: matricula.estado,
-          }));
+          };
+        });
 
           sessionStorage.setItem(
             CACHE_KEY,
@@ -357,8 +363,13 @@ export default function VerMatriculas() {
       }
     };
 
-    fetchData();
+    initPage();
   }, []);
+
+  const handlePeriodFilterChange = (id: number | string) => {
+    setSelectedPeriodFilter(id);
+    fetchMatriculasData(id, periods);
+  };
 
   // Filtros
 
@@ -506,7 +517,8 @@ export default function VerMatriculas() {
           Inscrito eliminado exitosamente.
         </Alert>
       </Snackbar>
-      <div className="mx-auto mt-4 flex w-11/12 justify-between rounded-2xl bg-white p-2 shadow-md">
+      <div className="mx-auto mt-4 flex w-11/12 items-center justify-between gap-4 rounded-2xl bg-white p-3 shadow-md">
+
         {/* Barra buscadora */}
         <TextField
           label="Buscar por nombre, apellido o correo"
@@ -518,7 +530,7 @@ export default function VerMatriculas() {
           className="inputs-textfield w-full sm:w-1/6"
         />
         {/* Filtro por Periodos */}
-        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+        <FormControl className="inputs-textfield w-full sm:w-1/6">
           <InputLabel id="filtro-periodos">Periodos</InputLabel>
           <Select
             labelId="filtro-periodos"
@@ -539,7 +551,7 @@ export default function VerMatriculas() {
         </FormControl>
 
         {/* Filtro por Módulos */}
-        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+        <FormControl className="inputs-textfield w-full sm:w-1/6">
           <InputLabel id="filtro-modulos">Módulos</InputLabel>
           <Select
             labelId="filtro-modulos"
@@ -558,7 +570,7 @@ export default function VerMatriculas() {
         </FormControl>
 
         {/* Filtro por Estamento */}
-        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+        <FormControl className="inputs-textfield w-full sm:w-1/6">
           <InputLabel id="filtro-estamento">Estamentos</InputLabel>
           <Select
             labelId="filtro-estamento"
@@ -579,7 +591,7 @@ export default function VerMatriculas() {
         </FormControl>
 
         {/* Filtro por Tipo de Inscrito */}
-        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+        <FormControl className="inputs-textfield w-full sm:w-1/6">
           <InputLabel id="filtro-tipo">Tipos de Inscritos</InputLabel>
           <Select
             labelId="filtro-tipo"

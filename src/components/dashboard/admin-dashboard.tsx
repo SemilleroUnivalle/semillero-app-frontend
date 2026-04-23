@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useState, useEffect } from "react";
-import { CircularProgress } from "@mui/material";
+import { CircularProgress, Button, Box, Typography } from "@mui/material";
 import {
   People as PeopleIcon,
   MenuBook as MenuBookIcon,
@@ -19,7 +19,7 @@ import { DemographicsOverview } from "./demographics-overview";
 import { EstratoSocioeconomicoDistributionInterno } from "./estrato_socioeconomico";
 import { VinculacionDistributionInterno } from "./tipodevinculacion";
 import { MunicipioDistributionInterno } from "./DistribucionMunicipios";
-import { fetchDashboardData, type DashboardData } from "@/lib/api/dashboard";
+import { fetchDashboardData, fetchPeriods, isPeriodActive, isInRegistration, type DashboardData, type Period } from "@/lib/api/dashboard";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 
@@ -53,26 +53,60 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
+  const [periods, setPeriods] = useState<Period[]>([]);
+  const [selectedPeriod, setSelectedPeriod] = useState<number | string>("");
 
   useEffect(() => {
-    async function loadDashboardData() {
+    async function initDashboard() {
       try {
         setLoading(true);
         setError(null);
-        const dashboardData = await fetchDashboardData();
+
+        // 1. Fetch Periods
+        const allPeriods = await fetchPeriods();
+
+        // Sort periods: active (not finished) first, prioritizing "en inscripcion"
+        const sortedPeriods = [...allPeriods].sort((a, b) => {
+          if (isPeriodActive(a) && !isPeriodActive(b)) return -1;
+          if (!isPeriodActive(a) && isPeriodActive(b)) return 1;
+          if (isInRegistration(a) && !isInRegistration(b)) return -1;
+          if (!isInRegistration(a) && isInRegistration(b)) return 1;
+          return 0;
+        });
+        setPeriods(sortedPeriods);
+
+        // 2. Determine initial period (prioritize "en inscripcion", then any active)
+        const activePeriod = allPeriods.find(p => isInRegistration(p)) || allPeriods.find(p => isPeriodActive(p));
+        const initialPeriodId = activePeriod ? activePeriod.id_oferta_academica : "all";
+        setSelectedPeriod(initialPeriodId);
+
+        // 3. Fetch Initial Data
+        const dashboardData = await fetchDashboardData(initialPeriodId);
         setData(dashboardData);
       } catch (err) {
-        console.error("Error loading dashboard data:", err);
-        setError(
-          "Error al cargar los datos del dashboard. Por favor, intenta de nuevo.",
-        );
+        console.error("Error initializing dashboard:", err);
+        setError("Error al cargar los peridodos o los datos iniciales.");
       } finally {
         setLoading(false);
       }
     }
 
-    loadDashboardData();
+    initDashboard();
   }, []);
+
+  const handlePeriodChange = async (periodId: number | string) => {
+    try {
+      setLoading(true);
+      setSelectedPeriod(periodId);
+      const dashboardData = await fetchDashboardData(periodId);
+      setData(dashboardData);
+    } catch (err) {
+      console.error("Error changing period:", err);
+      setError("Error al cambiar el periodo.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -114,8 +148,27 @@ export function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-primary">
-                Oferta Activa: 2026-1
+                Resumen de Inscripciones
               </h1>
+              <div className="mt-2 flex items-center gap-4">
+                <Box className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 border border-red-100">
+                  <Typography variant="body2" className="font-bold text-gray-600">
+                    Periodo Actual:
+                  </Typography>
+                  <Typography variant="body2" className="font-black text-primary">
+                    {periods.find(p => p.id_oferta_academica === selectedPeriod)?.nombre || "Cargando..."}
+                  </Typography>
+                </Box>
+                <Button
+                  href="/admin/estadisticas"
+                  variant="text"
+                  color="primary"
+                  size="small"
+                  className="font-bold"
+                >
+                  Ver Estadísticas Históricas →
+                </Button>
+              </div>
             </div>
             <div className="flex items-center gap-1">
               <CalendarIcon sx={{ fontSize: 16, color: "#999" }} />
@@ -169,9 +222,9 @@ export function AdminDashboard() {
 
           {/* Tercer Card - Módulos Activos */}
           <div className="col-span-1 h-full rounded-3xl">
-            <Link 
+            <Link
               className="h-full"
-            href="/admin/cursos/verCursos" legacyBehavior>
+              href="/admin/cursos/verCursos" legacyBehavior>
               <a className="block h-full rounded-xl no-underline">
                 <StatsCard
                   title="Módulos Activos"
@@ -241,11 +294,10 @@ export function AdminDashboard() {
                 onClick={() =>
                   handleTabChange({} as React.SyntheticEvent, index)
                 }
-                className={`text-md px-4 py-3 font-medium transition-colors ${
-                  tabValue === index
-                    ? "border-b-2 border-red-700 text-red-700"
-                    : "text-gray-700 hover:text-gray-900"
-                }`}
+                className={`text-md px-4 py-3 font-medium transition-colors ${tabValue === index
+                  ? "border-b-2 border-red-700 text-red-700"
+                  : "text-gray-700 hover:text-gray-900"
+                  }`}
               >
                 {label}
               </button>

@@ -99,6 +99,7 @@ const profesorLinks: LinkItem[] = [
   { name: "Asistencia", href: "/docente/asistencia", icon: InventoryOutlinedIcon },
   { name: "Visualizador", href: "/docente/visualizador", icon: ContentPasteSearchOutlinedIcon },
   { name: "Calificación", href: "/docente/calificacion", icon: TagIcon },
+  { name: "Estadísticas de Notas", href: "/docente/calificacion/estadisticas", icon: AnalyticsOutlinedIcon },
 ];
 
 /* ===== COMPONENT ===== */

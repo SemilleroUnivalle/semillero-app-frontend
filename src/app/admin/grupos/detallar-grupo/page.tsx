@@ -258,7 +258,7 @@ export default function DetallarGrupo() {
         }
 
         // Fetch matrículas
-        const response = await axios.get(`${API_BASE_URL}/matricula/mat/`, {
+        const response = await axios.get(`${API_BASE_URL}/inscripcion/`, {
           headers: {
             Authorization: `Token ${token}`,
           },
@@ -305,7 +305,7 @@ export default function DetallarGrupo() {
     try {
       const token = getToken();
 
-      const response = await axios.get(`${API_BASE_URL}/matricula/mat/`, {
+      const response = await axios.get(`${API_BASE_URL}/inscripcion/`, {
         headers: {
           Authorization: `Token ${token}`,
         },
@@ -431,7 +431,7 @@ export default function DetallarGrupo() {
       // Actualizar cada matrícula seleccionada con el ID del grupo
       const updatePromises = checked.map(async (matriculaId) => {
         const response = await axios.patch(
-          `${API_BASE_URL}/matricula/mat/${matriculaId}/`,
+          `${API_BASE_URL}/inscripcion/${matriculaId}/`,
           { grupo: grupoId },
           {
             headers: {
@@ -575,7 +575,7 @@ export default function DetallarGrupo() {
       const token = getToken();
 
       const response = await axios.patch(
-        `${API_BASE_URL}/matricula/mat/${matriculaId}/`,
+        `${API_BASE_URL}/inscripcion/${matriculaId}/`,
         { grupo: null },
         {
           headers: {

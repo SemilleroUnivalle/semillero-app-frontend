@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import {
   Box,
@@ -15,491 +15,577 @@ import {
   TableCell,
   TableBody,
   CircularProgress,
-  TextField,
+  Typography,
+  Chip,
+  Divider,
+  Tooltip,
+  Collapse,
+  IconButton,
 } from "@mui/material";
 
 import DownloadIcon from "@mui/icons-material/Download";
-import UploadIcon from "@mui/icons-material/CloudUpload";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 
 import * as XLSX from "xlsx";
+import axios from "axios";
+import { API_BASE_URL } from "../../../../config";
 
-
-// Importar Chart solo en cliente
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-interface EncuestaRow {
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+interface NotasGuardadas {
+  nota_modulo?: string;
+  nota_docente?: string;
+  nota_monitor?: string;
+  nota_estudiante?: string;
+}
+
+interface DetalleExito {
+  fila: number;
   documento: string;
   nombre: string;
-  modulo: string;
-  docente: string;
-  monitor: string;
-  nota_modulo: number;
-  nota_docente: number;
-  nota_monitor: number;
-  nota_estudiante: number;
+  id_inscripcion: number;
+  id_encuesta: number;
+  accion: "creada" | "actualizada";
+  notas_guardadas: NotasGuardadas;
 }
+
+interface DetalleError {
+  fila: number;
+  documento?: string;
+  error: string;
+}
+
+interface BackendResponse {
+  mensaje: string;
+  total_filas: number;
+  creadas: number;
+  actualizadas: number;
+  errores: number;
+  detalle_exito: DetalleExito[];
+  detalle_errores: DetalleError[];
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const ROJO = "#C20E1A";
+const ROJO_DARK = "#970000";
+
+function toN(v: string | undefined): number {
+  if (!v) return 0;
+  return parseFloat(v) || 0;
+}
+
+// ─── SubComponents ────────────────────────────────────────────────────────────
+
+function KpiCard({
+  label,
+  value,
+  color,
+  icon,
+}: {
+  label: string;
+  value: number;
+  color: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <Card
+      sx={{
+        flex: 1,
+        minWidth: 130,
+        borderRadius: 3,
+        borderTop: `4px solid ${color}`,
+        boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
+        transition: "transform .2s",
+        "&:hover": { transform: "translateY(-3px)" },
+      }}
+    >
+      <CardContent sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+        <Box sx={{ color, display: "flex", alignItems: "center", gap: 0.5 }}>
+          {icon}
+          <Typography variant="caption" fontWeight={700} textTransform="uppercase" letterSpacing={0.8}>
+            {label}
+          </Typography>
+        </Box>
+        <Typography variant="h4" fontWeight={800} color={color}>
+          {value}
+        </Typography>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function EncuestasPage() {
   const [archivo, setArchivo] = useState<File | null>(null);
-  const [resultados, setResultados] = useState<EncuestaRow[]>([]);
-  const [mensaje, setMensaje] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
+  const [respuesta, setRespuesta] = useState<BackendResponse | null>(null);
+  const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
 
-  const [filtroModulo, setFiltroModulo] = useState("");
-  const [filtroDocente, setFiltroDocente] = useState("");
-  const [filtroMonitor, setFiltroMonitor] = useState("");
+  const [showExitos, setShowExitos] = useState(true);
+  const [showErrores, setShowErrores] = useState(true);
 
-  // ---------------------------
-  // Descargar plantilla Excel
-  // ---------------------------
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const descargarPlantillaExcel = () => {
+  // ── Token ──
+  const getToken = () => {
+    try {
+      const u = localStorage.getItem("user");
+      return u ? JSON.parse(u).token : "";
+    } catch {
+      return "";
+    }
+  };
+
+  // ── Plantilla ──
+  const descargarPlantilla = () => {
     const plantilla = [
       {
         documento: "1001234567",
-        nombre: "Juan Perez",
-        modulo: "Matemáticas",
-        docente: "Carlos Gómez",
-        monitor: "Laura Díaz",
         nota_modulo: 4.5,
         nota_docente: 4.7,
         nota_monitor: 4.3,
         nota_estudiante: 4.8,
       },
     ];
-
-    const worksheet = XLSX.utils.json_to_sheet(plantilla);
-    const workbook = XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Encuestas");
-
-    XLSX.writeFile(workbook, "plantilla_encuesta_satisfaccion.xlsx");
+    const ws = XLSX.utils.json_to_sheet(plantilla);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Encuestas");
+    XLSX.writeFile(wb, "plantilla_encuesta_satisfaccion.xlsx");
   };
 
-  // ---------------------------
-  // Cargar Excel
-  // ---------------------------
-
-  const handleArchivoExcel = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-
+  // ── File handling ──
+  const handleFile = (file: File | undefined) => {
     if (!file) return;
-
+    if (!/\.(xlsx|xls)$/i.test(file.name)) {
+      setErrorGeneral("Solo se permiten archivos .xlsx o .xls");
+      return;
+    }
     setArchivo(file);
+    setRespuesta(null);
+    setErrorGeneral(null);
   };
 
-  const procesarExcel = () => {
-    if (!archivo) {
-      setMensaje("Debe seleccionar un archivo Excel");
+  const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    handleFile(e.target.files?.[0]);
+
+  const onDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    handleFile(e.dataTransfer.files?.[0]);
+  }, []);
+
+  // ── Upload ──
+  const subirArchivo = async () => {
+    if (!archivo) return;
+    const token = getToken();
+    if (!token) {
+      setErrorGeneral("No hay sesión activa. Inicia sesión primero.");
       return;
     }
 
     setCargando(true);
+    setErrorGeneral(null);
+    setRespuesta(null);
 
-    const reader = new FileReader();
+    try {
+      const formData = new FormData();
+      formData.append("archivo", archivo);
 
-    reader.onload = (e) => {
-      const data = new Uint8Array(e.target?.result as ArrayBuffer);
+      const res = await axios.post(
+        `${API_BASE_URL}/encuesta_satisfaccion/encuesta/cargar-excel/`,
+        formData,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-      const workbook = XLSX.read(data, { type: "array" });
-
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-
-      const json = XLSX.utils.sheet_to_json(sheet);
-
-      setResultados(json as EncuestaRow[]);
-
-      setMensaje(`Se cargaron ${json.length} encuestas`);
-
-      setCargando(false);
-    };
-
-    reader.readAsArrayBuffer(archivo);
-  };
-
-  // ---------------------------
-  // Filtros
-  // ---------------------------
-
-  const modulos = [...new Set(resultados.map((r) => r.modulo))];
-  const docentes = [...new Set(resultados.map((r) => r.docente))];
-  const monitores = [...new Set(resultados.map((r) => r.monitor))];
-
-  const datosFiltrados = resultados.filter((r) => {
-    return (
-      (filtroModulo === "" || r.modulo === filtroModulo) &&
-      (filtroDocente === "" || r.docente === filtroDocente) &&
-      (filtroMonitor === "" || r.monitor === filtroMonitor)
-    );
-  });
-
-  // ---------------------------
-  // Promedios
-  // ---------------------------
-
-  const promedio = (campo: string) => {
-    if (datosFiltrados.length === 0) return 0;
-
-    const suma = datosFiltrados.reduce(
-      (acc: number, item: any) => acc + Number(item[campo]),
-      0
-    );
-
-    return Number((suma / datosFiltrados.length).toFixed(2));
-  };
-
-  // ---------------------------
-  // Promedio por módulo
-  // ---------------------------
-
-  const promedioPorModulo = () => {
-    const agrupado: any = {};
-
-    datosFiltrados.forEach((r: any) => {
-      if (!agrupado[r.modulo]) {
-        agrupado[r.modulo] = [];
+      setRespuesta(res.data as BackendResponse);
+    } catch (err: any) {
+      if (err.response?.data) {
+        const d = err.response.data;
+        setErrorGeneral(
+          typeof d === "string"
+            ? d
+            : d.detail || d.message || d.error || JSON.stringify(d)
+        );
+      } else if (err.code === "ERR_NETWORK") {
+        setErrorGeneral(`No se pudo conectar al servidor (${API_BASE_URL})`);
+      } else {
+        setErrorGeneral(err.message || "Error desconocido");
       }
-
-      agrupado[r.modulo].push(Number(r.nota_modulo));
-    });
-
-    return Object.keys(agrupado).map((mod) => {
-      const notas = agrupado[mod];
-
-      const prom =
-        notas.reduce((a: number, b: number) => a + b, 0) / notas.length;
-
-      return {
-        modulo: mod,
-        promedio: Number(prom.toFixed(2)),
-      };
-    });
+    } finally {
+      setCargando(false);
+    }
   };
 
-  const datosModulo = promedioPorModulo();
-
-  // ---------------------------
-  // Gráficas
-  // ---------------------------
-
-  const graficaGeneral = {
-    options: {
-      chart: { id: "satisfaccion", toolbar: { show: false } },
-      xaxis: {
-        categories: ["Módulo", "Docente", "Monitor", "Autoevaluación"],
-      },
-      colors: ["#C20E1A"],
-    },
-    series: [
-      {
-        name: "Promedio",
-        data: [
-          promedio("nota_modulo"),
-          promedio("nota_docente"),
-          promedio("nota_monitor"),
-          promedio("nota_estudiante"),
-        ],
-      },
-    ],
+  const resetear = () => {
+    setArchivo(null);
+    setRespuesta(null);
+    setErrorGeneral(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const graficaModulo = {
-    options: {
-      chart: { id: "modulos", toolbar: { show: false } },
-      xaxis: {
-        categories: datosModulo.map((d) => d.modulo),
+  // ── Chart data from response ──
+  const chartPromedioGeneral = React.useMemo(() => {
+    if (!respuesta || respuesta.detalle_exito.length === 0) return null;
+    const items = respuesta.detalle_exito;
+    const avg = (field: keyof NotasGuardadas) => {
+      const vals = items
+        .map((i) => toN(i.notas_guardadas[field]))
+        .filter((v) => v > 0);
+      return vals.length ? parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2)) : 0;
+    };
+    return {
+      options: {
+        chart: { id: "satisfaccion-general", toolbar: { show: false } },
+        xaxis: { categories: ["Módulo", "Docente", "Monitor", "Autoevaluación"] },
+        colors: [ROJO],
+        plotOptions: { bar: { borderRadius: 6, columnWidth: "50%" } },
+        dataLabels: { enabled: true },
+        yaxis: { min: 0, max: 5 },
       },
-      colors: ["#C20E1A"],
-    },
-    series: [
-      {
-        name: "Promedio módulo",
-        data: datosModulo.map((d) => d.promedio),
-      },
-    ],
-  };
+      series: [
+        {
+          name: "Promedio",
+          data: [
+            avg("nota_modulo"),
+            avg("nota_docente"),
+            avg("nota_monitor"),
+            avg("nota_estudiante"),
+          ],
+        },
+      ],
+    };
+  }, [respuesta]);
 
+  // ── Render ──
   return (
-    <Box className="p-3 max-w-6xl mx-auto">
-      <Box className="mb-4">
-        <h1>Encuestas de Satisfacción</h1>
-        <p className="text-[#575757] mt-2 text-sm">
-          Cargar resultados de evaluación de módulos del semillero
-        </p>
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1100, mx: "auto", display: "flex", flexDirection: "column", gap: 3 }}>
+
+      {/* Header */}
+      <Box>
+        <Typography variant="h4" fontWeight={800} color={ROJO}>
+          Encuestas de Satisfacción
+        </Typography>
+        <Typography variant="body2" color="text.secondary" mt={0.5}>
+          Carga masiva de resultados de evaluación desde un archivo Excel
+        </Typography>
       </Box>
 
-      {mensaje && (
-        <Alert 
-          className="mb-3 rounded-[1rem]"
-          severity="info"
-          sx={{
-            backgroundColor: "#FFF9E6",
-            color: "#f57f17",
-            "& .MuiAlert-icon": { color: "#f57f17" }
-          }}
-        >
-          {mensaje}
+      {/* General error */}
+      {errorGeneral && (
+        <Alert severity="error" onClose={() => setErrorGeneral(null)} sx={{ borderRadius: 3 }}>
+          {errorGeneral}
         </Alert>
       )}
 
-      {/* CARGA */}
-
-      <Card className="mb-4 rounded-[1rem] shadow-sm border border-gray-200">
-        <CardHeader 
-          title="Carga de Encuestas"
-          titleTypographyProps={{
-            sx: { 
-              color: "#C20E1A",
-              fontWeight: 600,
-              fontSize: "1.1rem"
-            }
-          }}
-          sx={{ borderBottom: "1px solid #f0f0f0" }}
+      {/* ── Upload Card ── */}
+      <Card sx={{ borderRadius: 4, boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
+        <CardHeader
+          title="Cargar archivo Excel"
+          titleTypographyProps={{ fontWeight: 700, color: ROJO, fontSize: "1.05rem" }}
+          sx={{ borderBottom: "1px solid #f0f0f0", pb: 1.5 }}
         />
+        <CardContent sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
 
-        <CardContent>
-          <Box className="flex gap-2 flex-wrap items-center">
+          {/* Drop zone */}
+          <Box
+            onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={onDrop}
+            onClick={() => fileInputRef.current?.click()}
+            sx={{
+              border: `2px dashed ${dragging ? ROJO : "#d1d5db"}`,
+              borderRadius: 3,
+              p: 4,
+              textAlign: "center",
+              backgroundColor: dragging ? "#fef2f2" : "#fafafa",
+              cursor: "pointer",
+              transition: "all .2s",
+              "&:hover": { borderColor: ROJO, backgroundColor: "#fef2f2" },
+            }}
+          >
+            <InsertDriveFileIcon sx={{ fontSize: 40, color: archivo ? ROJO : "#9ca3af", mb: 1 }} />
+            {archivo ? (
+              <>
+                <Typography fontWeight={700} color={ROJO}>{archivo.name}</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {(archivo.size / 1024).toFixed(1)} KB · Haz clic para cambiar
+                </Typography>
+              </>
+            ) : (
+              <>
+                <Typography fontWeight={600} color="text.secondary">
+                  Arrastra tu archivo aquí o haz clic para seleccionarlo
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Formatos aceptados: .xlsx, .xls
+                </Typography>
+              </>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={onInputChange}
+              style={{ display: "none" }}
+            />
+          </Box>
+
+          {/* Actions */}
+          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", alignItems: "center" }}>
             <Button
-              startIcon={<DownloadIcon />}
               variant="outlined"
-              onClick={descargarPlantillaExcel}
+              startIcon={<DownloadIcon />}
+              onClick={descargarPlantilla}
               sx={{
-                borderColor: "#C20E1A",
-                color: "#C20E1A",
-                borderRadius: "0.75rem",
-                textTransform: "none",
-                fontWeight: 500,
-                "&:hover": {
-                  borderColor: "#970000",
-                  backgroundColor: "rgba(194, 14, 26, 0.04)"
-                }
+                borderColor: ROJO, color: ROJO, borderRadius: "10px", textTransform: "none", fontWeight: 600,
+                "&:hover": { borderColor: ROJO_DARK, backgroundColor: "#fef2f2" },
               }}
             >
-              Descargar plantilla Excel
+              Descargar plantilla
             </Button>
-
-            <Box
-              component="label"
-              className="flex items-center justify-center px-4 py-2 border-2 border-dashed border-[#C20E1A] rounded-lg cursor-pointer text-[#C20E1A] font-medium transition-colors hover:bg-red-50"
-            >
-              <UploadIcon sx={{ mr: 1, fontSize: "1.2rem" }} />
-              {archivo ? archivo.name : "Seleccionar archivo"}
-              <input
-                type="file"
-                accept=".xlsx"
-                onChange={handleArchivoExcel}
-                className="hidden"
-              />
-            </Box>
 
             <Button
-              startIcon={<UploadIcon />}
               variant="contained"
-              onClick={procesarExcel}
-              disabled={cargando || !archivo}
-              className="bg-[#C20E1A] hover:bg-[#970000] disabled:bg-gray-300 disabled:text-gray-500 text-white font-medium rounded-lg py-3"
+              startIcon={cargando ? <CircularProgress size={18} color="inherit" /> : <UploadFileIcon />}
+              onClick={subirArchivo}
+              disabled={!archivo || cargando}
+              sx={{
+                backgroundColor: ROJO, borderRadius: "10px", textTransform: "none", fontWeight: 700,
+                "&:hover": { backgroundColor: ROJO_DARK },
+                "&:disabled": { backgroundColor: "#e5e7eb", color: "#9ca3af" },
+              }}
             >
-              {cargando ? (
-                <>
-                  <CircularProgress size={20} sx={{ mr: 1 }} />
-                  Procesando
-                </>
-              ) : (
-                "Cargar encuestas"
-              )}
+              {cargando ? "Procesando…" : "Enviar al servidor"}
             </Button>
+
+            {(archivo || respuesta) && (
+              <Tooltip title="Reiniciar">
+                <IconButton onClick={resetear} sx={{ color: "#6b7280" }}>
+                  <RestartAltIcon />
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
+
+          {/* Hint */}
+          <Alert severity="info" sx={{ borderRadius: 3, fontSize: 13 }}>
+            El archivo debe contener al menos la columna <strong>documento</strong> y una o más de:{" "}
+            <strong>nota_modulo</strong>, <strong>nota_docente</strong>, <strong>nota_monitor</strong>,{" "}
+            <strong>nota_estudiante</strong>. Las celdas vacías se ignoran.
+          </Alert>
         </CardContent>
       </Card>
 
-      {/* FILTROS */}
-
-      {resultados.length > 0 && (
-        <Card className="mb-4 rounded-[1rem] shadow-sm border border-gray-200">
-          <CardHeader 
-            title="Filtros"
-            titleTypographyProps={{
-              sx: { 
-                color: "#C20E1A",
-                fontWeight: 600,
-                fontSize: "1.1rem"
-              }
-            }}
-            sx={{ borderBottom: "1px solid #f0f0f0" }}
-          />
-
-          <CardContent>
-            <Box className="inputs-textfield flex gap-2 flex-wrap items-end">
-              <TextField
-                select
-                label="Módulo"
-                value={filtroModulo}
-                onChange={(e) => setFiltroModulo(e.target.value)}
-                SelectProps={{ native: true }}
-                sx={{ minWidth: 150 }}
-              >
-                <option value="">Todos</option>
-                {modulos.map((m) => (
-                  <option key={m}>{m}</option>
-                ))}
-              </TextField>
-
-              <TextField
-                select
-                label="Docente"
-                value={filtroDocente}
-                onChange={(e) => setFiltroDocente(e.target.value)}
-                SelectProps={{ native: true }}
-                sx={{ minWidth: 150 }}
-              >
-                <option value="">Todos</option>
-                {docentes.map((d) => (
-                  <option key={d}>{d}</option>
-                ))}
-              </TextField>
-
-              <TextField
-                select
-                label="Monitor"
-                value={filtroMonitor}
-                onChange={(e) => setFiltroMonitor(e.target.value)}
-                SelectProps={{ native: true }}
-                sx={{ minWidth: 150 }}
-              >
-                <option value="">Todos</option>
-                {monitores.map((m) => (
-                  <option key={m}>{m}</option>
-                ))}
-              </TextField>
-
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  setFiltroModulo("");
-                  setFiltroDocente("");
-                  setFiltroMonitor("");
-                }}
-                sx={{
-                  borderColor: "#C20E1A",
-                  color: "#C20E1A",
-                  borderRadius: "0.75rem",
-                  textTransform: "none",
-                  fontWeight: 500,
-                  "&:hover": {
-                    borderColor: "#970000",
-                    backgroundColor: "rgba(194, 14, 26, 0.04)"
-                  }
-                }}
-              >
-                Limpiar filtros
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* TABLA */}
-
-      {datosFiltrados.length > 0 && (
-        <Card className="mb-4 rounded-[1rem] shadow-sm border border-gray-200 overflow-hidden">
-          <CardHeader 
-            title="Resultados cargados"
-            titleTypographyProps={{
-              sx: { 
-                color: "#C20E1A",
-                fontWeight: 600,
-                fontSize: "1.1rem"
-              }
-            }}
-            sx={{ borderBottom: "1px solid #f0f0f0" }}
-          />
-
-          <Box className="overflow-x-auto">
-            <Table>
-              <TableHead>
-                <TableRow className="bg-gray-100">
-                  <TableCell className="font-semibold text-gray-700">Documento</TableCell>
-                  <TableCell className="font-semibold text-gray-700">Nombre</TableCell>
-                  <TableCell className="font-semibold text-gray-700">Módulo</TableCell>
-                  <TableCell className="font-semibold text-gray-700">Docente</TableCell>
-                  <TableCell className="font-semibold text-gray-700">Monitor</TableCell>
-                  <TableCell className="font-semibold text-gray-700">Nota módulo</TableCell>
-                  <TableCell className="font-semibold text-gray-700">Nota docente</TableCell>
-                  <TableCell className="font-semibold text-gray-700">Nota monitor</TableCell>
-                  <TableCell className="font-semibold text-gray-700">Autoevaluación</TableCell>
-                </TableRow>
-              </TableHead>
-
-              <TableBody>
-                {datosFiltrados.map((row, index) => (
-                  <TableRow key={index} className="hover:bg-gray-50 border-b border-gray-200">
-                    <TableCell className="text-gray-700">{row.documento}</TableCell>
-                    <TableCell className="text-gray-700">{row.nombre}</TableCell>
-                    <TableCell className="text-gray-700">{row.modulo}</TableCell>
-                    <TableCell className="text-gray-700">{row.docente}</TableCell>
-                    <TableCell className="text-gray-700">{row.monitor}</TableCell>
-                    <TableCell className="text-gray-700 font-medium">{row.nota_modulo}</TableCell>
-                    <TableCell className="text-gray-700 font-medium">{row.nota_docente}</TableCell>
-                    <TableCell className="text-gray-700 font-medium">{row.nota_monitor}</TableCell>
-                    <TableCell className="text-gray-700 font-medium">{row.nota_estudiante}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+      {/* ── Resultado ── */}
+      {respuesta && (
+        <>
+          {/* KPI Cards */}
+          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+            <KpiCard label="Total filas" value={respuesta.total_filas} color="#3b82f6" icon={<InsertDriveFileIcon fontSize="small" />} />
+            <KpiCard label="Creadas" value={respuesta.creadas} color="#22c55e" icon={<CheckCircleOutlineIcon fontSize="small" />} />
+            <KpiCard label="Actualizadas" value={respuesta.actualizadas} color="#f59e0b" icon={<CheckCircleOutlineIcon fontSize="small" />} />
+            <KpiCard label="Errores" value={respuesta.errores} color="#ef4444" icon={<ErrorOutlineIcon fontSize="small" />} />
           </Box>
-        </Card>
-      )}
 
-      {/* GRÁFICAS */}
+          {/* Success alert */}
+          <Alert
+            severity={respuesta.errores === 0 ? "success" : respuesta.errores === respuesta.total_filas ? "error" : "warning"}
+            sx={{ borderRadius: 3 }}
+          >
+            {respuesta.mensaje}
+          </Alert>
 
-      {datosFiltrados.length > 0 && (
-        <Box className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <Card className="rounded-[1rem] shadow-sm border border-gray-200">
-            <CardHeader 
-              title="Promedio de satisfacción"
-              titleTypographyProps={{
-                sx: { 
-                  color: "#C20E1A",
-                  fontWeight: 600,
-                  fontSize: "1.1rem"
+          {/* ── Detalle Éxitos ── */}
+          {respuesta.detalle_exito.length > 0 && (
+            <Card sx={{ borderRadius: 4, boxShadow: "0 4px 20px rgba(0,0,0,0.07)" }}>
+              <CardHeader
+                title={
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <CheckCircleOutlineIcon sx={{ color: "#22c55e" }} />
+                    <Typography fontWeight={700} color="#166534">
+                      Registros procesados correctamente ({respuesta.detalle_exito.length})
+                    </Typography>
+                  </Box>
                 }
-              }}
-              sx={{ borderBottom: "1px solid #f0f0f0" }}
-            />
-
-            <CardContent>
-              <Chart
-                options={graficaGeneral.options}
-                series={graficaGeneral.series}
-                type="bar"
-                height={350}
-              />
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-[1rem] shadow-sm border border-gray-200">
-            <CardHeader 
-              title="Promedio por módulo"
-              titleTypographyProps={{
-                sx: { 
-                  color: "#C20E1A",
-                  fontWeight: 600,
-                  fontSize: "1.1rem"
+                action={
+                  <IconButton onClick={() => setShowExitos(!showExitos)}>
+                    {showExitos ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                  </IconButton>
                 }
-              }}
-              sx={{ borderBottom: "1px solid #f0f0f0" }}
-            />
-
-            <CardContent>
-              <Chart
-                options={graficaModulo.options}
-                series={graficaModulo.series}
-                type="bar"
-                height={350}
+                sx={{ borderBottom: showExitos ? "1px solid #f0f0f0" : "none", pb: 1.5 }}
               />
-            </CardContent>
-          </Card>
-        </Box>
+              <Collapse in={showExitos}>
+                <Box sx={{ overflowX: "auto" }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: "#f0fdf4" }}>
+                        <TableCell sx={{ fontWeight: 700 }}>Fila</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Documento</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Nombre</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Acción</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Módulo</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Docente</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Monitor</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Autoeval.</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>ID Encuesta</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {respuesta.detalle_exito.map((item) => (
+                        <TableRow key={item.fila} hover>
+                          <TableCell>{item.fila}</TableCell>
+                          <TableCell>{item.documento}</TableCell>
+                          <TableCell>{item.nombre}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={item.accion}
+                              size="small"
+                              sx={{
+                                backgroundColor: item.accion === "creada" ? "#dcfce7" : "#fef3c7",
+                                color: item.accion === "creada" ? "#166534" : "#92400e",
+                                fontWeight: 700,
+                                fontSize: 11,
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>{item.notas_guardadas.nota_modulo ?? "–"}</TableCell>
+                          <TableCell>{item.notas_guardadas.nota_docente ?? "–"}</TableCell>
+                          <TableCell>{item.notas_guardadas.nota_monitor ?? "–"}</TableCell>
+                          <TableCell>{item.notas_guardadas.nota_estudiante ?? "–"}</TableCell>
+                          <TableCell>
+                            <Typography variant="caption" color="text.secondary">
+                              #{item.id_encuesta}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Box>
+              </Collapse>
+            </Card>
+          )}
+
+          {/* ── Detalle Errores ── */}
+          {respuesta.detalle_errores.length > 0 && (
+            <Card sx={{ borderRadius: 4, boxShadow: "0 4px 20px rgba(0,0,0,0.07)" }}>
+              <CardHeader
+                title={
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <ErrorOutlineIcon sx={{ color: "#ef4444" }} />
+                    <Typography fontWeight={700} color="#991b1b">
+                      Filas con error ({respuesta.detalle_errores.length})
+                    </Typography>
+                  </Box>
+                }
+                action={
+                  <IconButton onClick={() => setShowErrores(!showErrores)}>
+                    {showErrores ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                  </IconButton>
+                }
+                sx={{ borderBottom: showErrores ? "1px solid #f0f0f0" : "none", pb: 1.5 }}
+              />
+              <Collapse in={showErrores}>
+                <Box sx={{ overflowX: "auto" }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: "#fef2f2" }}>
+                        <TableCell sx={{ fontWeight: 700 }}>Fila</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Documento</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Motivo del error</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {respuesta.detalle_errores.map((item, idx) => (
+                        <TableRow key={idx} sx={{ backgroundColor: "#fff5f5" }}>
+                          <TableCell>{item.fila}</TableCell>
+                          <TableCell>{item.documento || "–"}</TableCell>
+                          <TableCell>
+                            <Typography variant="body2" color="error.main">
+                              {item.error}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Box>
+              </Collapse>
+            </Card>
+          )}
+
+          {/* ── Gráficas ── */}
+          {chartPromedioGeneral && (
+            <>
+              <Divider />
+              <Typography variant="h6" fontWeight={700} color={ROJO}>
+                Analítica del archivo cargado
+              </Typography>
+
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
+                {/* Promedios generales */}
+                <Card sx={{ borderRadius: 4, boxShadow: "0 4px 20px rgba(0,0,0,0.07)" }}>
+                  <CardHeader
+                    title="Promedio por componente"
+                    titleTypographyProps={{ fontWeight: 700, color: ROJO, fontSize: "1rem" }}
+                    sx={{ borderBottom: "1px solid #f0f0f0", pb: 1.5 }}
+                  />
+                  <CardContent>
+                    <Chart
+                      options={chartPromedioGeneral.options}
+                      series={chartPromedioGeneral.series}
+                      type="bar"
+                      height={300}
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Distribución creadas vs actualizadas */}
+                <Card sx={{ borderRadius: 4, boxShadow: "0 4px 20px rgba(0,0,0,0.07)" }}>
+                  <CardHeader
+                    title="Resultado de la carga"
+                    titleTypographyProps={{ fontWeight: 700, color: ROJO, fontSize: "1rem" }}
+                    sx={{ borderBottom: "1px solid #f0f0f0", pb: 1.5 }}
+                  />
+                  <CardContent>
+                    <Chart
+                      options={{
+                        chart: { id: "resultado-carga", toolbar: { show: false } },
+                        labels: ["Creadas", "Actualizadas", "Errores"],
+                        colors: ["#22c55e", "#f59e0b", "#ef4444"],
+                        legend: { position: "bottom" },
+                        plotOptions: { pie: { donut: { size: "60%" } } },
+                        dataLabels: {
+                          formatter: (val: number, opts: any) =>
+                            `${opts.w.config.series[opts.seriesIndex]}`,
+                        },
+                      }}
+                      series={[respuesta.creadas, respuesta.actualizadas, respuesta.errores]}
+                      type="donut"
+                      height={300}
+                    />
+                  </CardContent>
+                </Card>
+              </Box>
+            </>
+          )}
+        </>
       )}
     </Box>
   );

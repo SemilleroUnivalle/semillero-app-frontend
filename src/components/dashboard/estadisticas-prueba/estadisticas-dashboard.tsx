@@ -9,8 +9,8 @@ import {
   FormControl,
   InputLabel,
   Box,
-  Breadcrumbs,
   Typography,
+  Breadcrumbs,
 } from "@mui/material";
 import {
   People as PeopleIcon,
@@ -19,31 +19,26 @@ import {
   School as SchoolIcon,
   CalendarToday as CalendarIcon,
 } from "@mui/icons-material";
-import { StatsCard } from "./stats-card";
-import { EnrollmentChart } from "./enrollment-chart";
-import { ModuleGenderChart } from "./module-gender-chart";
-import { ModuleDistribution } from "./module-distribution";
-import { EstamentoSegmentation } from "./estamento-segmentation";
-import { DemographicsOverview } from "./demographics-overview";
-import { EstratoSocioeconomicoDistributionInterno } from "./estrato_socioeconomico";
-import { VinculacionDistributionInterno } from "./tipodevinculacion";
-import { MunicipioDistributionInterno } from "./DistribucionMunicipios";
-import {
-  getMockDashboardData,
-  getPeriods,
-  getModules,
-  getEstamentos,
-  getGenders,
-  getGrados,
-  type DashboardFilters,
-} from "@/lib/api/mock-dashboard-data";
+
+// Import components from parent directory to reuse them
+import { StatsCard } from "../stats-card";
+import { EnrollmentChart } from "../enrollment-chart";
+import { ModuleGenderChart } from "../module-gender-chart";
+import { ModuleDistribution } from "../module-distribution";
+import { EstamentoSegmentation } from "../estamento-segmentation";
+import { DemographicsOverview } from "../demographics-overview";
+import { EstratoSocioeconomicoDistributionInterno } from "../estrato_socioeconomico";
+import { VinculacionDistributionInterno } from "../tipodevinculacion";
+import { MunicipioDistributionInterno } from "../DistribucionMunicipios";
+
+import { fetchDashboardData, fetchPeriods, isPeriodActive, type DashboardData, type Period } from "@/lib/api/dashboard";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 
 const COLOMBIA_GEOJSON_URL = "/colombia.json";
 
-const ColombiaMapWithNoSSR = dynamic(() => import("./ColombiaMap"), {
+const ColombiaMapWithNoSSR = dynamic(() => import("../ColombiaMap"), {
   ssr: false,
 });
 
@@ -67,70 +62,68 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export function EstadisticasDashboard() {
+  const pathname = usePathname();
 
-    const pathname = usePathname();
-
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
 
-  // Filter states
-  const [period, setPeriod] = useState("2025-2");
-  const [module, setModule] = useState("todos");
-  const [estamento, setEstamento] = useState("todos");
-  const [gender, setGender] = useState("todos");
+  const [periods, setPeriods] = useState<Period[]>([]);
+  const [selectedPeriod, setSelectedPeriod] = useState<number | string>("");
 
-  const [periods, setPeriods] = useState<string[]>([]);
-  const [modules, setModules] = useState<string[]>([]);
-  const [estamentos, setEstamentos] = useState<string[]>([]);
-  const [genders, setGenders] = useState<string[]>([]);
-  const [grados, setGrados] = useState<string[]>([]);
-
-  // Load filter options on mount
   useEffect(() => {
-    setPeriods(getPeriods());
-    setModules(getModules());
-    setEstamentos(getEstamentos());
-    setGenders(getGenders());
-    setGrados(getGrados());
-  }, []);
-
-  // Load dashboard data whenever filters change
-  useEffect(() => {
-    async function loadDashboardData() {
+    async function initStatistics() {
       try {
         setLoading(true);
         setError(null);
 
-        const filters: DashboardFilters = {
-          period,
-          module,
-          estamento,
-          gender,
-        };
+        // 1. Fetch Periods
+        const allPeriods = await fetchPeriods();
+        const sortedPeriods = [...allPeriods].sort((a, b) => (isPeriodActive(b) ? 1 : 0) - (isPeriodActive(a) ? 1 : 0));
+        setPeriods(sortedPeriods);
 
-        const dashboardData = getMockDashboardData(filters);
+        // 2. Default to "all" (Historic) for Statistics page
+        setSelectedPeriod("all");
+
+        // 3. Fetch Data
+        const dashboardData = await fetchDashboardData("all");
         setData(dashboardData);
       } catch (err) {
-        console.error("Error loading dashboard data:", err);
-        setError(
-          "Error al cargar los datos del dashboard. Por favor, intenta de nuevo.",
-        );
+        console.error("Error initializing statistics:", err);
+        setError("Error al cargar los datos históricos.");
       } finally {
         setLoading(false);
       }
     }
 
-    loadDashboardData();
-  }, [period, module, estamento, gender]);
+    initStatistics();
+  }, []);
+
+  const handlePeriodChange = async (periodId: number | string) => {
+    try {
+      setLoading(true);
+      setSelectedPeriod(periodId);
+      const dashboardData = await fetchDashboardData(periodId);
+      setData(dashboardData);
+    } catch (err) {
+      console.error("Error changing period in statistics:", err);
+      setError("Error al cambiar el filtro de periodo.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-200">
         <div className="text-center">
           <CircularProgress sx={{ color: "#c20e1a", mb: 2 }} />
-          <p className="mt-4 text-gray-600">Cargando datos del dashboard...</p>
+          <p className="mt-4 text-gray-600">Cargando estadísticas históricas...</p>
         </div>
       </div>
     );
@@ -141,475 +134,229 @@ export function EstadisticasDashboard() {
       <div className="min-h-screen bg-gray-200 p-4">
         <div className="mx-auto max-w-7xl">
           <div className="mt-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700">
-            {error || "No se pudieron cargar los datos del dashboard"}
+            {error || "No se pudieron cargar las estadísticas"}
           </div>
         </div>
       </div>
     );
   }
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
-
-
-  // Divide la ruta en segmentos y genera los enlaces
-  const pathSegments = pathname.split("/").filter(Boolean).slice(1); // Quita el primer segmento "admin"
-
-  const basePath = "/admin/estaditicas";
-  const breadcrumbNames: Record<string, string> = {
-    verOfertas: "Ver Ofertas Académicas",
-    crearOferta: "Crear Oferta Académica",
-    // Agrega más traducciones si lo deseas
-  };
-
-  const breadcrumbLinks = [
-    { href: basePath, label: "Estadísticas" },
-    ...pathSegments.slice(1).map((segment, idx) => {
-      const href = basePath + "/" + pathSegments.slice(1, idx + 2).join("/");
-      const label =
-        breadcrumbNames[segment] ||
-        segment.charAt(0).toUpperCase() +
-          segment.slice(1).replace(/([A-Z])/g, " $1");
-      return { href, label };
-    }),
-  ];
+  // Breadcrumbs logic
+  const pathSegments = pathname.split("/").filter(Boolean);
+  const breadcrumbLinks = pathSegments.map((segment, idx) => {
+    const href = "/" + pathSegments.slice(0, idx + 1).join("/");
+    const label = segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, " ");
+    return { href, label };
+  });
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
-      <div className="">
-        <h1>Estadisticas</h1>
-        <Breadcrumbs aria-label="breadcrumb" className="">
+      <div className="mx-auto w-11/12 px-4 py-5">
+        <Typography variant="h4" className="font-bold text-primary mb-2">
+          Estadísticas Históricas
+        </Typography>
+
+        <Breadcrumbs aria-label="breadcrumb" className="mb-6">
           {breadcrumbLinks.map((crumb, idx) =>
             idx < breadcrumbLinks.length - 1 ? (
-              <Link
-                key={crumb.href}
-                href={crumb.href}
-                className="text-primary hover:underline"
-              >
+              <Link key={crumb.href} href={crumb.href} className="text-gray-500 hover:text-primary transition-colors">
                 {crumb.label}
               </Link>
             ) : (
-              <Typography key={crumb.href} color="text.primary">
+              <Typography key={crumb.href} color="text.primary" className="font-semibold">
                 {crumb.label}
               </Typography>
-            ),
+            )
           )}
         </Breadcrumbs>
-        <div className="mx-auto w-11/12 px-4 py-3">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <CalendarIcon sx={{ fontSize: 16, color: "#999" }} />
-              <p className="text-sm text-gray-600">
-                Actualizado: {new Date().toLocaleDateString("es-ES")}
-              </p>
-            </div>
-          </div>
 
-          {/* Filters Section */}
-          <div className="inputs-textfield grid grid-cols-1 gap-4 rounded-2xl bg-white p-4 sm:grid-cols-2 lg:grid-cols-4">
-            <FormControl fullWidth size="small">
-              <InputLabel>Período</InputLabel>
-              <Select
-                value={period}
-                label="Período"
-                onChange={(e) => setPeriod(e.target.value)}
-              >
-                {periods.map((p) => (
-                  <MenuItem key={p} value={p}>
-                    {p}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth size="small">
-              <InputLabel>Módulo</InputLabel>
-              <Select
-                value={module}
-                label="Módulo"
-                onChange={(e) => setModule(e.target.value)}
-              >
-                {modules.map((m) => (
-                  <MenuItem key={m} value={m}>
-                    {m === "todos" ? "Todos los módulos" : m}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth size="small">
-              <InputLabel>Estamento</InputLabel>
-              <Select
-                value={estamento}
-                label="Estamento"
-                onChange={(e) => setEstamento(e.target.value)}
-              >
-                {estamentos.map((e) => (
-                  <MenuItem key={e} value={e}>
-                    {e === "todos" ? "Todos" : e}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth size="small">
-              <InputLabel>Género</InputLabel>
-              <Select
-                value={gender}
-                label="Género"
-                onChange={(e) => setGender(e.target.value)}
-              >
-                {genders.map((g) => (
-                  <MenuItem key={g} value={g}>
-                    {g === "todos"
-                      ? "Todos"
-                      : g === "masculino"
-                        ? "Masculino"
-                        : g === "femenino"
-                          ? "Femenino"
-                          : "Otro"}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto w-11/12 px-4 py-1">
-        {/* Key Stats */}
-        <div className="mb-4 grid auto-rows-fr grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-6">
-          {/* Primer Card - Total Inscritos */}
-          <div className="col-span-1 h-full rounded-3xl">
-            <Link
-              className="h-full rounded-3xl"
-              href="/admin/registros/verRegistros"
-              legacyBehavior
+        <div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <FormControl variant="outlined" size="small" sx={{ minWidth: 250, bgcolor: 'white', borderRadius: 2 }}>
+            <InputLabel id="period-select-label">Filtrar por Periodo</InputLabel>
+            <Select
+              labelId="period-select-label"
+              value={selectedPeriod}
+              label="Filtrar por Periodo"
+              onChange={(e) => handlePeriodChange(e.target.value)}
+              sx={{ borderRadius: 2 }}
             >
-              <a className="block h-full rounded-3xl no-underline">
-                <StatsCard
-                  title="Total Inscritos"
-                  value={data?.totalRegister.toLocaleString() ?? "—"}
-                  icon={PeopleIcon}
-                  trend={data?.inscritosNoMatriculados.toLocaleString() ?? "—"}
-                  trendLabel="% no matriculados"
-                />
-              </a>
-            </Link>
-          </div>
+              <MenuItem value="all"><em>Ver TODO (Histórico)</em></MenuItem>
+              {periods.map((p) => (
+                <MenuItem key={p.id_oferta_academica} value={p.id_oferta_academica}>
+                  {p.nombre} {isPeriodActive(p) ? "(Actual)" : ""}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-          {/* Segundo Card - Total Matriculados */}
-          <div className="col-span-1 h-full rounded-3xl">
-            <Link
-              className="h-full"
-              href="/admin/matriculas/verMatriculas"
-              legacyBehavior
-            >
-              <a className="block h-full rounded-3xl no-underline">
-                <StatsCard
-                  title="Total Matriculados"
-                  value={data?.totalEnrollments.toLocaleString() ?? "—"}
-                  icon={PeopleIcon}
-                  trend={data?.inscritosMatriculados.toLocaleString() ?? "—"}
-                  trendLabel="% de los inscritos se ha matriculado"
-                />
-              </a>
-            </Link>
-          </div>
-
-          {/* Tercer Card - Módulos Activos */}
-          <div className="col-span-1 h-full rounded-3xl">
-            <Link
-              className="h-full"
-              href="/admin/cursos/verCursos"
-              legacyBehavior
-            >
-              <a className="block h-full rounded-3xl no-underline">
-                <StatsCard
-                  title="Módulos Activos"
-                  value={data?.activeModules.toString() ?? "—"}
-                  icon={MenuBookIcon}
-                  description="En diferentes áreas"
-                />
-              </a>
-            </Link>
-          </div>
-
-          {/* Profesores */}
-          <div className="col-span-1 h-full rounded-3xl">
-            <StatsCard
-              title="Profesores"
-              value={data?.totalProfessors.toString() ?? "—"}
-              icon={PeopleIcon}
-              description="En diferentes modulos"
-              compact
-            />
-          </div>
-
-          {/* Monitores Académicos */}
-          <div className="col-span-1 h-full rounded-3xl">
-            <StatsCard
-              title="Monitores Académicos"
-              value={data?.totalMonitors.toString() ?? "—"}
-              icon={PeopleIcon}
-              description="En diferentes modulos"
-              compact
-            />
-          </div>
-
-          {/* Grupos Activos */}
-          <div className="col-span-1 h-full rounded-3xl">
-            <StatsCard
-              title="Grupos Activos"
-              value={data?.activeModules.toString() ?? "—"}
-              icon={PeopleIcon}
-              description="En diferentes modulos"
-              compact
-            />
-          </div>
-
-          {/* Módulo Más Popular */}
-          <div className="col-span-2 h-full rounded-3xl lg:col-span-1">
-            <StatsCard
-              title="Módulo Más Popular"
-              value={data?.enrollmentsByModule?.[0]?.name ?? "—"}
-              icon={TrendingUpIcon}
-              description={`${data?.enrollmentsByModule?.[0]?.enrollments ?? 0} estudiantes`}
-              compact
-            />
+          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm border">
+            <CalendarIcon sx={{ fontSize: 18, color: "text.secondary" }} />
+            <Typography variant="body2" color="text.secondary">
+              Última actualización: {new Date().toLocaleDateString("es-ES")}
+            </Typography>
           </div>
         </div>
 
-        {/* Main Content Tabs */}
-        <div className="e rounded-2xl border">
-          <div className="flex rounded-t-2xl bg-white">
+        {/* Key Stats Cards */}
+        <div className="mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+          <StatsCard
+            title="Total Inscripciones"
+            value={data.totalRegister.toLocaleString()}
+            icon={PeopleIcon}
+            trend={data.inscritosNoMatriculados.toLocaleString()}
+            trendLabel="pendientes"
+          />
+          <StatsCard
+            title="Total Matriculados"
+            value={data.totalEnrollments.toLocaleString()}
+            icon={PeopleIcon}
+            trend={data.inscritosMatriculados.toLocaleString()}
+            trendLabel="completados"
+          />
+          <StatsCard
+            title="Módulos Activos"
+            value={data.activeModules.toString()}
+            icon={MenuBookIcon}
+            description="Oferta académica"
+          />
+          <StatsCard
+            title="Docentes"
+            value={data.totalProfessors.toString()}
+            icon={PeopleIcon}
+            compact
+          />
+          <StatsCard
+            title="Monitores"
+            value={data.totalMonitors.toString()}
+            icon={PeopleIcon}
+            compact
+          />
+          <StatsCard
+            title="Módulo Popular"
+            value={data.enrollmentsByModule?.[0]?.name ?? "—"}
+            icon={TrendingUpIcon}
+            description={`${data.enrollmentsByModule?.[0]?.enrollments ?? 0} inscritos`}
+            compact
+          />
+        </div>
+
+        {/* Tabs for Detailed Analysis */}
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="flex border-b overflow-x-auto bg-gray-50/50">
             {[
-              "Información de Matriculados",
-              "Información geográfica estudiantes",
+              "General",
+              "Geografía",
               "Módulos",
+              "Institucional"
             ].map((label, index) => (
               <button
                 key={index}
-                onClick={() =>
-                  handleTabChange({} as React.SyntheticEvent, index)
-                }
-                className={`text-md px-4 py-3 font-medium transition-colors ${
-                  tabValue === index
-                    ? "border-b-2 border-red-700 text-red-700"
-                    : "text-gray-700 hover:text-gray-900"
-                }`}
+                onClick={() => setTabValue(index)}
+                className={`whitespace-nowrap px-8 py-4 text-sm font-bold transition-all ${tabValue === index
+                  ? "border-b-4 border-primary text-primary bg-white"
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-100/50"
+                  }`}
               >
                 {label}
               </button>
             ))}
           </div>
 
-          <div className="bg-transparent">
-            {/* Overview Tab */}
+          <div className="p-6">
+            {/* General Analysis Tab */}
             <TabPanel value={tabValue} index={0}>
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div>
-                  <div className="mb-6 rounded-2xl border border-gray-300 bg-white p-6">
-                    <h3 className="mb-2 text-lg font-bold text-gray-900">
-                      Matriculas totales por Módulo y Género
-                    </h3>
-                    <p className="mb-4 text-sm text-gray-600">
-                      Distribución de estudiantes matriculados en cada módulo,
-                      segmentado por género.
-                    </p>
-                    <ModuleGenderChart
-                      data={data?.enrollmentsByModuleAndGender ?? []}
-                    />
-                  </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-8">
+                  <Box className="p-6 rounded-2xl border bg-white">
+                    <Typography variant="h6" className="font-bold mb-1">Módulo y Género</Typography>
+                    <Typography variant="body2" color="text.secondary" className="mb-6">Distribución de estudiantes matriculados</Typography>
+                    <ModuleGenderChart data={data.enrollmentsByModuleAndGender ?? []} />
+                  </Box>
+
+                  <Box className="p-6 rounded-2xl border bg-white">
+                    <Typography variant="h6" className="font-bold mb-1">Estrato Socioeconómico</Typography>
+                    <Typography variant="body2" color="text.secondary" className="mb-6">Nivel socioeconómico de los matriculados</Typography>
+                    <EstratoSocioeconomicoDistributionInterno />
+                  </Box>
                 </div>
 
-                <div>
-                  <div className="rounded-2xl border border-gray-300 bg-white p-6">
-                    <h3 className="mb-2 text-lg font-bold text-gray-900">
-                      Matriculados por Módulo
-                    </h3>
-                    <p className="mb-3 text-sm text-gray-600">
-                      Número de estudiantes por módulo
-                    </p>
-                    <EnrollmentChart data={data?.enrollmentsByModule ?? []} />
-                  </div>
-                </div>
+                <div className="space-y-8">
+                  <Box className="p-6 rounded-2xl border bg-white">
+                    <Typography variant="h6" className="font-bold mb-1">Inscritos por Módulo</Typography>
+                    <Typography variant="body2" color="text.secondary" className="mb-6">Ranking de módulos por demanda</Typography>
+                    <EnrollmentChart data={data.enrollmentsByModule ?? []} />
+                  </Box>
 
-                <div>
-                  <div className="rounded-2xl border border-gray-300 bg-white p-6">
-                    <h3 className="mb-2 text-lg font-bold text-gray-900">
-                      Segmentación por Estamento
-                    </h3>
-                    <p className="mb-3 text-sm text-gray-600">
-                      Estudiantes matriculados por estamento del colegio
-                    </p>
-                    <EstamentoSegmentation
-                      data={data?.enrollmentsByEstamento ?? []}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="rounded-2xl border border-gray-300 bg-white p-6">
-                    <h3 className="mb-2 text-lg font-bold text-gray-900">
-                      Distribución por Grado
-                    </h3>
-                    <p className="mb-3 text-sm text-gray-600">
-                      Estudiantes matriculados por nivel educativo
-                    </p>
-                    <ModuleDistribution data={data?.enrollmentsByGrade ?? []} />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="rounded-2xl border border-gray-300 bg-white p-6">
-                    <h3 className="mb-2 text-lg font-bold text-gray-900">
-                      Distribución por Estrato Socioeconómico
-                    </h3>
-                    <p className="mb-3 text-sm text-gray-600">
-                      Estudiantes matriculados por estrato Socioeconómico.
-                    </p>
-                    <EstratoSocioeconomicoDistributionInterno
-                      data={data?.estratoDistribution ?? []}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="rounded-2xl border border-gray-300 bg-white p-6">
-                    <h3 className="mb-2 text-lg font-bold text-gray-900">
-                      Distribución por Tipo de Vinculación
-                    </h3>
-                    <p className="mb-3 text-sm text-gray-600">
-                      Base: {data?.totalEnrollments ?? 0} estudiantes.
-                    </p>
-                    <VinculacionDistributionInterno
-                      data={data?.vinculacionDistribution ?? []}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="rounded-2xl border border-gray-300 bg-white p-6">
-                    <h3 className="mb-2 text-lg font-bold text-gray-900">
-                      Procedencia por Municipio
-                    </h3>
-                    <p className="mb-3 text-sm text-gray-600">
-                      Base: {data?.totalEnrollments ?? 0} estudiantes (Mayoría
-                      Valle del Cauca).
-                    </p>
-                    <MunicipioDistributionInterno
-                      data={data?.municipioDistribution ?? []}
-                    />
-                  </div>
+                  <Box className="p-6 rounded-2xl border bg-white">
+                    <Typography variant="h6" className="font-bold mb-1">Tipo de Vinculación</Typography>
+                    <Typography variant="body2" color="text.secondary" className="mb-6">Relación contractual de los estudiantes</Typography>
+                    <VinculacionDistributionInterno />
+                  </Box>
                 </div>
               </div>
             </TabPanel>
 
-            {/* Non-Enrolled Students Tab */}
-            <TabPanel value={tabValue} index={5}>
-              <p className="text-gray-900">
-                Información de estudiantes inscritos no matriculados
-              </p>
-            </TabPanel>
-
-            {/* Geographic Tab */}
+            {/* Geographic Analysis Tab */}
             <TabPanel value={tabValue} index={1}>
-              <div className="mb-4 grid grid-cols-1 justify-center gap-4">
-                <div className="col-span-1">
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <Box className="xl:col-span-2 p-6 rounded-2xl border bg-white flex flex-col items-center">
+                  <Typography variant="h6" className="font-bold mb-6 self-start">Mapa de Procedencia</Typography>
                   <ColombiaMapWithNoSSR geojsonDataUrl={COLOMBIA_GEOJSON_URL} />
-                </div>
-              </div>
+                </Box>
 
-              <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
-                <div className="col-span-1">
-                  <div className="rounded border border-gray-300 bg-white p-6">
-                    <h3 className="mb-2 text-lg font-bold text-gray-900">
-                      Demografía de Estudiantes
-                    </h3>
-                    <p className="mb-3 text-sm text-gray-600">
-                      Distribución por género (estudiantes)
-                    </p>
-                    <DemographicsOverview
-                      genderData={data?.genderDistribution ?? []}
-                    />
-                  </div>
-                </div>
+                <div className="space-y-8">
+                  <Box className="p-6 rounded-2xl border bg-white">
+                    <Typography variant="h6" className="font-bold mb-1">Demografía</Typography>
+                    <Typography variant="body2" color="text.secondary" className="mb-6">Distribución por género</Typography>
+                    <DemographicsOverview genderData={data.genderDistribution ?? []} />
+                  </Box>
 
-                <div className="col-span-1 lg:col-span-2">
-                  <div className="rounded border border-gray-300 bg-white p-6">
-                    <h3 className="mb-2 text-lg font-bold text-gray-900">
-                      Distribución por Estamento
-                    </h3>
-                    <p className="mb-3 text-sm text-gray-600">
-                      Colegios públicos vs. privados
-                    </p>
-                    <div className="flex flex-col gap-3">
-                      {(data?.enrollmentsByEstamento ?? []).map(
-                        (item: any, index: number) => (
-                          <div key={index}>
-                            <div className="mb-2 flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <SchoolIcon
-                                  sx={{ fontSize: 20, color: "#999" }}
-                                />
-                                <p className="font-semibold text-gray-900">
-                                  {item.estamento}
-                                </p>
-                              </div>
-                              <p className="text-sm font-semibold text-gray-900">
-                                {item.count} ({item.percentage}%)
-                              </p>
-                            </div>
-                            <div className="h-2 overflow-hidden rounded bg-gray-300">
-                              <div
-                                className="h-full rounded bg-red-700 transition-all duration-300"
-                                style={{ width: `${item.percentage}%` }}
-                              />
-                            </div>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
+                  <Box className="p-6 rounded-2xl border bg-white">
+                    <Typography variant="h6" className="font-bold mb-1">Municipios</Typography>
+                    <Typography variant="body2" color="text.secondary" className="mb-6">Principales ciudades de origen</Typography>
+                    <MunicipioDistributionInterno />
+                  </Box>
                 </div>
               </div>
             </TabPanel>
 
-            {/* Modules Tab */}
+            {/* Modules Analysis Tab */}
             <TabPanel value={tabValue} index={2}>
-              <div className="rounded border border-gray-300 bg-white p-6">
-                <h3 className="mb-2 text-lg font-bold text-gray-900">
-                  Análisis de Módulos
-                </h3>
-                <p className="mb-4 text-sm text-gray-600">
-                  Rendimiento y popularidad de cada módulo
-                </p>
-                <div className="flex flex-col gap-3">
-                  {(data.enrollmentsByModule ?? []).map(
-                    (module: any, index: number) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between rounded border border-gray-300 bg-white p-4 transition-colors hover:bg-gray-50"
-                      >
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-900">
-                            {module.name}
-                          </p>
-                          <p className="text-sm text-gray-600">{module.area}</p>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <Box className="p-6 rounded-2xl border bg-white">
+                  <Typography variant="h6" className="font-bold mb-4">Listado de Módulos</Typography>
+                  <div className="divide-y">
+                    {(data.enrollmentsByModule ?? []).map((m: any, idx: number) => (
+                      <div key={idx} className="py-4 flex justify-between items-center group hover:bg-gray-50 px-2 transition-colors rounded-lg">
+                        <div>
+                          <Typography className="font-bold text-gray-800">{m.name}</Typography>
+                          <Typography variant="caption" className="text-gray-400">{m.area}</Typography>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold text-red-700">
-                            {module.enrollments}
-                          </p>
-                          <p className="text-xs text-gray-600">estudiantes</p>
+                          <Typography className="font-black text-primary text-xl">{m.enrollments}</Typography>
+                          <Typography variant="caption" className="text-gray-400 tabular-nums">participantes</Typography>
                         </div>
                       </div>
-                    ),
-                  )}
-                </div>
+                    ))}
+                  </div>
+                </Box>
+
+                <Box className="p-6 rounded-2xl border bg-white">
+                  <Typography variant="h6" className="font-bold mb-1">Distribución Académica</Typography>
+                  <Typography variant="body2" color="text.secondary" className="mb-6">Inscritos por grado escolar</Typography>
+                  <ModuleDistribution data={data.enrollmentsByGrade ?? []} />
+                </Box>
+              </div>
+            </TabPanel>
+
+            {/* Institutional Tab */}
+            <TabPanel value={tabValue} index={3}>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <Box className="p-6 rounded-2xl border bg-white">
+                  <Typography variant="h6" className="font-bold mb-1">Segmentación por Estamento</Typography>
+                  <Typography variant="body2" color="text.secondary" className="mb-6">Colegio público vs privado</Typography>
+                  <EstamentoSegmentation data={data.enrollmentsByEstamento ?? []} />
+                </Box>
               </div>
             </TabPanel>
           </div>

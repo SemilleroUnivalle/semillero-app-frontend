@@ -187,7 +187,7 @@ export default function DetallarMatricula() {
           token = user.token;
         }
         axios
-          .get(`${API_BASE_URL}/matricula/mat/${id}/`, {
+          .get(`${API_BASE_URL}/inscripcion/${id}/`, {
             headers: {
               Authorization: `Token ${token}`,
             },
@@ -255,7 +255,7 @@ export default function DetallarMatricula() {
         formDataMatriculaToSend.append("recibo_servicio", reciboServicio);
       }
       await axios.patch(
-        `${API_BASE_URL}/matricula/mat/${formDataMatricula.id_inscripcion}/`,
+        `${API_BASE_URL}/inscripcion/${formDataMatricula.id_inscripcion}/`,
         formDataMatriculaToSend,
         {
           headers: {
@@ -305,7 +305,7 @@ export default function DetallarMatricula() {
           token = user.token;
         }
         await axios.patch(
-          `${API_BASE_URL}/matricula/mat/${formDataMatricula.id_inscripcion}/`,
+          `${API_BASE_URL}/inscripcion/${formDataMatricula.id_inscripcion}/`,
           { verificacion_recibo_pago: newEstado },
           {
             headers: {
@@ -336,7 +336,7 @@ export default function DetallarMatricula() {
           token = user.token;
         }
         await axios.patch(
-          `${API_BASE_URL}/matricula/mat/${formDataMatricula.id_inscripcion}/`,
+          `${API_BASE_URL}/inscripcion/${formDataMatricula.id_inscripcion}/`,
           { verificacion_certificado: newEstado },
           {
             headers: {
@@ -367,7 +367,7 @@ export default function DetallarMatricula() {
           token = user.token;
         }
         await axios.patch(
-          `${API_BASE_URL}/matricula/mat/${formDataMatricula.id_inscripcion}/`,
+          `${API_BASE_URL}/inscripcion/${formDataMatricula.id_inscripcion}/`,
           { verificacion_recibo_servicio: newEstado },
           {
             headers: {
@@ -672,14 +672,14 @@ export default function DetallarMatricula() {
                   <span className="font-bold">Fecha: </span>
                   {formDataMatricula.audit_documento_recibo_pago?.timestamp
                     ? new Date(
-                        formDataMatricula.audit_documento_recibo_pago.timestamp,
-                      ).toLocaleString("es-CO", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
+                      formDataMatricula.audit_documento_recibo_pago.timestamp,
+                    ).toLocaleString("es-CO", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
                     : ""}
                 </p>
               </div>
@@ -721,14 +721,14 @@ export default function DetallarMatricula() {
                   <span className="font-bold">Fecha: </span>
                   {formDataMatricula.audit_certificado?.timestamp
                     ? new Date(
-                        formDataMatricula.audit_certificado.timestamp,
-                      ).toLocaleString("es-CO", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
+                      formDataMatricula.audit_certificado.timestamp,
+                    ).toLocaleString("es-CO", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
                     : ""}
                 </p>
               </div>
@@ -770,14 +770,14 @@ export default function DetallarMatricula() {
                   <span className="font-bold">Fecha: </span>
                   {formDataMatricula.audit_recibo_servicio?.timestamp
                     ? new Date(
-                        formDataMatricula.audit_recibo_servicio.timestamp,
-                      ).toLocaleString("es-CO", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
+                      formDataMatricula.audit_recibo_servicio.timestamp,
+                    ).toLocaleString("es-CO", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
                     : ""}
                 </p>
               </div>
