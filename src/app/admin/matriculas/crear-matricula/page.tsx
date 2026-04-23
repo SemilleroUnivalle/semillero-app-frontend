@@ -162,10 +162,6 @@ export default function CrearMatricula() {
       return;
     }
 
-    if (!reciboPago) {
-      setError("El recibo de pago es obligatorio");
-      return;
-    }
 
     // El certificado es obligatorio SOLO si NO es (estamento PRIVADO AND tipo_vinculacion Particular)
     const certificadoObligatorio = !(
@@ -456,7 +452,6 @@ export default function CrearMatricula() {
             name="recibo_pago"
             type="file"
             accept=".pdf"
-            required
             className="block w-full rounded border border-gray-300 p-2 text-sm text-gray-500"
             onChange={(e) => setReciboPago(e.target.files?.[0] || null)}
           />

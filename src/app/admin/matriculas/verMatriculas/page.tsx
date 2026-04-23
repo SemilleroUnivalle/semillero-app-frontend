@@ -33,6 +33,22 @@ import { useRouter } from "next/navigation";
 import { exportMatriculasToExcel } from "@/services/exportToExcel";
 import { isPeriodActive } from "@/lib/api/dashboard";
 
+const CACHE_KEY = "matriculas_cache";
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+// Función helper fuera del componente
+function getCache() {
+  try {
+    const cached = sessionStorage.getItem(CACHE_KEY);
+    if (!cached) return null;
+    const { data, timestamp } = JSON.parse(cached);
+    if (Date.now() - timestamp > CACHE_TTL_MS) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 export default function VerMatriculas() {
   const router = useRouter();
 
@@ -59,6 +75,11 @@ export default function VerMatriculas() {
     {
       field: "tipo",
       headerName: "Tipo de Inscrito",
+      flex: 1,
+    },
+    {
+      field: "colegio",
+      headerName: "Colegio",
       flex: 1,
     },
     {
@@ -184,17 +205,24 @@ export default function VerMatriculas() {
     modulo: string;
     estamento: string;
     tipo: string;
+    colegio: string;
     estado_registro: string;
     estado_matricula: string;
   }
 
-  const [rows, setRows] = useState<MatriculaRow[]>([]);
+  // const [rows, setRows] = useState<MatriculaRow[]>([]);
   const [success, setSuccess] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [matriculas, setMatriculas] = useState<Matricula[]>([]);
+  // const [loading, setLoading] = useState(true);
+  // const [matriculas, setMatriculas] = useState<Matricula[]>([]);
 
-
+  const [rows, setRows] = useState<MatriculaRow[]>(
+    () => getCache()?.formateado ?? [],
+  );
+  const [matriculas, setMatriculas] = useState<Matricula[]>(
+    () => getCache()?.matriculas ?? [],
+  );
+  const [loading, setLoading] = useState(() => getCache() === null); // false si hay caché
 
   // Función para eliminar una matricula
   const handleDelete = async (id: number) => {
@@ -219,6 +247,9 @@ export default function VerMatriculas() {
         "Hubo un error al eliminar la matrícula. Por favor, inténtalo de nuevo.",
       );
     }
+    sessionStorage.removeItem(CACHE_KEY); // ← invalida el caché
+    setRows((prevRows) => prevRows.filter((row) => row.id !== id));
+    setSuccess(true);
   };
 
   // Estados para periodos
@@ -226,107 +257,108 @@ export default function VerMatriculas() {
   const [selectedPeriodFilter, setSelectedPeriodFilter] = useState<number | string>("all");
 
   // Funcion para traer las matriculas desde el backend
-  const fetchMatriculasData = async (periodId: number | string, periodsList: any[]) => {
-    try {
-      setLoading(true);
-      const userString = localStorage.getItem("user");
-      let token = "";
-      if (userString) {
-        const user = JSON.parse(userString);
-        token = user.token;
-      }
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const userString = localStorage.getItem("user");
+  //       let token = "";
+  //       if (userString) {
+  //         const user = JSON.parse(userString);
+  //         token = user.token;
+  //       }
 
-      const url = periodId === "all"
-        ? `${API_BASE_URL}/inscripcion/`
-        : `${API_BASE_URL}/inscripcion/?periodo=${periodId}`;
+  //       const response = await axios.get(`${API_BASE_URL}/matricula/mat/`, {
+  //         headers: {
+  //           Authorization: `Token ${token}`,
+  //         },
+  //       });
 
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: `Token ${token}`,
-        },
-      });
+  //       if (response.status === 200) {
+  //         // Formatea los datos para la tabla
+  //         const formateado = response.data.map((matricula: Matricula) => ({
+  //           id: matricula.id_inscripcion,
+  //           apellido: matricula.estudiante.apellido || "",
+  //           nombre: matricula.estudiante.nombre || "",
+  //           email: matricula.estudiante.email || "",
+  //           direccion: matricula.estudiante.direccion_residencia || "",
+  //           periodo:
+  //             matricula.oferta_categoria &&
+  //             matricula.oferta_categoria.id_oferta_academica
+  //               ? matricula.oferta_categoria.id_oferta_academica.nombre
+  //               : "", // Cambiar cuando los datos no esten nulos
+  //           modulo: matricula.modulo.nombre_modulo || "",
+  //           estamento: matricula.estudiante.estamento || "",
+  //           tipo: matricula.tipo_vinculacion || "",
+  //           estado_registro: matricula.estudiante.estado, // true si es "Verificado", false en otro caso
+  //           estado_matricula: matricula.estado,
+  //         }));
 
-      if (response.status === 200) {
-        console.log("Inscripciones recibidas del servidor:", response.data);
-        const formateado = response.data.map((matricula: any) => {
-          // LÓGICA DE DETECCIÓN DE PERIODO ULTRA-ROBUSTA
-          let periodoNombre = "Sin periodo";
+  //         setMatriculas(response.data); // Guarda las matriculas originales para exportar a Excel
 
-          // 1. Intentar por objeto 'periodo' directo
-          if (matricula.periodo && typeof matricula.periodo === 'object' && matricula.periodo.nombre) {
-            periodoNombre = matricula.periodo.nombre;
-          }
-          // 2. Intentar por objeto anidado 'oferta_categoria -> id_oferta_academica'
-          else if (matricula.oferta_categoria && typeof matricula.oferta_categoria === 'object' &&
-            matricula.oferta_categoria.id_oferta_academica &&
-            typeof matricula.oferta_categoria.id_oferta_academica === 'object' &&
-            matricula.oferta_categoria.id_oferta_academica.nombre) {
-            periodoNombre = matricula.oferta_categoria.id_oferta_academica.nombre;
-          }
-          // 3. Fallback: Buscar por ID si alguno de los campos es un número
-          else {
-            const possibleId = matricula.periodo ||
-              matricula.id_oferta_academica ||
-              (typeof matricula.oferta_categoria === 'object' ? matricula.oferta_categoria.id_oferta_academica : null);
+  //         console.log("Datos formateados:", formateado); // Verifica los datos formateados
 
-            if (possibleId && (typeof possibleId === 'number' || typeof possibleId === 'string')) {
-              const matched = periodsList.find((p: any) => String(p.id_oferta_academica) === String(possibleId));
-              if (matched) periodoNombre = matched.nombre;
-            }
-          }
+  //         setRows(formateado);
+  //       }
 
-          // 4. Último recurso: Campos planos comunes en Django Serializers
-          if (periodoNombre === "Sin periodo") {
-            periodoNombre = matricula.periodo_nombre || matricula.nombre_periodo || matricula.oferta_nombre || "Sin periodo";
-          }
+  //       setLoading(false);
+  //     } catch (error) {
+  //       console.error("Error al obtener los datos de matriculas:", error);
+  //       setLoading(false);
+  //     }
+  //   };
 
-          return {
+  //   fetchData();
+  // }, []);
+
+  useEffect(() => {
+    const cache = getCache();
+    if (cache) return; // ✅ Ya tenemos datos, no hacer nada
+
+    const fetchData = async () => {
+      try {
+        const userString = localStorage.getItem("user");
+        let token = "";
+        if (userString) {
+          const user = JSON.parse(userString);
+          token = user.token;
+        }
+
+        const response = await axios.get(`${API_BASE_URL}/matricula/mat/`, {
+          headers: { Authorization: `Token ${token}` },
+        });
+
+        if (response.status === 200) {
+          const formateado = response.data.map((matricula: Matricula) => ({
             id: matricula.id_inscripcion,
-            apellido: matricula.estudiante?.apellido || "",
-            nombre: matricula.estudiante?.nombre || "",
-            email: matricula.estudiante?.email || "",
-            direccion: matricula.estudiante?.direccion_residencia || "",
-            periodo: periodoNombre,
-            modulo: matricula.modulo?.nombre_modulo || "",
-            estamento: matricula.estudiante?.estamento || "",
+            apellido: matricula.estudiante.apellido || "",
+            nombre: matricula.estudiante.nombre || "",
+            email: matricula.estudiante.email || "",
+            direccion: matricula.estudiante.direccion_residencia || "",
+            periodo:
+              matricula.oferta_categoria?.id_oferta_academica?.nombre ?? "",
+            modulo: matricula.modulo.nombre_modulo || "",
+            estamento: matricula.estudiante.estamento || "",
             tipo: matricula.tipo_vinculacion || "",
-            estado_registro: matricula.estudiante?.estado || "Pendiente",
+            colegio: matricula.estudiante.colegio || "",
+            estado_registro: matricula.estudiante.estado,
             estado_matricula: matricula.estado,
           };
         });
 
-        setMatriculas(response.data);
-        setRows(formateado);
-      }
-    } catch (error) {
-      console.error("Error al obtener los datos de matriculas:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+          sessionStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({
+              timestamp: Date.now(),
+              data: { formateado, matriculas: response.data },
+            }),
+          );
 
-  useEffect(() => {
-    const initPage = async () => {
-      try {
-        const token = localStorage.getItem("token");
-
-        // 1. Obtener Periodos
-        const periodsRes = await axios.get(`${API_BASE_URL}/oferta_academica/`, {
-          headers: { Authorization: `Token ${token}` }
-        });
-        const sortedPeriods = periodsRes.data.sort((a: any, b: any) => (isPeriodActive(b) ? 1 : 0) - (isPeriodActive(a) ? 1 : 0));
-        setPeriods(sortedPeriods);
-
-        // 2. Seleccionar periodo activo por defecto o "all"
-        const active = sortedPeriods.find((p: any) => isPeriodActive(p));
-        // Si el usuario dice que solo ve 2025, vamos a forzar "all" inicialmente para que vea todo
-        const initialPeriod = "all";
-        setSelectedPeriodFilter(initialPeriod);
-
-        // 3. Cargar datos
-        await fetchMatriculasData(initialPeriod, sortedPeriods);
+          setMatriculas(response.data);
+          setRows(formateado);
+        }
       } catch (error) {
-        console.error("Error inicializando página:", error);
+        console.error("Error al obtener los datos de matriculas:", error);
+      } finally {
         setLoading(false);
       }
     };
@@ -347,6 +379,7 @@ export default function VerMatriculas() {
     [],
   );
   const [selectedTipo, setSelectedTipo] = React.useState<string[]>([]);
+  const [selectedColegio, setSelectedColegio] = React.useState<string[]>([]);
   const [selectedEstado, setSelectedEstado] = React.useState<string[]>([]);
 
   const handleChangePeriodos = (event: SelectChangeEvent<string[]>) => {
@@ -376,6 +409,12 @@ export default function VerMatriculas() {
     setSelectedTipo(typeof value === "string" ? value.split(",") : value);
   };
 
+  const handleChangeColegio = (event: SelectChangeEvent<string[]>) => {
+    const {
+      target: { value },
+    } = event;
+    setSelectedColegio(typeof value === "string" ? value.split(",") : value);
+  };
   const handleChangeEstado = (event: SelectChangeEvent<string[]>) => {
     const {
       target: { value },
@@ -424,8 +463,12 @@ export default function VerMatriculas() {
       const tipoMatch =
         selectedTipo.length === 0 || selectedTipo.includes(row.tipo);
 
+      const colegioMatch =
+        selectedColegio.length === 0 || selectedColegio.includes(row.colegio);
+
       const estadoMatch =
-        selectedEstado.length === 0 || selectedEstado.includes(row.estado_registro);
+        selectedEstado.length === 0 ||
+        selectedEstado.includes(row.estado_registro);
 
       // Filtro de búsqueda por texto
       const searchMatch =
@@ -440,7 +483,8 @@ export default function VerMatriculas() {
         estamentoMatch &&
         tipoMatch &&
         estadoMatch &&
-        searchMatch
+        searchMatch &&
+        colegioMatch
       );
     });
   }, [
@@ -450,10 +494,11 @@ export default function VerMatriculas() {
     selectedEstamento,
     selectedTipo,
     selectedEstado,
+    selectedColegio,
     searchText,
   ]);
 
-  if (loading!) {
+  if (loading) {
     return <div>Loading...</div>;
   }
 
@@ -565,8 +610,29 @@ export default function VerMatriculas() {
             ))}
           </Select>
         </FormControl>
+        {/* Filtro por colegio */}
+        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+          <InputLabel id="filtro-colegio">Colegios</InputLabel>
+          <Select
+            labelId="filtro-colegio"
+            id="filtro-colegio"
+            label="filtro-colegio"
+            multiple
+            value={selectedColegio}
+            onChange={handleChangeColegio}
+            renderValue={(selected) => selected.join(", ")}
+          >
+            {[...new Set(rows.map((row) => row.colegio))].map((colegio) => (
+              <MenuItem key={colegio} value={colegio}>
+                <Checkbox checked={selectedColegio.indexOf(colegio) > -1} />
+                <ListItemText primary={colegio} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
-        {/* Filtro por Estado */}
+
+        {/* Filtro por Estado
         <FormControl className="inputs-textfield w-full sm:w-1/6">
           <InputLabel id="filtro-estado">Estados</InputLabel>
           <Select
@@ -578,14 +644,16 @@ export default function VerMatriculas() {
             onChange={handleChangeEstado}
             renderValue={(selected) => selected.join(", ")}
           >
-            {[...new Set(rows.map((row) => row.estado_registro))].map((estado) => (
-              <MenuItem key={estado} value={estado}>
-                <Checkbox checked={selectedEstado.indexOf(estado) > -1} />
-                <ListItemText primary={estado} />
-              </MenuItem>
-            ))}
+            {[...new Set(rows.map((row) => row.estado_registro))].map(
+              (estado) => (
+                <MenuItem key={estado} value={estado}>
+                  <Checkbox checked={selectedEstado.indexOf(estado) > -1} />
+                  <ListItemText primary={estado} />
+                </MenuItem>
+              ),
+            )}
           </Select>
-        </FormControl>
+        </FormControl> */}
       </div>
 
       <div className="mx-auto mt-4 w-11/12 rounded-2xl bg-white p-1 text-center shadow-md">
