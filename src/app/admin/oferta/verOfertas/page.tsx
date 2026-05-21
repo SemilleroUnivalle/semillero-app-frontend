@@ -27,6 +27,11 @@ export default function Page() {
 
   const [rows, setRows] = useState<OfertaRow[]>([]);
 
+  const [ofertas, setOfertas] = useState<any[]>([]);
+
+  const [selectedOfferId, setSelectedOfferId] = useState<number | null>(null);
+  const [newStatus, setNewStatus] = useState<boolean>(true);
+
   // Función para manejar la navegación a detalle/edición
   const handleAction = async (id: number, path: string) => {
     try {
@@ -205,7 +210,7 @@ export default function Page() {
 
     try {
       await axios.patch(
-        `${API_BASE_URL}/oferta_academica/ofer/${selectedOfferId}/`,
+        `${API_BASE_URL}/oferta_academica/${selectedOfferId}/`,
         { estado: newStatus },
         {
           headers: {
@@ -272,7 +277,7 @@ export default function Page() {
   useEffect(() => {
     const fetchOfertas = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/oferta_academica/ofer`, {
+        const response = await axios.get(`${API_BASE_URL}/oferta_academica/`, {
           headers: {
             Authorization: `Token ${localStorage.getItem("token")}`,
           },
@@ -280,7 +285,7 @@ export default function Page() {
         console.log("Ofertas académicas:", response.data);
         setOfertas(response.data);
       } catch (error) {
-        console.error("Error al obtener las ofertas académicas:", error);
+        console.error("Error al obtener las ofertas académicass:", error);
       }
     };
 
