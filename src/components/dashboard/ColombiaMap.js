@@ -69,7 +69,39 @@ const CityModal = ({ isOpen, city, onClose }) => {
 // -----------------------------------------------------------
 
 
-const ColombiaMap = ({ geojsonDataUrl }) => {
+const CITY_COORDINATES = {
+    "cali": { lat: 3.4516, lon: -76.5320, description: "Capital del Valle del Cauca, importante centro económico y cultural." },
+    "tuluá": { lat: 4.0833, lon: -76.1956, description: "Conocida como 'Corazón del Valle', es un centro agrícola." },
+    "tulua": { lat: 4.0833, lon: -76.1956, description: "Conocida como 'Corazón del Valle', es un centro agrícola." },
+    "palmira": { lat: 3.5385, lon: -76.2974, description: "La capital agrícola de Colombia, famosa por la caña de azúcar." },
+    "jamundí": { lat: 3.2505, lon: -76.5414, description: "Cercana a Cali, en crecimiento y conocida por su gastronomía." },
+    "jamundi": { lat: 3.2505, lon: -76.5414, description: "Cercana a Cali, en crecimiento y conocida por su gastronomía." },
+    "buga": { lat: 3.9037, lon: -76.2996, description: "Hogar de la Basílica del Señor de los Milagros, un destino religioso." },
+    "cartago": { lat: 4.7001, lon: -75.9135, description: "Famosa por sus bordados y como punto de conexión vial." },
+    "buenaventura": { lat: 3.8741, lon: -77.0272, description: "Principal puerto marítimo de Colombia en el Pacífico." },
+    "yumbo": { lat: 3.5501, lon: -76.4952, description: "Un importante centro industrial del Valle del Cauca." },
+    "zarzal": { lat: 4.3917, lon: -76.0725, description: "Municipio del Valle del Cauca." },
+    "sevilla": { lat: 4.2690, lon: -75.9328, description: "Municipio del Valle del Cauca." },
+    "caicedonia": { lat: 4.3311, lon: -75.8267, description: "Municipio del Valle del Cauca." },
+    "bugalagrande": { lat: 4.2125, lon: -76.1606, description: "Municipio del Valle del Cauca." },
+    "andalucía": { lat: 4.1687, lon: -76.1648, description: "Municipio del Valle del Cauca." },
+    "andalucia": { lat: 4.1687, lon: -76.1648, description: "Municipio del Valle del Cauca." },
+    "guacarí": { lat: 3.7636, lon: -76.3299, description: "Municipio del Valle del Cauca." },
+    "guacari": { lat: 3.7636, lon: -76.3299, description: "Municipio del Valle del Cauca." },
+    "cerrito": { lat: 3.6845, lon: -76.3134, description: "Municipio del Valle del Cauca." },
+    "el cerrito": { lat: 3.6845, lon: -76.3134, description: "Municipio del Valle del Cauca." },
+    "pradera": { lat: 3.4216, lon: -76.2447, description: "Municipio del Valle del Cauca." },
+    "florida": { lat: 3.3222, lon: -76.2341, description: "Municipio del Valle del Cauca." },
+    "candelaria": { lat: 3.4116, lon: -76.3508, description: "Municipio del Valle del Cauca." },
+    "dagua": { lat: 3.6625, lon: -76.6883, description: "Municipio del Valle del Cauca." },
+    "la cumbre": { lat: 3.6394, lon: -76.5649, description: "Municipio del Valle del Cauca." },
+    "vijes": { lat: 3.7025, lon: -76.5312, description: "Municipio del Valle del Cauca." },
+    "restrepo": { lat: 3.8214, lon: -76.5222, description: "Municipio del Valle del Cauca." },
+    "calima": { lat: 3.8966, lon: -76.6473, description: "Calima El Darién, centro turístico y deportivo." },
+    "calima el darien": { lat: 3.8966, lon: -76.6473, description: "Calima El Darién, centro turístico y deportivo." },
+};
+
+const ColombiaMap = ({ geojsonDataUrl, data: externalData }) => {
     const svgRef = useRef(null);
     let active = d3.select(null); 
 
@@ -83,7 +115,35 @@ const ColombiaMap = ({ geojsonDataUrl }) => {
 
         const width = 1200;
         const height = 800;
-        const cityData = generateCityData();
+        
+        const cityData = [];
+        if (externalData && Array.isArray(externalData)) {
+            externalData.forEach(item => {
+                const name = item.municipality || item.municipio;
+                if (!name) return;
+                const normalized = name.toLowerCase().trim();
+                const coords = CITY_COORDINATES[normalized];
+                if (coords) {
+                    cityData.push({
+                        name: name,
+                        count: item.count,
+                        lat: coords.lat,
+                        lon: coords.lon,
+                        description: coords.description
+                    });
+                } else {
+                    cityData.push({
+                        name: name,
+                        count: item.count,
+                        lat: 3.86,
+                        lon: -76.3,
+                        description: `Municipio de origen: ${name}`
+                    });
+                }
+            });
+        } else {
+            cityData.push(...generateCityData());
+        }
 
         d3.select(svgRef.current).selectAll("*").remove();
 
@@ -244,7 +304,7 @@ const ColombiaMap = ({ geojsonDataUrl }) => {
             tooltip.remove();
         };
 
-    }, [geojsonDataUrl, setIsModalOpen, setSelectedCity]); // Añadir dependencias de estado
+    }, [geojsonDataUrl, setIsModalOpen, setSelectedCity, externalData]); // Añadir dependencias de estado y datos externos
 
     // -------------------------------------------------------------
     // --- Renderizado del mapa y el modal ---

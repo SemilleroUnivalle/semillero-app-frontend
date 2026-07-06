@@ -207,7 +207,7 @@ export default function CrearMatricula() {
         console.log(`${pair[0]}:`, pair[1]);
       }
 
-      await axios.post(`${API_BASE_URL}/matricula/mat/`, formDataToSend, {
+      await axios.post(`${API_BASE_URL}/inscripcion/`, formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Token ${localStorage.getItem("token")}`,

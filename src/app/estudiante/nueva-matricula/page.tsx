@@ -17,7 +17,9 @@ import {
   FormLabel,
   Button,
   SelectChangeEvent,
+  Box,
 } from "@mui/material";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 export default function NuevaMatricula() {
   const router = useRouter();
@@ -43,13 +45,44 @@ export default function NuevaMatricula() {
   const [ofertas, setOfertas] = useState<Record<string, OfertaCategoria[]>>({});
 
   const [estamento, setEstamento] = useState<string>("");
+  const [estudianteId, setEstudianteId] = useState<string>("");
 
   useEffect(() => {
-    const est = JSON.parse(
-      localStorage.getItem("estudiante") || "{}",
-    ).estamento;
-    if (est) setEstamento(est);
-  }, []);
+    const token = localStorage.getItem("token");
+    const userRaw = localStorage.getItem("user");
+    if (!token) {
+      alert("No se encontró sesión activa. Por favor inicia sesión.");
+      router.push("/auth/login");
+      return;
+    }
+
+    // Fallback rápido usando los datos básicos guardados en el login
+    if (userRaw) {
+      try {
+        const userObj = JSON.parse(userRaw);
+        if (userObj.id) {
+          setEstudianteId(String(userObj.id));
+        }
+      } catch (e) {
+        console.error("Error al parsear user de localStorage:", e);
+      }
+    }
+
+    axios
+      .get(`${API_BASE_URL}/estudiante/me/`, {
+        headers: { Authorization: `Token ${token}` },
+      })
+      .then((res) => {
+        console.log("Información del estudiante cargada:", res.data);
+        setEstamento(res.data.estamento || "");
+        if (res.data.id_estudiante) {
+          setEstudianteId(String(res.data.id_estudiante));
+        }
+      })
+      .catch((err) => {
+        console.error("Error al obtener perfil del estudiante:", err);
+      });
+  }, [router]);
 
   useEffect(() => {
     // Reemplaza la URL por la de tu endpoint real
@@ -97,23 +130,22 @@ export default function NuevaMatricula() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const estudiante = JSON.parse(localStorage.getItem("estudiante") || "{}");
-    const id_estudiante = estudiante.id_estudiante;
-    const estamento = estudiante.estamento;
-
     console.log("Estamento del usuario:", estamento);
-    console.log("ID del estudiante:", id_estudiante);
+    console.log("ID del estudiante:", estudianteId);
 
-    if (!id_estudiante) {
-      alert("No se encontró el id del estudiante.");
+    if (!estudianteId) {
+      alert("No se encontró el id del estudiante. Por favor, inicia sesión nuevamente.");
       return;
     }
 
     const formDataToSend = new FormData();
-    formDataToSend.append("id_estudiante", id_estudiante);
+    formDataToSend.append("id_estudiante", estudianteId);
     formDataToSend.append("id_modulo", formData.modulo);
     formDataToSend.append("tipo_vinculacion", formData.tipo_vinculacion);
     formDataToSend.append("terminos", terminos ? "True" : "False");
+    if (formData.oferta) {
+      formDataToSend.append("oferta_academica", formData.oferta);
+    }
 
     if (reciboPago) {
       formDataToSend.append("recibo_pago", reciboPago);
@@ -127,14 +159,20 @@ export default function NuevaMatricula() {
       console.log(`${pair[0]}:`, pair[1]);
     }
 
+    const token = localStorage.getItem("token");
+    const headers: Record<string, string> = {
+      "Content-Type": "multipart/form-data",
+    };
+    if (token) {
+      headers["Authorization"] = `Token ${token}`;
+    }
+
     try {
-      await axios.post(`${API_BASE_URL}/matricula/mat/`, formDataToSend, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      await axios.post(`${API_BASE_URL}/inscripcion/`, formDataToSend, {
+        headers,
       });
       alert("Matrícula enviada correctamente.");
-      router.push("/auth/login"); // Redirige al login
+      router.push("/estudiante/matriculas"); // Redirige a mis matrículas
     } catch (error) {
       console.error("Error al enviar la matrícula:", error);
       alert("Hubo un error al enviar la matrícula.");
@@ -253,35 +291,63 @@ export default function NuevaMatricula() {
           Documentación
         </h2>
         {/* Inputs para subir archivos */}
-        <div className="flex flex-wrap justify-around gap-4 text-gray-600">
-          <div className="my-4 flex flex-col gap-3">
-            <h3>Recibo de pago</h3>
-            <input
-              name="recibo_pago"
-              type="file"
-              accept=".pdf"
-              className="block w-full text-sm text-gray-500"
-              onChange={(e) => setReciboPago(e.target.files?.[0] || null)}
-            />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6 max-w-3xl mx-auto">
+          {/* Recibo de Pago */}
+          <div className="flex flex-col gap-2">
+            <h3 className="text-sm font-semibold text-gray-700 text-left">Recibo de pago</h3>
+            <Box
+              className={`border-2 border-dashed border-[#C20E1A] rounded-xl p-4 text-center cursor-pointer transition-all ${
+                reciboPago ? "bg-red-50/30 border-solid" : "bg-transparent"
+              } hover:bg-red-50/10`}
+            >
+              <input
+                name="recibo_pago"
+                type="file"
+                accept=".pdf"
+                className="hidden"
+                id="file-input-recibo"
+                onChange={(e) => setReciboPago(e.target.files?.[0] || null)}
+              />
+              <label htmlFor="file-input-recibo" className="flex flex-col items-center cursor-pointer gap-2 py-2 w-full">
+                <CloudUploadIcon sx={{ fontSize: 32, color: "#C20E1A" }} />
+                <span className="text-sm font-medium text-gray-700">
+                  {reciboPago ? reciboPago.name : "Seleccionar PDF de recibo"}
+                </span>
+                <span className="text-xs text-gray-400">Sólo archivos .pdf</span>
+              </label>
+            </Box>
           </div>
-          {/* Mostrar solo si NO es estamento Privado con tipo de vinculación Particular */}
+
+          {/* Certificado */}
           {!(
             estamento === "Privado" &&
             formData.tipo_vinculacion === "Particular"
           ) && (
-            <div className="my-4 flex flex-col gap-3">
-              <h3>Certificado</h3>
-              <p>
-                (Certificado de estudios, acta de grado, diploma, certificado
-                relación Univalle)
-              </p>
-              <input
-                name="certificado_estudio"
-                type="file"
-                accept=".pdf"
-                className="block w-full text-sm text-gray-500"
-                onChange={(e) => setCertificado(e.target.files?.[0] || null)}
-              />
+            <div className="flex flex-col gap-2">
+              <h3 className="text-sm font-semibold text-gray-700 text-left">Certificado requerido</h3>
+              <Box
+                className={`border-2 border-dashed border-[#C20E1A] rounded-xl p-4 text-center cursor-pointer transition-all ${
+                  certificado ? "bg-red-50/30 border-solid" : "bg-transparent"
+                } hover:bg-red-50/10`}
+              >
+                <input
+                  name="certificado_estudio"
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  id="file-input-certificado"
+                  onChange={(e) => setCertificado(e.target.files?.[0] || null)}
+                />
+                <label htmlFor="file-input-certificado" className="flex flex-col items-center cursor-pointer gap-2 py-2 w-full">
+                  <CloudUploadIcon sx={{ fontSize: 32, color: "#C20E1A" }} />
+                  <span className="text-sm font-medium text-gray-700 max-w-[280px] truncate">
+                    {certificado ? certificado.name : "Seleccionar PDF de certificado"}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    Estudios, acta, diploma o relación Univalle
+                  </span>
+                </label>
+              </Box>
             </div>
           )}
         </div>

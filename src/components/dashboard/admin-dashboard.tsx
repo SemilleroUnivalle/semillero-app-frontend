@@ -410,7 +410,7 @@ export function AdminDashboard() {
             <TabPanel value={tabValue} index={1}>
               <div className="mb-4 grid grid-cols-1 justify-center gap-4">
                 <div className="col-span-1">
-                  <ColombiaMapWithNoSSR geojsonDataUrl={COLOMBIA_GEOJSON_URL} />
+                  <ColombiaMapWithNoSSR geojsonDataUrl={COLOMBIA_GEOJSON_URL} data={data.municipioDistribution} />
                 </div>
               </div>
 

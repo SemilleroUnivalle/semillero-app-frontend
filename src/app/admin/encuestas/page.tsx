@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
   Box,
@@ -126,6 +127,7 @@ function KpiCard({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function EncuestasPage() {
+  const router = useRouter();
   const [archivo, setArchivo] = useState<File | null>(null);
   const [cargando, setCargando] = useState(false);
   const [respuesta, setRespuesta] = useState<BackendResponse | null>(null);
@@ -277,13 +279,32 @@ export default function EncuestasPage() {
     <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1100, mx: "auto", display: "flex", flexDirection: "column", gap: 3 }}>
 
       {/* Header */}
-      <Box>
-        <Typography variant="h4" fontWeight={800} color={ROJO}>
-          Encuestas de Satisfacción
-        </Typography>
-        <Typography variant="body2" color="text.secondary" mt={0.5}>
-          Carga masiva de resultados de evaluación desde un archivo Excel
-        </Typography>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2, mb: 1 }}>
+        <Box>
+          <Typography variant="h4" fontWeight={800} color={ROJO}>
+            Encuestas de Satisfacción
+          </Typography>
+          <Typography variant="body2" color="text.secondary" mt={0.5}>
+            Carga masiva de resultados de evaluación desde un archivo Excel
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          onClick={() => router.push("/admin/encuestas/estadisticas")}
+          sx={{
+            bgcolor: ROJO,
+            color: "white",
+            borderRadius: 3,
+            fontWeight: "bold",
+            "&:hover": { bgcolor: ROJO_DARK },
+            textTransform: "none",
+            px: 3,
+            py: 1.2,
+            boxShadow: "0 4px 12px rgba(194, 14, 26, 0.2)"
+          }}
+        >
+          Ver Estadísticas Históricas
+        </Button>
       </Box>
 
       {/* General error */}
@@ -396,7 +417,7 @@ export default function EncuestasPage() {
       {respuesta && (
         <>
           {/* KPI Cards */}
-          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+          <Box sx={{ display: "flex", gap: 2, flexWrap: "nowrap", width: "100%" }}>
             <KpiCard label="Total filas" value={respuesta.total_filas} color="#3b82f6" icon={<InsertDriveFileIcon fontSize="small" />} />
             <KpiCard label="Creadas" value={respuesta.creadas} color="#22c55e" icon={<CheckCircleOutlineIcon fontSize="small" />} />
             <KpiCard label="Actualizadas" value={respuesta.actualizadas} color="#f59e0b" icon={<CheckCircleOutlineIcon fontSize="small" />} />
