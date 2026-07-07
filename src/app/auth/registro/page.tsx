@@ -344,7 +344,7 @@ export default function Registro() {
               }
 
               const responseMatricula = await axios.post(
-                `${API_BASE_URL}/matricula/mat/`,
+                `${API_BASE_URL}/inscripcion/`,
                 matriculaFormData,
                 {
                   headers: {

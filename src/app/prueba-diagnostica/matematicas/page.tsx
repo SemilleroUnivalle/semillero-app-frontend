@@ -24,7 +24,6 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import "katex/dist/katex.min.css";
 import { InlineMath } from "react-katex";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../config";
@@ -456,8 +455,6 @@ const CursosStaticos = [
   },
 ];
 
-
-
 interface RespuestaUsuario {
   preguntaId: number;
   respuestaSeleccionada: string;
@@ -468,7 +465,8 @@ export default function Page() {
   // Estados principales
   const [pruebas, setPruebas] = useState<PruebaDiagnostica[]>([]);
   const [loadingPruebas, setLoadingPruebas] = useState(true);
-  const [pruebaSeleccionada, setPruebaSeleccionada] = useState<PruebaDiagnostica | null>(null);
+  const [pruebaSeleccionada, setPruebaSeleccionada] =
+    useState<PruebaDiagnostica | null>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [respuestas, setRespuestas] = useState<RespuestaUsuario[]>([]);
   const [respuestaActual, setRespuestaActual] = useState("");
@@ -488,6 +486,14 @@ export default function Page() {
   // Cargar pruebas diagnósticas disponibles
   useEffect(() => {
     const fetchPruebas = async () => {
+      // En desarrollo, usar mock
+      if (process.env.NODE_ENV === "development") {
+        setPruebas(convertMockToPruebas(CursosStaticos));
+        setLoadingPruebas(false);
+        return;
+      }
+
+      // En producción, usar API
       try {
         const token = getToken();
         const response = await axios.get(
@@ -496,7 +502,7 @@ export default function Page() {
             headers: {
               Authorization: `Token ${token}`,
             },
-          }
+          },
         );
 
         if (response.status === 200) {
@@ -508,9 +514,35 @@ export default function Page() {
         setLoadingPruebas(false);
       }
     };
-
     fetchPruebas();
   }, []);
+
+  const convertMockToPruebas = (
+    cursos: typeof CursosStaticos,
+  ): PruebaDiagnostica[] => {
+    return cursos.map((curso, index) => ({
+      id_prueba: index + 1,
+      nombre_prueba: curso.curso,
+      descripcion: "",
+      tiempo_limite: 60,
+      puntaje_minimo: "80",
+      estado: true,
+      id_modulo: {
+        id_modulo: index + 1,
+        nombre_modulo: curso.curso,
+      },
+      preguntas: curso.preguntas.map((p) => ({
+        id_pregunta: p.id,
+        texto_pregunta: p.pregunta,
+        imagen: p.imagen,
+        respuestas: Object.entries(p.opciones).map((opt, i) => ({
+          id_respuesta: i + 1,
+          texto_respuesta: String(opt[1]),
+          es_correcta: opt[0] === p.respuesta_correcta,
+        })),
+      })),
+    }));
+  };
 
   const preguntas = pruebaSeleccionada?.preguntas || [];
   const preguntaActual = preguntas[activeStep];
@@ -543,7 +575,7 @@ export default function Page() {
 
     // Buscar la respuesta correcta
     const respuestaSeleccionadaObj = preguntaActual.respuestas.find(
-      (r) => r.id_respuesta.toString() === respuestaActual
+      (r) => r.id_respuesta.toString() === respuestaActual,
     );
 
     const nuevaRespuesta: RespuestaUsuario = {
@@ -600,10 +632,12 @@ export default function Page() {
   // Obtener color del chip según la respuesta
   const getChipColor = (respuestaId: number) => {
     if (!cuestionarioCompleto || !preguntaActual) return "default";
-    
-    const respuesta = preguntaActual.respuestas.find(r => r.id_respuesta === respuestaId);
+
+    const respuesta = preguntaActual.respuestas.find(
+      (r) => r.id_respuesta === respuestaId,
+    );
     if (!respuesta) return "default";
-    
+
     if (respuesta.es_correcta) return "success";
     if (respuestaActual === respuestaId.toString()) return "error";
     return "default";
@@ -638,25 +672,33 @@ export default function Page() {
             </Typography>
           ) : (
             <Box className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {pruebas.filter(p => p.estado).map((prueba) => (
-                <Card
-                  key={prueba.id_prueba}
-                  className="flex cursor-pointer justify-center rounded-2xl bg-gray-200 hover:bg-red-100 hover:shadow-lg transition-all"
-                  onClick={() => handleSeleccionarPrueba(prueba)}
-                >
-                  <CardContent className="my-auto text-center text-secondary w-full">
-                    <Typography variant="h6" className="font-bold">
-                      {prueba.nombre_prueba}
-                    </Typography>
-                    <Typography variant="body2" className="text-gray-600 mt-2">
-                      {prueba.id_modulo.nombre_modulo}
-                    </Typography>
-                    <Typography variant="caption" className="text-gray-500 block mt-2">
-                      {prueba.preguntas?.length || 0} preguntas
-                    </Typography>
-                  </CardContent>
-                </Card>
-              ))}
+              {pruebas
+                .filter((p) => p.estado)
+                .map((prueba) => (
+                  <Card
+                    key={prueba.id_prueba}
+                    className="flex cursor-pointer justify-center rounded-2xl bg-gray-200 transition-all hover:bg-red-100 hover:shadow-lg"
+                    onClick={() => handleSeleccionarPrueba(prueba)}
+                  >
+                    <CardContent className="my-auto w-full text-center text-secondary">
+                      <Typography variant="h6" className="font-bold">
+                        {prueba.nombre_prueba}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        className="mt-2 text-gray-600"
+                      >
+                        {prueba.id_modulo.nombre_modulo}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        className="mt-2 block text-gray-500"
+                      >
+                        {prueba.preguntas?.length || 0} preguntas
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                ))}
             </Box>
           )}
         </Box>
@@ -669,7 +711,9 @@ export default function Page() {
           <Box className="mb-6">
             <Box className="mb-4 flex items-center justify-between">
               <Box>
-                <Typography variant="h6">{pruebaSeleccionada.nombre_prueba}</Typography>
+                <Typography variant="h6">
+                  {pruebaSeleccionada.nombre_prueba}
+                </Typography>
                 <Typography variant="body2" color="textSecondary">
                   {pruebaSeleccionada.id_modulo.nombre_modulo}
                 </Typography>
