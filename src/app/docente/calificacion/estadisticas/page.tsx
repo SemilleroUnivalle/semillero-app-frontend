@@ -104,13 +104,22 @@ function StatCard({
         background: "linear-gradient(135deg, #fff 60%, #fef2f2 100%)",
         borderTop: `4px solid ${color}`,
         transition: "transform .2s, box-shadow .2s",
-        "&:hover": { transform: "translateY(-4px)", boxShadow: "0 8px 32px rgba(0,0,0,0.14)" },
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.14)",
+        },
       }}
     >
       <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, color }}>
           {icon}
-          <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase" letterSpacing={1}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            fontWeight={600}
+            textTransform="uppercase"
+            letterSpacing={1}
+          >
             {label}
           </Typography>
         </Box>
@@ -140,7 +149,11 @@ export default function EstadisticasCalificacion() {
       try {
         setLoading(true);
         const userString = localStorage.getItem("user");
-        if (!userString) { setError("Sin sesión activa."); setLoading(false); return; }
+        if (!userString) {
+          setError("Sin sesión activa.");
+          setLoading(false);
+          return;
+        }
         const token = JSON.parse(userString).token;
 
         let rawData: any[] = [];
@@ -148,21 +161,36 @@ export default function EstadisticasCalificacion() {
         try {
           const res = await axios.get(
             `${API_BASE_URL}/seguimiento_academico/seg/estudiantes-seguimiento/`,
-            { headers: { Authorization: `Token ${token}` } }
+            { headers: { Authorization: `Token ${token}` } },
           );
           if (Array.isArray(res.data)) rawData = res.data;
           else if (Array.isArray(res.data.results)) rawData = res.data.results;
-          else rawData = (Object.values(res.data).find(v => Array.isArray(v)) as any[]) || [];
+          else
+            rawData =
+              (Object.values(res.data).find((v) =>
+                Array.isArray(v),
+              ) as any[]) || [];
         } catch (err: any) {
           if (err.response?.status !== 404) throw err;
           // fallback
-          const res2 = await axios.get(`${API_BASE_URL}/profesor/prof/mi-grupo/`, {
-            headers: { Authorization: `Token ${token}` },
-          });
+          const res2 = await axios.get(
+            `${API_BASE_URL}/profesor/prof/mi-grupo/`,
+            {
+              headers: { Authorization: `Token ${token}` },
+            },
+          );
           res2.data.forEach((grupo: any) =>
             grupo.estudiantes.forEach((e: any) =>
-              rawData.push({ ...e, grupo_nombre: grupo.nombre, seguimiento_1: null, seguimiento_2: null, nota_conceptual_docente: null, nota_conceptual_estudiante: null, nota_final: null })
-            )
+              rawData.push({
+                ...e,
+                grupo_nombre: grupo.nombre,
+                seguimiento_1: null,
+                seguimiento_2: null,
+                nota_conceptual_docente: null,
+                nota_conceptual_estudiante: null,
+                nota_final: null,
+              }),
+            ),
           );
         }
 
@@ -173,11 +201,16 @@ export default function EstadisticasCalificacion() {
             grupo_nombre: item.grupo_nombre || item.grupo || "Sin grupo",
             nombre: item.nombre || item.estudiante?.nombre || "",
             apellido: item.apellido || item.estudiante?.apellido || "",
-            numero_documento: item.numero_documento || item.estudiante?.numero_documento || "",
+            numero_documento:
+              item.numero_documento || item.estudiante?.numero_documento || "",
             seguimiento_1: toNum(item.seguimiento_1 ?? n.seguimiento_1),
             seguimiento_2: toNum(item.seguimiento_2 ?? n.seguimiento_2),
-            nota_conceptual_docente: toNum(item.nota_conceptual_docente ?? n.nota_conceptual_docente),
-            nota_conceptual_estudiante: toNum(item.nota_conceptual_estudiante ?? n.nota_conceptual_estudiante),
+            nota_conceptual_docente: toNum(
+              item.nota_conceptual_docente ?? n.nota_conceptual_docente,
+            ),
+            nota_conceptual_estudiante: toNum(
+              item.nota_conceptual_estudiante ?? n.nota_conceptual_estudiante,
+            ),
             nota_final: toNum(item.nota_final ?? n.nota_final),
             observaciones: item.observaciones ?? n.observaciones ?? "",
           };
@@ -194,24 +227,45 @@ export default function EstadisticasCalificacion() {
   }, []);
 
   /* ── Filtered dataset ── */
-  const grupos = useMemo(() => Array.from(new Set(rows.map(r => r.grupo_nombre))), [rows]);
+  const grupos = useMemo(
+    () => Array.from(new Set(rows.map((r) => r.grupo_nombre))),
+    [rows],
+  );
 
   const filtered = useMemo(
-    () => (selectedGrupo === "todos" ? rows : rows.filter(r => r.grupo_nombre === selectedGrupo)),
-    [rows, selectedGrupo]
+    () =>
+      selectedGrupo === "todos"
+        ? rows
+        : rows.filter((r) => r.grupo_nombre === selectedGrupo),
+    [rows, selectedGrupo],
   );
 
   /* ── Stats ── */
-  const withFinal = useMemo(() => filtered.filter(r => r.nota_final !== null), [filtered]);
-  const aprobados = useMemo(() => withFinal.filter(r => r.nota_final! >= 3), [withFinal]);
-  const reprobados = useMemo(() => withFinal.filter(r => r.nota_final! < 3), [withFinal]);
-  const sinNota = useMemo(() => filtered.filter(r => r.nota_final === null), [filtered]);
+  const withFinal = useMemo(
+    () => filtered.filter((r) => r.nota_final !== null),
+    [filtered],
+  );
+  const aprobados = useMemo(
+    () => withFinal.filter((r) => r.nota_final! >= 3),
+    [withFinal],
+  );
+  const reprobados = useMemo(
+    () => withFinal.filter((r) => r.nota_final! < 3),
+    [withFinal],
+  );
+  const sinNota = useMemo(
+    () => filtered.filter((r) => r.nota_final === null),
+    [filtered],
+  );
 
-  const avg = (arr: number[]) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+  const avg = (arr: number[]) =>
+    arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
 
   const promedios = useMemo(() => {
     const get = (field: keyof CalificacionRow) =>
-      filtered.map(r => r[field] as number | null).filter(v => v !== null) as number[];
+      filtered
+        .map((r) => r[field] as number | null)
+        .filter((v) => v !== null) as number[];
     return {
       seg1: avg(get("seguimiento_1")),
       seg2: avg(get("seguimiento_2")),
@@ -226,15 +280,22 @@ export default function EstadisticasCalificacion() {
     { name: "Aprobados", value: aprobados.length, color: COLORS.aprobado },
     { name: "Reprobados", value: reprobados.length, color: COLORS.reprobado },
     { name: "Sin nota", value: sinNota.length, color: COLORS.sinNota },
-  ].filter(d => d.value > 0);
+  ].filter((d) => d.value > 0);
 
   const promedioBarData = [
     { label: "Seg. 1", value: promedios.seg1, fill: COLORS.seg1 },
     { label: "Seg. 2", value: promedios.seg2, fill: COLORS.seg2 },
     { label: "Conc. Docente", value: promedios.docente, fill: COLORS.docente },
-    { label: "Conc. Estud.", value: promedios.estudiante, fill: COLORS.estudiante },
+    {
+      label: "Conc. Estud.",
+      value: promedios.estudiante,
+      fill: COLORS.estudiante,
+    },
     { label: "Final", value: promedios.final, fill: COLORS.final },
-  ].map(d => ({ ...d, value: d.value !== null ? parseFloat(d.value!.toFixed(2)) : 0 }));
+  ].map((d) => ({
+    ...d,
+    value: d.value !== null ? parseFloat(d.value!.toFixed(2)) : 0,
+  }));
 
   // Histogram: distribute nota_final into buckets [0-1), [1-2), [2-3), [3-4), [4-5]
   const histData = useMemo(() => {
@@ -245,8 +306,10 @@ export default function EstadisticasCalificacion() {
       { rango: "3 – 4", min: 3, max: 4, count: 0 },
       { rango: "4 – 5", min: 4, max: 5.01, count: 0 },
     ];
-    withFinal.forEach(r => {
-      const b = buckets.find(b => r.nota_final! >= b.min && r.nota_final! < b.max);
+    withFinal.forEach((r) => {
+      const b = buckets.find(
+        (b) => r.nota_final! >= b.min && r.nota_final! < b.max,
+      );
       if (b) b.count++;
     });
     return buckets;
@@ -254,10 +317,12 @@ export default function EstadisticasCalificacion() {
 
   // Radar per group
   const radarData = useMemo(() => {
-    return grupos.map(g => {
-      const gRows = filtered.filter(r => r.grupo_nombre === g);
+    return grupos.map((g) => {
+      const gRows = filtered.filter((r) => r.grupo_nombre === g);
       const gAvg = (field: keyof CalificacionRow) => {
-        const vals = gRows.map(r => r[field] as number | null).filter(v => v !== null) as number[];
+        const vals = gRows
+          .map((r) => r[field] as number | null)
+          .filter((v) => v !== null) as number[];
         return vals.length ? parseFloat(avg(vals)!.toFixed(2)) : 0;
       };
       return {
@@ -266,20 +331,20 @@ export default function EstadisticasCalificacion() {
         "Seg. 2": gAvg("seguimiento_2"),
         "Conc. Doc.": gAvg("nota_conceptual_docente"),
         "Conc. Est.": gAvg("nota_conceptual_estudiante"),
-        "Final": gAvg("nota_final"),
+        Final: gAvg("nota_final"),
       };
     });
   }, [grupos, filtered]);
 
   // Por grupo bar
   const byGroupData = useMemo(() => {
-    return grupos.map(g => {
-      const gRows = rows.filter(r => r.grupo_nombre === g);
-      const conFinal = gRows.filter(r => r.nota_final !== null);
-      const aprobG = conFinal.filter(r => r.nota_final! >= 3).length;
-      const reproG = conFinal.filter(r => r.nota_final! < 3).length;
+    return grupos.map((g) => {
+      const gRows = rows.filter((r) => r.grupo_nombre === g);
+      const conFinal = gRows.filter((r) => r.nota_final !== null);
+      const aprobG = conFinal.filter((r) => r.nota_final! >= 3).length;
+      const reproG = conFinal.filter((r) => r.nota_final! < 3).length;
       const sinG = gRows.length - conFinal.length;
-      const promFin = avg(conFinal.map(r => r.nota_final!));
+      const promFin = avg(conFinal.map((r) => r.nota_final!));
       return {
         grupo: g.length > 14 ? g.slice(0, 14) + "…" : g,
         Aprobados: aprobG,
@@ -293,7 +358,16 @@ export default function EstadisticasCalificacion() {
   /* ── Render ── */
   if (loading) {
     return (
-      <Box sx={{ display: "flex", height: "80vh", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          height: "80vh",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
         <CircularProgress sx={{ color: ROJO }} />
         <Typography color="text.secondary">Cargando estadísticas…</Typography>
       </Box>
@@ -304,7 +378,12 @@ export default function EstadisticasCalificacion() {
     return (
       <Box sx={{ p: 4 }}>
         <Alert severity="error">{error}</Alert>
-        <Button component={Link} href="/docente/calificacion" startIcon={<ArrowBackIcon />} sx={{ mt: 2 }}>
+        <Button
+          component={Link}
+          href="/docente/calificacion"
+          startIcon={<ArrowBackIcon />}
+          sx={{ mt: 2 }}
+        >
           Volver
         </Button>
       </Box>
@@ -312,16 +391,29 @@ export default function EstadisticasCalificacion() {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, display: "flex", flexDirection: "column", gap: 4 }}>
-
+    <Box
+      sx={{
+        p: { xs: 2, md: 4 },
+        display: "flex",
+        flexDirection: "column",
+        gap: 4,
+      }}
+    >
       {/* ── Header ── */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
+      <Box
+        sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}
+      >
         <Button
           component={Link}
           href="/docente/calificacion"
           startIcon={<ArrowBackIcon />}
           variant="outlined"
-          sx={{ borderColor: ROJO, color: ROJO, borderRadius: 3, "&:hover": { backgroundColor: "#fef2f2" } }}
+          sx={{
+            borderColor: ROJO,
+            color: ROJO,
+            borderRadius: 3,
+            "&:hover": { backgroundColor: "#fef2f2" },
+          }}
         >
           Volver
         </Button>
@@ -340,11 +432,15 @@ export default function EstadisticasCalificacion() {
           <Select
             value={selectedGrupo}
             label="Filtrar por grupo"
-            onChange={e => setSelectedGrupo(e.target.value)}
+            onChange={(e) => setSelectedGrupo(e.target.value)}
             sx={{ borderRadius: 3 }}
           >
             <MenuItem value="todos">Todos los grupos</MenuItem>
-            {grupos.map(g => <MenuItem key={g} value={g}>{g}</MenuItem>)}
+            {grupos.map((g) => (
+              <MenuItem key={g} value={g}>
+                {g}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
       </Box>
@@ -361,14 +457,22 @@ export default function EstadisticasCalificacion() {
           icon={<EmojiEventsIcon fontSize="small" />}
           label="Aprobados"
           value={aprobados.length}
-          sub={withFinal.length > 0 ? `${((aprobados.length / withFinal.length) * 100).toFixed(0)}% de calificados` : "–"}
+          sub={
+            withFinal.length > 0
+              ? `${((aprobados.length / withFinal.length) * 100).toFixed(0)}% de calificados`
+              : "–"
+          }
           color={COLORS.aprobado}
         />
         <StatCard
           icon={<WarningAmberIcon fontSize="small" />}
           label="Reprobados"
           value={reprobados.length}
-          sub={withFinal.length > 0 ? `${((reprobados.length / withFinal.length) * 100).toFixed(0)}% de calificados` : "–"}
+          sub={
+            withFinal.length > 0
+              ? `${((reprobados.length / withFinal.length) * 100).toFixed(0)}% de calificados`
+              : "–"
+          }
           color={COLORS.reprobado}
         />
         <StatCard
@@ -388,10 +492,17 @@ export default function EstadisticasCalificacion() {
       </Box>
 
       {/* ── Row: Pie + Promedios Bar ── */}
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
-
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+          gap: 3,
+        }}
+      >
         {/* Pie */}
-        <Card sx={{ borderRadius: 4, boxShadow: "0 4px 24px rgba(0,0,0,0.07)" }}>
+        <Card
+          sx={{ borderRadius: 4, boxShadow: "0 4px 24px rgba(0,0,0,0.07)" }}
+        >
           <CardContent>
             <Typography variant="h6" fontWeight={700} gutterBottom>
               Estado de Calificación
@@ -401,7 +512,9 @@ export default function EstadisticasCalificacion() {
             </Typography>
             {pieData.length === 0 ? (
               <Box sx={{ py: 6, textAlign: "center" }}>
-                <Typography color="text.secondary">Sin datos suficientes</Typography>
+                <Typography color="text.secondary">
+                  Sin datos suficientes
+                </Typography>
               </Box>
             ) : (
               <ResponsiveContainer width="100%" height={280}>
@@ -414,7 +527,9 @@ export default function EstadisticasCalificacion() {
                     outerRadius={100}
                     paddingAngle={3}
                     dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) =>
+                      `${name} ${percent != null ? (percent * 100).toFixed(0) : 0}%`
+                    }
                     labelLine={false}
                   >
                     {pieData.map((entry, i) => (
@@ -426,12 +541,17 @@ export default function EstadisticasCalificacion() {
               </ResponsiveContainer>
             )}
             <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
-              {pieData.map(d => (
+              {pieData.map((d) => (
                 <Chip
                   key={d.name}
                   label={`${d.name}: ${d.value}`}
                   size="small"
-                  sx={{ backgroundColor: d.color + "22", color: d.color, fontWeight: 700, border: `1px solid ${d.color}44` }}
+                  sx={{
+                    backgroundColor: d.color + "22",
+                    color: d.color,
+                    fontWeight: 700,
+                    border: `1px solid ${d.color}44`,
+                  }}
                 />
               ))}
             </Box>
@@ -439,7 +559,9 @@ export default function EstadisticasCalificacion() {
         </Card>
 
         {/* Promedios por componente */}
-        <Card sx={{ borderRadius: 4, boxShadow: "0 4px 24px rgba(0,0,0,0.07)" }}>
+        <Card
+          sx={{ borderRadius: 4, boxShadow: "0 4px 24px rgba(0,0,0,0.07)" }}
+        >
           <CardContent>
             <Typography variant="h6" fontWeight={700} gutterBottom>
               Promedio por Componente
@@ -448,11 +570,19 @@ export default function EstadisticasCalificacion() {
               Media de cada tipo de nota en el grupo seleccionado
             </Typography>
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={promedioBarData} margin={{ top: 16, right: 16, left: -10, bottom: 0 }}>
+              <BarChart
+                data={promedioBarData}
+                margin={{ top: 16, right: 16, left: -10, bottom: 0 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="label" tick={{ fontSize: 12 }} />
                 <YAxis domain={[0, 5]} tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(val: number) => [val.toFixed(2), "Promedio"]} />
+                <Tooltip
+                  formatter={(value) => [
+                    Number(value ?? 0).toFixed(2),
+                    "Promedio",
+                  ]}
+                />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={52}>
                   {promedioBarData.map((entry, i) => (
                     <Cell key={i} fill={entry.fill} />
@@ -474,14 +604,31 @@ export default function EstadisticasCalificacion() {
             Histograma de frecuencias agrupadas por rango
           </Typography>
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={histData} margin={{ top: 16, right: 16, left: -10, bottom: 0 }}>
+            <BarChart
+              data={histData}
+              margin={{ top: 16, right: 16, left: -10, bottom: 0 }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="rango" tick={{ fontSize: 13 }} />
               <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
               <Tooltip formatter={(val) => [`${val} estudiantes`]} />
-              <Bar dataKey="count" name="Estudiantes" radius={[6, 6, 0, 0]} maxBarSize={60}>
+              <Bar
+                dataKey="count"
+                name="Estudiantes"
+                radius={[6, 6, 0, 0]}
+                maxBarSize={60}
+              >
                 {histData.map((entry, i) => (
-                  <Cell key={i} fill={entry.min >= 3 ? COLORS.aprobado : entry.min >= 2 ? "#facc15" : COLORS.reprobado} />
+                  <Cell
+                    key={i}
+                    fill={
+                      entry.min >= 3
+                        ? COLORS.aprobado
+                        : entry.min >= 2
+                          ? "#facc15"
+                          : COLORS.reprobado
+                    }
+                  />
                 ))}
               </Bar>
             </BarChart>
@@ -491,7 +638,9 @@ export default function EstadisticasCalificacion() {
 
       {/* ── By Group ── */}
       {grupos.length > 1 && (
-        <Card sx={{ borderRadius: 4, boxShadow: "0 4px 24px rgba(0,0,0,0.07)" }}>
+        <Card
+          sx={{ borderRadius: 4, boxShadow: "0 4px 24px rgba(0,0,0,0.07)" }}
+        >
           <CardContent>
             <Typography variant="h6" fontWeight={700} gutterBottom>
               Comparativa por Grupo
@@ -500,15 +649,33 @@ export default function EstadisticasCalificacion() {
               Aprobados, reprobados y sin nota por cada grupo
             </Typography>
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={byGroupData} margin={{ top: 16, right: 16, left: -10, bottom: 0 }}>
+              <BarChart
+                data={byGroupData}
+                margin={{ top: 16, right: 16, left: -10, bottom: 0 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="grupo" tick={{ fontSize: 12 }} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="Aprobados" fill={COLORS.aprobado} radius={[4, 4, 0, 0]} maxBarSize={36} />
-                <Bar dataKey="Reprobados" fill={COLORS.reprobado} radius={[4, 4, 0, 0]} maxBarSize={36} />
-                <Bar dataKey="Sin Nota" fill={COLORS.sinNota} radius={[4, 4, 0, 0]} maxBarSize={36} />
+                <Bar
+                  dataKey="Aprobados"
+                  fill={COLORS.aprobado}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={36}
+                />
+                <Bar
+                  dataKey="Reprobados"
+                  fill={COLORS.reprobado}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={36}
+                />
+                <Bar
+                  dataKey="Sin Nota"
+                  fill={COLORS.sinNota}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={36}
+                />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -517,7 +684,9 @@ export default function EstadisticasCalificacion() {
 
       {/* ── Radar ── */}
       {grupos.length > 0 && selectedGrupo === "todos" && (
-        <Card sx={{ borderRadius: 4, boxShadow: "0 4px 24px rgba(0,0,0,0.07)" }}>
+        <Card
+          sx={{ borderRadius: 4, boxShadow: "0 4px 24px rgba(0,0,0,0.07)" }}
+        >
           <CardContent>
             <Typography variant="h6" fontWeight={700} gutterBottom>
               Radar de Desempeño por Grupo
@@ -526,18 +695,56 @@ export default function EstadisticasCalificacion() {
               Promedio de cada componente por grupo en una vista radial
             </Typography>
             <ResponsiveContainer width="100%" height={320}>
-              <RadarChart data={[
-                { subject: "Seg. 1", ...Object.fromEntries(radarData.map(g => [g.grupo, g["Seg. 1"]])) },
-                { subject: "Seg. 2", ...Object.fromEntries(radarData.map(g => [g.grupo, g["Seg. 2"]])) },
-                { subject: "Conc. Doc.", ...Object.fromEntries(radarData.map(g => [g.grupo, g["Conc. Doc."]])) },
-                { subject: "Conc. Est.", ...Object.fromEntries(radarData.map(g => [g.grupo, g["Conc. Est."]])) },
-                { subject: "Final", ...Object.fromEntries(radarData.map(g => [g.grupo, g["Final"]])) },
-              ]}>
+              <RadarChart
+                data={[
+                  {
+                    subject: "Seg. 1",
+                    ...Object.fromEntries(
+                      radarData.map((g) => [g.grupo, g["Seg. 1"]]),
+                    ),
+                  },
+                  {
+                    subject: "Seg. 2",
+                    ...Object.fromEntries(
+                      radarData.map((g) => [g.grupo, g["Seg. 2"]]),
+                    ),
+                  },
+                  {
+                    subject: "Conc. Doc.",
+                    ...Object.fromEntries(
+                      radarData.map((g) => [g.grupo, g["Conc. Doc."]]),
+                    ),
+                  },
+                  {
+                    subject: "Conc. Est.",
+                    ...Object.fromEntries(
+                      radarData.map((g) => [g.grupo, g["Conc. Est."]]),
+                    ),
+                  },
+                  {
+                    subject: "Final",
+                    ...Object.fromEntries(
+                      radarData.map((g) => [g.grupo, g["Final"]]),
+                    ),
+                  },
+                ]}
+              >
                 <PolarGrid />
                 <PolarAngleAxis dataKey="subject" />
-                <PolarRadiusAxis angle={30} domain={[0, 5]} tick={{ fontSize: 11 }} />
+                <PolarRadiusAxis
+                  angle={30}
+                  domain={[0, 5]}
+                  tick={{ fontSize: 11 }}
+                />
                 {radarData.map((g, i) => {
-                  const radarColors = [ROJO, "#3b82f6", "#8b5cf6", "#f59e0b", "#14b8a6", "#ec4899"];
+                  const radarColors = [
+                    ROJO,
+                    "#3b82f6",
+                    "#8b5cf6",
+                    "#f59e0b",
+                    "#14b8a6",
+                    "#ec4899",
+                  ];
                   return (
                     <Radar
                       key={g.grupo}
@@ -550,7 +757,15 @@ export default function EstadisticasCalificacion() {
                   );
                 })}
                 <Legend />
-                <Tooltip formatter={(val: number) => val.toFixed(2)} />
+                <Tooltip
+                  formatter={(value) =>
+                    typeof value === "number"
+                      ? value.toFixed(2)
+                      : value != null
+                        ? String(value)
+                        : ""
+                  }
+                />{" "}
               </RadarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -579,7 +794,8 @@ export default function EstadisticasCalificacion() {
                     gap: 2,
                     p: 1.5,
                     borderRadius: 3,
-                    backgroundColor: i === 0 ? "#fef9c3" : i === 1 ? "#f1f5f9" : "#fff",
+                    backgroundColor:
+                      i === 0 ? "#fef9c3" : i === 1 ? "#f1f5f9" : "#fff",
                     border: "1px solid #e2e8f0",
                     transition: "box-shadow .2s",
                     "&:hover": { boxShadow: "0 2px 12px rgba(0,0,0,0.08)" },
@@ -595,7 +811,8 @@ export default function EstadisticasCalificacion() {
                       justifyContent: "center",
                       fontWeight: 800,
                       fontSize: 14,
-                      backgroundColor: i === 0 ? "#facc15" : i === 1 ? "#94a3b8" : "#d97706",
+                      backgroundColor:
+                        i === 0 ? "#facc15" : i === 1 ? "#94a3b8" : "#d97706",
                       color: "white",
                       flexShrink: 0,
                     }}
@@ -615,7 +832,8 @@ export default function EstadisticasCalificacion() {
                       px: 2,
                       py: 0.5,
                       borderRadius: 3,
-                      backgroundColor: r.nota_final! >= 3 ? "#dcfce7" : "#fee2e2",
+                      backgroundColor:
+                        r.nota_final! >= 3 ? "#dcfce7" : "#fee2e2",
                       color: r.nota_final! >= 3 ? "#166534" : "#991b1b",
                       fontWeight: 800,
                       fontSize: 16,
@@ -633,7 +851,6 @@ export default function EstadisticasCalificacion() {
           </Box>
         </CardContent>
       </Card>
-
     </Box>
   );
 }
