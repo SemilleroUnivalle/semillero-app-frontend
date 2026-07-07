@@ -323,11 +323,13 @@ export default function VerMatriculas() {
           token = user.token;
         }
 
-        const response = await axios.get(`${API_BASE_URL}/matricula/mat/`, {
+        const response = await axios.get(`${API_BASE_URL}/inscripcion/`, {
           headers: { Authorization: `Token ${token}` },
         });
 
         if (response.status === 200) {
+ console.log("Datos obtenidos del backend:", response.data); // Verifica los datos obtenidos
+
           const formateado = response.data.map((matricula: Matricula) => ({
             id: matricula.id_inscripcion,
             apellido: matricula.estudiante.apellido || "",
@@ -342,8 +344,8 @@ export default function VerMatriculas() {
             colegio: matricula.estudiante.colegio || "",
             estado_registro: matricula.estudiante.estado,
             estado_matricula: matricula.estado,
-          };
-        });
+          }));
+        
 
           sessionStorage.setItem(
             CACHE_KEY,
@@ -363,13 +365,13 @@ export default function VerMatriculas() {
       }
     };
 
-    initPage();
+    fetchData();
   }, []);
 
-  const handlePeriodFilterChange = (id: number | string) => {
-    setSelectedPeriodFilter(id);
-    fetchMatriculasData(id, periods);
-  };
+//   const handlePeriodFilterChange = (id: number | string) => {
+//     setSelectedPeriodFilter(id);
+//     fetchMatriculasData(id, periods);
+//   };
 
   // Filtros
 
