@@ -63,6 +63,7 @@ const Matricula = forwardRef<MatriculaHandle, MatriculaProps>(
         .then((res) => {
           setOfertas(res.data);
           setLoading(false);
+          console.log("Ofertas académicas cargadas:", res.data);
         })
         .catch(() => setLoading(false));
     }, []);

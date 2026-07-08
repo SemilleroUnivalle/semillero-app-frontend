@@ -1,321 +1,664 @@
 "use client";
 
 import {
-    Box,
-    Typography,
-    Paper,
-    Card,
-    CardContent,
-    LinearProgress,
-    Select,
-    MenuItem,
-    FormControl,
-    InputLabel,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Chip,
-    Avatar,
-    Tooltip
+  Box,
+  Typography,
+  Paper,
+  Card,
+  CardContent,
+  LinearProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  Avatar,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { useState } from "react";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import GroupIcon from "@mui/icons-material/Group";
-import AssignmentIcon from "@mui/icons-material/Assignment";
-import WarningIcon from "@mui/icons-material/Warning";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import BarChartIcon from "@mui/icons-material/BarChart";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
-// Datos simulados (Mocks)
-const mockEstudiantes = [
-    { id: 1, nombre: "Ana García", puntaje: 95, estado: "Aprobado", cuartil: 1, tiempo: "45 min" },
-    { id: 2, nombre: "Carlos López", puntaje: 82, estado: "Aprobado", cuartil: 2, tiempo: "50 min" },
-    { id: 3, nombre: "María Rodríguez", puntaje: 58, estado: "Reprobado", cuartil: 4, tiempo: "60 min" },
-    { id: 4, nombre: "Juan Pérez", puntaje: 74, estado: "Aprobado", cuartil: 3, tiempo: "55 min" },
-    { id: 5, nombre: "Laura Martínez", puntaje: 88, estado: "Aprobado", cuartil: 2, tiempo: "40 min" },
-    { id: 6, nombre: "Pedro Sánchez", puntaje: 45, estado: "Reprobado", cuartil: 4, tiempo: "30 min" },
-    { id: 7, nombre: "Sofía Torres", puntaje: 92, estado: "Aprobado", cuartil: 1, tiempo: "48 min" },
-    { id: 8, nombre: "Diego Ruiz", puntaje: 65, estado: "Aprobado", cuartil: 3, tiempo: "58 min" },
+// Datos simulados - Múltiples Pruebas
+const mockPruebas = [
+  {
+    id: "prueba_1",
+    nombre: "Prueba Diagnóstica - Matemáticas Básicas",
+    curso: "Cálculo Diferencial",
+    fecha: "2024-06-10",
+    activa: true,
+  },
+  {
+    id: "prueba_2",
+    nombre: "Prueba Diagnóstica - Álgebra Lineal",
+    curso: "Álgebra Lineal",
+    fecha: "2024-06-11",
+    activa: true,
+  },
+  {
+    id: "prueba_3",
+    nombre: "Prueba Diagnóstica - Geometría",
+    curso: "Geometría Analítica",
+    fecha: "2024-06-12",
+    activa: false,
+  },
 ];
 
-const mockPreguntasErrores = [
-    { id: 1, enunciado: "¿Cuál es la derivada de x^2?", errores: 15, total: 40, porcentaje: 37.5, tema: "Cálculo Diferencial" },
-    { id: 2, enunciado: "Resuelva la integral definida de 0 a 1...", errores: 12, total: 40, porcentaje: 30, tema: "Cálculo Integral" },
-    { id: 3, enunciado: "Definición de límite...", errores: 8, total: 40, porcentaje: 20, tema: "Límites" },
-];
+// Datos simulados por prueba
+const mockDatosPorPrueba: {
+  [key: string]: {
+    estudiantes: Array<{
+      id: number;
+      nombre: string;
+      puntaje: number;
+      clasificacion: string;
+      presentada: boolean;
+    }>;
+    preguntasAciertos: Array<{ pregunta: string; aciertos: number }>;
+  };
+} = {
+  prueba_1: {
+    estudiantes: [
+      {
+        id: 1,
+        nombre: "Ana García",
+        puntaje: 95,
+        clasificacion: "Apto-Avanzado",
+        presentada: true,
+      },
+      {
+        id: 2,
+        nombre: "Carlos López",
+        puntaje: 82,
+        clasificacion: "Apto-Curso Base",
+        presentada: true,
+      },
+      {
+        id: 3,
+        nombre: "María Rodríguez",
+        puntaje: 45,
+        clasificacion: "No Apto",
+        presentada: true,
+      },
+      {
+        id: 4,
+        nombre: "Juan Pérez",
+        puntaje: 74,
+        clasificacion: "Apto-Curso Base",
+        presentada: true,
+      },
+      {
+        id: 5,
+        nombre: "Laura Martínez",
+        puntaje: 88,
+        clasificacion: "Apto-Avanzado",
+        presentada: true,
+      },
+      {
+        id: 6,
+        nombre: "Pedro Sánchez",
+        puntaje: 35,
+        clasificacion: "No Apto",
+        presentada: true,
+      },
+      {
+        id: 7,
+        nombre: "Sofía Torres",
+        puntaje: 92,
+        clasificacion: "Apto-Avanzado",
+        presentada: true,
+      },
+      {
+        id: 8,
+        nombre: "Diego Ruiz",
+        puntaje: 65,
+        clasificacion: "Apto-Curso Base",
+        presentada: true,
+      },
+      {
+        id: 9,
+        nombre: "Emma Vargas",
+        puntaje: 0,
+        clasificacion: "Sin presentar",
+        presentada: false,
+      },
+      {
+        id: 10,
+        nombre: "Felipe Mora",
+        puntaje: 0,
+        clasificacion: "Sin presentar",
+        presentada: false,
+      },
+    ],
+    preguntasAciertos: [
+      { pregunta: "P1: Derivadas básicas", aciertos: 85 },
+      { pregunta: "P2: Integrales indefinidas", aciertos: 72 },
+      { pregunta: "P3: Límites", aciertos: 68 },
+      { pregunta: "P4: Continuidad", aciertos: 78 },
+      { pregunta: "P5: Optimización", aciertos: 55 },
+      { pregunta: "P6: Series", aciertos: 62 },
+    ],
+  },
+  prueba_2: {
+    estudiantes: [
+      {
+        id: 1,
+        nombre: "Ana García",
+        puntaje: 88,
+        clasificacion: "Apto-Avanzado",
+        presentada: true,
+      },
+      {
+        id: 2,
+        nombre: "Carlos López",
+        puntaje: 72,
+        clasificacion: "Apto-Curso Base",
+        presentada: true,
+      },
+      {
+        id: 3,
+        nombre: "María Rodríguez",
+        puntaje: 52,
+        clasificacion: "No Apto",
+        presentada: true,
+      },
+      {
+        id: 4,
+        nombre: "Juan Pérez",
+        puntaje: 68,
+        clasificacion: "Apto-Curso Base",
+        presentada: true,
+      },
+      {
+        id: 5,
+        nombre: "Laura Martínez",
+        puntaje: 91,
+        clasificacion: "Apto-Avanzado",
+        presentada: true,
+      },
+      {
+        id: 6,
+        nombre: "Pedro Sánchez",
+        puntaje: 0,
+        clasificacion: "Sin presentar",
+        presentada: false,
+      },
+      {
+        id: 7,
+        nombre: "Sofía Torres",
+        puntaje: 85,
+        clasificacion: "Apto-Avanzado",
+        presentada: true,
+      },
+      {
+        id: 8,
+        nombre: "Diego Ruiz",
+        puntaje: 0,
+        clasificacion: "Sin presentar",
+        presentada: false,
+      },
+      {
+        id: 9,
+        nombre: "Emma Vargas",
+        puntaje: 75,
+        clasificacion: "Apto-Curso Base",
+        presentada: true,
+      },
+      {
+        id: 10,
+        nombre: "Felipe Mora",
+        puntaje: 58,
+        clasificacion: "No Apto",
+        presentada: true,
+      },
+    ],
+    preguntasAciertos: [
+      { pregunta: "P1: Matrices", aciertos: 78 },
+      { pregunta: "P2: Determinantes", aciertos: 65 },
+      { pregunta: "P3: Sistemas lineales", aciertos: 82 },
+      { pregunta: "P4: Vectores", aciertos: 70 },
+      { pregunta: "P5: Espacios vectoriales", aciertos: 48 },
+      { pregunta: "P6: Eigenvalores", aciertos: 55 },
+    ],
+  },
+  prueba_3: {
+    estudiantes: [
+      {
+        id: 1,
+        nombre: "Ana García",
+        puntaje: 98,
+        clasificacion: "Apto-Avanzado",
+        presentada: true,
+      },
+      {
+        id: 2,
+        nombre: "Carlos López",
+        puntaje: 76,
+        clasificacion: "Apto-Curso Base",
+        presentada: true,
+      },
+      {
+        id: 3,
+        nombre: "María Rodríguez",
+        puntaje: 48,
+        clasificacion: "No Apto",
+        presentada: true,
+      },
+      {
+        id: 4,
+        nombre: "Juan Pérez",
+        puntaje: 70,
+        clasificacion: "Apto-Curso Base",
+        presentada: true,
+      },
+      {
+        id: 5,
+        nombre: "Laura Martínez",
+        puntaje: 0,
+        clasificacion: "Sin presentar",
+        presentada: false,
+      },
+      {
+        id: 6,
+        nombre: "Pedro Sánchez",
+        puntaje: 42,
+        clasificacion: "No Apto",
+        presentada: true,
+      },
+      {
+        id: 7,
+        nombre: "Sofía Torres",
+        puntaje: 89,
+        clasificacion: "Apto-Avanzado",
+        presentada: true,
+      },
+      {
+        id: 8,
+        nombre: "Diego Ruiz",
+        puntaje: 77,
+        clasificacion: "Apto-Curso Base",
+        presentada: true,
+      },
+      {
+        id: 9,
+        nombre: "Emma Vargas",
+        puntaje: 0,
+        clasificacion: "Sin presentar",
+        presentada: false,
+      },
+      {
+        id: 10,
+        nombre: "Felipe Mora",
+        puntaje: 94,
+        clasificacion: "Apto-Avanzado",
+        presentada: true,
+      },
+    ],
+    preguntasAciertos: [
+      { pregunta: "P1: Coordenadas", aciertos: 88 },
+      { pregunta: "P2: Rectas", aciertos: 80 },
+      { pregunta: "P3: Cónicas", aciertos: 72 },
+      { pregunta: "P4: Distancias", aciertos: 75 },
+      { pregunta: "P5: Ángulos", aciertos: 68 },
+      { pregunta: "P6: Transformaciones", aciertos: 70 },
+    ],
+  },
+};
 
-export default function EstadisticasPage() {
-    const [filtroModulo, setFiltroModulo] = useState("todos");
-    const [filtroPrueba, setFiltroPrueba] = useState("todas");
+export default function EstadisticasPruebasDiagnosticas() {
+  const [pruebaSeleccionada, setPruebaSeleccionada] = useState("prueba_1");
 
-    // Cálculos simples basados en mocks
-    const promedioGeneral = (mockEstudiantes.reduce((acc, curr) => acc + curr.puntaje, 0) / mockEstudiantes.length).toFixed(1);
-    const tasaAprobacion = ((mockEstudiantes.filter(e => e.estado === "Aprobado").length / mockEstudiantes.length) * 100).toFixed(0);
+  const prueba = mockPruebas.find((p) => p.id === pruebaSeleccionada);
+  const datosPrueba = mockDatosPorPrueba[pruebaSeleccionada];
 
-    return (
-        <Box className="mx-auto w-11/12 pb-8">
-            {/* Encabezado y Filtros */}
-            <Paper className="mb-6 rounded-2xl p-6 shadow-sm">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-center">
-                    <div>
-                        <Typography variant="h5" className="font-bold text-primary">
-                            Tablero de Resultados
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Análisis detallado del rendimiento estudiantil
-                        </Typography>
-                    </div>
-                    <div>
-                        <Box className="flex gap-4">
-                            <FormControl fullWidth size="small">
-                                <InputLabel>Módulo</InputLabel>
-                                <Select
-                                    value={filtroModulo}
-                                    label="Módulo"
-                                    onChange={(e) => setFiltroModulo(e.target.value)}
-                                >
-                                    <MenuItem value="todos">Todos los Módulos</MenuItem>
-                                    <MenuItem value="calculo">Cálculo Diferencial</MenuItem>
-                                    <MenuItem value="algebra">Álgebra Lineal</MenuItem>
-                                </Select>
-                            </FormControl>
-                            <FormControl fullWidth size="small">
-                                <InputLabel>Prueba</InputLabel>
-                                <Select
-                                    value={filtroPrueba}
-                                    label="Prueba"
-                                    onChange={(e) => setFiltroPrueba(e.target.value)}
-                                >
-                                    <MenuItem value="todas">Todas las Pruebas</MenuItem>
-                                    <MenuItem value="p1">Parcial 1</MenuItem>
-                                    <MenuItem value="p2">Quiz 2</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Box>
-                    </div>
-                </div>
-            </Paper>
+  const mockEstudiantes = datosPrueba?.estudiantes || [];
+  const mockPreguntasAciertos = datosPrueba?.preguntasAciertos || [];
 
-            {/* KPIs / Tarjetas de Resumen */}
-            <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
-                <Card className="h-full rounded-xl shadow-sm transition-transform hover:scale-105">
-                    <CardContent className="flex flex-col items-center justify-center p-6">
-                        <Avatar sx={{ bgcolor: '#e3f2fd', color: '#1976d2', mb: 2 }}>
-                            <TrendingUpIcon />
-                        </Avatar>
-                        <Typography variant="h4" className="font-bold text-gray-800">
-                            {promedioGeneral}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Promedio General
-                        </Typography>
-                    </CardContent>
-                </Card>
-                <Card className="h-full rounded-xl shadow-sm transition-transform hover:scale-105">
-                    <CardContent className="flex flex-col items-center justify-center p-6">
-                        <Avatar sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', mb: 2 }}>
-                            <CheckCircleIcon />
-                        </Avatar>
-                        <Typography variant="h4" className="font-bold text-gray-800">
-                            {tasaAprobacion}%
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Tasa de Aprobación
-                        </Typography>
-                    </CardContent>
-                </Card>
-                <Card className="h-full rounded-xl shadow-sm transition-transform hover:scale-105">
-                    <CardContent className="flex flex-col items-center justify-center p-6">
-                        <Avatar sx={{ bgcolor: '#fff3e0', color: '#ef6c00', mb: 2 }}>
-                            <GroupIcon />
-                        </Avatar>
-                        <Typography variant="h4" className="font-bold text-gray-800">
-                            {mockEstudiantes.length}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Estudiantes Evaluados
-                        </Typography>
-                    </CardContent>
-                </Card>
-                <Card className="h-full rounded-xl shadow-sm transition-transform hover:scale-105">
-                    <CardContent className="flex flex-col items-center justify-center p-6">
-                        <Avatar sx={{ bgcolor: '#f3e5f5', color: '#7b1fa2', mb: 2 }}>
-                            <AssignmentIcon />
-                        </Avatar>
-                        <Typography variant="h4" className="font-bold text-gray-800">
-                            4
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Pruebas Activas
-                        </Typography>
-                    </CardContent>
-                </Card>
-            </div>
+  // Cálculos basados en mocks
+  const pruebaspresentadas = mockEstudiantes.filter((e) => e.presentada).length;
+  const pruebaspendientes = mockEstudiantes.filter((e) => !e.presentada).length;
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                {/* Sección Izquierda: Gráficos y Análisis */}
-                <div className="md:col-span-2 space-y-6">
-                    {/* Distribución de Cuartiles (Simulado visualmente) */}
-                    <Paper className="rounded-xl p-6 shadow-sm">
-                        <Box className="mb-4 flex items-center justify-between">
-                            <Typography variant="h6" className="font-bold text-secondary">
-                                Distribución por Cuartiles
-                            </Typography>
-                            <Tooltip title="Distribución de estudiantes según su rendimiento">
-                                <BarChartIcon color="action" />
-                            </Tooltip>
-                        </Box>
-                        <Box className="flex h-64 items-end justify-around gap-4 border-b pb-2">
-                            {/* Barras simuladas con CSS */}
-                            <Box className="flex w-1/4 flex-col items-center gap-2">
-                                <div className="w-full rounded-t-lg bg-red-100 transition-all hover:bg-red-200" style={{ height: '30%' }}></div>
-                                <Typography variant="caption" className="font-bold">Q4 (Bajo)</Typography>
-                                <Typography variant="caption" color="text.secondary">25%</Typography>
-                            </Box>
-                            <Box className="flex w-1/4 flex-col items-center gap-2">
-                                <div className="w-full rounded-t-lg bg-orange-100 transition-all hover:bg-orange-200" style={{ height: '50%' }}></div>
-                                <Typography variant="caption" className="font-bold">Q3 (Medio-Bajo)</Typography>
-                                <Typography variant="caption" color="text.secondary">35%</Typography>
-                            </Box>
-                            <Box className="flex w-1/4 flex-col items-center gap-2">
-                                <div className="w-full rounded-t-lg bg-blue-100 transition-all hover:bg-blue-200" style={{ height: '70%' }}></div>
-                                <Typography variant="caption" className="font-bold">Q2 (Medio-Alto)</Typography>
-                                <Typography variant="caption" color="text.secondary">20%</Typography>
-                            </Box>
-                            <Box className="flex w-1/4 flex-col items-center gap-2">
-                                <div className="w-full rounded-t-lg bg-green-100 transition-all hover:bg-green-200" style={{ height: '40%' }}></div>
-                                <Typography variant="caption" className="font-bold">Q1 (Alto)</Typography>
-                                <Typography variant="caption" color="text.secondary">20%</Typography>
-                            </Box>
-                        </Box>
-                    </Paper>
+  const clasificacionDistribucion = [
+    {
+      name: "Apto-Avanzado",
+      value: mockEstudiantes.filter((e) => e.clasificacion === "Apto-Avanzado")
+        .length,
+      color: "#22c55e",
+    },
+    {
+      name: "Apto-Curso Base",
+      value: mockEstudiantes.filter(
+        (e) => e.clasificacion === "Apto-Curso Base",
+      ).length,
+      color: "#3b82f6",
+    },
+    {
+      name: "No Apto",
+      value: mockEstudiantes.filter((e) => e.clasificacion === "No Apto")
+        .length,
+      color: "#ef4444",
+    },
+    {
+      name: "Sin presentar",
+      value: mockEstudiantes.filter((e) => e.clasificacion === "Sin presentar")
+        .length,
+      color: "#94a3b8",
+    },
+  ].filter((d) => d.value > 0);
 
-                    {/* Tabla de Estudiantes */}
-                    <Paper className="rounded-xl p-6 shadow-sm">
-                        <Typography variant="h6" className="mb-4 font-bold text-secondary">
-                            Detalle por Estudiante
+  const getClasificacionColor = (clasificacion: string) => {
+    switch (clasificacion) {
+      case "Apto-Avanzado":
+        return "success";
+      case "Apto-Curso Base":
+        return "primary";
+      case "No Apto":
+        return "error";
+      case "Sin presentar":
+        return "default";
+      default:
+        return "default";
+    }
+  };
+
+  const getClasificacionBgColor = (clasificacion: string) => {
+    switch (clasificacion) {
+      case "Apto-Avanzado":
+        return "#dcfce7";
+      case "Apto-Curso Base":
+        return "#dbeafe";
+      case "No Apto":
+        return "#fee2e2";
+      case "Sin presentar":
+        return "#f1f5f9";
+      default:
+        return "#f5f5f5";
+    }
+  };
+
+  return (
+    <Box className="mx-auto w-11/12 pb-8">
+      {/* Encabezado */}
+      <Paper className="mb-6 rounded-2xl p-6 shadow-sm">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-center">
+          <div>
+            <Typography variant="h5" className="font-bold text-primary">
+              {prueba?.nombre || "Estadísticas - Prueba Diagnóstica"}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {prueba?.curso} • Análisis del desempeño en la prueba diagnóstica
+            </Typography>
+          </div>
+          <div>
+            <FormControl fullWidth size="small">
+              <InputLabel>Seleccionar Prueba</InputLabel>
+              <Select
+                value={pruebaSeleccionada}
+                label="Seleccionar Prueba"
+                onChange={(e) => setPruebaSeleccionada(e.target.value)}
+              >
+                {mockPruebas.map((p) => (
+                  <MenuItem key={p.id} value={p.id}>
+                    {p.nombre}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
+        </div>
+      </Paper>
+
+      {/* KPIs / Tarjetas de Resumen */}
+      <div className="mb-6 grid w-full grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+        <Card className="h-full rounded-xl shadow-sm transition-transform hover:scale-105">
+          <CardContent className="flex flex-col items-center justify-center p-6">
+            <Avatar sx={{ bgcolor: "#e3f2fd", color: "#1976d2", mb: 2 }}>
+              <CheckCircleIcon />
+            </Avatar>
+            <Typography variant="h4" className="font-bold text-gray-800">
+              {pruebaspresentadas}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Pruebas Presentadas
+            </Typography>
+          </CardContent>
+        </Card>
+        <Card className="h-full rounded-xl shadow-sm transition-transform hover:scale-105">
+          <CardContent className="flex flex-col items-center justify-center p-6">
+            <Avatar sx={{ bgcolor: "#fff3e0", color: "#ef6c00", mb: 2 }}>
+              <AssignmentIcon />
+            </Avatar>
+            <Typography variant="h4" className="font-bold text-gray-800">
+              {pruebaspendientes}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Pruebas Activas / Pendientes
+            </Typography>
+          </CardContent>
+        </Card>
+
+        <Card className="h-full rounded-xl shadow-sm transition-transform hover:scale-105">
+          <CardContent className="flex flex-col items-center justify-center p-6">
+            <Avatar sx={{ bgcolor: "#e8f5e9", color: "#2e7d32", mb: 2 }}>
+              <Typography variant="h5" className="font-bold">
+                %
+              </Typography>
+            </Avatar>
+            <Typography variant="h4" className="font-bold text-gray-800">
+              {pruebaspresentadas > 0
+                ? ((pruebaspresentadas / mockEstudiantes.length) * 100).toFixed(
+                    0,
+                  )
+                : 0}
+              %
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Tasa de Presentación
+            </Typography>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        {/* Sección Izquierda: Tabla y Gráficos */}
+        <div className="space-y-6 md:col-span-2">
+          {/* Tabla de Estudiantes */}
+          <Paper className="rounded-xl p-6 shadow-sm">
+            <Typography variant="h6" className="mb-4 font-bold text-secondary">
+              Detalle de Estudiantes
+            </Typography>
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                    <TableCell className="font-bold">Estudiante</TableCell>
+                    <TableCell className="font-bold" align="center">
+                      Puntaje
+                    </TableCell>
+                    <TableCell className="font-bold" align="center">
+                      Clasificación
+                    </TableCell>
+                    <TableCell className="font-bold" align="center">
+                      Estado
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {mockEstudiantes.map((est) => (
+                    <TableRow key={est.id} hover>
+                      <TableCell>{est.nombre}</TableCell>
+                      <TableCell align="center">
+                        <Typography
+                          className={`font-bold ${est.puntaje >= 60 ? "text-green-600" : est.puntaje > 0 ? "text-orange-600" : "text-gray-500"}`}
+                        >
+                          {est.puntaje > 0 ? est.puntaje : "—"}
                         </Typography>
-                        <TableContainer>
-                            <Table size="small">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell className="font-bold">Estudiante</TableCell>
-                                        <TableCell className="font-bold" align="center">Puntaje</TableCell>
-                                        <TableCell className="font-bold" align="center">Tiempo</TableCell>
-                                        <TableCell className="font-bold" align="center">Cuartil</TableCell>
-                                        <TableCell className="font-bold" align="center">Estado</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {mockEstudiantes.map((est) => (
-                                        <TableRow key={est.id} hover>
-                                            <TableCell>{est.nombre}</TableCell>
-                                            <TableCell align="center">
-                                                <Typography
-                                                    className={`font-bold ${est.puntaje >= 60 ? 'text-green-600' : 'text-red-600'}`}
-                                                >
-                                                    {est.puntaje}
-                                                </Typography>
-                                            </TableCell>
-                                            <TableCell align="center">{est.tiempo}</TableCell>
-                                            <TableCell align="center">
-                                                <Chip
-                                                    label={`Q${est.cuartil}`}
-                                                    size="small"
-                                                    color={est.cuartil === 1 ? "success" : est.cuartil === 4 ? "error" : "default"}
-                                                    variant="outlined"
-                                                />
-                                            </TableCell>
-                                            <TableCell align="center">
-                                                <Chip
-                                                    label={est.estado}
-                                                    size="small"
-                                                    color={est.estado === "Aprobado" ? "success" : "error"}
-                                                />
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    </Paper>
-                </div>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip
+                          label={est.clasificacion}
+                          size="small"
+                          color={getClasificacionColor(est.clasificacion)}
+                          variant="filled"
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip
+                          label={est.presentada ? "Presentada" : "Pendiente"}
+                          size="small"
+                          color={est.presentada ? "success" : "warning"}
+                          variant="outlined"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
 
-                {/* Sección Derecha: Alertas y Detalles */}
-                <div className="space-y-6">
-                    {/* Preguntas con más errores */}
-                    <Paper className="rounded-xl p-6 shadow-sm bg-red-50 border border-red-100">
-                        <Box className="mb-4 flex items-center gap-2 text-red-700">
-                            <WarningIcon />
-                            <Typography variant="h6" className="font-bold">
-                                Áreas de Mejora
-                            </Typography>
-                        </Box>
-                        <Typography variant="body2" className="mb-4 text-red-600">
-                            Preguntas con mayor tasa de error en las últimas pruebas.
-                        </Typography>
+          {/* % Aciertos por Pregunta */}
+          <Paper className="rounded-xl p-6 shadow-sm">
+            <Typography variant="h6" className="mb-4 font-bold text-secondary">
+              % Aciertos por Pregunta
+            </Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={mockPreguntasAciertos}
+                margin={{ top: 20, right: 30, left: 0, bottom: 60 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis
+                  dataKey="pregunta"
+                  angle={-45}
+                  textAnchor="end"
+                  height={100}
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  label={{ value: "%", angle: -90, position: "insideLeft" }}
+                />
+                <Tooltip
+                  formatter={(value) => `${value}%`}
+                  contentStyle={{
+                    backgroundColor: "#fff",
+                    border: "1px solid #ccc",
+                  }}
+                />
+                <Bar dataKey="aciertos" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </Paper>
+        </div>
 
-                        <Box className="flex flex-col gap-4">
-                            {mockPreguntasErrores.map((preg) => (
-                                <Card key={preg.id} className="shadow-none border border-red-200 bg-white">
-                                    <CardContent className="p-3">
-                                        <Typography variant="subtitle2" className="font-bold text-gray-800 mb-1">
-                                            {preg.tema}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary" className="mb-2 line-clamp-2">
-                                            {preg.enunciado}
-                                        </Typography>
-                                        <Box className="flex items-center gap-2">
-                                            <LinearProgress
-                                                variant="determinate"
-                                                value={preg.porcentaje}
-                                                color="error"
-                                                className="flex-1 rounded-full h-2"
-                                            />
-                                            <Typography variant="caption" className="font-bold text-red-600">
-                                                {preg.porcentaje}% Error
-                                            </Typography>
-                                        </Box>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </Box>
-                    </Paper>
+        {/* Sección Derecha: Distribución y Resumen */}
+        <div className="space-y-6">
+          {/* Distribución de Clasificación */}
+          <Paper className="rounded-xl p-6 shadow-sm">
+            <Typography variant="h6" className="mb-4 font-bold text-secondary">
+              Distribución de Clasificación
+            </Typography>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={clasificacionDistribucion}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={90}
+                  paddingAngle={2}
+                  dataKey="value"
+                  label={({ name, percent }) =>
+                    `${name} ${percent != null ? (percent * 100).toFixed(0) : 0}%`
+                  }
+                >
+                  {clasificacionDistribucion.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(val) => [`${val} estudiantes`]} />
+              </PieChart>
+            </ResponsiveContainer>
+            <Box className="mt-4 flex flex-col gap-2">
+              {clasificacionDistribucion.map((item) => (
+                <Box
+                  key={item.name}
+                  className="flex items-center justify-between"
+                >
+                  <Box className="flex items-center gap-2">
+                    <Box
+                      sx={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: "2px",
+                        backgroundColor: item.color,
+                      }}
+                    />
+                    <Typography variant="body2">{item.name}</Typography>
+                  </Box>
+                  <Typography variant="body2" className="font-bold">
+                    {item.value} (
+                    {((item.value / mockEstudiantes.length) * 100).toFixed(0)}%)
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </Paper>
 
-                    {/* Resumen por Módulo */}
-                    <Paper className="rounded-xl p-6 shadow-sm">
-                        <Typography variant="h6" className="mb-4 font-bold text-secondary">
-                            Rendimiento por Módulo
-                        </Typography>
-                        <Box className="flex flex-col gap-4">
-                            <Box>
-                                <Box className="flex justify-between mb-1">
-                                    <Typography variant="body2">Cálculo Diferencial</Typography>
-                                    <Typography variant="body2" className="font-bold">78%</Typography>
-                                </Box>
-                                <LinearProgress variant="determinate" value={78} className="rounded-full h-2" />
-                            </Box>
-                            <Box>
-                                <Box className="flex justify-between mb-1">
-                                    <Typography variant="body2">Álgebra Lineal</Typography>
-                                    <Typography variant="body2" className="font-bold">65%</Typography>
-                                </Box>
-                                <LinearProgress variant="determinate" value={65} color="warning" className="rounded-full h-2" />
-                            </Box>
-                            <Box>
-                                <Box className="flex justify-between mb-1">
-                                    <Typography variant="body2">Lógica Matemática</Typography>
-                                    <Typography variant="body2" className="font-bold">82%</Typography>
-                                </Box>
-                                <LinearProgress variant="determinate" value={82} color="success" className="rounded-full h-2" />
-                            </Box>
-                        </Box>
-                    </Paper>
-                </div>
-            </div>
-        </Box>
-    );
+          {/* Resumen por Clasificación */}
+          <Paper className="rounded-xl p-6 shadow-sm">
+            <Typography variant="h6" className="mb-4 font-bold text-secondary">
+              Resumen
+            </Typography>
+            <Box className="flex flex-col gap-3">
+              {clasificacionDistribucion.map((item) => (
+                <Box key={item.name}>
+                  <Box className="mb-1 flex justify-between">
+                    <Typography variant="body2" className="font-semibold">
+                      {item.name}
+                    </Typography>
+                    <Typography variant="body2" className="font-bold">
+                      {((item.value / mockEstudiantes.length) * 100).toFixed(1)}
+                      %
+                    </Typography>
+                  </Box>
+                  <LinearProgress
+                    variant="determinate"
+                    value={(item.value / mockEstudiantes.length) * 100}
+                    sx={{
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: "#e0e0e0",
+                      "& .MuiLinearProgress-bar": {
+                        backgroundColor: item.color,
+                      },
+                    }}
+                  />
+                </Box>
+              ))}
+            </Box>
+          </Paper>
+        </div>
+      </div>
+    </Box>
+  );
 }

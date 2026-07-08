@@ -364,17 +364,6 @@ export default function CrearCursos() {
           />
 
           {/* Campo Dirigido a*/}
-          <TextField
-            className="inputs-textfield w-full"
-            label="Dirigido a"
-            name="dirigido_a"
-            variant="outlined"
-            type="text"
-            fullWidth
-            required
-            value={formData.dirigido_a}
-            onChange={handleChange}
-          />
 
           <FormControl className="inputs-textfield w-full">
             <InputLabel id="dirigido_a_label">Dirigido a</InputLabel>
