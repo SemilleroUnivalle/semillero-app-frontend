@@ -165,7 +165,7 @@ export default function DetallarMatricula() {
     if (id) {
       const token = getToken();
       axios
-        .get(`${API_BASE_URL}/matricula/mat/${id}/`, {
+        .get(`${API_BASE_URL}/inscripcion/${id}/`, {
           headers: {
             Authorization: `Token ${token}`,
           },
@@ -201,7 +201,7 @@ export default function DetallarMatricula() {
     //Peticion para actualizar la matricula
     try {
       await axios.patch(
-        `${API_BASE_URL}/matricula/mat/${formDataMatricula.id_inscripcion}/`,
+        `${API_BASE_URL}/inscripcion/${formDataMatricula.id_inscripcion}/`,
         { observaciones: formDataMatricula.observaciones },
         {
           headers: {
@@ -217,17 +217,7 @@ export default function DetallarMatricula() {
     }
   };
 
-  // Estados para las verificaciones
 
-  const [estadoReciboPago] = useState<true | false | null>(
-    null,
-  );
-  const [estadoCertificado] = useState<
-    true | false | null
-  >(null);
-  const [estadoInformacionMatricula] = useState<
-    true | false | null
-  >(null);
 
   if (loading) {
     return (
@@ -395,8 +385,9 @@ export default function DetallarMatricula() {
           </Typography>
           <ToggleButtonGroup
             className="border-rounded rounded-xl"
-            value={estadoInformacionMatricula}
+            value={formDataEstudiante.verificacion_informacion}
             exclusive
+            disabled
             aria-label="Estado de verificación"
             sx={{ marginY: 2, borderRadius: 8 }}
           >
@@ -414,8 +405,9 @@ export default function DetallarMatricula() {
             Recibo de pago verificado
           </Typography>
           <ToggleButtonGroup
-            value={estadoReciboPago}
+            value={formDataMatricula.verificacion_recibo_pago}
             exclusive
+            disabled
             aria-label="Estado de verificación"
             sx={{ marginY: 2 }}
           >
@@ -432,8 +424,9 @@ export default function DetallarMatricula() {
             Certificado verificado
           </Typography>
           <ToggleButtonGroup
-            value={estadoCertificado}
+            value={formDataMatricula.verificacion_certificado}
             exclusive
+            disabled
             aria-label="Estado de verificación"
             sx={{ marginY: 2 }}
           >

@@ -29,7 +29,7 @@ export async function fetchUbicacionesGeocodificadas(): Promise<UbicacionData[]>
   }
 
   // CÓDIGO ORIGINAL (sin mock)
-  const res = await client.get("/matricula/mat/inscripciones/geocodificacion/"); 
+  const res = await client.get("/inscripcion/geocodificacion/"); 
   return res.data as UbicacionData[];
 }
 

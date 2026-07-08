@@ -3,7 +3,6 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import {
-
   Paper,
   Select,
   MenuItem,
@@ -16,6 +15,7 @@ import {
   Snackbar,
   Alert,
   Chip,
+  TextField,
 } from "@mui/material";
 
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
@@ -33,6 +33,7 @@ interface ProfesorApi {
   email?: string;
   area_desempeño?: string;
   estado: string;
+  numero_documento?: string;
 }
 
 export default function VisualizarFuncionarios() {
@@ -136,6 +137,7 @@ export default function VisualizarFuncionarios() {
     tipo: string;
     area_desempeño: string;
     estado: string;
+    numero_documento: string;
   }
 
   const [rows, setRows] = useState<FuncionarioRow[]>([]);
@@ -238,6 +240,7 @@ const monitoresAdmin =
     tipo: "Profesor",
     area_desempeño: profesor.area_desempeño || "",
     estado: profesor.estado,
+    numero_documento: profesor.numero_documento || "",
   }));
 
   const formateadoMonAcad = monitoresAcad.map((monitor: ProfesorApi) => ({
@@ -248,6 +251,7 @@ const monitoresAdmin =
     tipo: "Monitor Académico",
     area_desempeño: monitor.area_desempeño || "",
     estado: monitor.estado,
+    numero_documento: monitor.numero_documento || "",
   }));
 
   const formateadoMonAdmin = monitoresAdmin.map((monitor: ProfesorApi) => ({
@@ -258,6 +262,7 @@ const monitoresAdmin =
     tipo: "Monitor Administrativo",
     area_desempeño: monitor.area_desempeño || "",
     estado: monitor.estado,
+    numero_documento: monitor.numero_documento || "",
   }));
 
   // Une todos los arrays
@@ -287,6 +292,7 @@ const monitoresAdmin =
   );
   const [selectedArea, setSelectedArea] = React.useState<string[]>([]);
   const [selectedEstado, setSelectedEstado] = React.useState<string[]>([]);
+  const [searchText, setSearchText] = useState("");
 
   const handleChangeTipo = (event: SelectChangeEvent<string[]>) => {
     const {
@@ -325,10 +331,17 @@ const monitoresAdmin =
       const estadoMatch =
         selectedEstado.length === 0 || selectedEstado.includes(estadoAsString);
 
+      const searchMatch =
+        searchText === "" ||
+        row.nombre.toLowerCase().includes(searchText.toLowerCase()) ||
+        row.apellido.toLowerCase().includes(searchText.toLowerCase()) ||
+        row.numero_documento.toLowerCase().includes(searchText.toLowerCase());
+
       return (
         tipoMatch &&
         areaMatch &&
-        estadoMatch
+        estadoMatch &&
+        searchMatch
       );
     });
   }, [
@@ -336,6 +349,7 @@ const monitoresAdmin =
     selectedTipo,
     selectedArea,
     selectedEstado,
+    searchText,
   ]);
 
   if(loading!){
@@ -358,16 +372,24 @@ const monitoresAdmin =
           Funcionario eliminado exitosamente.
         </Alert>
       </Snackbar>
-      <div className="mx-auto mt-4 flex w-11/12 justify-around rounded-2xl bg-white p-2 shadow-md">
-        
+      <div className="mx-auto mt-4 flex w-11/12 items-center justify-around gap-4 rounded-2xl bg-white p-3 shadow-md">
+        {/* Buscador por Nombre o Documento */}
+        <TextField
+          label="Buscar por nombre o documento"
+          variant="outlined"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          placeholder="Escribe nombre o documento..."
+          className="inputs-textfield w-full sm:w-1/4"
+        />
 
         {/* Filtro por Estamento */}
-        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+        <FormControl className="inputs-textfield w-full sm:w-1/6">
           <InputLabel id="filtro-estamento">Tipo</InputLabel>
           <Select
             labelId="filtro-estamento"
             id="filtro-estamento"
-            label="filtro-estamento"
+            label="Tipo"
             multiple
             value={selectedTipo}
             onChange={handleChangeTipo}
@@ -383,12 +405,12 @@ const monitoresAdmin =
         </FormControl>
 
         {/* Filtro por Area de desempeño */}
-        <FormControl className="inputs-textfield h-2 w-full sm:w-1/6">
+        <FormControl className="inputs-textfield w-full sm:w-1/6">
           <InputLabel id="filtro-area">Area de desempeño</InputLabel>
           <Select
             labelId="filtro-area"
             id="filtro-area"
-            label="filtro-area"
+            label="Area de desempeño"
             multiple
             value={selectedArea}
             onChange={handleChangeArea}
@@ -409,7 +431,7 @@ const monitoresAdmin =
           <Select
             labelId="filtro-estado"
             id="filtro-estado"
-            label="filtro-estado"
+            label="Estados"
             multiple
             value={selectedEstado}
             onChange={handleChangeEstado}

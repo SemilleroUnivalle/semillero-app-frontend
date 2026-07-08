@@ -180,7 +180,7 @@ export default function VerGrupos() {
         }
 
         const response = await axios.get(
-          `${API_BASE_URL}/matricula/mat/matricula-grupo`,
+          `${API_BASE_URL}/inscripcion/matricula-grupo/`,
           {
             headers: {
               Authorization: `Token ${token}`,

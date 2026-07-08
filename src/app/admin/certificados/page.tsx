@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Card,
@@ -28,100 +28,55 @@ import {
   ListItemText,
   ListItemIcon,
   TextField,
+  Typography,
 } from "@mui/material";
 import {
   CloudUpload as CloudUploadIcon,
   Download as DownloadIcon,
-  Info as InfoIcon,
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon,
   Search as SearchIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
+import { IconButton } from "@mui/material";
+import axios, { AxiosError } from "axios";
+import { API_BASE_URL } from "../../../../config";
 
-// Mock data
-const MOCK_PERIODOS = ["2024", "2025", "2026"];
+// ─── Tipos ────────────────────────────────────────────────────────────────────
+interface Periodo {
+  id_oferta_academica: number;
+  nombre: string;
+  estado: string;
+}
 
-const MOCK_ESTUDIANTES_COMPLETO = [
-  {
-    id: 1,
-    documento: "1001234567",
-    nombre: "Juan Pérez",
-    email: "juan@example.com",
-    matriculas: [
-      { id: 1, periodo: "2024", oferta: "Matemáticas Básico", area: "Matemáticas" },
-      { id: 2, periodo: "2025", oferta: "Matemáticas Avanzado", area: "Matemáticas" },
-    ],
-  },
-  {
-    id: 2,
-    documento: "1002345678",
-    nombre: "María García",
-    email: "maria@example.com",
-    matriculas: [
-      { id: 3, periodo: "2024", oferta: "Biología", area: "Biología" },
-      { id: 4, periodo: "2025", oferta: "Biología Avanzada", area: "Biología" },
-    ],
-  },
-  {
-    id: 3,
-    documento: "1003456789",
-    nombre: "Carlos López",
-    email: "carlos@example.com",
-    matriculas: [{ id: 5, periodo: "2025", oferta: "Lenguaje", area: "Lenguaje" }],
-  },
-  {
-    id: 4,
-    documento: "1004567890",
-    nombre: "Ana Martínez",
-    email: "ana@example.com",
-    matriculas: [{ id: 6, periodo: "2025", oferta: "Física", area: "Física" }],
-  },
-  {
-    id: 5,
-    documento: "1005678901",
-    nombre: "Luis Rodríguez",
-    email: "luis@example.com",
-    matriculas: [{ id: 7, periodo: "2026", oferta: "Teatro", area: "Teatro" }],
-  },
-  {
-    id: 6,
-    documento: "1006789012",
-    nombre: "Sofia Torres",
-    email: "sofia@example.com",
-    matriculas: [
-      { id: 8, periodo: "2025", oferta: "Música", area: "Música" },
-      { id: 9, periodo: "2026", oferta: "Música Avanzada", area: "Música" },
-    ],
-  },
-  {
-    id: 7,
-    documento: "1007890123",
-    nombre: "Diego Sánchez",
-    email: "diego@example.com",
-    matriculas: [{ id: 10, periodo: "2024", oferta: "Física", area: "Física" }],
-  },
-];
+interface InscripcionBuscada {
+  id_inscripcion: number;
+  nombre: string;
+  apellido: string;
+  numero_documento: string;
+  modulo: string | null;
+  grupo: string | null;
+}
 
 interface CertificadoCargado {
   id: string;
   estudianteDocumento: string;
   estudianteNombre: string;
   periodo: string;
-  oferta: string;
+  modulo: string;
   archivo: string;
   fechaCarga: string;
   estado: "exitoso" | "error";
   mensaje?: string;
 }
 
+// ─── TabPanel ─────────────────────────────────────────────────────────────────
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
 }
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index } = props;
+function TabPanel({ children, value, index }: TabPanelProps) {
   return (
     <div hidden={value !== index}>
       {value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
@@ -129,238 +84,279 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
+// ─── Utilidades ───────────────────────────────────────────────────────────────
+const getToken = () => localStorage.getItem("token") || "";
+
 export default function CertificadosPage() {
   const [tabValue, setTabValue] = useState(0);
 
+  // Datos del backend
+  const [periodos, setPeriodos] = useState<Periodo[]>([]);
+  const [loadingPeriodos, setLoadingPeriodos] = useState(true);
+
   // Carga Individual
-  const [periodoSeleccionado, setPeriodoSeleccionado] = useState<string>("");
-  const [busquedaEstudiante, setBusquedaEstudiante] = useState("");
-  const [estudianteSeleccionado, setEstudianteSeleccionado] = useState<any>(null);
-  const [matriculaSeleccionada, setMatriculaSeleccionada] = useState<any>(null);
+  const [periodoSeleccionado, setPeriodoSeleccionado] = useState<number | "">("");
+  const [numeroDocumento, setNumeroDocumento] = useState("");
+  const [buscandoEstudiante, setBuscandoEstudiante] = useState(false);
+  const [inscripciones, setInscripciones] = useState<InscripcionBuscada[] | null>(null);
+  const [inscripcionSeleccionada, setInscripcionSeleccionada] = useState<InscripcionBuscada | null>(null);
   const [archivoIndividual, setArchivoIndividual] = useState<File | null>(null);
 
   // Carga Masiva
-  const [periodoMasivo, setPeriodoMasivo] = useState<string>("");
+  const [periodoMasivo, setPeriodoMasivo] = useState<number | "">("");
   const [archivosLote, setArchivosLote] = useState<File[]>([]);
 
-  // Estados globales
+  // Refs para file inputs
+  const loteInputRef = useRef<HTMLInputElement>(null);
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState<{
-    tipo: "success" | "error" | "info";
+    tipo: "success" | "error" | "info" | "warning";
     texto: string;
   } | null>(null);
-  const [certificadosCargados, setCertificadosCargados] = useState<
-    CertificadoCargado[]
-  >([]);
+  const [certificadosCargados, setCertificadosCargados] = useState<CertificadoCargado[]>([]);
 
-  // Filtrar estudiantes por período y búsqueda
-  const estudiantesFiltrados = MOCK_ESTUDIANTES_COMPLETO.filter((est) => {
-    const tieneMatriculaEnPeriodo = est.matriculas.some(
-      (mat) => mat.periodo === periodoSeleccionado
-    );
-    const coincideBusqueda =
-      est.nombre.toLowerCase().includes(busquedaEstudiante.toLowerCase()) ||
-      est.documento.includes(busquedaEstudiante);
-    return tieneMatriculaEnPeriodo && coincideBusqueda;
-  });
-
-  const matriculasEstudiante =
-    estudianteSeleccionado?.matriculas.filter(
-      (mat: any) => mat.periodo === periodoSeleccionado
-    ) || [];
-
-  // Carga Individual
-  const handleArchivoIndividualChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    if (event.target.files && event.target.files[0]) {
-      const archivo = event.target.files[0];
-      if (archivo.type === "application/pdf") {
-        if (archivo.size > 2 * 1024 * 1024) {
-          setMensaje({
-            tipo: "error",
-            texto: "El archivo no puede exceder 2MB",
-          });
-          setArchivoIndividual(null);
-        } else {
-          setArchivoIndividual(archivo);
-          setMensaje(null);
-        }
-      } else {
-        setMensaje({
-          tipo: "error",
-          texto: "Por favor, selecciona un archivo PDF válido.",
+  // ── Cargar periodos al montar ──────────────────────────────────────────────
+  useEffect(() => {
+    const fetchPeriodos = async () => {
+      try {
+        const { data } = await axios.get<Periodo[]>(`${API_BASE_URL}/oferta_academica/`, {
+          headers: { Authorization: `Token ${getToken()}` },
         });
-        setArchivoIndividual(null);
+        setPeriodos(data);
+      } catch {
+        setMensaje({ tipo: "error", texto: "No se pudieron cargar los períodos académicos." });
+      } finally {
+        setLoadingPeriodos(false);
       }
+    };
+    fetchPeriodos();
+  }, []);
+
+  // ── Buscar estudiante por documento ───────────────────────────────────────
+  const handleBuscarEstudiante = async () => {
+    if (!numeroDocumento.trim()) return;
+    setBuscandoEstudiante(true);
+    setInscripciones(null);
+    setInscripcionSeleccionada(null);
+    setMensaje(null);
+
+    try {
+      const { data } = await axios.get<InscripcionBuscada[]>(
+        `${API_BASE_URL}/inscripcion/buscar-por-documento/`,
+        {
+          params: {
+            numero_documento: numeroDocumento.trim(),
+            ...(periodoSeleccionado ? { oferta_academica_id: periodoSeleccionado } : {}),
+          },
+          headers: { Authorization: `Token ${getToken()}` },
+        }
+      );
+      setInscripciones(data);
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ detail?: string }>;
+      const detail = axiosErr.response?.data?.detail ?? "No se encontró el estudiante.";
+      setMensaje({ tipo: "warning", texto: detail });
+    } finally {
+      setBuscandoEstudiante(false);
     }
   };
 
+  // ── Validar archivo PDF ────────────────────────────────────────────────────
+  const validarPDF = (archivo: File): string | null => {
+    if (archivo.type !== "application/pdf") return "El archivo debe ser un PDF.";
+    if (archivo.size > 2 * 1024 * 1024) return "El archivo no puede exceder 2 MB.";
+    return null;
+  };
+
+  const handleArchivoIndividualChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const archivo = e.target.files?.[0];
+    if (!archivo) return;
+    const error = validarPDF(archivo);
+    if (error) {
+      setMensaje({ tipo: "error", texto: error });
+      setArchivoIndividual(null);
+    } else {
+      setArchivoIndividual(archivo);
+      setMensaje(null);
+    }
+  };
+
+  // ── Cargar certificado individual ─────────────────────────────────────────
   const handleCargarIndividual = async () => {
-    if (!periodoSeleccionado || !estudianteSeleccionado || !matriculaSeleccionada || !archivoIndividual) {
-      setMensaje({
-        tipo: "error",
-        texto: "Por favor, completa todos los campos.",
-      });
+    if (!inscripcionSeleccionada || !archivoIndividual) {
+      setMensaje({ tipo: "error", texto: "Selecciona una inscripción y un archivo PDF." });
       return;
     }
 
     setCargando(true);
+    setMensaje(null);
 
-    setTimeout(() => {
-      const nuevoCertificado: CertificadoCargado = {
+    const formData = new FormData();
+    formData.append("certificado", archivoIndividual);
+
+    try {
+      await axios.patch(
+        `${API_BASE_URL}/inscripcion/${inscripcionSeleccionada.id_inscripcion}/`,
+        formData,
+        {
+          headers: {
+            Authorization: `Token ${getToken()}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      const periodoNombre = periodos.find((p) => p.id_oferta_academica === periodoSeleccionado)?.nombre ?? "";
+
+      const nuevoCert: CertificadoCargado = {
         id: `cert-${Date.now()}`,
-        estudianteDocumento: estudianteSeleccionado.documento,
-        estudianteNombre: estudianteSeleccionado.nombre,
-        periodo: periodoSeleccionado,
-        oferta: matriculaSeleccionada.oferta,
+        estudianteDocumento: inscripcionSeleccionada.numero_documento,
+        estudianteNombre: `${inscripcionSeleccionada.nombre} ${inscripcionSeleccionada.apellido}`,
+        periodo: periodoNombre,
+        modulo: inscripcionSeleccionada.modulo ?? "—",
         archivo: archivoIndividual.name,
-        fechaCarga: new Date().toLocaleDateString("es-ES"),
+        fechaCarga: new Date().toLocaleDateString("es-CO"),
         estado: "exitoso",
       };
 
-      setCertificadosCargados([nuevoCertificado, ...certificadosCargados]);
+      setCertificadosCargados((prev) => [nuevoCert, ...prev]);
       setMensaje({
         tipo: "success",
-        texto: `Certificado cargado exitosamente para ${estudianteSeleccionado.nombre}`,
+        texto: `Certificado cargado para ${inscripcionSeleccionada.nombre} ${inscripcionSeleccionada.apellido}`,
       });
 
       // Reset
-      setPeriodoSeleccionado("");
-      setBusquedaEstudiante("");
-      setEstudianteSeleccionado(null);
-      setMatriculaSeleccionada(null);
+      setNumeroDocumento("");
+      setInscripciones(null);
+      setInscripcionSeleccionada(null);
       setArchivoIndividual(null);
+      setPeriodoSeleccionado("");
+    } catch (err) {
+      const axiosErr = err as AxiosError<Record<string, string[]>>;
+      console.error("Error al cargar certificado:", axiosErr.response?.data);
+      setMensaje({ tipo: "error", texto: "Error al subir el certificado. Intenta de nuevo." });
+    } finally {
       setCargando(false);
-    }, 1500);
+    }
   };
 
-  // Carga Masiva
-  const handleArchivosMasivoChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    if (event.target.files) {
-      const archivos = Array.from(event.target.files);
-      const archivosValidos = archivos.filter((f) => {
-        if (f.type !== "application/pdf") {
-          setMensaje({
-            tipo: "error",
-            texto: `${f.name} no es un PDF válido`,
-          });
-          return false;
-        }
-        if (f.size > 2 * 1024 * 1024) {
-          setMensaje({
-            tipo: "error",
-            texto: `${f.name} excede el límite de 2MB`,
-          });
-          return false;
-        }
-        return true;
-      });
-
-      if (archivosValidos.length > 0) {
-        setArchivosLote(archivosValidos);
-        setMensaje(null);
+  // ── Carga masiva ──────────────────────────────────────────────────────────
+  const handleArchivosMasivoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const archivos = Array.from(e.target.files);
+    const validos: File[] = [];
+    for (const f of archivos) {
+      const err = validarPDF(f);
+      if (err) {
+        setMensaje({ tipo: "error", texto: `${f.name}: ${err}` });
+        return;
       }
+      validos.push(f);
     }
+    setArchivosLote(validos);
+    setMensaje(null);
   };
 
   const handleCargarMasivo = async () => {
     if (!periodoMasivo || archivosLote.length === 0) {
-      setMensaje({
-        tipo: "error",
-        texto: "Por favor, selecciona un período y archivos.",
-      });
+      setMensaje({ tipo: "error", texto: "Selecciona un período y al menos un archivo." });
       return;
     }
 
     setCargando(true);
-    const resultados: CertificadoCargado[] = [];
+    setMensaje(null);
 
-    setTimeout(() => {
-      archivosLote.forEach((archivo) => {
-        // Extraer documento del nombre del archivo (sin extensión)
-        const nombreSinExtension = archivo.name.replace(".pdf", "");
-        const estudiante = MOCK_ESTUDIANTES_COMPLETO.find(
-          (est) => est.documento === nombreSinExtension
+    const resultados: CertificadoCargado[] = [];
+    const periodoNombre = periodos.find((p) => p.id_oferta_academica === periodoMasivo)?.nombre ?? "";
+
+    for (const archivo of archivosLote) {
+      const docNumber = archivo.name.replace(/\.pdf$/i, "");
+
+      try {
+        // 1) Buscar inscripcion por numero_documento filtrada por período
+        const { data: inscrs } = await axios.get<InscripcionBuscada[]>(
+          `${API_BASE_URL}/inscripcion/buscar-por-documento/`,
+          {
+            params: { numero_documento: docNumber, oferta_academica_id: periodoMasivo },
+            headers: { Authorization: `Token ${getToken()}` },
+          }
         );
 
-        if (estudiante) {
-          const matricula = estudiante.matriculas.find(
-            (mat) => mat.periodo === periodoMasivo
-          );
+        if (inscrs.length === 0) throw new Error("Sin inscripciones");
 
-          if (matricula) {
-            resultados.push({
-              id: `cert-${Date.now()}-${estudiante.documento}`,
-              estudianteDocumento: estudiante.documento,
-              estudianteNombre: estudiante.nombre,
-              periodo: periodoMasivo,
-              oferta: matricula.oferta,
-              archivo: archivo.name,
-              fechaCarga: new Date().toLocaleDateString("es-ES"),
-              estado: "exitoso",
-            });
-          } else {
-            resultados.push({
-              id: `cert-${Date.now()}-${estudiante.documento}`,
-              estudianteDocumento: estudiante.documento,
-              estudianteNombre: estudiante.nombre,
-              periodo: periodoMasivo,
-              oferta: "N/A",
-              archivo: archivo.name,
-              fechaCarga: new Date().toLocaleDateString("es-ES"),
-              estado: "error",
-              mensaje: `No tiene matrícula en el período ${periodoMasivo}`,
-            });
+        // Tomar la primera inscripción disponible
+        const inscripcion = inscrs[0];
+
+        // 2) Subir certificado
+        const form = new FormData();
+        form.append("certificado", archivo);
+        await axios.patch(
+          `${API_BASE_URL}/inscripcion/${inscripcion.id_inscripcion}/`,
+          form,
+          {
+            headers: {
+              Authorization: `Token ${getToken()}`,
+              "Content-Type": "multipart/form-data",
+            },
           }
-        } else {
-          resultados.push({
-            id: `cert-${Date.now()}-${nombreSinExtension}`,
-            estudianteDocumento: nombreSinExtension,
-            estudianteNombre: "Estudiante no encontrado",
-            periodo: periodoMasivo,
-            oferta: "N/A",
-            archivo: archivo.name,
-            fechaCarga: new Date().toLocaleDateString("es-ES"),
-            estado: "error",
-            mensaje: "Estudiante no existe en el sistema",
-          });
-        }
-      });
+        );
 
-      const exitosos = resultados.filter((r) => r.estado === "exitoso").length;
-      const errores = resultados.filter((r) => r.estado === "error").length;
+        resultados.push({
+          id: `cert-${Date.now()}-${docNumber}`,
+          estudianteDocumento: docNumber,
+          estudianteNombre: `${inscripcion.nombre} ${inscripcion.apellido}`,
+          periodo: periodoNombre,
+          modulo: inscripcion.modulo ?? "—",
+          archivo: archivo.name,
+          fechaCarga: new Date().toLocaleDateString("es-CO"),
+          estado: "exitoso",
+        });
+      } catch (err) {
+        const axiosErr = err as AxiosError<{ detail?: string }>;
+        const detail = axiosErr.response?.data?.detail ?? String(err);
+        resultados.push({
+          id: `cert-${Date.now()}-${docNumber}`,
+          estudianteDocumento: docNumber,
+          estudianteNombre: "No encontrado",
+          periodo: periodoNombre,
+          modulo: "—",
+          archivo: archivo.name,
+          fechaCarga: new Date().toLocaleDateString("es-CO"),
+          estado: "error",
+          mensaje: detail,
+        });
+      }
+    }
 
-      setCertificadosCargados([...resultados, ...certificadosCargados]);
-      setMensaje({
-        tipo: exitosos > 0 ? "success" : "error",
-        texto: `Carga completada: ${exitosos} exitosos, ${errores} con errores`,
-      });
+    const exitosos = resultados.filter((r) => r.estado === "exitoso").length;
+    const errores = resultados.filter((r) => r.estado === "error").length;
 
-      setPeriodoMasivo("");
-      setArchivosLote([]);
-      setCargando(false);
-    }, 2500);
-  };
-
-  const exportarExcel = () => {
-    const filas = [["Documento", "Nombre", "Período", "Oferta", "Archivo", "Estado", "Fecha"]];
-
-    certificadosCargados.forEach((cert) => {
-      filas.push([
-        cert.estudianteDocumento,
-        cert.estudianteNombre,
-        cert.periodo,
-        cert.oferta,
-        cert.archivo,
-        cert.estado === "exitoso" ? "Exitoso" : "Error",
-        cert.fechaCarga,
-      ]);
+    setCertificadosCargados((prev) => [...resultados, ...prev]);
+    setMensaje({
+      tipo: exitosos > 0 ? "success" : "error",
+      texto: `Carga completada: ${exitosos} exitosos, ${errores} con errores.`,
     });
 
-    const csv = filas.map((fila) => fila.map((cell) => `"${cell}"`).join(",")).join("\n");
+    setPeriodoMasivo("");
+    setArchivosLote([]);
+    setCargando(false);
+  };
+
+  // ── Exportar CSV ──────────────────────────────────────────────────────────
+  const exportarCSV = () => {
+    const filas = [["Documento", "Nombre", "Período", "Módulo", "Archivo", "Estado", "Fecha"]];
+    certificadosCargados.forEach((c) => {
+      filas.push([
+        c.estudianteDocumento,
+        c.estudianteNombre,
+        c.periodo,
+        c.modulo,
+        c.archivo,
+        c.estado === "exitoso" ? "Exitoso" : "Error",
+        c.fechaCarga,
+      ]);
+    });
+    const csv = filas.map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -368,12 +364,13 @@ export default function CertificadosPage() {
     link.click();
   };
 
+  // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <Box className="p-3">
       <Box className="mb-4">
         <h1>Gestión de Certificados</h1>
         <p className="text-[#575757] mt-2 text-sm">
-          Carga certificados de estudiantes por período académico
+          Carga certificados PDF de estudiantes vinculados a sus inscripciones
         </p>
       </Box>
 
@@ -382,135 +379,104 @@ export default function CertificadosPage() {
           severity={mensaje.tipo}
           className="mb-3 rounded-[1rem]"
           onClose={() => setMensaje(null)}
-          sx={{
-            backgroundColor: mensaje.tipo === "success" ? "#f0f8f0" : mensaje.tipo === "error" ? "#fff0f0" : "#FFF9E6",
-            color: mensaje.tipo === "success" ? "#2e7d32" : mensaje.tipo === "error" ? "#c62828" : "#f57f17",
-            "& .MuiAlert-icon": {
-              color: mensaje.tipo === "success" ? "#2e7d32" : mensaje.tipo === "error" ? "#c62828" : "#f57f17"
-            }
-          }}
         >
           {mensaje.texto}
         </Alert>
       )}
 
       <Box className="inputs-textfield grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-3">
-        {/* Formulario */}
+        {/* ── Formulario ── */}
         <Card className="rounded-[1rem] shadow-sm border border-gray-200">
-          <CardHeader 
+          <CardHeader
             title="Cargar Certificados"
-            titleTypographyProps={{
-              sx: { 
-                color: "#C20E1A",
-                fontWeight: 600,
-                fontSize: "1.1rem"
-              }
-            }}
+            titleTypographyProps={{ sx: { color: "#C20E1A", fontWeight: 600, fontSize: "1.1rem" } }}
             sx={{ borderBottom: "1px solid #f0f0f0" }}
           />
           <CardContent>
             <Box className="border-b border-gray-200 mb-2">
-              <Tabs className="text-primary" value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
-                <Tab className="text-primary" label="Carga Individual"/>
+              <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)}>
+                <Tab className="text-primary" label="Carga Individual" />
                 <Tab className="text-primary" label="Carga por Lote" />
               </Tabs>
             </Box>
 
-            {/* CARGA INDIVIDUAL */}
+            {/* ── CARGA INDIVIDUAL ── */}
             <TabPanel value={tabValue} index={0}>
-              <Box className="flex flex-col gap-2.5">
+              <Box className="flex flex-col gap-3">
                 {/* Período */}
-                <FormControl fullWidth>
-                  <InputLabel>Período</InputLabel>
+                <FormControl fullWidth disabled={loadingPeriodos}>
+                  <InputLabel>Período académico</InputLabel>
                   <Select
                     value={periodoSeleccionado}
-                    label="Período"
+                    label="Período académico"
                     onChange={(e) => {
-                      setPeriodoSeleccionado(e.target.value);
-                      setBusquedaEstudiante("");
-                      setEstudianteSeleccionado(null);
-                      setMatriculaSeleccionada(null);
+                      setPeriodoSeleccionado(e.target.value as number);
+                      setInscripciones(null);
+                      setInscripcionSeleccionada(null);
                     }}
                   >
-                    {MOCK_PERIODOS.map((periodo) => (
-                      <MenuItem key={periodo} value={periodo}>
-                        {periodo}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                {/* Búsqueda Estudiante */}
-                <TextField
-                  fullWidth
-                  placeholder="Buscar por nombre o documento..."
-                  value={busquedaEstudiante}
-                  onChange={(e) => setBusquedaEstudiante(e.target.value)}
-                  disabled={!periodoSeleccionado}
-                  className="inputs-textfield"
-                  InputProps={{
-                    startAdornment: <SearchIcon sx={{ mr: 1, color: "#999" }} />,
-                  }}
-                />
-
-                {/* Seleccionar Estudiante */}
-                <FormControl fullWidth disabled={!periodoSeleccionado || estudiantesFiltrados.length === 0}>
-                  <InputLabel>Estudiante</InputLabel>
-                  <Select
-                    value={estudianteSeleccionado?.id || ""}
-                    label="Estudiante"
-                    onChange={(e) => {
-                      const estudiante = MOCK_ESTUDIANTES_COMPLETO.find(
-                        (est) => est.id === e.target.value
-                      );
-                      setEstudianteSeleccionado(estudiante);
-                      setMatriculaSeleccionada(null);
-                    }}
-                  >
-                    {estudiantesFiltrados.length > 0 ? (
-                      estudiantesFiltrados.map((estudiante) => (
-                        <MenuItem key={estudiante.id} value={estudiante.id}>
-                          {estudiante.nombre} ({estudiante.documento})
+                    {loadingPeriodos ? (
+                      <MenuItem disabled>Cargando...</MenuItem>
+                    ) : (
+                      periodos.map((p) => (
+                        <MenuItem key={p.id_oferta_academica} value={p.id_oferta_academica}>
+                          {p.nombre}
                         </MenuItem>
                       ))
-                    ) : (
-                      <MenuItem disabled>
-                        No hay estudiantes para este período
-                      </MenuItem>
                     )}
                   </Select>
                 </FormControl>
 
-                {/* Seleccionar Matrícula */}
-                <FormControl fullWidth disabled={!estudianteSeleccionado || matriculasEstudiante.length === 0}>
-                  <InputLabel>Matrícula</InputLabel>
-                  <Select
-                    value={matriculaSeleccionada?.id || ""}
-                    label="Matrícula"
-                    onChange={(e) => {
-                      const matricula = matriculasEstudiante.find(
-                        (mat: any) => mat.id === e.target.value
-                      );
-                      setMatriculaSeleccionada(matricula);
+                {/* Búsqueda por documento */}
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  <TextField
+                    fullWidth
+                    label="Número de documento del estudiante"
+                    value={numeroDocumento}
+                    onChange={(e) => setNumeroDocumento(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleBuscarEstudiante()}
+                    disabled={!periodoSeleccionado}
+                    InputProps={{
+                      startAdornment: <SearchIcon sx={{ mr: 1, color: "#999" }} />,
                     }}
+                  />
+                  <Button
+                    variant="outlined"
+                    onClick={handleBuscarEstudiante}
+                    disabled={buscandoEstudiante || !numeroDocumento.trim() || !periodoSeleccionado}
+                    sx={{ whiteSpace: "nowrap", minWidth: 110 }}
                   >
-                    {matriculasEstudiante.length > 0 ? (
-                      matriculasEstudiante.map((matricula: any) => (
-                        <MenuItem key={matricula.id} value={matricula.id}>
-                          {matricula.oferta} ({matricula.area})
+                    {buscandoEstudiante ? <CircularProgress size={18} /> : "Buscar"}
+                  </Button>
+                </Box>
+
+                {/* Seleccionar inscripción encontrada */}
+                {inscripciones && inscripciones.length > 0 && (
+                  <FormControl fullWidth>
+                    <InputLabel>Inscripción del estudiante</InputLabel>
+                    <Select
+                      value={inscripcionSeleccionada?.id_inscripcion ?? ""}
+                      label="Inscripción del estudiante"
+                      onChange={(e) => {
+                        const ins = inscripciones.find(
+                          (i) => i.id_inscripcion === e.target.value
+                        );
+                        setInscripcionSeleccionada(ins ?? null);
+                      }}
+                    >
+                      {inscripciones.map((ins) => (
+                        <MenuItem key={ins.id_inscripcion} value={ins.id_inscripcion}>
+                          {ins.nombre} {ins.apellido} — {ins.modulo ?? "Sin módulo"}
+                          {ins.grupo ? ` (${ins.grupo})` : ""}
                         </MenuItem>
-                      ))
-                    ) : (
-                      <MenuItem disabled>
-                        No hay matrículas disponibles
-                      </MenuItem>
-                    )}
-                  </Select>
-                </FormControl>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
 
                 {/* Upload PDF */}
                 <Box
-                  className={`border-2 border-dashed border-[#C20E1A] rounded-lg p-2 text-center cursor-pointer transition-colors ${
+                  className={`border-2 border-dashed border-[#C20E1A] rounded-lg p-4 text-center cursor-pointer transition-colors ${
                     archivoIndividual ? "bg-gray-100" : "bg-transparent"
                   } hover:bg-gray-50`}
                 >
@@ -522,15 +488,12 @@ export default function CertificadosPage() {
                     id="file-input-individual"
                     disabled={cargando}
                   />
-                  <label
-                    htmlFor="file-input-individual"
-                    className="flex flex-col items-center cursor-pointer gap-2"
-                  >
+                  <label htmlFor="file-input-individual" className="flex flex-col items-center cursor-pointer gap-2">
                     <CloudUploadIcon sx={{ fontSize: 40, color: "#C20E1A" }} />
                     <span className="text-gray-700">
-                      {archivoIndividual ? archivoIndividual.name : "Selecciona PDF"}
+                      {archivoIndividual ? archivoIndividual.name : "Selecciona el PDF del certificado"}
                     </span>
-                    <small className="text-gray-400">Máximo 2MB</small>
+                    <small className="text-gray-400">Máximo 2 MB</small>
                   </label>
                 </Box>
 
@@ -538,14 +501,8 @@ export default function CertificadosPage() {
                   variant="contained"
                   size="large"
                   onClick={handleCargarIndividual}
-                  disabled={
-                    !periodoSeleccionado ||
-                    !estudianteSeleccionado ||
-                    !matriculaSeleccionada ||
-                    !archivoIndividual ||
-                    cargando
-                  }
-                  className="bg-[#C20E1A] hover:bg-[#970000] disabled:bg-gray-300 disabled:text-gray-500 text-white font-medium rounded-lg py-3"
+                  disabled={!inscripcionSeleccionada || !archivoIndividual || cargando}
+                  className="bg-[#C20E1A] hover:bg-[#970000] disabled:bg-gray-300 text-white font-medium rounded-lg py-3"
                 >
                   {cargando ? (
                     <>
@@ -559,89 +516,144 @@ export default function CertificadosPage() {
               </Box>
             </TabPanel>
 
-            {/* CARGA POR LOTE */}
+            {/* ── CARGA POR LOTE ── */}
             <TabPanel value={tabValue} index={1}>
-              <Box className="flex flex-col gap-2.5">
+              <Box className="flex flex-col gap-3">
                 <Alert severity="info" className="rounded-lg">
                   <Box className="mb-1 font-semibold">⚠️ Requisitos para la carga por lote:</Box>
                   <List dense className="pl-2">
                     <ListItem disablePadding>
                       <ListItemIcon sx={{ minWidth: 32 }}>•</ListItemIcon>
-                      <ListItemText primary="Máximo 2MB por archivo PDF" />
+                      <ListItemText primary="El nombre de cada PDF debe ser el número de documento del estudiante (ej: 1001234567.pdf)" />
                     </ListItem>
                     <ListItem disablePadding>
                       <ListItemIcon sx={{ minWidth: 32 }}>•</ListItemIcon>
-                      <ListItemText primary="El nombre del archivo debe ser el documento del estudiante (ej: 1001234567.pdf)" />
+                      <ListItemText primary="Máximo 2 MB por archivo" />
                     </ListItem>
                     <ListItem disablePadding>
                       <ListItemIcon sx={{ minWidth: 32 }}>•</ListItemIcon>
-                      <ListItemText primary="El estudiante debe tener matrícula en el período seleccionado" />
+                      <ListItemText primary="El estudiante debe tener al menos una inscripción activa" />
                     </ListItem>
                   </List>
                 </Alert>
 
-                <FormControl fullWidth>
-                  <InputLabel>Período</InputLabel>
+                <FormControl fullWidth disabled={loadingPeriodos}>
+                  <InputLabel>Período académico</InputLabel>
                   <Select
                     value={periodoMasivo}
-                    label="Período"
+                    label="Período académico"
                     onChange={(e) => {
-                      setPeriodoMasivo(e.target.value);
+                      setPeriodoMasivo(e.target.value as number);
                       setArchivosLote([]);
                     }}
                   >
-                    {MOCK_PERIODOS.map((periodo) => (
-                      <MenuItem key={periodo} value={periodo}>
-                        {periodo}
-                      </MenuItem>
-                    ))}
+                    {loadingPeriodos ? (
+                      <MenuItem disabled>Cargando...</MenuItem>
+                    ) : (
+                      periodos.map((p) => (
+                        <MenuItem key={p.id_oferta_academica} value={p.id_oferta_academica}>
+                          {p.nombre}
+                        </MenuItem>
+                      ))
+                    )}
                   </Select>
                 </FormControl>
 
+                {/* Zona de clic / selección de archivos */}
                 <Box
-                  className={`border-2 border-dashed border-[#C20E1A] rounded-lg p-3 text-center cursor-pointer transition-colors ${
-                    archivosLote.length > 0 ? "bg-gray-100" : "bg-transparent"
-                  } hover:bg-gray-50`}
+                  onClick={() => {
+                    if (!periodoMasivo || cargando) return;
+                    loteInputRef.current?.click();
+                  }}
+                  sx={{
+                    border: "2px dashed #C20E1A",
+                    borderRadius: 2,
+                    p: 4,
+                    textAlign: "center",
+                    cursor: periodoMasivo && !cargando ? "pointer" : "not-allowed",
+                    bgcolor: archivosLote.length > 0 ? "#f5f5f5" : "transparent",
+                    opacity: periodoMasivo ? 1 : 0.5,
+                    "&:hover": periodoMasivo && !cargando ? { bgcolor: "#fafafa" } : {},
+                    transition: "background-color 0.2s",
+                  }}
                 >
                   <input
+                    ref={loteInputRef}
                     type="file"
                     multiple
                     accept=".pdf"
                     onChange={handleArchivosMasivoChange}
-                    className="hidden"
-                    id="folder-input"
-                    disabled={cargando || !periodoMasivo}
+                    style={{ display: "none" }}
                   />
-                  <label
-                    htmlFor="folder-input"
-                    className="flex flex-col items-center cursor-pointer gap-2"
-                  >
-                    <CloudUploadIcon sx={{ fontSize: 50, color: "#C20E1A" }} />
-                    <span className="font-semibold text-base text-gray-700">
-                      {archivosLote.length > 0
-                        ? `${archivosLote.length} archivos seleccionados`
-                        : "Selecciona una carpeta"}
-                    </span>
-                    <small className="text-gray-400">
-                      PDF con nombres: documento.pdf (ej: 1001234567.pdf)
-                    </small>
-                  </label>
+                  <CloudUploadIcon sx={{ fontSize: 50, color: "#C20E1A" }} />
+                  <Typography variant="body1" fontWeight={600} color="text.secondary" mt={1}>
+                    {archivosLote.length > 0
+                      ? `${archivosLote.length} archivo${archivosLote.length !== 1 ? "s" : ""} seleccionado${archivosLote.length !== 1 ? "s" : ""}`
+                      : "Haz clic aquí para seleccionar los PDFs"}
+                  </Typography>
+                  <Typography variant="caption" color="text.disabled">
+                    Nombre del archivo = número de documento del estudiante.pdf
+                  </Typography>
                 </Box>
+
+                {/* Lista de archivos seleccionados */}
+                {archivosLote.length > 0 && (
+                  <Box
+                    sx={{
+                      maxHeight: 180,
+                      overflowY: "auto",
+                      border: "1px solid #e0e0e0",
+                      borderRadius: 1,
+                      px: 1,
+                      py: 0.5,
+                    }}
+                  >
+                    {archivosLote.map((f, i) => (
+                      <Box
+                        key={i}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          py: 0.4,
+                          borderBottom: i < archivosLote.length - 1 ? "1px solid #f0f0f0" : "none",
+                        }}
+                      >
+                        <Typography variant="body2" color="text.secondary" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                          📄 {f.name}
+                          <span style={{ color: "#bbb", fontSize: "0.75rem" }}>
+                            ({(f.size / 1024).toFixed(0)} KB)
+                          </span>
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          onClick={() =>
+                            setArchivosLote((prev) => prev.filter((_, idx) => idx !== i))
+                          }
+                          sx={{ color: "#C20E1A", ml: 1, p: 0.5, "&:hover": { bgcolor: "#fff0f0" } }}
+                          title="Quitar archivo"
+                        >
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
 
                 <Button
                   variant="contained"
                   size="large"
                   onClick={handleCargarMasivo}
                   disabled={!periodoMasivo || archivosLote.length === 0 || cargando}
-                  className="bg-[#C20E1A] hover:bg-[#970000] disabled:bg-gray-300 disabled:text-gray-500 text-white font-medium rounded-lg py-3"
+                  className="bg-[#C20E1A] hover:bg-[#970000] disabled:bg-gray-300 text-white font-medium rounded-lg py-3"
                 >
                   {cargando ? (
                     <>
                       <CircularProgress size={20} sx={{ mr: 1, color: "white" }} />
-                      Procesando ({archivosLote.length} archivos)...
+                      Procesando {archivosLote.length} archivos...
                     </>
                   ) : (
-                    <>Cargar {archivosLote.length} Certificados</>
+                    <>Cargar {archivosLote.length} Certificado{archivosLote.length !== 1 ? "s" : ""}</>
                   )}
                 </Button>
               </Box>
@@ -649,56 +661,55 @@ export default function CertificadosPage() {
           </CardContent>
         </Card>
 
-        {/* Panel Lateral */}
+        {/* ── Panel lateral de info ── */}
         <Card className="rounded-[1rem] shadow-sm border border-gray-200 h-fit">
-          <CardHeader 
-            title="Información"
-            titleTypographyProps={{
-              sx: { 
-                color: "#C20E1A",
-                fontWeight: 600,
-                fontSize: "1.1rem"
-              }
-            }}
+          <CardHeader
+            title="Resumen"
+            titleTypographyProps={{ sx: { color: "#C20E1A", fontWeight: 600, fontSize: "1.1rem" } }}
             sx={{ borderBottom: "1px solid #f0f0f0" }}
           />
           <CardContent>
-            <Box className="flex flex-col gap-2">
+            <Box className="flex flex-col gap-3">
               {tabValue === 0 ? (
                 <>
                   {periodoSeleccionado ? (
                     <>
                       <Box>
-                        <p className="font-semibold mb-2">Período:</p>
-                        <Chip label={periodoSeleccionado} color="primary" variant="outlined" />
+                        <Typography variant="body2" className="font-semibold mb-1">Período:</Typography>
+                        <Chip
+                          label={periodos.find((p) => p.id_oferta_academica === periodoSeleccionado)?.nombre}
+                          color="primary"
+                          variant="outlined"
+                        />
                       </Box>
-
-                      {estudianteSeleccionado && (
+                      {inscripcionSeleccionada && (
                         <Box>
-                          <p className="font-semibold mb-2">Estudiante:</p>
-                          <p className="mb-1 text-gray-700">
-                            {estudianteSeleccionado.nombre}
-                          </p>
-                          <small className="text-gray-400">
-                            {estudianteSeleccionado.documento}
-                          </small>
+                          <Typography variant="body2" className="font-semibold mb-1">Estudiante:</Typography>
+                          <Typography variant="body2" className="text-gray-700">
+                            {inscripcionSeleccionada.nombre} {inscripcionSeleccionada.apellido}
+                          </Typography>
+                          <Typography variant="caption" className="text-gray-400">
+                            Doc: {inscripcionSeleccionada.numero_documento}
+                          </Typography>
+                          <Typography variant="body2" className="text-gray-600 mt-1">
+                            {inscripcionSeleccionada.modulo ?? "—"}
+                          </Typography>
                         </Box>
                       )}
-
-                      {matriculaSeleccionada && (
+                      {archivoIndividual && (
                         <Box>
-                          <p className="font-semibold mb-2">Matrícula:</p>
-                          <p className="mb-1 text-gray-700">
-                            {matriculaSeleccionada.oferta}
-                          </p>
-                          <small className="text-gray-400">
-                            Área: {matriculaSeleccionada.area}
-                          </small>
+                          <Typography variant="body2" className="font-semibold mb-1">Archivo:</Typography>
+                          <Typography variant="body2" className="text-gray-700">{archivoIndividual.name}</Typography>
+                          <Typography variant="caption" className="text-gray-400">
+                            {(archivoIndividual.size / 1024).toFixed(1)} KB
+                          </Typography>
                         </Box>
                       )}
                     </>
                   ) : (
-                    <p className="text-gray-400 text-center">Selecciona un período</p>
+                    <Typography variant="body2" className="text-gray-400 text-center">
+                      Selecciona un período para comenzar
+                    </Typography>
                   )}
                 </>
               ) : (
@@ -706,18 +717,24 @@ export default function CertificadosPage() {
                   {periodoMasivo ? (
                     <>
                       <Box>
-                        <p className="font-semibold mb-2">Período:</p>
-                        <Chip label={periodoMasivo} color="primary" variant="outlined" />
+                        <Typography variant="body2" className="font-semibold mb-1">Período:</Typography>
+                        <Chip
+                          label={periodos.find((p) => p.id_oferta_academica === periodoMasivo)?.nombre}
+                          color="primary"
+                          variant="outlined"
+                        />
                       </Box>
                       <Box>
-                        <p className="font-semibold mb-2">Archivos:</p>
-                        <p className="text-3xl font-bold text-[#C20E1A]">
+                        <Typography variant="body2" className="font-semibold mb-1">Archivos:</Typography>
+                        <Typography variant="h4" className="font-bold text-[#C20E1A]">
                           {archivosLote.length}
-                        </p>
+                        </Typography>
                       </Box>
                     </>
                   ) : (
-                    <p className="text-gray-400 text-center">Selecciona un período</p>
+                    <Typography variant="body2" className="text-gray-400 text-center">
+                      Selecciona un período para comenzar
+                    </Typography>
                   )}
                 </>
               )}
@@ -726,25 +743,15 @@ export default function CertificadosPage() {
         </Card>
       </Box>
 
-      {/* Tabla de resultados */}
+      {/* ── Historial de cargas ── */}
       {certificadosCargados.length > 0 && (
         <Card className="mt-4 rounded-[1rem] shadow-sm border border-gray-200">
           <CardHeader
             title="Historial de Cargas"
-            titleTypographyProps={{
-              sx: { 
-                color: "#C20E1A",
-                fontWeight: 600,
-                fontSize: "1.1rem"
-              }
-            }}
+            titleTypographyProps={{ sx: { color: "#C20E1A", fontWeight: 600, fontSize: "1.1rem" } }}
             action={
-              <Button
-                startIcon={<DownloadIcon />}
-                onClick={exportarExcel}
-                className="text-[#C20E1A] hover:bg-red-50"
-              >
-                Exportar Excel
+              <Button startIcon={<DownloadIcon />} onClick={exportarCSV} className="text-[#C20E1A] hover:bg-red-50">
+                Exportar CSV
               </Button>
             }
             sx={{ borderBottom: "1px solid #f0f0f0" }}
@@ -756,7 +763,7 @@ export default function CertificadosPage() {
                   <TableCell className="font-semibold text-gray-700">Documento</TableCell>
                   <TableCell className="font-semibold text-gray-700">Estudiante</TableCell>
                   <TableCell className="font-semibold text-gray-700">Período</TableCell>
-                  <TableCell className="font-semibold text-gray-700">Oferta</TableCell>
+                  <TableCell className="font-semibold text-gray-700">Módulo</TableCell>
                   <TableCell className="font-semibold text-gray-700">Archivo</TableCell>
                   <TableCell className="font-semibold text-gray-700">Fecha</TableCell>
                   <TableCell align="center" className="font-semibold text-gray-700">Estado</TableCell>
@@ -765,19 +772,17 @@ export default function CertificadosPage() {
               <TableBody>
                 {certificadosCargados.map((cert) => (
                   <TableRow key={cert.id} className="hover:bg-gray-50 border-b border-gray-200">
-                    <TableCell className="font-semibold text-gray-700">
-                      {cert.estudianteDocumento}
-                    </TableCell>
+                    <TableCell className="font-semibold text-gray-700">{cert.estudianteDocumento}</TableCell>
                     <TableCell className="text-gray-700">{cert.estudianteNombre}</TableCell>
                     <TableCell className="text-gray-700">{cert.periodo}</TableCell>
-                    <TableCell className="text-gray-700">{cert.oferta}</TableCell>
+                    <TableCell className="text-gray-700">{cert.modulo}</TableCell>
                     <TableCell className="text-gray-700">{cert.archivo}</TableCell>
                     <TableCell className="text-gray-700">{cert.fechaCarga}</TableCell>
                     <TableCell align="center">
                       {cert.estado === "exitoso" ? (
-                        <CheckCircleIcon className="text-green-500" />
+                        <CheckCircleIcon className="text-green-500" titleAccess="Exitoso" />
                       ) : (
-                        <ErrorIcon className="text-red-500" />
+                        <ErrorIcon className="text-red-500" titleAccess={cert.mensaje} />
                       )}
                     </TableCell>
                   </TableRow>

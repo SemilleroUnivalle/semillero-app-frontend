@@ -24,14 +24,21 @@ const DATOS_MUNICIPIOS: MunicipioData[] = [
   { municipio: "Cartago", count: 2 },
 ];
 
-export function MunicipioDistributionInterno() {
+interface MunicipioDistributionProps {
+  data?: Array<{ municipio?: string; municipality?: string; count: number }>
+}
+
+export function MunicipioDistributionInterno({ data: externalData }: MunicipioDistributionProps = {}) {
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
     setIsClient(true)
   }, [])
 
-  const data = DATOS_MUNICIPIOS;
+  const data = (externalData || DATOS_MUNICIPIOS).map((item: any) => ({
+    municipio: item.municipality || item.municipio || "Desconocido",
+    count: item.count,
+  }));
 
   const options: ApexCharts.ApexOptions = {
     chart: {

@@ -70,7 +70,31 @@ export function EstadisticasDashboard() {
   const [tabValue, setTabValue] = useState(0);
 
   const [periods, setPeriods] = useState<Period[]>([]);
-  const [selectedPeriod, setSelectedPeriod] = useState<number | string>("");
+  const [selectedPeriod, setSelectedPeriod] = useState<number | string>("all");
+  const [selectedModulo, setSelectedModulo] = useState<number | string>("all");
+  const [selectedArea, setSelectedArea] = useState<number | string>("all");
+  const [selectedTipoVinculacion, setSelectedTipoVinculacion] = useState<string>("all");
+  const [selectedEstamento, setSelectedEstamento] = useState<string>("all");
+
+  const loadFilteredData = async (
+    period: number | string,
+    modulo: number | string,
+    area: number | string,
+    vinculacion: string,
+    estamento: string
+  ) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const dashboardData = await fetchDashboardData(period, modulo, area, vinculacion, estamento);
+      setData(dashboardData);
+    } catch (err) {
+      console.error("Error loading filtered dashboard data:", err);
+      setError("Error al filtrar las estadísticas.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     async function initStatistics() {
@@ -83,11 +107,8 @@ export function EstadisticasDashboard() {
         const sortedPeriods = [...allPeriods].sort((a, b) => (isPeriodActive(b) ? 1 : 0) - (isPeriodActive(a) ? 1 : 0));
         setPeriods(sortedPeriods);
 
-        // 2. Default to "all" (Historic) for Statistics page
-        setSelectedPeriod("all");
-
-        // 3. Fetch Data
-        const dashboardData = await fetchDashboardData("all");
+        // 2. Fetch Data with default "all" filters
+        const dashboardData = await fetchDashboardData("all", "all", "all", "all", "all");
         setData(dashboardData);
       } catch (err) {
         console.error("Error initializing statistics:", err);
@@ -100,23 +121,43 @@ export function EstadisticasDashboard() {
     initStatistics();
   }, []);
 
-  const handlePeriodChange = async (periodId: number | string) => {
-    try {
-      setLoading(true);
-      setSelectedPeriod(periodId);
-      const dashboardData = await fetchDashboardData(periodId);
-      setData(dashboardData);
-    } catch (err) {
-      console.error("Error changing period in statistics:", err);
-      setError("Error al cambiar el filtro de periodo.");
-    } finally {
-      setLoading(false);
-    }
+  const handlePeriodChange = (periodId: number | string) => {
+    setSelectedPeriod(periodId);
+    loadFilteredData(periodId, selectedModulo, selectedArea, selectedTipoVinculacion, selectedEstamento);
+  };
+
+  const handleModuloChange = (moduloId: number | string) => {
+    setSelectedModulo(moduloId);
+    loadFilteredData(selectedPeriod, moduloId, selectedArea, selectedTipoVinculacion, selectedEstamento);
+  };
+
+  const handleAreaChange = (areaId: number | string) => {
+    setSelectedArea(areaId);
+    setSelectedModulo("all");
+    loadFilteredData(selectedPeriod, "all", areaId, selectedTipoVinculacion, selectedEstamento);
+  };
+
+  const handleTipoVinculacionChange = (vinculacion: string) => {
+    setSelectedTipoVinculacion(vinculacion);
+    loadFilteredData(selectedPeriod, selectedModulo, selectedArea, vinculacion, selectedEstamento);
+  };
+
+  const handleEstamentoChange = (est: string) => {
+    setSelectedEstamento(est);
+    loadFilteredData(selectedPeriod, selectedModulo, selectedArea, selectedTipoVinculacion, est);
   };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
+
+  const filteredModules = React.useMemo(() => {
+    const allModules = data?.filterOptions?.modules ?? [];
+    if (!selectedArea || selectedArea === "all") {
+      return allModules;
+    }
+    return allModules.filter((m) => m.id_area_id === Number(selectedArea));
+  }, [data?.filterOptions?.modules, selectedArea]);
 
   if (loading) {
     return (
@@ -170,30 +211,115 @@ export function EstadisticasDashboard() {
           )}
         </Breadcrumbs>
 
-        <div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <FormControl variant="outlined" size="small" sx={{ minWidth: 250, bgcolor: 'white', borderRadius: 2 }}>
-            <InputLabel id="period-select-label">Filtrar por Periodo</InputLabel>
-            <Select
-              labelId="period-select-label"
-              value={selectedPeriod}
-              label="Filtrar por Periodo"
-              onChange={(e) => handlePeriodChange(e.target.value)}
-              sx={{ borderRadius: 2 }}
-            >
-              <MenuItem value="all"><em>Ver TODO (Histórico)</em></MenuItem>
-              {periods.map((p) => (
-                <MenuItem key={p.id_oferta_academica} value={p.id_oferta_academica}>
-                  {p.nombre} {isPeriodActive(p) ? "(Actual)" : ""}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+        <div className="mb-8 p-6 bg-white rounded-3xl shadow-sm border border-gray-100">
+          <Typography variant="subtitle2" className="font-bold text-gray-500 mb-4 uppercase tracking-wider">
+            Filtros de Búsqueda
+          </Typography>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            {/* Filtro por Periodo */}
+            <FormControl variant="outlined" size="small" fullWidth sx={{ bgcolor: 'white', borderRadius: 2 }}>
+              <InputLabel id="period-select-label">Periodo</InputLabel>
+              <Select
+                labelId="period-select-label"
+                value={selectedPeriod}
+                label="Periodo"
+                onChange={(e) => handlePeriodChange(e.target.value)}
+                sx={{ borderRadius: 2 }}
+              >
+                <MenuItem value="all"><em>Ver TODO (Histórico)</em></MenuItem>
+                {periods.map((p) => (
+                  <MenuItem key={p.id_oferta_academica} value={p.id_oferta_academica}>
+                    {p.nombre} {isPeriodActive(p) ? "(Actual)" : ""}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm border">
-            <CalendarIcon sx={{ fontSize: 18, color: "text.secondary" }} />
-            <Typography variant="body2" color="text.secondary">
-              Última actualización: {new Date().toLocaleDateString("es-ES")}
-            </Typography>
+            {/* Filtro por Área */}
+            <FormControl variant="outlined" size="small" fullWidth sx={{ bgcolor: 'white', borderRadius: 2 }}>
+              <InputLabel id="area-select-label">Área</InputLabel>
+              <Select
+                labelId="area-select-label"
+                value={selectedArea}
+                label="Área"
+                onChange={(e) => handleAreaChange(e.target.value)}
+                sx={{ borderRadius: 2 }}
+              >
+                <MenuItem value="all"><em>Todas las Áreas</em></MenuItem>
+                {data?.filterOptions?.areas.map((a) => (
+                  <MenuItem key={a.id_area} value={a.id_area}>
+                    {a.nombre_area}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Filtro por Módulo */}
+            <FormControl variant="outlined" size="small" fullWidth sx={{ bgcolor: 'white', borderRadius: 2 }}>
+              <InputLabel id="modulo-select-label">Módulo</InputLabel>
+              <Select
+                labelId="modulo-select-label"
+                value={selectedModulo}
+                label="Módulo"
+                onChange={(e) => handleModuloChange(e.target.value)}
+                sx={{ borderRadius: 2 }}
+              >
+                <MenuItem value="all"><em>Todos los Módulos</em></MenuItem>
+                {filteredModules.map((m) => (
+                  <MenuItem key={m.id_modulo} value={m.id_modulo}>
+                    {m.nombre_modulo}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Filtro por Tipo de Estudiante */}
+            <FormControl variant="outlined" size="small" fullWidth sx={{ bgcolor: 'white', borderRadius: 2 }}>
+              <InputLabel id="vinculacion-select-label">Tipo de estudiante (Vinculación)</InputLabel>
+              <Select
+                labelId="vinculacion-select-label"
+                value={selectedTipoVinculacion}
+                label="Tipo de estudiante (Vinculación)"
+                onChange={(e) => handleTipoVinculacionChange(e.target.value as string)}
+                sx={{ borderRadius: 2 }}
+              >
+                <MenuItem value="all"><em>Todos los Tipos</em></MenuItem>
+                {data?.filterOptions?.vinculaciones.map((v, idx) => (
+                  <MenuItem key={idx} value={v}>
+                    {v}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-4 pt-4 border-t border-gray-100">
+            {/* Filtro por Estamento */}
+            <FormControl variant="outlined" size="small" sx={{ minWidth: 250, bgcolor: 'white', borderRadius: 2 }}>
+              <InputLabel id="estamento-select-label">Estamento</InputLabel>
+              <Select
+                labelId="estamento-select-label"
+                value={selectedEstamento}
+                label="Estamento"
+                onChange={(e) => handleEstamentoChange(e.target.value as string)}
+                sx={{ borderRadius: 2 }}
+              >
+                <MenuItem value="all"><em>Todos los Estamentos</em></MenuItem>
+                {data?.filterOptions?.estamentos.map((e, idx) => (
+                  <MenuItem key={idx} value={e}>
+                    {e}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
+              <CalendarIcon sx={{ fontSize: 18, color: "text.secondary" }} />
+              <Typography variant="body2" color="text.secondary">
+                Última actualización: {new Date().toLocaleDateString("es-ES")}
+              </Typography>
+            </div>
           </div>
         </div>
 
@@ -276,7 +402,7 @@ export function EstadisticasDashboard() {
                   <Box className="p-6 rounded-2xl border bg-white">
                     <Typography variant="h6" className="font-bold mb-1">Estrato Socioeconómico</Typography>
                     <Typography variant="body2" color="text.secondary" className="mb-6">Nivel socioeconómico de los matriculados</Typography>
-                    <EstratoSocioeconomicoDistributionInterno />
+                    <EstratoSocioeconomicoDistributionInterno data={data.estratoDistribution} />
                   </Box>
                 </div>
 
@@ -290,7 +416,7 @@ export function EstadisticasDashboard() {
                   <Box className="p-6 rounded-2xl border bg-white">
                     <Typography variant="h6" className="font-bold mb-1">Tipo de Vinculación</Typography>
                     <Typography variant="body2" color="text.secondary" className="mb-6">Relación contractual de los estudiantes</Typography>
-                    <VinculacionDistributionInterno />
+                    <VinculacionDistributionInterno data={data.vinculacionDistribution} />
                   </Box>
                 </div>
               </div>
@@ -301,7 +427,7 @@ export function EstadisticasDashboard() {
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 <Box className="xl:col-span-2 p-6 rounded-2xl border bg-white flex flex-col items-center">
                   <Typography variant="h6" className="font-bold mb-6 self-start">Mapa de Procedencia</Typography>
-                  <ColombiaMapWithNoSSR geojsonDataUrl={COLOMBIA_GEOJSON_URL} />
+                  <ColombiaMapWithNoSSR geojsonDataUrl={COLOMBIA_GEOJSON_URL} data={data.municipioDistribution} />
                 </Box>
 
                 <div className="space-y-8">
@@ -314,7 +440,7 @@ export function EstadisticasDashboard() {
                   <Box className="p-6 rounded-2xl border bg-white">
                     <Typography variant="h6" className="font-bold mb-1">Municipios</Typography>
                     <Typography variant="body2" color="text.secondary" className="mb-6">Principales ciudades de origen</Typography>
-                    <MunicipioDistributionInterno />
+                    <MunicipioDistributionInterno data={data.municipioDistribution} />
                   </Box>
                 </div>
               </div>

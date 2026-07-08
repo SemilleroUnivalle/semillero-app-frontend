@@ -84,7 +84,7 @@ interface Matricula {
     estado: boolean;
     id_categoria: number;
   };
-  estado: boolean;
+  estado: string;
   grupo: string;
   fecha_inscripcion: string;
   tipo_vinculacion: string;
@@ -101,117 +101,44 @@ export default function Matriculas() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Matrícula de ejemplo
-  const matriculaEjemplo: Matricula = {
-    id_inscripcion: 1,
-    modulo: {
-      id_modulo: 1,
-      id_categoria: {
-        id_categoria: 1,
-        nombre: "NAS",
-        estado: true,
-      },
-      nombre_modulo: "CURSO DE PREPARACIÓN A LAS PRUEBAS SABER 11",
-      descripcion_modulo: "Aprende las habilidades necesarias para rendir exitosamente las pruebas Saber 11.",
-      intensidad_horaria: 120,
-      dirigido_a: "Estudiantes de grado 10-11",
-      incluye: "Proyecto final, certificado y acceso a recursos",
-      imagen_modulo: "/NAS.png",
-      estado: true,
-      id_area: 1,
-      id_oferta_categoria: [1],
-    },
-    estudiante: {
-      id_estudiante: 1,
-      acudiente: {
-        id_acudiente: 1,
-        nombre_acudiente: "Juan",
-        apellido_acudiente: "García",
-        tipo_documento_acudiente: "CC",
-        numero_documento_acudiente: "1234567890",
-        celular_acudiente: "3001234567",
-        email_acudiente: "juan.garcia@example.com",
-      },
-      nombre: "Pedro",
-      apellido: "Pérez",
-      contrasena: "hash_password",
-      numero_documento: "1098765432",
-      email: "pedro.perez@example.com",
-      is_active: true,
-      ciudad_residencia: "Cali",
-      eps: "Salud Total",
-      grado: "11",
-      colegio: "Colegio San Antonio",
-      tipo_documento: "CC",
-      genero: "M",
-      fecha_nacimiento: "2007-05-15",
-      telefono_fijo: "2123456",
-      celular: "3009876543",
-      departamento_residencia: "Valle del Cauca",
-      comuna_residencia: "Comuna 1",
-      direccion_residencia: "Calle 5 No. 10-20",
-      estamento: "Estudiante",
-      discapacidad: false,
-      tipo_discapacidad: "",
-      descripcion_discapacidad: "",
-      area_desempeño: "Tecnología",
-      grado_escolaridad: "Bachiller",
-      documento_identidad: "doc_url",
-      foto: "foto_url",
-      user: 1,
-    },
-    oferta_categoria: {
-      id_oferta_categoria: 1,
-      id_oferta_academica: {
-        id_oferta_academica: 1,
-        nombre: "2026A",
-        fecha_inicio: "2026-02-23",
-        estado: true,
-      },
-      precio_publico: "500000",
-      precio_privado: "600000",
-      precio_univalle: "300000",
-      precio_univalle_egresados: "250000",
-      fecha_finalizacion: "2025-06-30",
-      estado: true,
-      id_categoria: 1,
-    },
-    estado: true,
-    grupo: "",
-    fecha_inscripcion: "2026-02-23",
-    tipo_vinculacion: "Becados",
-    terminos: true,
-    observaciones: null,
-    recibo_pago: null,
-    constancia: null,
-    certificado: null,
-  };
+
+
 
   useEffect(() => {
-    // TODO: Reemplazar con llamada real al endpoint cuando esté disponible
-    // const token = localStorage.getItem("token");
-    // axios
-    //   .get(`${API_BASE_URL}/matricula/mat/`, {
-    //     headers: {
-    //       Authorization: `Token ${token}`,
-    //     },
-    //   })
-    //   .then((res) => {
-    //     setMatriculas(res.data);
-    //     setLoading(false);
-    //     console.log("Ofertas academicas", res.data);
-    //   })
-    //   .catch(() => {
-    //     setError("Error al cargar las matrículas");
-    //     setLoading(false);
-    //   });
+    const token = localStorage.getItem("token");
+    const userRaw = localStorage.getItem("user");
+    let idEstudiante: number | null = null;
 
-    // Datos de ejemplo temporal
-    setTimeout(() => {
-      setMatriculas([matriculaEjemplo]);
+    if (userRaw) {
+      try {
+        const user = JSON.parse(userRaw);
+        idEstudiante = user.id ?? null;
+      } catch {
+        idEstudiante = null;
+      }
+    }
+
+    if (!token || !idEstudiante) {
+      setError("No se pudo obtener la sesión del estudiante.");
       setLoading(false);
-    }, 500);
+      return;
+    }
+
+    axios
+      .get(`${API_BASE_URL}/inscripcion/filtro-estudiante/`, {
+        params: { id_estudiante: idEstudiante },
+        headers: { Authorization: `Token ${token}` },
+      })
+      .then((res) => {
+        setMatriculas(res.data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Error al cargar las matrículas. Intenta de nuevo.");
+        setLoading(false);
+      });
   }, []);
+
 
   if (loading) return <div>Cargando matrículas...</div>;
   if (error) return <div>{error}</div>;
@@ -269,15 +196,20 @@ export default function Matriculas() {
                   </div>
                 </div>
 
-                {matricula.estado ? (
+                {matricula.estado === "Revisado" ? (
                   <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold mb-3">
                     <span className="w-2 h-2 bg-green-600 rounded-full"></span>
-                    Activa
+                    Revisada
+                  </div>
+                ) : matricula.estado === "Pendiente" ? (
+                  <div className="inline-flex items-center gap-2 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold mb-3">
+                    <span className="w-2 h-2 bg-yellow-600 rounded-full"></span>
+                    Pendiente
                   </div>
                 ) : (
                   <div className="inline-flex items-center gap-2 bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold mb-3">
                     <span className="w-2 h-2 bg-red-600 rounded-full"></span>
-                    Inactiva
+                    No revisada
                   </div>
                 )}
 

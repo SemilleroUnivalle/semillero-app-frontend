@@ -11,6 +11,13 @@ export interface ModuleGenderEnrollment {
   genderBreakdown: ModuleGenderBreakdown;
 }
 
+export interface FilterOptions {
+  modules: Array<{ id_modulo: number; nombre_modulo: string; id_area_id: number }>;
+  areas: Array<{ id_area: number; nombre_area: string }>;
+  vinculaciones: string[];
+  estamentos: string[];
+}
+
 export interface DashboardData {
   totalEnrollments: number
   totalRegister: number
@@ -45,6 +52,19 @@ export interface DashboardData {
     gender: string
     count: number
   }>
+  estratoDistribution?: Array<{
+    estrato: string
+    count: number
+  }>
+  vinculacionDistribution?: Array<{
+    type: string
+    count: number
+  }>
+  municipioDistribution?: Array<{
+    municipality: string
+    count: number
+  }>
+  filterOptions?: FilterOptions
 }
 
 export interface Period {
@@ -64,11 +84,21 @@ export const isInRegistration = (p: Period) => {
 };
 
 
-export async function fetchDashboardData(periodId?: number | string): Promise<DashboardData> {
-  const isAll = !periodId || periodId === "all";
-  const res = await client.get("/inscripcion/dashboard/", {
-    params: isAll ? {} : { periodo: periodId }
-  });
+export async function fetchDashboardData(
+  periodId?: number | string,
+  moduloId?: number | string,
+  areaId?: number | string,
+  tipoVinculacion?: string,
+  estamento?: string
+): Promise<DashboardData> {
+  const params: Record<string, any> = {};
+  if (periodId && periodId !== "all") params.periodo = periodId;
+  if (moduloId && moduloId !== "all") params.modulo = moduloId;
+  if (areaId && areaId !== "all") params.area = areaId;
+  if (tipoVinculacion && tipoVinculacion !== "all") params.tipo_vinculacion = tipoVinculacion;
+  if (estamento && estamento !== "all") params.estamento = estamento;
+
+  const res = await client.get("/inscripcion/dashboard/", { params });
   return res.data as DashboardData;
 }
 

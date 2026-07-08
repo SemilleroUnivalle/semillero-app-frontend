@@ -101,7 +101,7 @@ export default function CrearGruposManualmente() {
       try {
         const token = getToken();
 
-        const response = await fetch(`${API_BASE_URL}/matricula/mat/`, {
+        const response = await fetch(`${API_BASE_URL}/inscripcion/`, {
           headers: {
             Authorization: `Token ${token}`,
             "Content-Type": "application/json",
@@ -411,7 +411,7 @@ export default function CrearGruposManualmente() {
     const updatePromises = studentIds.map(async (studentId) => {
       try {
         const response = await fetch(
-          `${API_BASE_URL}/matricula/mat/${studentId}/`,
+          `${API_BASE_URL}/inscripcion/${studentId}/`,
           {
             method: "PATCH",
             headers: {
