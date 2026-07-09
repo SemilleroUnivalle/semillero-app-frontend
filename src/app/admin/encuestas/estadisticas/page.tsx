@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import type { ApexOptions } from "apexcharts";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
@@ -491,7 +492,7 @@ export default function EstadisticasEncuestasPage() {
       <Grid container spacing={3}>
 
         {/* Row 1 — Left: Evolution */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ borderRadius: 4, boxShadow: "0 4px 20px rgba(0,0,0,0.06)", height: "100%" }}>
             <CardHeader
               title="Tendencias del Semillero"
@@ -503,7 +504,7 @@ export default function EstadisticasEncuestasPage() {
             <CardContent>
               <Box sx={{ pt: 1 }}>
                 <Chart
-                  options={evolutionChart.options}
+                  options={evolutionChart.options as ApexOptions}
                   series={evolutionChart.series}
                   type="area"
                   height={380}
@@ -514,7 +515,7 @@ export default function EstadisticasEncuestasPage() {
         </Grid>
 
         {/* Row 1 — Right: Bars per area */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ borderRadius: 4, boxShadow: "0 4px 20px rgba(0,0,0,0.06)", height: "100%" }}>
             <CardHeader
               title="Desempeño por Áreas Académicas"
@@ -526,7 +527,7 @@ export default function EstadisticasEncuestasPage() {
             <CardContent>
               <Box sx={{ pt: 1 }}>
                 <Chart
-                  options={areasChart.options}
+                  options={areasChart.options as ApexOptions}
                   series={areasChart.series}
                   type="bar"
                   height={380}
@@ -537,7 +538,7 @@ export default function EstadisticasEncuestasPage() {
         </Grid>
 
         {/* Row 2 — Left: Donut distribution */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ borderRadius: 4, boxShadow: "0 4px 20px rgba(0,0,0,0.06)", height: "100%" }}>
             <CardHeader
               title="Distribución de Satisfacción"
@@ -549,7 +550,7 @@ export default function EstadisticasEncuestasPage() {
             <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Box sx={{ width: "100%", py: 2 }}>
                 <Chart
-                  options={distributionChart.options}
+                  options={distributionChart.options as ApexOptions}
                   series={distributionChart.series}
                   type="donut"
                   height={360}
@@ -560,7 +561,7 @@ export default function EstadisticasEncuestasPage() {
         </Grid>
 
         {/* Row 2 — Right: Radar by area */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ borderRadius: 4, boxShadow: "0 4px 20px rgba(0,0,0,0.06)", height: "100%" }}>
             <CardHeader
               title="Perfil de Rendimiento por Área"
@@ -572,7 +573,7 @@ export default function EstadisticasEncuestasPage() {
             <CardContent>
               <Box sx={{ pt: 1 }}>
                 <Chart
-                  options={radarChart.options}
+                  options={radarChart.options as ApexOptions}
                   series={radarChart.series}
                   type="radar"
                   height={380}
