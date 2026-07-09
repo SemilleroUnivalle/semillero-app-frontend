@@ -91,7 +91,7 @@ export default function Matriculas() {
               className="flex flex-col rounded-xl shadow-lg transition-shadow hover:shadow-2xl"
             >
               <CardMedia
-                className="h-48 bg-gradient-to-r from-primary to-blue-600 object-cover"
+                className="h-48 bg-gradient-to-r from-gray-200 to-gray-600 object-cover"
                 component="img"
                 image={matricula.modulo.imagen_modulo || "/NAS.png"}
               />

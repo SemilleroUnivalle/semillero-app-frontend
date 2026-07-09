@@ -11,12 +11,9 @@ import {
   Avatar,
   Button,
   Autocomplete,
-  Alert,
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
-  Typography,
 } from "@mui/material";
 import { useState, useEffect, useRef } from "react";
 import Matricula from "@/components/matricula-form";
@@ -181,6 +178,7 @@ export default function Registro() {
     ciudad_documento: "cali",
   });
 
+  // Formulario de datos del acudiente
   const [formDataAcudiente, setFormDataAcudiente] = useState({
     nombre_acudiente: "",
     apellido_acudiente: "",
@@ -194,6 +192,52 @@ export default function Registro() {
     getFormData: () => any;
     validate: () => boolean;
   }>(null);
+
+  // Buscar estudiante por número de documento
+  const buscarEstudiante = async (numeroDocumento: string) => {
+    if (!numeroDocumento) return;
+  
+    try {
+      const response = await axios.get(`${API_BASE_URL}/estudiante/est/`);
+  
+      const estudiante = response.data.find(
+        (e: any) => e.numero_documento === numeroDocumento
+      );
+  
+      if (!estudiante) {
+        console.log("No se encontró el estudiante");
+        return;
+      }
+  
+      console.log("Estudiante encontrado:", estudiante);
+  
+      setFormData((prev) => ({
+        ...prev,
+        nombre: estudiante.nombre ?? "",
+        apellido: estudiante.apellido ?? "",
+        tipo_documento: estudiante.tipo_documento ?? "",
+        fecha_nacimiento: estudiante.fecha_nacimiento ?? "",
+        genero: estudiante.genero ?? "",
+        email: estudiante.email ?? "",
+        celular: estudiante.celular ?? "",
+        telefono_fijo: estudiante.telefono_fijo ?? "",
+        departamento_residencia: estudiante.departamento_residencia ?? "",
+        ciudad_residencia: estudiante.ciudad_residencia ?? "",
+        comuna_residencia: estudiante.comuna_residencia ?? "",
+        direccion_residencia: estudiante.direccion_residencia ?? "",
+        colegio: estudiante.colegio ?? "",
+        grado: estudiante.grado ?? "",
+        estamento: estudiante.estamento ?? "",
+        eps: estudiante.eps ?? "",
+        discapacidad: estudiante.discapacidad ?? false,
+        descripcion_discapacidad:
+          estudiante.descripcion_discapacidad ?? "",
+        tipo_discapacidad: estudiante.tipo_discapacidad ?? "",
+      }));
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   // Manejar envío del formulario
   // Enviar datos al backend
@@ -618,6 +662,48 @@ export default function Registro() {
                 DATOS DEL ESTUDIANTE
               </h2>
               <div className="flex flex-wrap justify-around gap-4 text-gray-600">
+                 {/* Campo Numero de Documento */}
+                 <TextField
+                  className="inputs-textfield flex w-full flex-col sm:w-1/3"
+                  label="Número de identificación"
+                  name="numero_identificacion"
+                  variant="outlined"
+                  type="number"
+                  fullWidth
+                  required
+                  value={formData.numero_documento}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      numero_documento: e.target.value,
+                    })
+                  }
+                  onBlur={() => buscarEstudiante(formData.numero_documento)}
+                />
+                {/* Campo Tipo de Documento */}
+                <FormControl className="inputs-textfield w-full sm:w-1/3">
+                  <InputLabel id="tipo_documento">Tipo de documento</InputLabel>
+                  <Select
+                    labelId="tipo_documento"
+                    id="tipo_documento"
+                    label="tipo_documento"
+                    required
+                    value={formData.tipo_documento}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        tipo_documento: e.target.value.toUpperCase(),
+                      })
+                    }
+                  >
+                    <MenuItem value={"TI"}>Tarjeta de identidad</MenuItem>
+                    <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
+                    <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
+                    <MenuItem value={"PPT"}>
+                      Permiso de protección temporal
+                    </MenuItem>
+                  </Select>
+                </FormControl>
                 {/* Campo Nombres */}
                 <TextField
                   className="inputs-textfield flex w-full flex-col sm:w-1/3"
@@ -652,47 +738,7 @@ export default function Registro() {
                     })
                   }
                 />
-                {/* Campo Tipo de Documento */}
-                <FormControl className="inputs-textfield w-full sm:w-1/3">
-                  <InputLabel id="tipo_documento">Tipo de documento</InputLabel>
-                  <Select
-                    labelId="tipo_documento"
-                    id="tipo_documento"
-                    label="tipo_documento"
-                    required
-                    value={formData.tipo_documento}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        tipo_documento: e.target.value.toUpperCase(),
-                      })
-                    }
-                  >
-                    <MenuItem value={"TI"}>Tarjeta de identidad</MenuItem>
-                    <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
-                    <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
-                    <MenuItem value={"PPT"}>
-                      Permiso de protección temporal
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-                {/* Campo Numero de Documento */}
-                <TextField
-                  className="inputs-textfield flex w-full flex-col sm:w-1/3"
-                  label="Número de identificación"
-                  name="numero_identificacion"
-                  variant="outlined"
-                  type="number"
-                  fullWidth
-                  required
-                  value={formData.numero_documento}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      numero_documento: e.target.value,
-                    })
-                  }
-                />
+                               
                 {/* Campo Fecha de Nacimiento */}
                 <TextField
                   className="inputs-textfield flex w-full flex-col sm:w-1/3"
