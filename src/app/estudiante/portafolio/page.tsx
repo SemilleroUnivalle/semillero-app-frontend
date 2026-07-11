@@ -36,7 +36,7 @@ interface Inscripcion {
       fecha_inicio: string;
     };
   };
-  certificado: string | null;
+  certificado_academico: string | null;
   grupo: string | null;
   fecha_inscripcion: string;
 }
@@ -77,7 +77,7 @@ export default function Portafolio() {
       })
       .then((res) => {
         // Filtrar las inscripciones que tengan certificado asignado
-        const conCertificado = res.data.filter((ins: any) => ins.certificado);
+        const conCertificado = res.data.filter((ins: any) => ins.certificado_academico);
         setCertificados(conCertificado);
         setLoading(false);
       })
@@ -192,8 +192,8 @@ export default function Portafolio() {
                       color="primary"
                       startIcon={<VisibilityOutlinedIcon />}
                       onClick={() => {
-                        if (cert.certificado) {
-                          setPreviewUrl(cert.certificado);
+                        if (cert.certificado_academico) {
+                          setPreviewUrl(cert.certificado_academico);
                           setPreviewTitle(cert.modulo?.nombre_modulo || "Certificado");
                         }
                       }}
@@ -210,7 +210,7 @@ export default function Portafolio() {
                     <Button
                       variant="contained"
                       color="primary"
-                      href={cert.certificado || "#"}
+                      href={cert.certificado_academico || "#"}
                       target="_blank"
                       rel="noopener noreferrer"
                       startIcon={<DownloadOutlined />}

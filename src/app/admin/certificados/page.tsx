@@ -192,7 +192,7 @@ export default function CertificadosPage() {
     setMensaje(null);
 
     const formData = new FormData();
-    formData.append("certificado", archivoIndividual);
+    formData.append("certificado_academico", archivoIndividual);
 
     try {
       await axios.patch(
@@ -289,7 +289,7 @@ export default function CertificadosPage() {
 
         // 2) Subir certificado
         const form = new FormData();
-        form.append("certificado", archivo);
+        form.append("certificado_academico", archivo);
         await axios.patch(
           `${API_BASE_URL}/inscripcion/${inscripcion.id_inscripcion}/`,
           form,
