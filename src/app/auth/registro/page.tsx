@@ -148,6 +148,10 @@ export default function Registro() {
   const [documentoIdentidad, setDocumentoIdentidad] = useState<File | null>(
     null,
   );
+  const [isExistingStudent, setIsExistingStudent] = useState(false);
+  const [existingStudentId, setExistingStudentId] = useState<number | null>(
+    null,
+  );
 
   // Estados de carga
   const [cargando, setCargando] = useState(false);
@@ -208,7 +212,7 @@ export default function Registro() {
     setCargando(true);
 
     try {
-      if (!fotoPerfil) {
+      if (!isExistingStudent && !fotoPerfil) {
         alert("La foto de perfil es obligatoria");
         setCargando(false);
         return;
@@ -216,7 +220,7 @@ export default function Registro() {
 
       if (
         !isValidEmail(formData.email) ||
-        !isValidEmail(formDataAcudiente.email_acudiente)
+        (!esDocente && !isValidEmail(formDataAcudiente.email_acudiente))
       ) {
         alert(
           "Los correos electrónicos deben ser @gmail.com o @correounivalle.edu.co",
@@ -225,15 +229,15 @@ export default function Registro() {
         return;
       }
 
-      if (!documentoIdentidad) {
+      if (!isExistingStudent && !documentoIdentidad) {
         alert("El documento de identidad es obligatorio");
         setCargando(false);
         return;
       }
 
       if (
-        fotoPerfil.size > 2 * 1024 * 1024 ||
-        documentoIdentidad.size > 2 * 1024 * 1024
+        (fotoPerfil && fotoPerfil.size > 2 * 1024 * 1024) ||
+        (documentoIdentidad && documentoIdentidad.size > 2 * 1024 * 1024)
       ) {
         alert(
           "La foto de perfil o el documento de identidad tienen un peso mayor a 2MB",
@@ -242,39 +246,16 @@ export default function Registro() {
         return;
       }
 
-      const formDataToSend = new FormData();
+      let finalStudentId = existingStudentId;
 
-      // Añadir todos los campos del formData al FormData
-      for (const key in formData) {
-        const typedKey = key as keyof typeof formData;
-        let value = formData[typedKey];
-        if (typeof value === "boolean") value = value ? "True" : "False";
-        formDataToSend.append(key, value as string | Blob);
-      }
-      // Crear un acudiente primero para obtener su ID
-      const responseAcudiente = await axios.post(
-        `${API_BASE_URL}/acudiente/acu/`,
-        formDataAcudiente,
-        {
-          headers: {},
-        },
-      );
+      if (isExistingStudent && existingStudentId) {
+        const formDataToSend = new FormData();
 
-      if (
-        responseAcudiente.status === 201 ||
-        responseAcudiente.status === 200
-      ) {
-        let id_acudiente = null; // Inicializar id_acudiente
-        if (responseAcudiente.status === 201) {
-          id_acudiente = responseAcudiente.data.id_acudiente; // Obtener el ID del acudiente creado
-        } else {
-          id_acudiente = responseAcudiente.data.data.id_acudiente; // Obtener el ID del acudiente creado
-        }
-
-        formDataToSend.append("acudiente", id_acudiente);
-
-        for (const pair of formDataToSend.entries()) {
-          console.log(`${pair[0]}:`, pair[1]);
+        for (const key in formData) {
+          const typedKey = key as keyof typeof formData;
+          let value = formData[typedKey];
+          if (typeof value === "boolean") value = value ? "True" : "False";
+          formDataToSend.append(key, value as string | Blob);
         }
 
         if (fotoPerfil) {
@@ -285,101 +266,189 @@ export default function Registro() {
           formDataToSend.append("documento_identidad", documentoIdentidad);
         }
 
-        //Creacion de estudiante
-        const responseEstudiante = await axios.post(
-          `${API_BASE_URL}/estudiante/est/`,
-          formDataToSend,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
+        try {
+          const responseEstudiante = await axios.patch(
+            `${API_BASE_URL}/estudiante/est/${existingStudentId}/`,
+            formDataToSend,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
             },
-          },
-        );
-        if (responseEstudiante.status === 201) {
-          console.log("Estudiante agregado con éxito");
+          );
 
-          // AHORA crear la matrícula con el ID del estudiante
-          if (matriculaFormRef.current) {
-            try {
-              const matriculaData = matriculaFormRef.current.getFormData();
+          if (
+            responseEstudiante.status === 200 ||
+            responseEstudiante.status === 201
+          ) {
+            console.log("Estudiante actualizado con éxito");
+            finalStudentId = existingStudentId;
+          }
+        } catch (updateError) {
+          let mensaje = "Error desconocido al actualizar el estudiante";
+          if (axios.isAxiosError(updateError)) {
+            mensaje =
+              (updateError.response?.data as any)?.detail ||
+              (updateError.response?.data as any)?.message ||
+              JSON.stringify(updateError.response?.data) ||
+              updateError.message;
+          } else if (updateError instanceof Error) {
+            mensaje = updateError.message;
+          }
 
-              if (!matriculaData) {
-                throw new Error(
-                  "No se pudieron obtener los datos de la matrícula",
-                );
-              }
+          console.error("Error al actualizar estudiante:", updateError);
+          setCargando(false);
+          alert(`Hubo un error al actualizar el estudiante:\n${mensaje}`);
+          return;
+        }
+      } else {
+        if (!isExistingStudent) {
+          const formDataToSend = new FormData();
 
-              const matriculaFormData = new FormData();
-              matriculaFormData.append(
-                "id_estudiante",
-                responseEstudiante.data.id,
-              );
-              matriculaFormData.append("id_modulo", matriculaData.modulo);
-              matriculaFormData.append(
-                "tipo_vinculacion",
-                matriculaData.tipo_vinculacion,
-              );
-              matriculaFormData.append(
-                "terminos",
-                matriculaData.terminos ? "True" : "False",
-              );
+          // Añadir todos los campos del formData al FormData
+          for (const key in formData) {
+            const typedKey = key as keyof typeof formData;
+            let value = formData[typedKey];
+            if (typeof value === "boolean") value = value ? "True" : "False";
+            formDataToSend.append(key, value as string | Blob);
+          }
+          // Crear un acudiente primero para obtener su ID
+          const responseAcudiente = await axios.post(
+            `${API_BASE_URL}/acudiente/acu/`,
+            formDataAcudiente,
+            {
+              headers: {},
+            },
+          );
 
-              if (matriculaData.reciboPago) {
-                matriculaFormData.append(
-                  "recibo_pago",
-                  matriculaData.reciboPago,
-                );
-              }
-              if (matriculaData.certificado) {
-                matriculaFormData.append(
-                  "certificado",
-                  matriculaData.certificado,
-                );
-              }
-              if (matriculaData.reciboServicio) {
-                matriculaFormData.append(
-                  "recibo_servicio",
-                  matriculaData.reciboServicio,
-                );
-              }
+          if (
+            responseAcudiente.status === 201 ||
+            responseAcudiente.status === 200
+          ) {
+            let id_acudiente = null; // Inicializar id_acudiente
+            if (responseAcudiente.status === 201) {
+              id_acudiente = responseAcudiente.data.id_acudiente; // Obtener el ID del acudiente creado
+            } else {
+              id_acudiente = responseAcudiente.data.data.id_acudiente; // Obtener el ID del acudiente creado
+            }
 
-              const responseMatricula = await axios.post(
-                `${API_BASE_URL}/inscripcion/`,
-                matriculaFormData,
-                {
-                  headers: {
-                    "Content-Type": "multipart/form-data",
-                  },
+            formDataToSend.append("acudiente", id_acudiente);
+
+            for (const pair of formDataToSend.entries()) {
+              console.log(`${pair[0]}:`, pair[1]);
+            }
+
+            if (fotoPerfil) {
+              formDataToSend.append("foto", fotoPerfil);
+            }
+
+            if (documentoIdentidad) {
+              formDataToSend.append("documento_identidad", documentoIdentidad);
+            }
+
+            //Creacion de estudiante
+            const responseEstudiante = await axios.post(
+              `${API_BASE_URL}/estudiante/est/`,
+              formDataToSend,
+              {
+                headers: {
+                  "Content-Type": "multipart/form-data",
                 },
-              );
-
-              if (responseMatricula.status === 201) {
-                setCargando(false);
-                alert("¡Registro exitoso!");
-                const datos_matricula = responseMatricula.data;
-                localStorage.setItem(
-                  "datos_matricula",
-                  JSON.stringify(datos_matricula),
-                );
-                router.push("/auth/matricula-finalizada");
-              }
-            } catch (matriculaError) {
-              setCargando(false);
-              let mensaje = "Error desconocido en matrícula";
-              if (axios.isAxiosError(matriculaError)) {
-                mensaje =
-                  (matriculaError.response?.data as any)?.detail ||
-                  (matriculaError.response?.data as any)?.message ||
-                  JSON.stringify(matriculaError.response?.data) ||
-                  matriculaError.message;
-              } else if (matriculaError instanceof Error) {
-                mensaje = matriculaError.message;
-              }
-              console.error("Error al crear matrícula:", matriculaError);
-              alert(`Error al crear la matrícula:\n${mensaje}`);
+              },
+            );
+            if (responseEstudiante.status === 201) {
+              console.log("Estudiante agregado con éxito");
+              finalStudentId = responseEstudiante.data.id;
             }
           }
         }
+      }
+
+      // AHORA crear la matrícula con el ID del estudiante
+      if (finalStudentId && matriculaFormRef.current) {
+        try {
+          const matriculaData = matriculaFormRef.current.getFormData();
+
+          if (!matriculaData) {
+            throw new Error("No se pudieron obtener los datos de la matrícula");
+          }
+
+          const matriculaFormData = new FormData();
+          matriculaFormData.append("id_estudiante", finalStudentId.toString());
+          matriculaFormData.append("id_modulo", matriculaData.modulo);
+          matriculaFormData.append(
+            "tipo_vinculacion",
+            matriculaData.tipo_vinculacion,
+          );
+          matriculaFormData.append(
+            "terminos",
+            matriculaData.terminos ? "True" : "False",
+          );
+          if (matriculaData.oferta_categoria) {
+            matriculaFormData.append(
+              "id_oferta_categoria",
+              matriculaData.oferta_categoria,
+            );
+          }
+
+          if (matriculaData.reciboPago) {
+            matriculaFormData.append("recibo_pago", matriculaData.reciboPago);
+          }
+          if (matriculaData.certificado) {
+            matriculaFormData.append("certificado", matriculaData.certificado);
+          }
+          if (matriculaData.reciboServicio) {
+            matriculaFormData.append(
+              "recibo_servicio",
+              matriculaData.reciboServicio,
+            );
+          }
+
+          console.log(
+            "Payload completo:",
+            Object.fromEntries(matriculaFormData.entries()),
+          );
+
+          const responseMatricula = await axios.post(
+            `${API_BASE_URL}/inscripcion/`,
+            matriculaFormData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            },
+          );
+
+          if (responseMatricula.status === 201) {
+            setCargando(false);
+            alert("¡Registro exitoso!");
+            const datos_matricula = responseMatricula.data;
+            localStorage.setItem(
+              "datos_matricula",
+              JSON.stringify(datos_matricula),
+            );
+            router.push("/auth/matricula-finalizada");
+          }
+        } catch (matriculaError) {
+          setCargando(false);
+          let mensaje = "Error desconocido en matrícula";
+          if (axios.isAxiosError(matriculaError)) {
+            mensaje =
+              (matriculaError.response?.data as any)?.detail ||
+              (matriculaError.response?.data as any)?.message ||
+              JSON.stringify(matriculaError.response?.data) ||
+              matriculaError.message;
+          } else if (matriculaError instanceof Error) {
+            mensaje = matriculaError.message;
+          }
+          console.error("Error al crear matrícula:", matriculaError);
+          alert(`Error al crear la matrícula:\n${mensaje}`);
+        }
+      } else {
+        setCargando(false);
+        alert(
+          "No se pudo obtener el ID del estudiante para realizar el registro.",
+        );
       }
     } catch (err) {
       setCargando(false);
@@ -454,6 +523,51 @@ export default function Registro() {
 
   // Obtener ciudades cuando cambia el departamento seleccionado
 
+  const loadCiudadesForDepartamento = async (nombreDepartamento: string) => {
+    if (!nombreDepartamento) return;
+    setCargandoCiudades(true);
+    try {
+      let departamentoObj = departamentos.find(
+        (d) =>
+          d.nombre.trim().toUpperCase() ===
+          nombreDepartamento.trim().toUpperCase(),
+      );
+
+      if (!departamentoObj) {
+        const responseDeps = await axios.get<DepartamentoApi[]>(
+          "https://api-colombia.com/api/v1/Department",
+        );
+        const dep = responseDeps.data.find(
+          (d) =>
+            d.name.trim().toUpperCase() ===
+            nombreDepartamento.trim().toUpperCase(),
+        );
+        if (dep) {
+          departamentoObj = { id: dep.id, nombre: dep.name };
+        }
+      }
+
+      if (departamentoObj) {
+        const response = await axios.get<CiudadApi[]>(
+          `https://api-colombia.com/api/v1/Department/${departamentoObj.id}/cities`,
+        );
+
+        const ciudadesFormateadas: Ciudad[] = response.data
+          .map((ciudad) => ({
+            id: ciudad.id,
+            nombre: ciudad.name,
+          }))
+          .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+        setCiudades(ciudadesFormateadas);
+      }
+    } catch (error) {
+      console.error("Error al obtener ciudades:", error);
+    } finally {
+      setCargandoCiudades(false);
+    }
+  };
+
   const handleChangeDepartamento = async (
     event: SelectChangeEvent<string | "">,
   ) => {
@@ -465,35 +579,141 @@ export default function Registro() {
       departamento_residencia: nombreDepartamento,
       ciudad_residencia: "", // Limpia ciudad seleccionada
     }));
-    setCargandoCiudades(true);
+    await loadCiudadesForDepartamento(nombreDepartamento);
+  };
+
+  // Función para resetear los campos del formulario
+
+  const resetFormFields = (keepDocument = "") => {
+    setIsExistingStudent(false);
+    setExistingStudentId(null);
+    setImage(null);
+    setFotoPerfil(null);
+    setDocumentoIdentidad(null);
+    setDepartamentoSeleccionado("");
+    setFormData({
+      nombre: "",
+      apellido: "",
+      numero_documento: keepDocument,
+      tipo_documento: "",
+      fecha_nacimiento: "",
+      genero: "",
+      email: "",
+      celular: "",
+      telefono_fijo: "",
+      departamento_residencia: "",
+      ciudad_residencia: "",
+      comuna_residencia: "",
+      direccion_residencia: "",
+      colegio: "",
+      grado: "",
+      estamento: "",
+      eps: "",
+      discapacidad: false,
+      descripcion_discapacidad: "",
+      tipo_discapacidad: "",
+      is_active: true,
+      area_desempeño: "",
+      grado_escolaridad: "",
+      ciudad_documento: "cali",
+    });
+    setFormDataAcudiente({
+      nombre_acudiente: "",
+      apellido_acudiente: "",
+      tipo_documento_acudiente: "",
+      numero_documento_acudiente: "",
+      email_acudiente: "",
+      celular_acudiente: "",
+    });
+  };
+
+  // Función para manejar el evento onBlur del campo de documento y buscar el estudiante en el backend
+  const handleDocumentoBlur = async (doc: string) => {
+    if (!doc) {
+      resetFormFields();
+      return;
+    }
 
     try {
-      // Buscar el ID del departamento con base en el nombre
-      const departamentoObj = departamentos.find(
-        (d) => d.nombre === nombreDepartamento,
+      const response = await axios.get(
+        `${API_BASE_URL}/estudiante/est/buscar-por-documento/?numero_documento=${doc}`,
       );
 
-      if (!departamentoObj) {
-        console.error("Departamento no encontrado");
-        return;
+      if (response.status === 200 && response.data) {
+        const studentData = response.data;
+        setIsExistingStudent(true);
+        setExistingStudentId(studentData.id_estudiante);
+
+        setFormData({
+          nombre: studentData.nombre || "",
+          apellido: studentData.apellido || "",
+          numero_documento: studentData.numero_documento || doc,
+          tipo_documento: studentData.tipo_documento || "",
+          fecha_nacimiento: studentData.fecha_nacimiento || "",
+          genero: studentData.genero || "",
+          email: studentData.email || "",
+          celular: studentData.celular || "",
+          telefono_fijo: studentData.telefono_fijo || "",
+          departamento_residencia: studentData.departamento_residencia || "",
+          ciudad_residencia: studentData.ciudad_residencia || "",
+          comuna_residencia: studentData.comuna_residencia || "",
+          direccion_residencia: studentData.direccion_residencia || "",
+          colegio: studentData.colegio || "",
+          grado: studentData.grado || "",
+          estamento: studentData.estamento || "",
+          eps: studentData.eps || "",
+          discapacidad: studentData.discapacidad ?? false,
+          descripcion_discapacidad: studentData.descripcion_discapacidad || "",
+          tipo_discapacidad: studentData.tipo_discapacidad || "",
+          is_active: studentData.is_active ?? true,
+          area_desempeño: studentData.area_desempeño || "",
+          grado_escolaridad: studentData.grado_escolaridad || "",
+          ciudad_documento: studentData.ciudad_documento || "cali",
+        });
+
+        setTipoDiscapacidad(studentData.discapacidad ?? false);
+        setEsDocente(studentData.grado === "Docente");
+
+        if (studentData.foto) {
+          setImage(studentData.foto);
+        } else {
+          setImage(null);
+        }
+
+        if (studentData.documento_identidad) {
+          setDocumentoIdentidad(studentData.documento_identidad);
+        } else {
+          setDocumentoIdentidad(null);
+        }
+
+        if (studentData.acudiente) {
+          setFormDataAcudiente({
+            nombre_acudiente: studentData.acudiente.nombre_acudiente || "",
+            apellido_acudiente: studentData.acudiente.apellido_acudiente || "",
+            tipo_documento_acudiente:
+              studentData.acudiente.tipo_documento_acudiente || "",
+            numero_documento_acudiente:
+              studentData.acudiente.numero_documento_acudiente || "",
+            email_acudiente: studentData.acudiente.email_acudiente || "",
+            celular_acudiente: studentData.acudiente.celular_acudiente || "",
+          });
+        }
+
+        if (studentData.departamento_residencia) {
+          setDepartamentoSeleccionado(studentData.departamento_residencia);
+          await loadCiudadesForDepartamento(
+            studentData.departamento_residencia,
+          );
+        }
       }
-
-      const response = await axios.get<CiudadApi[]>(
-        `https://api-colombia.com/api/v1/Department/${departamentoObj.id}/cities`,
-      );
-
-      const ciudadesFormateadas: Ciudad[] = response.data
-        .map((ciudad) => ({
-          id: ciudad.id,
-          nombre: ciudad.name,
-        }))
-        .sort((a, b) => a.nombre.localeCompare(b.nombre));
-
-      setCiudades(ciudadesFormateadas);
     } catch (error) {
-      console.error("Error al obtener ciudades:", error);
-    } finally {
-      setCargandoCiudades(false);
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        if (isExistingStudent) {
+          resetFormFields(doc);
+        }
+      } else {
+        console.error("Error al buscar estudiante:", error);
+      }
     }
   };
 
@@ -577,6 +797,15 @@ export default function Registro() {
             FORMULARIO DE INSCRIPCIÓN{" "}
             {tipo_usuario_form === "Becados" ? "- BECADOS" : ""}{" "}
           </h1>
+          {isExistingStudent && (
+            <div className="mx-5 my-2">
+              <Alert severity="info" className="rounded-2xl text-left">
+                Se encontró un estudiante registrado con este documento. Los
+                datos se han cargado automáticamente y no es necesario volver a
+                subir su foto ni su documento de identidad.
+              </Alert>
+            </div>
+          )}
           <div className="flex w-full flex-col rounded-2xl bg-white p-5 md:flex-row">
             {/* Campo Seleccionar Fotografia */}
             <div className="flex w-full flex-col items-center justify-around md:w-1/3">
@@ -618,6 +847,54 @@ export default function Registro() {
                 DATOS DEL ESTUDIANTE
               </h2>
               <div className="flex flex-wrap justify-around gap-4 text-gray-600">
+                {/* Campo Numero de Documento */}
+                <TextField
+                  className="inputs-textfield flex w-full flex-col sm:w-1/3"
+                  label="Número de identificación"
+                  name="numero_identificacion"
+                  variant="outlined"
+                  type="number"
+                  fullWidth
+                  required
+                  value={formData.numero_documento}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData({
+                      ...formData,
+                      numero_documento: val,
+                    });
+                    if (isExistingStudent) {
+                      setIsExistingStudent(false);
+                      setExistingStudentId(null);
+                    }
+                  }}
+                  onBlur={(e) => handleDocumentoBlur(e.target.value)}
+                />
+                {/* Campo Tipo de Documento */}
+                <FormControl className="inputs-textfield w-full sm:w-1/3">
+                  <InputLabel id="tipo_documento">Tipo de documento</InputLabel>
+                  <Select
+                    labelId="tipo_documento"
+                    id="tipo_documento"
+                    label="tipo_documento"
+                    required
+                    value={formData.tipo_documento}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        tipo_documento: e.target.value.toUpperCase(),
+                      })
+                    }
+                  >
+                    <MenuItem value={"TI"}>Tarjeta de identidad</MenuItem>
+                    <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
+                    <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
+                    <MenuItem value={"PPT"}>
+                      Permiso de protección temporal
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+
                 {/* Campo Nombres */}
                 <TextField
                   className="inputs-textfield flex w-full flex-col sm:w-1/3"
@@ -652,47 +929,7 @@ export default function Registro() {
                     })
                   }
                 />
-                {/* Campo Tipo de Documento */}
-                <FormControl className="inputs-textfield w-full sm:w-1/3">
-                  <InputLabel id="tipo_documento">Tipo de documento</InputLabel>
-                  <Select
-                    labelId="tipo_documento"
-                    id="tipo_documento"
-                    label="tipo_documento"
-                    required
-                    value={formData.tipo_documento}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        tipo_documento: e.target.value.toUpperCase(),
-                      })
-                    }
-                  >
-                    <MenuItem value={"TI"}>Tarjeta de identidad</MenuItem>
-                    <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
-                    <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
-                    <MenuItem value={"PPT"}>
-                      Permiso de protección temporal
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-                {/* Campo Numero de Documento */}
-                <TextField
-                  className="inputs-textfield flex w-full flex-col sm:w-1/3"
-                  label="Número de identificación"
-                  name="numero_identificacion"
-                  variant="outlined"
-                  type="number"
-                  fullWidth
-                  required
-                  value={formData.numero_documento}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      numero_documento: e.target.value,
-                    })
-                  }
-                />
+
                 {/* Campo Fecha de Nacimiento */}
                 <TextField
                   className="inputs-textfield flex w-full flex-col sm:w-1/3"
@@ -1088,68 +1325,6 @@ export default function Registro() {
                 ))}
               </Select>
             </FormControl>
-
-            {/* Campo Grado de Escolaridad */}
-
-            {/* <FormControl className="inputs-textfield w-full sm:w-1/4">
-              <InputLabel id="grado_escolaridad">
-                Grado de escolaridad
-              </InputLabel>
-              <Select
-                labelId="grado_escolaridad"
-                id="grado_escolaridad"
-                name="grado_escolaridad"
-                label="Grado de escolaridad"
-                required
-                value={formData.grado_escolaridad || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    grado_escolaridad: e.target.value.toUpperCase(),
-                  })
-                }
-              >
-                <MenuItem value="Técnico">Técnico</MenuItem>
-                <MenuItem value="Tecnólogo">Tecnólogo</MenuItem>
-                <MenuItem value="Licenciatura">Licenciatura</MenuItem>
-                <MenuItem value="Especialización">Especialización</MenuItem>
-                <MenuItem value="Maestría">Maestría</MenuItem>
-                <MenuItem value="Doctorado">Doctorado</MenuItem>
-                <MenuItem value="Otro">Otro</MenuItem>
-              </Select>
-            </FormControl>
-
-             */}
-
-            {/* Campo Área de Enseñanza */}
-            {/* <FormControl className="inputs-textfield w-full sm:w-1/4">
-              <InputLabel id="area_ensenanza">
-                Área de enseñanza
-              </InputLabel>
-              <Select
-                labelId="area_ensenanza"
-                id="area_ensenanza"
-                name="area_ensenanza"
-                label="Área de enseñanza"
-                required
-                value={formData.area_desempeño || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, area_desempeño: e.target.value.toUpperCase() })
-                }
-              >
-                <MenuItem value="Matemáticas">Matemáticas</MenuItem>
-                <MenuItem value="Ciencias Naturales">
-                  Ciencias Naturales
-                </MenuItem>
-                <MenuItem value="Ciencias Sociales">Ciencias Sociales</MenuItem>
-                <MenuItem value="Lengua Castellana">Lengua Castellana</MenuItem>
-                <MenuItem value="Inglés">Inglés</MenuItem>
-                <MenuItem value="Educación Física">Educación Física</MenuItem>
-                <MenuItem value="Artes">Artes</MenuItem>
-                <MenuItem value="Tecnología">Tecnología</MenuItem>
-                <MenuItem value="Otra">Otra</MenuItem>
-              </Select>
-            </FormControl> */}
           </div>
         </div>
 
