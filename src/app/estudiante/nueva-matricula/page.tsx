@@ -164,6 +164,9 @@ export default function NuevaMatricula() {
 
     formDataToSend.append("tipo_vinculacion", formData.tipo_vinculacion);
     formDataToSend.append("terminos", terminos ? "True" : "False");
+    if (formData.oferta) {
+      formDataToSend.append("oferta_academica", formData.oferta);
+    }
 
     if (reciboPago) {
       formDataToSend.append("recibo_pago", reciboPago);
