@@ -48,6 +48,7 @@ function getCache() {
 
 interface MatriculaRow {
   id: number;
+  fecha_inscripcion: string;
   apellido: string;
   nombre: string;
   email: string;
@@ -106,6 +107,7 @@ export default function VerMatriculas() {
 
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", flex: 0.5 },
+    { field: "fecha_inscripcion", headerName: "Fecha de Inscripción", flex: 0.5 },
     { field: "apellido", headerName: "Apellidos", flex: 1 },
     { field: "nombre", headerName: "Nombres", flex: 1 },
     { field: "email", headerName: "Correo Electrónico", flex: 1 },
@@ -185,6 +187,7 @@ export default function VerMatriculas() {
       if (response.status === 200) {
         const formateado: MatriculaRow[] = response.data.map((matricula: Matricula) => ({
           id: matricula.id_inscripcion,
+          fecha_inscripcion: matricula.fecha_inscripcion || "",
           apellido: matricula.estudiante?.apellido || "",
           nombre: matricula.estudiante?.nombre || "",
           email: matricula.estudiante?.email || "",

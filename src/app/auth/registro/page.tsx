@@ -149,7 +149,9 @@ export default function Registro() {
     null,
   );
   const [isExistingStudent, setIsExistingStudent] = useState(false);
-  const [existingStudentId, setExistingStudentId] = useState<number | null>(null);
+  const [existingStudentId, setExistingStudentId] = useState<number | null>(
+    null,
+  );
 
   // Estados de carga
   const [cargando, setCargando] = useState(false);
@@ -246,53 +248,27 @@ export default function Registro() {
 
       let finalStudentId = existingStudentId;
 
-      if (!isExistingStudent) {
+      if (isExistingStudent && existingStudentId) {
         const formDataToSend = new FormData();
 
-        // Añadir todos los campos del formData al FormData
         for (const key in formData) {
           const typedKey = key as keyof typeof formData;
           let value = formData[typedKey];
           if (typeof value === "boolean") value = value ? "True" : "False";
           formDataToSend.append(key, value as string | Blob);
         }
-        // Crear un acudiente primero para obtener su ID
-        const responseAcudiente = await axios.post(
-          `${API_BASE_URL}/acudiente/acu/`,
-          formDataAcudiente,
-          {
-            headers: {},
-          },
-        );
 
-        if (
-          responseAcudiente.status === 201 ||
-          responseAcudiente.status === 200
-        ) {
-          let id_acudiente = null; // Inicializar id_acudiente
-          if (responseAcudiente.status === 201) {
-            id_acudiente = responseAcudiente.data.id_acudiente; // Obtener el ID del acudiente creado
-          } else {
-            id_acudiente = responseAcudiente.data.data.id_acudiente; // Obtener el ID del acudiente creado
-          }
+        if (fotoPerfil) {
+          formDataToSend.append("foto", fotoPerfil);
+        }
 
-          formDataToSend.append("acudiente", id_acudiente);
+        if (documentoIdentidad) {
+          formDataToSend.append("documento_identidad", documentoIdentidad);
+        }
 
-          for (const pair of formDataToSend.entries()) {
-            console.log(`${pair[0]}:`, pair[1]);
-          }
-
-          if (fotoPerfil) {
-            formDataToSend.append("foto", fotoPerfil);
-          }
-
-          if (documentoIdentidad) {
-            formDataToSend.append("documento_identidad", documentoIdentidad);
-          }
-
-          //Creacion de estudiante
-          const responseEstudiante = await axios.post(
-            `${API_BASE_URL}/estudiante/est/`,
+        try {
+          const responseEstudiante = await axios.patch(
+            `${API_BASE_URL}/estudiante/est/${existingStudentId}/`,
             formDataToSend,
             {
               headers: {
@@ -300,9 +276,90 @@ export default function Registro() {
               },
             },
           );
-          if (responseEstudiante.status === 201) {
-            console.log("Estudiante agregado con éxito");
-            finalStudentId = responseEstudiante.data.id;
+
+          if (
+            responseEstudiante.status === 200 ||
+            responseEstudiante.status === 201
+          ) {
+            console.log("Estudiante actualizado con éxito");
+            finalStudentId = existingStudentId;
+          }
+        } catch (updateError) {
+          let mensaje = "Error desconocido al actualizar el estudiante";
+          if (axios.isAxiosError(updateError)) {
+            mensaje =
+              (updateError.response?.data as any)?.detail ||
+              (updateError.response?.data as any)?.message ||
+              JSON.stringify(updateError.response?.data) ||
+              updateError.message;
+          } else if (updateError instanceof Error) {
+            mensaje = updateError.message;
+          }
+
+          console.error("Error al actualizar estudiante:", updateError);
+          setCargando(false);
+          alert(`Hubo un error al actualizar el estudiante:\n${mensaje}`);
+          return;
+        }
+      } else {
+        if (!isExistingStudent) {
+          const formDataToSend = new FormData();
+
+          // Añadir todos los campos del formData al FormData
+          for (const key in formData) {
+            const typedKey = key as keyof typeof formData;
+            let value = formData[typedKey];
+            if (typeof value === "boolean") value = value ? "True" : "False";
+            formDataToSend.append(key, value as string | Blob);
+          }
+          // Crear un acudiente primero para obtener su ID
+          const responseAcudiente = await axios.post(
+            `${API_BASE_URL}/acudiente/acu/`,
+            formDataAcudiente,
+            {
+              headers: {},
+            },
+          );
+
+          if (
+            responseAcudiente.status === 201 ||
+            responseAcudiente.status === 200
+          ) {
+            let id_acudiente = null; // Inicializar id_acudiente
+            if (responseAcudiente.status === 201) {
+              id_acudiente = responseAcudiente.data.id_acudiente; // Obtener el ID del acudiente creado
+            } else {
+              id_acudiente = responseAcudiente.data.data.id_acudiente; // Obtener el ID del acudiente creado
+            }
+
+            formDataToSend.append("acudiente", id_acudiente);
+
+            for (const pair of formDataToSend.entries()) {
+              console.log(`${pair[0]}:`, pair[1]);
+            }
+
+            if (fotoPerfil) {
+              formDataToSend.append("foto", fotoPerfil);
+            }
+
+            if (documentoIdentidad) {
+              formDataToSend.append("documento_identidad", documentoIdentidad);
+            }
+
+            //Creacion de estudiante
+            const responseEstudiante = await axios.post(
+              `${API_BASE_URL}/estudiante/est/`,
+              formDataToSend,
+              {
+                headers: {
+                  "Content-Type": "multipart/form-data",
+                },
+              },
+            );
+            if (responseEstudiante.status === 201) {
+              console.log("Estudiante agregado con éxito");
+              finalStudentId = responseEstudiante.data.id;
+            }
           }
         }
       }
@@ -313,16 +370,11 @@ export default function Registro() {
           const matriculaData = matriculaFormRef.current.getFormData();
 
           if (!matriculaData) {
-            throw new Error(
-              "No se pudieron obtener los datos de la matrícula",
-            );
+            throw new Error("No se pudieron obtener los datos de la matrícula");
           }
 
           const matriculaFormData = new FormData();
-          matriculaFormData.append(
-            "id_estudiante",
-            finalStudentId.toString(),
-          );
+          matriculaFormData.append("id_estudiante", finalStudentId.toString());
           matriculaFormData.append("id_modulo", matriculaData.modulo);
           matriculaFormData.append(
             "tipo_vinculacion",
@@ -332,18 +384,18 @@ export default function Registro() {
             "terminos",
             matriculaData.terminos ? "True" : "False",
           );
-
-          if (matriculaData.reciboPago) {
+          if (matriculaData.oferta_categoria) {
             matriculaFormData.append(
-              "recibo_pago",
-              matriculaData.reciboPago,
+              "id_oferta_categoria",
+              matriculaData.oferta_categoria,
             );
           }
+
+          if (matriculaData.reciboPago) {
+            matriculaFormData.append("recibo_pago", matriculaData.reciboPago);
+          }
           if (matriculaData.certificado) {
-            matriculaFormData.append(
-              "certificado",
-              matriculaData.certificado,
-            );
+            matriculaFormData.append("certificado", matriculaData.certificado);
           }
           if (matriculaData.reciboServicio) {
             matriculaFormData.append(
@@ -351,6 +403,11 @@ export default function Registro() {
               matriculaData.reciboServicio,
             );
           }
+
+          console.log(
+            "Payload completo:",
+            Object.fromEntries(matriculaFormData.entries()),
+          );
 
           const responseMatricula = await axios.post(
             `${API_BASE_URL}/inscripcion/`,
@@ -389,7 +446,9 @@ export default function Registro() {
         }
       } else {
         setCargando(false);
-        alert("No se pudo obtener el ID del estudiante para realizar el registro.");
+        alert(
+          "No se pudo obtener el ID del estudiante para realizar el registro.",
+        );
       }
     } catch (err) {
       setCargando(false);
@@ -469,15 +528,19 @@ export default function Registro() {
     setCargandoCiudades(true);
     try {
       let departamentoObj = departamentos.find(
-        (d) => d.nombre.trim().toUpperCase() === nombreDepartamento.trim().toUpperCase()
+        (d) =>
+          d.nombre.trim().toUpperCase() ===
+          nombreDepartamento.trim().toUpperCase(),
       );
 
       if (!departamentoObj) {
         const responseDeps = await axios.get<DepartamentoApi[]>(
-          "https://api-colombia.com/api/v1/Department"
+          "https://api-colombia.com/api/v1/Department",
         );
         const dep = responseDeps.data.find(
-          (d) => d.name.trim().toUpperCase() === nombreDepartamento.trim().toUpperCase()
+          (d) =>
+            d.name.trim().toUpperCase() ===
+            nombreDepartamento.trim().toUpperCase(),
         );
         if (dep) {
           departamentoObj = { id: dep.id, nombre: dep.name };
@@ -486,7 +549,7 @@ export default function Registro() {
 
       if (departamentoObj) {
         const response = await axios.get<CiudadApi[]>(
-          `https://api-colombia.com/api/v1/Department/${departamentoObj.id}/cities`
+          `https://api-colombia.com/api/v1/Department/${departamentoObj.id}/cities`,
         );
 
         const ciudadesFormateadas: Ciudad[] = response.data
@@ -518,6 +581,8 @@ export default function Registro() {
     }));
     await loadCiudadesForDepartamento(nombreDepartamento);
   };
+
+  // Función para resetear los campos del formulario
 
   const resetFormFields = (keepDocument = "") => {
     setIsExistingStudent(false);
@@ -562,6 +627,7 @@ export default function Registro() {
     });
   };
 
+  // Función para manejar el evento onBlur del campo de documento y buscar el estudiante en el backend
   const handleDocumentoBlur = async (doc: string) => {
     if (!doc) {
       resetFormFields();
@@ -570,7 +636,7 @@ export default function Registro() {
 
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/estudiante/est/buscar-por-documento/?numero_documento=${doc}`
+        `${API_BASE_URL}/estudiante/est/buscar-por-documento/?numero_documento=${doc}`,
       );
 
       if (response.status === 200 && response.data) {
@@ -614,12 +680,20 @@ export default function Registro() {
           setImage(null);
         }
 
+        if (studentData.documento_identidad) {
+          setDocumentoIdentidad(studentData.documento_identidad);
+        } else {
+          setDocumentoIdentidad(null);
+        }
+
         if (studentData.acudiente) {
           setFormDataAcudiente({
             nombre_acudiente: studentData.acudiente.nombre_acudiente || "",
             apellido_acudiente: studentData.acudiente.apellido_acudiente || "",
-            tipo_documento_acudiente: studentData.acudiente.tipo_documento_acudiente || "",
-            numero_documento_acudiente: studentData.acudiente.numero_documento_acudiente || "",
+            tipo_documento_acudiente:
+              studentData.acudiente.tipo_documento_acudiente || "",
+            numero_documento_acudiente:
+              studentData.acudiente.numero_documento_acudiente || "",
             email_acudiente: studentData.acudiente.email_acudiente || "",
             celular_acudiente: studentData.acudiente.celular_acudiente || "",
           });
@@ -627,7 +701,9 @@ export default function Registro() {
 
         if (studentData.departamento_residencia) {
           setDepartamentoSeleccionado(studentData.departamento_residencia);
-          await loadCiudadesForDepartamento(studentData.departamento_residencia);
+          await loadCiudadesForDepartamento(
+            studentData.departamento_residencia,
+          );
         }
       }
     } catch (error) {
@@ -724,7 +800,9 @@ export default function Registro() {
           {isExistingStudent && (
             <div className="mx-5 my-2">
               <Alert severity="info" className="rounded-2xl text-left">
-                Se encontró un estudiante registrado con este documento. Los datos se han cargado automáticamente y no es necesario volver a subir su foto ni su documento de identidad.
+                Se encontró un estudiante registrado con este documento. Los
+                datos se han cargado automáticamente y no es necesario volver a
+                subir su foto ni su documento de identidad.
               </Alert>
             </div>
           )}
@@ -769,6 +847,54 @@ export default function Registro() {
                 DATOS DEL ESTUDIANTE
               </h2>
               <div className="flex flex-wrap justify-around gap-4 text-gray-600">
+                {/* Campo Numero de Documento */}
+                <TextField
+                  className="inputs-textfield flex w-full flex-col sm:w-1/3"
+                  label="Número de identificación"
+                  name="numero_identificacion"
+                  variant="outlined"
+                  type="number"
+                  fullWidth
+                  required
+                  value={formData.numero_documento}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData({
+                      ...formData,
+                      numero_documento: val,
+                    });
+                    if (isExistingStudent) {
+                      setIsExistingStudent(false);
+                      setExistingStudentId(null);
+                    }
+                  }}
+                  onBlur={(e) => handleDocumentoBlur(e.target.value)}
+                />
+                {/* Campo Tipo de Documento */}
+                <FormControl className="inputs-textfield w-full sm:w-1/3">
+                  <InputLabel id="tipo_documento">Tipo de documento</InputLabel>
+                  <Select
+                    labelId="tipo_documento"
+                    id="tipo_documento"
+                    label="tipo_documento"
+                    required
+                    value={formData.tipo_documento}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        tipo_documento: e.target.value.toUpperCase(),
+                      })
+                    }
+                  >
+                    <MenuItem value={"TI"}>Tarjeta de identidad</MenuItem>
+                    <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
+                    <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
+                    <MenuItem value={"PPT"}>
+                      Permiso de protección temporal
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+
                 {/* Campo Nombres */}
                 <TextField
                   className="inputs-textfield flex w-full flex-col sm:w-1/3"
@@ -803,53 +929,7 @@ export default function Registro() {
                     })
                   }
                 />
-                {/* Campo Tipo de Documento */}
-                <FormControl className="inputs-textfield w-full sm:w-1/3">
-                  <InputLabel id="tipo_documento">Tipo de documento</InputLabel>
-                  <Select
-                    labelId="tipo_documento"
-                    id="tipo_documento"
-                    label="tipo_documento"
-                    required
-                    value={formData.tipo_documento}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        tipo_documento: e.target.value.toUpperCase(),
-                      })
-                    }
-                  >
-                    <MenuItem value={"TI"}>Tarjeta de identidad</MenuItem>
-                    <MenuItem value={"CC"}>Cédula de ciudadanía</MenuItem>
-                    <MenuItem value={"CE"}>Cédula de extranjería</MenuItem>
-                    <MenuItem value={"PPT"}>
-                      Permiso de protección temporal
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-                {/* Campo Numero de Documento */}
-                <TextField
-                  className="inputs-textfield flex w-full flex-col sm:w-1/3"
-                  label="Número de identificación"
-                  name="numero_identificacion"
-                  variant="outlined"
-                  type="number"
-                  fullWidth
-                  required
-                  value={formData.numero_documento}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setFormData({
-                      ...formData,
-                      numero_documento: val,
-                    });
-                    if (isExistingStudent) {
-                      setIsExistingStudent(false);
-                      setExistingStudentId(null);
-                    }
-                  }}
-                  onBlur={(e) => handleDocumentoBlur(e.target.value)}
-                />
+
                 {/* Campo Fecha de Nacimiento */}
                 <TextField
                   className="inputs-textfield flex w-full flex-col sm:w-1/3"
@@ -1245,68 +1325,6 @@ export default function Registro() {
                 ))}
               </Select>
             </FormControl>
-
-            {/* Campo Grado de Escolaridad */}
-
-            {/* <FormControl className="inputs-textfield w-full sm:w-1/4">
-              <InputLabel id="grado_escolaridad">
-                Grado de escolaridad
-              </InputLabel>
-              <Select
-                labelId="grado_escolaridad"
-                id="grado_escolaridad"
-                name="grado_escolaridad"
-                label="Grado de escolaridad"
-                required
-                value={formData.grado_escolaridad || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    grado_escolaridad: e.target.value.toUpperCase(),
-                  })
-                }
-              >
-                <MenuItem value="Técnico">Técnico</MenuItem>
-                <MenuItem value="Tecnólogo">Tecnólogo</MenuItem>
-                <MenuItem value="Licenciatura">Licenciatura</MenuItem>
-                <MenuItem value="Especialización">Especialización</MenuItem>
-                <MenuItem value="Maestría">Maestría</MenuItem>
-                <MenuItem value="Doctorado">Doctorado</MenuItem>
-                <MenuItem value="Otro">Otro</MenuItem>
-              </Select>
-            </FormControl>
-
-             */}
-
-            {/* Campo Área de Enseñanza */}
-            {/* <FormControl className="inputs-textfield w-full sm:w-1/4">
-              <InputLabel id="area_ensenanza">
-                Área de enseñanza
-              </InputLabel>
-              <Select
-                labelId="area_ensenanza"
-                id="area_ensenanza"
-                name="area_ensenanza"
-                label="Área de enseñanza"
-                required
-                value={formData.area_desempeño || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, area_desempeño: e.target.value.toUpperCase() })
-                }
-              >
-                <MenuItem value="Matemáticas">Matemáticas</MenuItem>
-                <MenuItem value="Ciencias Naturales">
-                  Ciencias Naturales
-                </MenuItem>
-                <MenuItem value="Ciencias Sociales">Ciencias Sociales</MenuItem>
-                <MenuItem value="Lengua Castellana">Lengua Castellana</MenuItem>
-                <MenuItem value="Inglés">Inglés</MenuItem>
-                <MenuItem value="Educación Física">Educación Física</MenuItem>
-                <MenuItem value="Artes">Artes</MenuItem>
-                <MenuItem value="Tecnología">Tecnología</MenuItem>
-                <MenuItem value="Otra">Otra</MenuItem>
-              </Select>
-            </FormControl> */}
           </div>
         </div>
 

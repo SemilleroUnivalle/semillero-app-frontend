@@ -134,18 +134,36 @@ export default function NuevaMatricula() {
     console.log("ID del estudiante:", estudianteId);
 
     if (!estudianteId) {
-      alert("No se encontró el id del estudiante. Por favor, inicia sesión nuevamente.");
+      alert(
+        "No se encontró el id del estudiante. Por favor, inicia sesión nuevamente.",
+      );
       return;
     }
 
     const formDataToSend = new FormData();
+    const ofertaCategoriaSeleccionada =
+      formData.oferta && formData.area
+        ? ofertas[formData.oferta]?.find(
+            (ofertaCat) =>
+              ofertaCat.id_categoria.id_categoria === Number(formData.area),
+          )
+        : null;
     formDataToSend.append("id_estudiante", estudianteId);
     formDataToSend.append("id_modulo", formData.modulo);
-    formDataToSend.append("tipo_vinculacion", formData.tipo_vinculacion);
-    formDataToSend.append("terminos", terminos ? "True" : "False");
+
     if (formData.oferta) {
       formDataToSend.append("oferta_academica", formData.oferta);
     }
+
+    if (ofertaCategoriaSeleccionada?.id_oferta_categoria) {
+      formDataToSend.append(
+        "id_oferta_categoria",
+        ofertaCategoriaSeleccionada.id_oferta_categoria.toString(),
+      );
+    }
+
+    formDataToSend.append("tipo_vinculacion", formData.tipo_vinculacion);
+    formDataToSend.append("terminos", terminos ? "True" : "False");
 
     if (reciboPago) {
       formDataToSend.append("recibo_pago", reciboPago);
@@ -291,13 +309,15 @@ export default function NuevaMatricula() {
           Documentación
         </h2>
         {/* Inputs para subir archivos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6 max-w-3xl mx-auto">
+        <div className="mx-auto my-6 grid max-w-3xl grid-cols-1 gap-6 md:grid-cols-2">
           {/* Recibo de Pago */}
           <div className="flex flex-col gap-2">
-            <h3 className="text-sm font-semibold text-gray-700 text-left">Recibo de pago</h3>
+            <h3 className="text-left text-sm font-semibold text-gray-700">
+              Recibo de pago
+            </h3>
             <Box
-              className={`border-2 border-dashed border-[#C20E1A] rounded-xl p-4 text-center cursor-pointer transition-all ${
-                reciboPago ? "bg-red-50/30 border-solid" : "bg-transparent"
+              className={`cursor-pointer rounded-xl border-2 border-dashed border-[#C20E1A] p-4 text-center transition-all ${
+                reciboPago ? "border-solid bg-red-50/30" : "bg-transparent"
               } hover:bg-red-50/10`}
             >
               <input
@@ -308,12 +328,17 @@ export default function NuevaMatricula() {
                 id="file-input-recibo"
                 onChange={(e) => setReciboPago(e.target.files?.[0] || null)}
               />
-              <label htmlFor="file-input-recibo" className="flex flex-col items-center cursor-pointer gap-2 py-2 w-full">
+              <label
+                htmlFor="file-input-recibo"
+                className="flex w-full cursor-pointer flex-col items-center gap-2 py-2"
+              >
                 <CloudUploadIcon sx={{ fontSize: 32, color: "#C20E1A" }} />
                 <span className="text-sm font-medium text-gray-700">
                   {reciboPago ? reciboPago.name : "Seleccionar PDF de recibo"}
                 </span>
-                <span className="text-xs text-gray-400">Sólo archivos .pdf</span>
+                <span className="text-xs text-gray-400">
+                  Sólo archivos .pdf
+                </span>
               </label>
             </Box>
           </div>
@@ -324,10 +349,12 @@ export default function NuevaMatricula() {
             formData.tipo_vinculacion === "Particular"
           ) && (
             <div className="flex flex-col gap-2">
-              <h3 className="text-sm font-semibold text-gray-700 text-left">Certificado requerido</h3>
+              <h3 className="text-left text-sm font-semibold text-gray-700">
+                Certificado requerido
+              </h3>
               <Box
-                className={`border-2 border-dashed border-[#C20E1A] rounded-xl p-4 text-center cursor-pointer transition-all ${
-                  certificado ? "bg-red-50/30 border-solid" : "bg-transparent"
+                className={`cursor-pointer rounded-xl border-2 border-dashed border-[#C20E1A] p-4 text-center transition-all ${
+                  certificado ? "border-solid bg-red-50/30" : "bg-transparent"
                 } hover:bg-red-50/10`}
               >
                 <input
@@ -338,10 +365,15 @@ export default function NuevaMatricula() {
                   id="file-input-certificado"
                   onChange={(e) => setCertificado(e.target.files?.[0] || null)}
                 />
-                <label htmlFor="file-input-certificado" className="flex flex-col items-center cursor-pointer gap-2 py-2 w-full">
+                <label
+                  htmlFor="file-input-certificado"
+                  className="flex w-full cursor-pointer flex-col items-center gap-2 py-2"
+                >
                   <CloudUploadIcon sx={{ fontSize: 32, color: "#C20E1A" }} />
-                  <span className="text-sm font-medium text-gray-700 max-w-[280px] truncate">
-                    {certificado ? certificado.name : "Seleccionar PDF de certificado"}
+                  <span className="max-w-[280px] truncate text-sm font-medium text-gray-700">
+                    {certificado
+                      ? certificado.name
+                      : "Seleccionar PDF de certificado"}
                   </span>
                   <span className="text-xs text-gray-400">
                     Estudios, acta, diploma o relación Univalle

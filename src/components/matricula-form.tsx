@@ -27,6 +27,7 @@ interface MatriculaHandle {
     reciboPago: File | null;
     certificado: File | null;
     reciboServicio: File | null;
+    oferta_categoria: string;
   };
 }
 interface MatriculaProps {
@@ -95,7 +96,9 @@ const Matricula = forwardRef<MatriculaHandle, MatriculaProps>(
         }
 
         if (reciboServicio && reciboServicio.size > 2 * 1024 * 1024) {
-          alert("El recibo de servicios excede el tamaño máximo permitido (2 MB)");
+          alert(
+            "El recibo de servicios excede el tamaño máximo permitido (2 MB)",
+          );
           return false;
         }
 
@@ -123,43 +126,19 @@ const Matricula = forwardRef<MatriculaHandle, MatriculaProps>(
         reciboPago,
         certificado,
         reciboServicio,
+        ofertaAcademicaId: formData.oferta,
+        oferta_categoria:
+          formData.oferta && formData.area
+            ? ofertas[formData.oferta]
+                ?.find(
+                  (ofertaCat) =>
+                    ofertaCat.id_categoria.id_categoria ===
+                    Number(formData.area),
+                )
+                ?.id_oferta_categoria?.toString() || ""
+            : "",
       }),
     }));
-
-    // export default function Matricula({
-    //   estamento_form,
-    //   grado_form,
-    //   tipoVinculacion_form,
-    // }: {
-    //   estamento_form: string;
-    //   grado_form: string;
-    //   tipoVinculacion_form: string;
-    // }) {
-    //   const router = useRouter();
-
-    //   const [formData, setFormData] = useState({
-    //     oferta: "",
-    //     area: "",
-    //     modulo: "",
-    //     tipo_vinculacion: "",
-    //     terminos: true,
-    //     id_estudiante: 1,
-    //     id_modulo: "",
-    //   });
-
-    //   // Estados para los archivos
-    //   const [reciboPago, setReciboPago] = useState<File | null>(null);
-    //   const [certificado, setCertificado] = useState<File | null>(null);
-    //   const [reciboServicio, setReciboServicio] = useState<File | null>(null);
-
-    //   // Estado para términos
-    //   const [terminos, setTerminos] = useState(false);
-    //   const [error, setError] = useState<string | null>(null);
-    //   const [success, setSuccess] = useState(false);
-
-    //   // Estado para las ofertas académicas activas
-    //   const [ofertas, setOfertas] = useState<Record<string, OfertaCategoria[]>>({});
-    //   const [loading, setLoading] = useState(true);
 
     // Carga las ofertas académicas al montar el componente
 
@@ -209,77 +188,6 @@ const Matricula = forwardRef<MatriculaHandle, MatriculaProps>(
         ...(field === "area" ? { modulo: "" } : {}),
       }));
     };
-
-    // if (loading) return <div>Cargando ofertas...</div>;
-
-    // const handleSubmit = async (e: React.FormEvent) => {
-    //   e.preventDefault();
-
-    //   const id_estudiante = localStorage.getItem("id_estudiante");
-
-    //   if (tipoVinculacion_form !== "Becados" && !reciboPago) {
-    //     alert("El recibo de pago es obligatorio");
-    //     return;
-    //   }
-
-    //   if (tipoVinculacion_form === "Becados" && !reciboServicio) {
-    //     alert("El recibo de servicios es obligatorio para becados");
-    //     return;
-    //   }
-
-    //   // El certificado es obligatorio SOLO si NO es (estamento PRIVADO AND tipo_vinculacion Particular)
-    //   const certificadoObligatorio = !(
-    //     estamento_form === "PRIVADO" && formData.tipo_vinculacion === "Particular"
-    //   );
-
-    //   if (certificadoObligatorio && !certificado) {
-    //     alert("El certificado es obligatorio");
-    //     return;
-    //   }
-
-    //   console.log("Grado del usuario:", grado_form);
-    //   console.log("Estamento del usuario:", estamento_form);
-    //   console.log("ID del estudiante:", id_estudiante);
-
-    //   if (!id_estudiante) {
-    //     alert("No se encontró el id del estudiante.");
-    //     return;
-    //   }
-
-    //   const formDataToSend = new FormData();
-    //   formDataToSend.append("id_estudiante", id_estudiante);
-    //   formDataToSend.append("id_modulo", formData.modulo);
-    //   formDataToSend.append("tipo_vinculacion", formData.tipo_vinculacion);
-    //   formDataToSend.append("terminos", terminos ? "True" : "False");
-
-    //   if (reciboPago) {
-    //     formDataToSend.append("recibo_pago", reciboPago);
-    //   }
-    //   if (certificado) {
-    //     formDataToSend.append("certificado", certificado);
-    //   }
-    //   if (reciboServicio) {
-    //     formDataToSend.append("recibo_servicio", reciboServicio);
-    //   }
-
-    //   // Imprime todos los datos que se van a enviar
-    //   for (const pair of formDataToSend.entries()) {
-    //     console.log(`${pair[0]}:`, pair[1]);
-    //   }
-
-    //   try {
-    //     await axios.post(`${API_BASE_URL}/matricula/mat/`, formDataToSend, {
-    //       headers: {
-    //         "Content-Type": "multipart/form-data",
-    //       },
-    //     });
-    //     setSuccess(true);
-    //     router.push("/auth/matricula-finalizada"); // Redirige al login
-    //   } catch (error) {
-    //     console.error("Error al enviar la matrícula:", error);
-    //     setError("Hubo un error al enviar la matrícula.");
-    //   }
-    // };
 
     if (loading) return <div>Cargando ofertas...</div>;
 
