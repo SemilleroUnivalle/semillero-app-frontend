@@ -69,24 +69,26 @@ export default function VerMatriculas() {
   const [searchText, setSearchText] = useState("");
 
   const [rows, setRows] = useState<MatriculaRow[]>(
-    () => getCache()?.formateado ?? []
+    () => getCache()?.formateado ?? [],
   );
   const [matriculas, setMatriculas] = useState<Matricula[]>(
-    () => getCache()?.matriculas ?? []
+    () => getCache()?.matriculas ?? [],
   );
   const [loading, setLoading] = useState(() => getCache() === null);
 
   // Filtros
   const [selectedPeriodos, setSelectedPeriodos] = React.useState<string[]>([]);
   const [selectedModulos, setSelectedModulos] = React.useState<string[]>([]);
-  const [selectedEstamento, setSelectedEstamento] = React.useState<string[]>([]);
+  const [selectedEstamento, setSelectedEstamento] = React.useState<string[]>(
+    [],
+  );
   const [selectedTipo, setSelectedTipo] = React.useState<string[]>([]);
   const [selectedColegio, setSelectedColegio] = React.useState<string[]>([]);
   const [selectedEstado, setSelectedEstado] = React.useState<string[]>([]);
 
   const handleDelete = async (id: number) => {
     const confirmDelete = window.confirm(
-      "¿Estás seguro de que deseas eliminar esta matrícula?"
+      "¿Estás seguro de que deseas eliminar esta matrícula?",
     );
     if (!confirmDelete) return;
 
@@ -101,13 +103,19 @@ export default function VerMatriculas() {
       setSuccess(true);
     } catch (error) {
       console.error("Error al eliminar la matrícula:", error);
-      alert("Hubo un error al eliminar la matrícula. Por favor, inténtalo de nuevo.");
+      alert(
+        "Hubo un error al eliminar la matrícula. Por favor, inténtalo de nuevo.",
+      );
     }
   };
 
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", flex: 0.5 },
-    { field: "fecha_inscripcion", headerName: "Fecha de Inscripción", flex: 0.5 },
+    {
+      field: "fecha_inscripcion",
+      headerName: "Fecha de Inscripción",
+      flex: 0.5,
+    },
     { field: "apellido", headerName: "Apellidos", flex: 1 },
     { field: "nombre", headerName: "Nombres", flex: 1 },
     { field: "email", headerName: "Correo Electrónico", flex: 1 },
@@ -122,11 +130,32 @@ export default function VerMatriculas() {
       flex: 0.5,
       renderCell: (params) => {
         if (params.value === "Revisado")
-          return <Chip label="Revisado" color="success" variant="outlined" sx={{ fontWeight: "bold" }} />;
+          return (
+            <Chip
+              label="Revisado"
+              color="success"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
         if (params.value === "No revisado")
-          return <Chip label="No revisado" color="error" variant="outlined" sx={{ fontWeight: "bold" }} />;
+          return (
+            <Chip
+              label="No revisado"
+              color="error"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
         if (params.value === "Pendiente")
-          return <Chip label="Pendiente" color="warning" variant="outlined" sx={{ fontWeight: "bold" }} />;
+          return (
+            <Chip
+              label="Pendiente"
+              color="warning"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
         return null;
       },
     },
@@ -136,11 +165,32 @@ export default function VerMatriculas() {
       flex: 0.5,
       renderCell: (params) => {
         if (params.value === "Revisado")
-          return <Chip label="Revisado" color="success" variant="outlined" sx={{ fontWeight: "bold" }} />;
+          return (
+            <Chip
+              label="Revisado"
+              color="success"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
         if (params.value === "No revisado")
-          return <Chip label="No revisado" color="error" variant="outlined" sx={{ fontWeight: "bold" }} />;
+          return (
+            <Chip
+              label="No revisado"
+              color="error"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
         if (params.value === "Pendiente")
-          return <Chip label="Pendiente" color="warning" variant="outlined" sx={{ fontWeight: "bold" }} />;
+          return (
+            <Chip
+              label="Pendiente"
+              color="warning"
+              variant="outlined"
+              sx={{ fontWeight: "bold" }}
+            />
+          );
         return null;
       },
     },
@@ -158,7 +208,10 @@ export default function VerMatriculas() {
             <VisibilityOutlinedIcon
               className="h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"
               onClick={() => {
-                localStorage.setItem("matriculaSeleccionada", JSON.stringify(params.row));
+                localStorage.setItem(
+                  "matriculaSeleccionada",
+                  JSON.stringify(params.row),
+                );
                 router.push("/admin/matriculas/detallarMatricula");
               }}
             />
@@ -185,28 +238,31 @@ export default function VerMatriculas() {
       });
 
       if (response.status === 200) {
-        const formateado: MatriculaRow[] = response.data.map((matricula: Matricula) => ({
-          id: matricula.id_inscripcion,
-          fecha_inscripcion: matricula.fecha_inscripcion || "",
-          apellido: matricula.estudiante?.apellido || "",
-          nombre: matricula.estudiante?.nombre || "",
-          email: matricula.estudiante?.email || "",
-          direccion: matricula.estudiante?.direccion_residencia || "",
-          periodo: matricula.oferta_categoria?.id_oferta_academica?.nombre ?? "",
-          modulo: matricula.modulo?.nombre_modulo || "",
-          estamento: matricula.estudiante?.estamento || "",
-          tipo: matricula.tipo_vinculacion || "",
-          colegio: matricula.estudiante?.colegio || "",
-          estado_registro: matricula.estudiante?.estado || "",
-          estado_matricula: matricula.estado || "",
-        }));
+        const formateado: MatriculaRow[] = response.data.map(
+          (matricula: Matricula) => ({
+            id: matricula.id_inscripcion,
+            fecha_inscripcion: matricula.fecha_inscripcion || "",
+            apellido: matricula.estudiante?.apellido || "",
+            nombre: matricula.estudiante?.nombre || "",
+            email: matricula.estudiante?.email || "",
+            direccion: matricula.estudiante?.direccion_residencia || "",
+            periodo:
+              matricula.oferta_categoria?.id_oferta_academica?.nombre ?? "",
+            modulo: matricula.modulo?.nombre_modulo || "",
+            estamento: matricula.estudiante?.estamento || "",
+            tipo: matricula.tipo_vinculacion || "",
+            colegio: matricula.estudiante?.colegio || "",
+            estado_registro: matricula.estudiante?.estado || "",
+            estado_matricula: matricula.estado || "",
+          }),
+        );
 
         sessionStorage.setItem(
           CACHE_KEY,
           JSON.stringify({
             timestamp: Date.now(),
             data: { formateado, matriculas: response.data },
-          })
+          }),
         );
 
         setMatriculas(response.data);
@@ -223,55 +279,87 @@ export default function VerMatriculas() {
     const cache = getCache();
     if (cache) return;
     fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleChangePeriodos = (event: SelectChangeEvent<string[]>) => {
-    const { target: { value } } = event;
+    const {
+      target: { value },
+    } = event;
     setSelectedPeriodos(typeof value === "string" ? value.split(",") : value);
   };
 
   const handleChangeModulos = (event: SelectChangeEvent<string[]>) => {
-    const { target: { value } } = event;
+    const {
+      target: { value },
+    } = event;
     setSelectedModulos(typeof value === "string" ? value.split(",") : value);
   };
 
   const handleChangeEstamento = (event: SelectChangeEvent<string[]>) => {
-    const { target: { value } } = event;
+    const {
+      target: { value },
+    } = event;
     setSelectedEstamento(typeof value === "string" ? value.split(",") : value);
   };
 
   const handleChangeTipo = (event: SelectChangeEvent<string[]>) => {
-    const { target: { value } } = event;
+    const {
+      target: { value },
+    } = event;
     setSelectedTipo(typeof value === "string" ? value.split(",") : value);
   };
 
   const handleChangeColegio = (event: SelectChangeEvent<string[]>) => {
-    const { target: { value } } = event;
+    const {
+      target: { value },
+    } = event;
     setSelectedColegio(typeof value === "string" ? value.split(",") : value);
   };
 
-  const handleExportExcel = async () => {
+  // const handleExportExcel = async () => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${API_BASE_URL}/estudiante/est/export-excel/`,
+  //       {
+  //         responseType: "blob",
+  //         headers: {
+  //           Authorization: `Token ${localStorage.getItem("token")}`,
+  //         },
+  //       }
+  //     );
+  //     const url = window.URL.createObjectURL(new Blob([response.data]));
+  //     const link = document.createElement("a");
+  //     link.href = url;
+  //     link.setAttribute("download", "Inscripciones.xlsx");
+  //     document.body.appendChild(link);
+  //     link.click();
+  //     link.remove();
+  //   } catch (error) {
+  //     alert("No se pudo exportar el archivo.");
+  //     console.error(error);
+  //   }
+  // };
+
+  const handleExportExcel = () => {
+    // 1. Verificamos que tengamos datos cargados en el estado 'matriculas'
+    if (!matriculas || matriculas.length === 0) {
+      alert("No hay información disponible para exportar.");
+      return;
+    }
+
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/estudiante/est/export-excel/`,
-        {
-          responseType: "blob",
-          headers: {
-            Authorization: `Token ${localStorage.getItem("token")}`,
-          },
-        }
+      // 2. Opción A: Exportar TODAS las matrículas traídas de la API
+      //exportMatriculasToExcel(matriculas);
+
+      // 💡 Opción B: Si prefieres exportar solo las filas que están FILTRADAS actualmente en pantalla:
+      const matriculasFiltradas = matriculas.filter((m) =>
+        filteredRows.some((row) => row.id === m.id_inscripcion),
       );
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "Inscripciones.xlsx");
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      exportMatriculasToExcel(matriculasFiltradas);
     } catch (error) {
-      alert("No se pudo exportar el archivo.");
-      console.error(error);
+      console.error("Error al exportar a Excel:", error);
+      alert("Ocurrió un error al generar el archivo Excel.");
     }
   };
 
@@ -283,13 +371,15 @@ export default function VerMatriculas() {
       const moduloMatch =
         selectedModulos.length === 0 || selectedModulos.includes(row.modulo);
       const estamentoMatch =
-        selectedEstamento.length === 0 || selectedEstamento.includes(row.estamento);
+        selectedEstamento.length === 0 ||
+        selectedEstamento.includes(row.estamento);
       const tipoMatch =
         selectedTipo.length === 0 || selectedTipo.includes(row.tipo);
       const colegioMatch =
         selectedColegio.length === 0 || selectedColegio.includes(row.colegio);
       const estadoMatch =
-        selectedEstado.length === 0 || selectedEstado.includes(row.estado_registro);
+        selectedEstado.length === 0 ||
+        selectedEstado.includes(row.estado_registro);
       const searchMatch =
         searchText === "" ||
         row.nombre.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -328,7 +418,11 @@ export default function VerMatriculas() {
         autoHideDuration={4000}
         onClose={() => setSuccess(false)}
       >
-        <Alert onClose={() => setSuccess(false)} severity="success" sx={{ width: "100%" }}>
+        <Alert
+          onClose={() => setSuccess(false)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
           Inscrito eliminado exitosamente.
         </Alert>
       </Snackbar>
@@ -468,7 +562,10 @@ export default function VerMatriculas() {
         >
           Crear Matricula
         </Button>
-        <Paper className="border-none shadow-none" sx={{ height: 800, width: "100%" }}>
+        <Paper
+          className="border-none shadow-none"
+          sx={{ height: 800, width: "100%" }}
+        >
           <DataGrid
             rows={filteredRows}
             columns={columns}
