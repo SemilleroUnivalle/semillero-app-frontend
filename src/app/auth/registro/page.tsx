@@ -733,7 +733,7 @@ export default function Registro() {
       >
         <DialogContent className="rounded-2xl p-10">
           <h1>Información importante</h1>
-          <br />- Este formulario debe ser diligenciado una vez realizado el
+          {/* <br />- Este formulario debe ser diligenciado una vez realizado el
           proceso de pago. Si no lo has realizado, sigue el paso a paso en:{" "}
           <a
             className="font-bold"
@@ -767,7 +767,17 @@ export default function Registro() {
             target="_blank"
           >
             ILoveIMG - Eliminar fondo
-          </a>
+          </a> */}
+
+Ante el reciente evento sísmico registrado en nuestra ciudad y las situaciones derivadas de este, la Universidad del Valle se encuentra realizando las evaluaciones necesarias de su infraestructura y adoptando las medidas pertinentes para garantizar condiciones adecuadas de seguridad en los espacios del campus universitario de Meléndez.
+<br />
+<br />
+En este sentido, informamos a toda nuestra comunidad que las clases iniciarán el <span className="font-bold">sábado 3 de octubre de 2026</span>.
+<br />
+<br />
+
+Es posible que las primeras jornadas se desarrollen bajo la modalidad de <span className="font-bold">Presencialidad Asistida por Tecnología (PAT)</span>, pero con el propósito de retornar a las actividades presenciales de acuerdo con las orientaciones de la Dirección Universitaria.
+
         </DialogContent>
 
         <DialogActions>
